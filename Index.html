@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUMENFALL - El Atrio</title>
+    
+    <!-- Metas para PWA -->
+    <meta name="theme-color" content="#000000">
+    <link id="manifest-link" rel="manifest">
+
+    <!-- Cargar Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configuración personalizada de Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Impact', 'Arial Black', 'sans-serif'], // Fuente dramática
+                    },
+                },
+            },
+        };
+    </script>
+
+    <style>
+        /* Importar la fuente de Google para la firma */
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+
+        /* Estilo base */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Evitar saltos de layout */
+            overscroll-behavior: none;
+        }
+
+        /* --- FASE 1: Estilos del Splash Screen --- */
+        
+        #splash-screen {
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        #splash-screen.fade-out {
+            opacity: 0;
+        }
+        
+        #splash-text {
+            font-family: 'Great Vibes', cursive;
+            font-size: 7rem; 
+            color: white;
+            text-shadow: 0 0 25px rgba(255, 255, 255, 1),
+                         0 0 15px rgba(255, 255, 255, 0.8),
+                         0 0 8px rgba(255, 255, 255, 0.6);
+        }
+        
+        @media (max-width: 640px) {
+            #splash-text {
+                font-size: 5rem;
+            }
+        }
+
+        /* --- FASE 2: Estilos de la Página Principal --- */
+
+        #bg-video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        #bg-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: blur(8px) brightness(0.4); 
+        }
+        
+        #main-content {
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="bg-black text-white antialiased">
+
+    <!-- FASE 1: Splash Screen -->
+    <div id="splash-screen" class="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <h1 id="splash-text">Joziel</h1>
+    </div>
+
+    <!-- FASE 2: Contenido Principal -->
+    <div id="main-content" class="relative z-10 min-h-screen flex flex-col">
+        
+        <!-- Contenedor del Video de Fondo -->
+        <div id="bg-video-container">
+            <video id="bg-video" autoplay muted loop playsinline>
+                <source src="assets/videos/flama-bg.mp4" type="video/mp4">
+                Tu navegador no soporta el video de fondo.
+            </video>
+        </div>
+
+        <!-- Contenido de la página -->
+        <div class="flex-grow flex flex-col items-center justify-center p-4 sm:p-8">
+
+            <!-- Encabezado con el Título -->
+            <header class="text-center my-8 sm:my-10">
+                <h1 class="text-6xl sm:text-7xl md:text-9xl">
+                    <!-- NOTA: Reemplaza 'src' con la ruta a tu logo PNG -->
+                    <img src="assets/images/lumenfall-logo.png" alt="Lumenfall" class="mx-auto w-full max-w-lg md:max-w-2xl h-auto"
+                         onerror="this.style.display='none'; document.getElementById('lumenfall-fallback-text').style.display='block';">
+                    <!-- Fallback de texto si la imagen del logo no carga -->
+                    <span id="lumenfall-fallback-text" class="font-display uppercase tracking-widest text-shadow-red" style="display:none;">Lumenfall</span>
+                </h1>
+            </header>
+
+            <!-- Contenedor de Autenticación -->
+            <section id="auth-container" class="w-full max-w-sm mx-auto my-6 text-center">
+                
+                <!-- Botones de Inicio de Sesión (Visible por defecto) -->
+                <div id="login-buttons" class="space-y-4">
+                    
+                    <!-- Botón de Instalación PWA (Oculto por defecto) -->
+                    <button id="install-pwa-button" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-teal-500 text-white hover:bg-teal-600 hidden">
+                        <svg class="w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                        Instalar Aplicación
+                    </button>
+
+                    <button id="google-login" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-white text-gray-800 hover:bg-gray-200">
+                        <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M43.6111 20.0833H42V20H24V28H35.303C33.6747 32.6596 29.2235 36 24 36C17.373 36 12 30.627 12 24C12 17.373 17.373 12 24 12C26.8543 12 29.4312 13.1118 31.3914 14.888L36.0121 10.2672C32.6393 7.2898 28.5363 5.5 24 5.5C13.797 5.5 5.5 13.797 5.5 24C5.5 34.203 13.797 42.5 24 42.5C34.203 42.5 42.5 34.203 42.5 24C42.5 22.6105 42.3699 21.3533 42.126 20.1388L43.6111 20.0833Z" fill="#FFC107"></path><path d="M43.6111 20.0833H42V20H24V28H35.303C34.5102 30.4187 33.1594 32.5539 31.3914 34.1118L36.0121 38.7328C39.4239 35.034 42.5 29.16 42.5 24C42.5 22.6105 42.3699 21.3533 42.126 20.1388L43.6111 20.0833Z" fill="#FF3D00"></path><path d="M24 5.5C28.5363 5.5 32.6393 7.2898 36.0121 10.2672L31.3914 14.888C29.4312 13.1118 26.8543 12 24 12C20.6974 12 17.817 13.4357 16.0352 15.6961L11.0264 11.8346C14.3315 8.1636 18.892 5.5 24 5.5Z" fill="#4CAF50"></path><path d="M43.6111 20.0833L42.126 20.1388C42.3699 21.3533 42.5 22.6105 42.5 24C42.5 29.16 39.4239 35.034 36.0121 38.7328L31.3914 34.1118C33.1594 32.5539 34.5102 30.4187 35.303 28H24V20H42V20.0833H43.6111Z" fill="#1976D2"></path></svg>
+                        Iniciar con Google
+                    </button>
+                    <button id="facebook-login" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-blue-600 text-white hover:bg-blue-700">
+                        <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.81C10.44 7.31 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96C18.34 21.21 22 17.06 22 12.06C22 6.53 17.5 2.04 12 2.04Z"></path></svg>
+                        Iniciar con Facebook
+                    </button>
+                </div>
+                
+                <!-- Información del Usuario (Oculto por defecto) -->
+                <div id="user-info" class="hidden space-y-4">
+                    <p id="user-email" class="text-gray-300 text-sm break-all"></p>
+                    <button id="logout-button" class="w-full p-3 rounded-lg font-semibold transition-colors duration-200 bg-red-600 text-white hover:bg-red-700">
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </section>
+
+            <!-- Navegación Principal -->
+            <nav class="w-full max-w-4xl mx-auto my-8 sm:my-10">
+                <div class="flex flex-col sm:grid sm:grid-cols-2 sm:gap-6 space-y-6 sm:space-y-0">
+                    
+                    <a href="./juego/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
+                        <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">JUGAR EL DEMO</span>
+                        <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(La Experiencia Interactiva)</span>
+                    </a>
+                    
+                    <a href="./libro/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
+                        <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">LEER EL LORE</span>
+                        <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(El Grimorio / El Diario)</span>
+                    </a>
+                    
+                    <a href="./tienda/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
+                        <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">LA ARMERÍA</span>
+                        <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(Camisetas y Accesorios)</span>
+                    </a>
+                    
+                    <a href="#" class="group block p-6 sm:p-8 text-center bg-white rounded-lg transition-all duration-300 hover:bg-gray-200 hover:shadow-lg transform hover:-translate-y-1">
+                        <span class="block text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-red-500 transition-colors duration-300">LA BANDA SONORA</span>
+                        <span class="block text-sm text-gray-600 group-hover:text-red-500 transition-colors duration-300">(Escuchar 'MY TEMPO')</span>
+                    </a>
+
+                </div>
+            </nav>
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="w-full text-center p-6 mt-auto">
+            <div class="flex justify-center space-x-6 mb-4">
+                <a href="https://www.tiktok.com/@joziel38000" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="text-gray-500 hover:text-white transition-colors duration-200">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-2.1.04-4.14-.63-5.73-2.1-1.9-1.75-2.79-4.38-2.48-6.85.04-1.1.22-2.19.42-3.27.17-1.07.39-2.13.68-3.18.32-1.12.72-2.2 1.19-3.26.47-1.06.99-2.09 1.57-3.11.02-.03.04-.06.05-.08.6-.98 1.26-1.92 1.98-2.82.72-.9 1.5-1.75 2.32-2.55.88-.85 1.82-1.63 2.8-2.32 1.94-1.39 4.02-2.33 6.13-2.71v4.03c-1.31.02-2.61.01-3.91.02-.08 1.53-.63 3.09-1.75 4.17-1.12 1.11-2.7 1.62-4.24 1.79v4.03c1.44-.05 2.89-.35 4.2-.97.57-.26 1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-2.1.04-4.14-.63-5.73-2.1-1.9-1.75-2.79-4.38-2.48-6.85.04-1.1.22-2.19.42-3.27.17-1.07.39-2.13.68-3.18.32-1.12.72-2.2 1.19-3.26.47-1.06.99-2.09 1.57-3.11.02-.03.04-.06.05-.08.6-.98 1.26-1.92 1.98-2.82.72-.9 1.5-1.75 2.32-2.55.88-.85 1.82-1.63 2.8-2.32 1.94-1.39 4.02-2.33 6.13-2.71Z"/></svg>
+                </a>
+                <a href="https://www.youtube.com/@Joziel38000" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="text-gray-500 hover:text-white transition-colors duration-200">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814ZM9.545 15.568V8.432L15.818 12l-6.273 3.568Z"/></svg>
+                </a>
+            </div>
+            <p class="text-gray-500 text-sm mb-2">
+                <a href="mailto:joziel.official@gmail.com" class="hover:text-gray-300 transition-colors duration-200">
+                    joziel.official@gmail.com
+                </a>
+            </p>
+            <p class="text-gray-500 text-sm">&copy; 2025 JUSN38</p>
+        </footer>
+
+    </div>
+    
+    <!-- Lógica del Splash Screen y PWA -->
+    <script>
+        window.addEventListener('load', () => {
+            const splash = document.getElementById('splash-screen');
+            const main = document.getElementById('main-content');
+            
+            // --- Lógica del Splash Screen ---
+            function hideSplash() {
+                splash.classList.add('fade-out');
+                main.style.opacity = '1';
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                }, 500); 
+            }
+            setTimeout(hideSplash, 4000);
+
+            // --- Lógica de PWA (Manifest y Service Worker) ---
+            
+            // 1. Crear el Manifest dinámicamente
+            const pwaManifest = {
+                "name": "LUMENFALL",
+                "short_name": "Lumenfall",
+                "start_url": ".",
+                "display": "standalone",
+                "background_color": "#000000",
+                "theme_color": "#000000",
+                "description": "LUMENFALL - El Atrio",
+                "icons": [
+                    {
+                        // NOTA: Reemplaza esto con un ícono real de 192x192 en assets/images/
+                        "src": "https://placehold.co/192x192/FF0000/FFFFFF?text=L",
+                        "type": "image/png",
+                        "sizes": "192x192"
+                    },
+                    {
+                        // NOTA: Reemplaza esto con un ícono real de 512x512 en assets/images/
+                        "src": "https://placehold.co/512x512/FF0000/FFFFFF?text=L",
+                        "type": "image/png",
+                        "sizes": "512x512"
+                    }
+                ]
+            };
+            
+            try {
+                const manifestString = JSON.stringify(pwaManifest);
+                const manifestBlob = new Blob([manifestString], {type: 'application/json'});
+                const manifestUrl = URL.createObjectURL(manifestBlob);
+                document.getElementById('manifest-link').setAttribute('href', manifestUrl);
+            } catch (e) {
+                console.error("Error al crear el manifest:", e);
+            }
+
+
+            // 2. Crear y registrar el Service Worker dinámicamente
+            const swCode = `
+                const CACHE_NAME = 'lumenfall-cache-v1';
+                // Cachear la página principal en la instalación
+                self.addEventListener('install', (event) => {
+                    event.waitUntil(
+                        caches.open(CACHE_NAME).then((cache) => {
+                            return cache.add('./'); // Cachear la página actual
+                        })
+                    );
+                });
+
+                // Servir desde el cache si es posible (estrategia Cache First)
+                self.addEventListener('fetch', (event) => {
+                    event.respondWith(
+                        caches.match(event.request).then((response) => {
+                            return response || fetch(event.request);
+                        })
+                    );
+                });
+            `;
+
+            if ('serviceWorker' in navigator) {
+                try {
+                    const swBlob = new Blob([swCode], {type: 'application/javascript'});
+                    const swUrl = URL.createObjectURL(swBlob);
+                    navigator.serviceWorker.register(swUrl)
+                        .then((registration) => {
+                            console.log('Service Worker registrado con éxito:', registration);
+                        })
+                        .catch((error) => {
+                            console.error('Error al registrar el Service Worker:', error);
+                        });
+                } catch (e) {
+                     console.error("Error al crear el Blob del Service Worker:", e);
+                }
+            }
+        });
+    </script>
+
+    <!-- Lógica de Firebase y Prompt de Instalación -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            signInWithPopup, 
+            GoogleAuthProvider, 
+            FacebookAuthProvider,
+            signInWithCustomToken,
+            signInAnonymously,
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- 1. Configuración de Firebase ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config)
+            : {
+                apiKey: "TU_API_KEY",
+                authDomain: "TU_AUTH_DOMAIN",
+                projectId: "TU_PROJECT_ID",
+                // ...etc
+            };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-lumenfall-app';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        try {
+            setLogLevel('Debug');
+        } catch (e) {
+            console.error("Error al configurar el nivel de log de Firestore:", e);
+        }
+
+        // --- 2. Inicialización de Firebase ---
+        let app, auth, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            console.log("Firebase inicializado correctamente.");
+        } catch (e) {
+            console.error("Error al inicializar Firebase:", e);
+            document.getElementById("auth-container").innerHTML = '<p class="text-red-500">Error al conectar con el servidor.</p>';
+            return; 
+        }
+
+        // --- 3. Referencias al DOM ---
+        const loginButtons = document.getElementById('login-buttons');
+        const userInfo = document.getElementById('user-info');
+        const userEmail = document.getElementById('user-email');
+        const googleLoginBtn = document.getElementById('google-login');
+        const facebookLoginBtn = document.getElementById('facebook-login');
+        const logoutBtn = document.getElementById('logout-button');
+        const installButton = document.getElementById('install-pwa-button'); // Botón de PWA
+
+        // --- 4. Lógica de Autenticación Firebase ---
+        const googleProvider = new GoogleAuthProvider();
+        const facebookProvider = new FacebookAuthProvider();
+
+        async function signIn(provider) {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                console.log("Inicio de sesión exitoso:", result.user);
+            } catch (error) {
+                console.error("Error en el inicio de sesión:", error.code, error.message);
+            }
+        }
+
+        async function logOut() {
+            try {
+                await signOut(auth);
+                console.log("Sesión cerrada.");
+            } catch (error) {
+                console.error("Error al cerrar sesión:", error);
+            }
+        }
+
+        if(googleLoginBtn) googleLoginBtn.addEventListener('click', () => signIn(googleProvider));
+        if(facebookLoginBtn) facebookLoginBtn.addEventListener('click', () => signIn(facebookProvider));
+        if(logoutBtn) logoutBtn.addEventListener('click', logOut);
+
+        // --- 5. Observador de Autenticación ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log("Usuario autenticado:", user.email, "UID:", user.uid);
+                userEmail.textContent = `Conectado como: ${user.email || 'Usuario Anónimo'}`;
+                loginButtons.classList.add('hidden');
+                userInfo.classList.remove('hidden');
+            } else {
+                console.log("Usuario no autenticado.");
+                userEmail.textContent = '';
+                loginButtons.classList.remove('hidden');
+                userInfo.classList.add('hidden');
+            }
+        });
+
+        // --- 6. Inicio de Sesión Inicial ---
+        (async () => {
+            if (auth.currentUser) {
+                 console.log("Usuario ya autenticado:", auth.currentUser.uid);
+                 return;
+            }
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Error durante el inicio de sesión inicial:", error);
+            }
+        })();
+
+        // --- 7. Lógica del Prompt de Instalación PWA ---
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevenir que el mini-infobar aparezca en Chrome
+            e.preventDefault();
+            // Guardar el evento para que pueda ser disparado más tarde.
+            deferredPrompt = e;
+            // Mostrar nuestro botón de instalación personalizado
+            if(installButton) {
+                installButton.classList.remove('hidden');
+            }
+            console.log('Evento beforeinstallprompt disparado.');
+        });
+
+        if(installButton) {
+            installButton.addEventListener('click', async () => {
+                // Ocultar nuestro botón
+                installButton.classList.add('hidden');
+                if (deferredPrompt) {
+                    // Mostrar el prompt de instalación del navegador
+                    deferredPrompt.prompt();
+                    // Esperar a que el usuario responda al prompt
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`Resultado del prompt de instalación: ${outcome}`);
+                    // Ya no podemos usar el evento, así que lo limpiamos
+                    deferredPrompt = null;
+                }
+            });
+        }
+
+        window.addEventListener('appinstalled', () => {
+            // Ocultar el botón de instalación si la app ya fue instalada
+            if(installButton) {
+                installButton.classList.add('hidden');
+            }
+            deferredPrompt = null;
+            console.log('PWA fue instalada');
+        });
+
+    </script>
+
+</body>
+</html>
