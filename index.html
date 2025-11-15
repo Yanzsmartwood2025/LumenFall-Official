@@ -33,7 +33,6 @@
         /* Estilo base */
         body {
             font-family: 'Inter', sans-serif;
-            /* Evitar saltos de layout */
             overscroll-behavior: none;
         }
 
@@ -101,7 +100,8 @@
         <!-- Contenedor del Video de Fondo -->
         <div id="bg-video-container">
             <video id="bg-video" autoplay muted loop playsinline>
-                <source src="assets/videos/flama-bg.mp4" type="video/mp4">
+                <!-- RUTA CORREGIDA -->
+                <source src="assets/flama-bg.mp4" type="video/mp4">
                 Tu navegador no soporta el video de fondo.
             </video>
         </div>
@@ -112,21 +112,19 @@
             <!-- Encabezado con el Título -->
             <header class="text-center my-8 sm:my-10">
                 <h1 class="text-6xl sm:text-7xl md:text-9xl">
-                    <!-- NOTA: Reemplaza 'src' con la ruta a tu logo PNG -->
-                    <img src="assets/images/lumenfall-logo.png" alt="Lumenfall" class="mx-auto w-full max-w-lg md:max-w-2xl h-auto"
+                    <!-- RUTA CORREGIDA -->
+                    <img src="assets/lumenfall-logo.png" alt="Lumenfall" class="mx-auto w-full max-w-lg md:max-w-2xl h-auto"
                          onerror="this.style.display='none'; document.getElementById('lumenfall-fallback-text').style.display='block';">
                     <!-- Fallback de texto si la imagen del logo no carga -->
-                    <span id="lumenfall-fallback-text" class="font-display uppercase tracking-widest text-shadow-red" style="display:none;">Lumenfall</span>
+                    <span id="lumenfall-fallback-text" class="font-display uppercase tracking-widest" style="display:none; color: #ef4444;">Lumenfall</span>
                 </h1>
             </header>
 
             <!-- Contenedor de Autenticación -->
             <section id="auth-container" class="w-full max-w-sm mx-auto my-6 text-center">
                 
-                <!-- Botones de Inicio de Sesión (Visible por defecto) -->
                 <div id="login-buttons" class="space-y-4">
                     
-                    <!-- Botón de Instalación PWA (Oculto por defecto) -->
                     <button id="install-pwa-button" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-teal-500 text-white hover:bg-teal-600 hidden">
                         <svg class="w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -144,7 +142,6 @@
                     </button>
                 </div>
                 
-                <!-- Información del Usuario (Oculto por defecto) -->
                 <div id="user-info" class="hidden space-y-4">
                     <p id="user-email" class="text-gray-300 text-sm break-all"></p>
                     <button id="logout-button" class="w-full p-3 rounded-lg font-semibold transition-colors duration-200 bg-red-600 text-white hover:bg-red-700">
@@ -157,22 +154,23 @@
             <nav class="w-full max-w-4xl mx-auto my-8 sm:my-10">
                 <div class="flex flex-col sm:grid sm:grid-cols-2 sm:gap-6 space-y-6 sm:space-y-0">
                     
-                    <a href="./juego/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
+                    <a href="./Lumenfall-juego/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
                         <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">JUGAR EL DEMO</span>
                         <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(La Experiencia Interactiva)</span>
                     </a>
                     
-                    <a href="./libro/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
+                    <a href="./Lumenfall-libro/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
                         <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">LEER EL LORE</span>
                         <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(El Grimorio / El Diario)</span>
                     </a>
                     
+                    <!-- RUTA PENDIENTE (no estaba en la captura) -->
                     <a href="./tienda/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
                         <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">LA ARMERÍA</span>
                         <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(Camisetas y Accesorios)</span>
                     </a>
                     
-                    <a href="#" class="group block p-6 sm:p-8 text-center bg-white rounded-lg transition-all duration-300 hover:bg-gray-200 hover:shadow-lg transform hover:-translate-y-1">
+                    <a href="./Musica/index.html" class="group block p-6 sm:p-8 text-center bg-white rounded-lg transition-all duration-300 hover:bg-gray-200 hover:shadow-lg transform hover:-translate-y-1">
                         <span class="block text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-red-500 transition-colors duration-300">LA BANDA SONORA</span>
                         <span class="block text-sm text-gray-600 group-hover:text-red-500 transition-colors duration-300">(Escuchar 'MY TEMPO')</span>
                     </a>
@@ -231,14 +229,14 @@
                 "description": "LUMENFALL - El Atrio",
                 "icons": [
                     {
-                        // NOTA: Reemplaza esto con un ícono real de 192x192 en assets/images/
-                        "src": "https://placehold.co/192x192/FF0000/FFFFFF?text=L",
+                        // RUTA CORREGIDA
+                        "src": "assets/icon-192.png",
                         "type": "image/png",
                         "sizes": "192x192"
                     },
                     {
-                        // NOTA: Reemplaza esto con un ícono real de 512x512 en assets/images/
-                        "src": "https://placehold.co/512x512/FF0000/FFFFFF?text=L",
+                        // RUTA CORREGIDA
+                        "src": "assets/icon-512.png",
                         "type": "image/png",
                         "sizes": "512x512"
                     }
@@ -258,19 +256,32 @@
             // 2. Crear y registrar el Service Worker dinámicamente
             const swCode = `
                 const CACHE_NAME = 'lumenfall-cache-v1';
-                // Cachear la página principal en la instalación
+                const ASSETS_TO_CACHE = [
+                    './',
+                    './index.html',
+                    './assets/lumenfall-logo.png', // RUTA CORREGIDA
+                    './assets/flama-bg.mp4' // RUTA CORREGIDA
+                ];
+
                 self.addEventListener('install', (event) => {
                     event.waitUntil(
                         caches.open(CACHE_NAME).then((cache) => {
-                            return cache.add('./'); // Cachear la página actual
+                            console.log('Cache abierto, añadiendo assets principales');
+                            // a.addAll() es atómico, si uno falla, todo falla.
+                            // Así que lo hacemos más robusto:
+                            ASSETS_TO_CACHE.forEach(asset => {
+                                cache.add(asset).catch(err => {
+                                    console.warn('Error al cachear:', asset, err);
+                                });
+                            });
                         })
                     );
                 });
 
-                // Servir desde el cache si es posible (estrategia Cache First)
                 self.addEventListener('fetch', (event) => {
                     event.respondWith(
                         caches.match(event.request).then((response) => {
+                            // Si está en cache, lo devuelve. Si no, lo busca en la red.
                             return response || fetch(event.request);
                         })
                     );
@@ -411,11 +422,8 @@
         let deferredPrompt;
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevenir que el mini-infobar aparezca en Chrome
             e.preventDefault();
-            // Guardar el evento para que pueda ser disparado más tarde.
             deferredPrompt = e;
-            // Mostrar nuestro botón de instalación personalizado
             if(installButton) {
                 installButton.classList.remove('hidden');
             }
@@ -424,22 +432,17 @@
 
         if(installButton) {
             installButton.addEventListener('click', async () => {
-                // Ocultar nuestro botón
                 installButton.classList.add('hidden');
                 if (deferredPrompt) {
-                    // Mostrar el prompt de instalación del navegador
                     deferredPrompt.prompt();
-                    // Esperar a que el usuario responda al prompt
                     const { outcome } = await deferredPrompt.userChoice;
                     console.log(`Resultado del prompt de instalación: ${outcome}`);
-                    // Ya no podemos usar el evento, así que lo limpiamos
                     deferredPrompt = null;
                 }
             });
         }
 
         window.addEventListener('appinstalled', () => {
-            // Ocultar el botón de instalación si la app ya fue instalada
             if(installButton) {
                 installButton.classList.add('hidden');
             }
