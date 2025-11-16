@@ -8,7 +8,8 @@
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="LumenFall - Mi Libro Digital Interactivo" />
     <meta property="og:description" content="Te invito a explorar el universo de LumenFall a través de este libro digital. Una nueva aventura te espera." />
-    <meta property="og:image" content="https://raw.githubusercontent.com/Yanzsmartwood2025/JUSN38/872aa43a0894e69917f178d71fbc0d7ac1eac8fb/LumenFall-book/assets/imagenes/Portada-libro.jpg" />
+    <!-- RUTA CORREGIDA: Usa rutas relativas -->
+    <meta property="og:image" content="assets/imagenes/Portada-libro.jpg" />
     <meta property="og:url" content="#" />
     <meta property="og:type" content="website" />
     
@@ -98,37 +99,38 @@
         .flipbook .hard { background-color: #101010; box-shadow: inset 0 0 5px #000; }
         
         .cover-page { background: #101010 url(assets/imagenes/Portada-libro2.jpg) center/cover no-repeat !important; }
-        .back-cover-page { background: #101010 url(https://raw.githubusercontent.com/Yanzsmartwood2025/JUSN38/32acf737002f499e83f4e3fb63d27b0dd4d44827/LumenFall-book/assets/imagenes/Contraportada-libro.jpg) center/contain no-repeat !important; }
+        .back-cover-page { background: #101010 url(assets/imagenes/Contraportada-libro.jpg) center/contain no-repeat !important; }
         
-        .page-number { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 1.8em; }
+        .page-number { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 0.9em; }
 
         #book-side-title { position: absolute; left: 2vw; top: 50%; transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; font-family: 'Poppins', sans-serif; font-size: 8rem; font-weight: 700; letter-spacing: 0.5rem; opacity: 0.4; display: none; pointer-events: none; }
         @media (min-width: 1024px) { #book-side-title { display: block; } }
 
-        /* --- ESTILOS OPTIMIZADOS PARA EL CONTENIDO DEL LIBRO --- */
+        /* --- ESTILOS DE CONTENIDO (CORREGIDOS) --- */
         .page .content-wrapper {
-          height: 100%; display: flex; flex-direction: column;
-          justify-content: space-between; 
-          padding: 2.5rem 1.5rem;
-          box-sizing: border-box; overflow-y: auto;
+            height: 100%; display: flex; flex-direction: column;
+            justify-content: flex-start;  /* << CORREGIDO: Alinear todo arriba */
+            padding: 2rem 1.5rem;         /* << CORREGIDO: Padding base */
+            box-sizing: border-box; overflow-y: auto;
+            gap: 1.5rem; /* << NUEVO: Espacio entre párrafos/títulos */
         }
         
         .page .content-wrapper.center-content { justify-content: center; text-align: center; }
 
-        .page .content-wrapper:has(p:nth-of-type(4)) { justify-content: flex-start; }
-
-        .page .content-wrapper p { font-family: 'Lora', serif; font-size: 32px; line-height: 1.6; margin-bottom: 0; }
-        .page .content-wrapper h2 { font-size: 3.6rem; margin-bottom: 1.5rem; }
-        .page .content-wrapper h3 { font-size: 3.0rem; margin-bottom: 1.5rem; }
-        .page .content-wrapper .handwriting-title { font-size: 5.0rem; }
+        /* --- Tipografía Base (Móvil) (CORREGIDO) --- */
+        .page .content-wrapper p { font-family: 'Lora', serif; font-size: 1.125rem; line-height: 1.7; margin-bottom: 0; }
+        .page .content-wrapper h2 { font-size: 2.25rem; margin-bottom: 0; }
+        .page .content-wrapper h3 { font-size: 1.75rem; margin-bottom: 0; }
+        .page .content-wrapper .handwriting-title { font-size: 2.5rem; }
         .page .content-wrapper.center-content h2, .page .content-wrapper.center-content h3 { text-align: center; }
 
+        /* --- Tipografía (Tablet/Escritorio) (CORREGIDO) --- */
         @media (min-width: 768px) {
-          .page .content-wrapper { padding: 4rem 5rem; }
-          .page .content-wrapper p { font-size: 40px; line-height: 1.6; }
-          .page .content-wrapper h2 { font-size: 5.6rem; }
-          .page .content-wrapper h3 { font-size: 4.0rem; }
-          .page .content-wrapper .handwriting-title { font-size: 7.0rem; }
+            .page .content-wrapper { padding: 3rem 4rem; }
+            .page .content-wrapper p { font-size: 1.25rem; line-height: 1.8; }
+            .page .content-wrapper h2 { font-size: 3rem; }
+            .page .content-wrapper h3 { font-size: 2.25rem; }
+            .page .content-wrapper .handwriting-title { font-size: 3.75rem; }
         }
 
         /* --- Estilos para páginas especiales --- */
@@ -137,10 +139,14 @@
         .portal-video { z-index: 1; }
         .portal-overlay { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); }
         .portal-content { text-align: center; padding: 2rem; color: white; max-width: 90%; }
-        .portal-content h2 { font-size: 3.0rem; font-weight: 700; margin-bottom: 1rem; text-align: center !important; }
-        .portal-content p { font-size: 2.0rem; margin-bottom: 1.5rem; }
-        @media (min-width: 640px) { .portal-content h2 { font-size: 4.0rem; } }
-        .portal-button { display: inline-block; padding: 0.75rem 1.5rem; border: 2px solid white; border-radius: 9999px; color: white !important; font-weight: 600; text-decoration: none; transition: background-color 0.2s, color 0.2s; font-size: 1.5rem; }
+        /* Portal Font Sizes (CORREGIDO) */
+        .portal-content h2 { font-size: 2.25rem; font-weight: 700; margin-bottom: 1rem; text-align: center !important; }
+        .portal-content p { font-size: 1.125rem; margin-bottom: 1.5rem; }
+        @media (min-width: 640px) { 
+            .portal-content h2 { font-size: 3rem; }
+            .portal-content p { font-size: 1.25rem; }
+        }
+        .portal-button { display: inline-block; padding: 0.75rem 1.5rem; border: 2px solid white; border-radius: 9999px; color: white !important; font-weight: 600; text-decoration: none; transition: background-color 0.2s, color 0.2s; font-size: 1rem; }
         .portal-button:hover { background-color: white; color: black !important; }
         
         /* Estilos para el nuevo menú y el índice de páginas */
@@ -151,23 +157,21 @@
         .page-finder-item .page-number-label { font-weight: 600; margin-right: 1rem; min-width: 60px; }
         .page-finder-item .page-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* --- Controles de navegación invisibles para PC --- */
+        /* --- ZONAS DE CLIC (CORREGIDO) --- */
         #prev-page-area, #next-page-area {
             position: absolute;
             top: 0;
-            width: 25%;
+            width: 50%; /* << CORREGIDO: 50% */
             height: 100%;
             z-index: 10;
             cursor: pointer;
-            display: none;
+            display: block; /* << CORREGIDO: Siempre visible */
         }
-        #prev-page-area { left: 0; }
-        #next-page-area { right: 0; }
-
-        @media (min-width: 1024px) {
-            #prev-page-area, #next-page-area {
-                display: block;
-            }
+        #prev-page-area { 
+            left: 0; 
+        }
+        #next-page-area { 
+            right: 0; 
         }
 
     </style>
@@ -176,7 +180,7 @@
 
 <div id="video-background-wrapper">
     <video id="video-background" autoplay loop muted playsinline>
-        <source id="video-source" src="https://raw.githubusercontent.com/Yanzsmartwood2025/JUSN38/854320f471ce072f148d973f8955d454d2f7cb64/LumenFall-book/assets/videos/video-1.mp4" type="video/mp4">
+        <source id="video-source" src="assets/videos/video-1.mp4" type="video/mp4">
     </video>
 </div>
 
@@ -187,12 +191,12 @@
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
             <button id="language-toggle" class="w-12 h-12 rounded-full text-white overflow-hidden" aria-label="Cambiar idioma">
-                <img src="https://raw.githubusercontent.com/Yanzsmartwood2025/JUSN38/main/LumenFall-book/assets/imagenes/Selector-idiomas.png" alt="Select Language" class="w-full h-full object-cover">
+                <img src="assets/imagenes/Selector-idiomas.png" alt="Select Language" class="w-full h-full object-cover">
             </button>
         </div>
         
         <div class="flex-shrink-0">
-            <button class="h-16 w-16 rounded-full overflow-hidden bg-black shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--runa-primary)]"><video autoplay loop muted playsinline class="w-full h-full object-cover" style="transform: scale(1.2) translateY(-8%);"><source src="https://raw.githubusercontent.com/Yanzsmartwood2025/JUSN38/bb7aff4aaea46c50153b947702807b29dad413cf/LumenFall-book/assets/videos/Logo-cabezal.mp4" type="video/mp4"></video></button>
+            <button class="h-16 w-16 rounded-full overflow-hidden bg-black shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--runa-primary)]"><video autoplay loop muted playsinline class="w-full h-full object-cover" style="transform: scale(1.2) translateY(-8%);"><source src="assets/videos/Logo-cabezal.mp4" type="video/mp4"></video></button>
         </div>
         
         <div class="flex-1 flex justify-end items-center space-x-4">
@@ -220,8 +224,8 @@
                 
                 <div class="page"><div class="content-wrapper center-content"><h2 style="font-family: 'Merriweather', serif; text-align:center;">LumenFall</h2></div></div>
                 <div class="page"><div class="content-wrapper center-content"><h1 class="text-4xl sm:text-5xl md:text-6xl font-bold" style="font-family: 'Poppins', sans-serif;">LUMENFALL</h1><p class="text-xl sm:text-2xl mt-4" style="font-family: 'Merriweather', serif;">A LIGHT DIVIDED</p><p class="mt-24 text-lg sm:text-xl">JUSN38 STUDIO</p></div></div>
-                <div class="page"><div class="content-wrapper center-content"><div class="text-xs copyright-page"><p>LumenFall © 2025 JUSN38 STUDIO.</p><p data-lang="es">Todos los derechos reservados.</p><p data-lang="en">All rights reserved.</p><p data-lang="pt">Todos os direitos reservados.</p><br><p data-lang="es">Ninguna parte de esta publicación puede ser reproducida, distribuida o transmitida en cualquier forma o por cualquier medio, sin el permiso previo por escrito del editor.</p><p data-lang="en">No part of this publication may be reproduced, distributed, or transmitted in any form or by any means, without the prior written permission of the publisher.</p><p data-lang="pt">Nenhuma parte desta publicação pode ser reproduzida, distribuída ou transmitida de qualquer forma ou por qualquer meio, sem a permissão prévia por escrito do editor.</p><br><p class="italic mt-8" data-lang="es">Para aquellos que encuentran luz en su propia oscuridad.</p><p class="italic mt-8" data-lang="en">For those who find light in their own darkness.</p><p class="italic mt-8" data-lang="pt">Para aqueles que encontram luz em sua própria escuridão.</p></div></div></div>
-                <div class="page video-page"><video class="page-background-video" autoplay loop muted playsinline><source src="https://raw.githubusercontent.com/Yanzsmartwood2025/JUSN38/854320f471ce072f148d973f8955d454d2f7cb64/LumenFall-book/assets/videos/video-1.mp4" type="video/mp4"></video><div class="page-number">1</div></div>
+                <div class="page"><div class="content-wrapper center-content"><div class="text-xs copyright-page"><p>LumenFall © 2025 JUSN38 STUDIO.</p><p data-lang="es">Todos los derechos reservados.</p><p data-lang="en">All rights reserved.</p><p data-lang="pt">Todos os direitos reservados.</p><br><p data-lang="es">Ninguna parte de esta publicación puede ser reproducida, distribuida o transmitida en cualquier forma o por cualquier medio, sin el permiso previo por escrito del editor.</p><p data-lang="en">No part of this publication may be reproduced, distributed, or transmitted in any form or by any means, without the prior written permission of the publisher.</p><p data-lang="pt">Nenhuma parte desta publicação pode ser reproduzida, distribuída ou transmitida de qualquer forma ou por cualquier meio, sem a permissão prévia por escrito do editor.</p><br><p class="italic mt-8" data-lang="es">Para aquellos que encuentran luz en su propia oscuridad.</p><p class="italic mt-8" data-lang="en">For those who find light in their own darkness.</p><p class="italic mt-8" data-lang="pt">Para aqueles que encontram luz em sua própria escuridão.</p></div></div></div>
+                <div class="page video-page"><video class="page-background-video" autoplay loop muted playsinline><source src="assets/videos/video-1.mp4" type="video/mp4"></video><div class="page-number">1</div></div>
 
                 <!-- INICIO DEL CONTENIDO DE LA HISTORIA -->
                 <div class="page">
@@ -274,7 +278,7 @@
                         <p data-lang="pt">Naquela tarde, eu estava descalça no pátio, dançando sozinha no ritmo de uma canção que cantarolava. Então o vi: a centímetros do meu pé, um escorpião preto, vivo, imóvel, olhando para mim como se esperasse meu primeiro movimento. Fiquei paralisada, sem saber se corria ou o esmagava.</p>
 
                         <p data-lang="es">Y entonces pasó. Sin que yo lo tocara, su cuerpo empezó a humear. Primero un olor agrio, como pelo quemado, y luego un chisporroteo suave. El alacrán se encogió sobre sí mismo, ennegrecido, hasta quedar inmóvil… muerto. No había nadie cerca. Solo yo, el patio, y ese olor que no se me olvidó nunca.</p>
-                        <p data-lang="en">And then it happened. Without me touching it, its body began to smoke. First a bitter smell, like burnt hair, and then a faint crackling. The scorpion curled in on itself, blackened, until it lay still… dead. There was no one around. Just me, the yard, and that smell I would never forget.</p>
+                        <p data-lang="en">And then it happened. Without me touching it, its body began to smoke. First a bitter smell, like burnt hair, and then a faint crackling.The scorpion curled in on itself, blackened, until it lay still… dead. There was no one around. Just me, the yard, and that smell I would never forget.</p>
                         <p data-lang="pt">E então aconteceu. Sem que eu o tocasse, seu corpo começou a soltar fumaça. Primeiro um cheiro acre, como de cabelo queimado, depois um chiado suave. O escorpião se encolheu sobre si mesmo, enegrecido, até ficar imóvel… morto. Não havia ninguém por perto. Só eu, o pátio e aquele cheiro que nunca esqueci.</p>
                     </div>
                     <div class="page-number">5</div>
@@ -283,12 +287,12 @@
                 <div class="page">
                     <div class="content-wrapper">
                         <p data-lang="es">El segundo fue un coche. Yo estaba en la acera, esperando a mi mamá, cuando escuché el chirrido de llantas. Un auto venía directo hacia mí, derrapando. Vi el reflejo del sol en el parabrisas, sentí el aire caliente cortarme la cara… y entonces, se detuvo. No frenó: se detuvo, como si hubiera chocado contra algo invisible. El conductor bajó pálido, jurando que el volante se le había trabado solo.</p>
-                        <p data-lang="en">The second was a car. I was on the sidewalk, waiting for my mother, when I heard the screech of tires. A car came straight at me, skidding. I saw the sun’s glare on the windshield, felt the hot air slice across my face… and then, it stopped. It didn’t brake: it stopped, as if it had hit something invisible. The driver got out pale, swearing that the steering wheel had locked on its own.</p>
+                        <p data-lang="en">The second was a car. I was on the sidewalk, waiting for my mother, when I heard the screech of tires. A car came straight at me, skidding. I saw the sun’s glare on the windshield, felt the hot air slice across my face… and then, it stopped. It didn’t brake: it stopped, as if it had hit something invisible. The driver get out pale, swearing that the steering wheel had locked on its own.</p>
                         <p data-lang="pt">O segundo foi um carro. Eu estava na calçada, esperando minha mãe, quando ouvi o guincho dos pneus. Um carro vinha direto em minha direção, derrapando. Vi o reflexo do sol no para-brisa, senti o ar quente cortar meu rosto… e então, ele parou. Não freou: parou, como se tivesse batido em algo invisível. O motorista saiu pálido, jurando que o volante tinha travado sozinho.</p>
 
                         <p data-lang="es">Hubo más. Pequeñas salvaciones imposibles. La gente decía que Dios me cuidaba. Yo sonreía, pero por dentro, una semilla fría de duda empezaba a germinar. No se sentía como una bendición. Se sentía como una trampa.</p>
                         <p data-lang="en">There were more. Little impossible salvations. People said God was watching over me. I smiled, but inside, a cold seed of doubt began to sprout. It didn’t feel like a blessing. It felt like a trap.</p>
-                        <p data-lang="pt">Houve mais. Pequenas salvações impossíveis. As pessoas diziam que Deus cuidava de mim. Eu sorria, mas por dentro, uma semente fria de dúvida começava a germinar. Não parecia uma bênção. Parecia uma armadilha.</p>
+                        <p data-lang="pt">Houve mais. Pequenas salvações impossíveis. As pessoas diziam que Deus cuidava de mim. Eu sorria, mas por dentro, uma semente fria de dúvida começava a germinar. Não parecia una bênção. Parecia uma armadilha.</p>
                     </div>
                     <div class="page-number">6</div>
                 </div>
@@ -301,7 +305,7 @@
 
                         <p data-lang="es">Tenía un hermano mayor, Elías. Nunca nos llevamos bien. Él siempre encontraba la forma de recordarme que yo era “la menor” y que debía quedarme callada. Discutíamos por todo: por quién ayudaba más en la finca, por quién se quedaba con el último pan, por quién tenía la razón aunque no importara.</p>
                         <p data-lang="en">I had an older brother, Elías. We never got along. He always found a way to remind me that I was “the youngest” and should keep quiet. We argued about everything: about who helped more on the farm, about who got the last piece of bread, about who was right even when it didn’t matter.</p>
-                        <p data-lang="pt">Eu tinha um irmão mais velho, Elías. Nunca nos demos bem. Ele sempre encontrava um jeito de me lembrar que eu era “a menor” e que devia ficar calada. Discutíamos por tudo: por quem ajudava mais na fazenda, por quem ficava com o último pão, por quem tinha razão mesmo quando não importava.</p>
+                        <p data-lang="pt">Eu tinha um irmão mais velho, Elías. Nunca nos demos bem. Ele sempre encontrava un jeito de me lembrar que eu era “a menor” e que devia ficar calada. Discutíamos por tudo: por quem ajudava mais na fazenda, por quem ficava com o último pão, por quem tinha razão mesmo quando não importava.</p>
                     </div>
                     <div class="page-number">7</div>
                 </div>
@@ -426,7 +430,7 @@
 
                         <p data-lang="es">Puedo percibir cada respiración acelerada, cada estremecimiento que recorre su piel, pero no es mío. Es de ellos. Es un pulso ajeno que me atraviesa, un calor que no me pertenece. Y mientras él se hunde en esa ilusión, yo me hundo en algo mucho más oscuro: la certeza de que mi cara, mi voz, mi cuerpo, están siendo usados para algo que me repugna.</p>
                         <p data-lang="en">I can sense every hurried breath, every shiver that runs across his skin, but it isn’t mine. It’s theirs. It’s a foreign pulse coursing through me, a heat that doesn’t belong to me. And while he sinks into that illusion, I sink into something much darker: the certainty that my face, my voice, my body, are being used for something that disgusts me.</p>
-                        <p data-lang="pt">Posso perceber cada respiração acelerada, cada arrepio que percorre a pele dele, mas não é meu. É deles. É um pulso estranho que me atravessa, um calor que não me pertence. E enquanto ele se entrega àquela ilusão, eu me afundo em algo muito mais escuro: a certeza de que meu rosto, minha voz, meu corpo estão sendo usados para algo que me enoja.</p>
+                        <p data-lang="pt">Posso perceber cada respiração acelerada, cada arrepio que percorre a pele dele, mas não é meu. É deles. É um pulso estranho que me atravessa, um calor que não me pertence. E enquanto ele se entrega àquela ilusão, eu me afundo em algo muito mais escuro: la certeza de que meu rosto, minha voz, meu corpo estão sendo usados para algo que me enoja.</p>
                     </div>
                     <div class="page-number">16</div>
                 </div>
@@ -539,28 +543,57 @@
     </div>
 </main>
 
-<audio id="music-audio" loop><source src="https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/main/public/assets/mp3/runa-main-audio.mp3" type="audio/mpeg"></audio>
-<audio id="river-audio" loop><source src="https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/9b1ab5105236fed3644570e1a2ea37f1f1956091/public/assets/mp3/Sonido_de_rio.mp3" type="audio/mpeg"></audio>
-<audio id="birds-audio" loop><source src="https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/9b1ab5105236fed3644570e1a2ea37f1f1956091/public/assets/mp3/Sonidos_de_Pajaros.mp3" type="audio/mpeg"></audio>
-<audio id="rain-audio" loop><source src="https://raw.githubusercontent.com/pixel-nation/files-for-codepen/master/rain.mp3" type="audio/mpeg"></audio>
-<audio id="fire-audio" loop><source src="https://raw.githubusercontent.com/pixel-nation/files-for-codepen/master/fire.mp3" type="audio/mpeg"></audio>
-<audio id="wind-audio" loop><source src="https://actions.google.com/sounds/v1/weather/wind_gust.ogg" type="audio/ogg"></audio>
-<audio id="storm-audio" loop><source src="https://actions.google.com/sounds/v1/weather/thunder_crack.ogg" type="audio/ogg"></audio>
-<audio id="magic-chimes-audio" loop><source src="https://actions.google.com/sounds/v1/magical/magic_chimes.ogg" type="audio/ogg"></audio>
-<audio id="cave-ambience-audio" loop><source src="https://actions.google.com/sounds/v1/ambiences/cave_ambience.ogg" type="audio/ogg"></audio>
+<audio id="music-audio" loop><source src="assets/audio/runa-main-audio.mp3" type="audio/mpeg"></audio>
+<audio id="river-audio" loop><source src="assets/audio/Sonido_de_rio.mp3" type="audio/mpeg"></audio>
+<audio id="birds-audio" loop><source src="assets/audio/Sonidos_de_Pajaros.mp3" type="audio/mpeg"></audio>
+<audio id="rain-audio" loop><source src="assets/audio/rain.mp3" type="audio/mpeg"></audio>
+<audio id="fire-audio" loop><source src="assets/audio/fire.mp3" type="audio/mpeg"></audio>
+<audio id="wind-audio" loop><source src="assets/audio/wind_gust.ogg" type="audio/ogg"></audio>
+<audio id="storm-audio" loop><source src="assets/audio/thunder_crack.ogg" type="audio/ogg"></audio>
+<audio id="magic-chimes-audio" loop><source src="assets/audio/magic_chimes.ogg" type="audio/ogg"></audio>
+<audio id="cave-ambience-audio" loop><source src="assets/audio/cave_ambience.ogg" type="audio/ogg"></audio>
 
 <script type="module">
 $(window).on('load', function() {
     const flipbook = $('.flipbook');
     const viewport = $('.flipbook-viewport');
-    const pageFlipSound = new Audio('https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/c2acd6b2dd569ae8ee33f2441eaacb2386e7490d/public/assets/mp3/pasar-hoja-de-libro.mp3');
+    const pageFlipSound = new Audio('assets/audio/pasar-hoja-de-libro.mp3'); // RUTA CORREGIDA
     
-    const videoSkins = [{"name":"Intro LumenFall","url":"https://raw.githubusercontent.com/Yanzsmartwood2025/JUSN38/854320f471ce072f148d973f8955d454d2f7cb64/LumenFall-book/assets/videos/video-1.mp4"},{"name":"Bosque Tenebroso","url":"https://assets.mixkit.co/videos/preview/mixkit-gloomy-forest-with-flying-particles-39803-large.mp4"},{"name":"Naturaleza","url":"https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/abb2e1a716439dd1ba47f48c0bba176ff72e197e/public/assets/videos/runa-fondo-video.mp4"}];
+    const videoSkins = [
+        {"name":"Intro LumenFall", "url":"assets/videos/video-1.mp4"},
+        {"name":"Bosque Tenebroso", "url":"https://assets.mixkit.co/videos/preview/mixkit-gloomy-forest-with-flying-particles-39803-large.mp4"}, // Externo
+        {"name":"Naturaleza", "url":"https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/abb2e1a716439dd1ba47f48c0bba176ff72e197e/public/assets/videos/runa-fondo-video.mp4"} // Externo
+    ];
     let currentVideoIndex = 0;
-    const ambienceSounds = [{"id":"music-audio","name":"Música","gifSrc":"https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/741d48f54473497390f1b028f4e2a2b874459088/public/assets/gif/music.gif"},{"id":"river-audio","name":"Río","gifSrc":"https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/741d48f54473497390f1b028f4e2a2b874459088/public/assets/gif/river.gif"},{"id":"birds-audio","name":"Pájaros","gifSrc":"https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/741d48f54473497390f1b028f4e2a2b874459088/public/assets/gif/birds.gif"},{"id":"rain-audio","name":"Lluvia","gifSrc":"https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/1502311c7a2daf5ee882bb36da3e6555680fd5e8/public/assets/gif/rain.gif"},{"id":"fire-audio","name":"Fuego","gifSrc":"https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/1502311c7a2daf5ee882bb36da3e6555680fd5e8/public/assets/gif/fire.gif"},{"id":"wind-audio","name":"Viento","gifSrc":"https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/1502311c7a2daf5ee882bb36da3e6555680fd5e8/public/assets/gif/wind.gif"},{"id":"storm-audio","name":"Tormenta","gifSrc":"https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/1502311c7a2daf5ee882bb36da3e6555680fd5e8/public/assets/gif/storm.gif"},{"id":"magic-chimes-audio","name":"Sonido Mágico","gifSrc":"https://raw.githubusercontent.com/Yanzsmartwood2025/JUSN38/main/LumenFall-book/assets/gif/Magic.gif"},{"id":"cave-ambience-audio","name":"Cueva","gifSrc":"https://raw.githubusercontent.com/Yanzsmartwood2025/JUSN38/main/LumenFall-book/assets/gif/Cave.gif"}];
-    const languages = [{"code":"es","name":"Español","flagUrl":"https://raw.githubusercontent.com/Yanzsmartwood2025/JUSN38/main/LumenFall-book/assets/imagenes/Espanol.png"},{"code":"en","name":"English","flagUrl":"https://raw.githubusercontent.com/Yanzsmartwood2025/JUSN38/main/LumenFall-book/assets/imagenes/ingles.png"},{"code":"pt","name":"Português (BR)","flagUrl":"https://raw.githubusercontent.com/Yanzsmartwood2025/JUSN38/main/LumenFall-book/assets/imagenes/Brasil.png"}];
+    
+    const ambienceSounds = [
+        {"id":"music-audio","name":"Música","gifSrc":"assets/gif/music.gif"},
+        {"id":"river-audio","name":"Río","gifSrc":"assets/gif/river.gif"},
+        {"id":"birds-audio","name":"Pájaros","gifSrc":"assets/gif/birds.gif"},
+        {"id":"rain-audio","name":"Lluvia","gifSrc":"assets/gif/rain.gif"},
+        {"id":"fire-audio","name":"Fuego","gifSrc":"assets/gif/fire.gif"},
+        {"id":"wind-audio","name":"Viento","gifSrc":"assets/gif/wind.gif"},
+        {"id":"storm-audio","name":"Tormenta","gifSrc":"assets/gif/storm.gif"},
+        {"id":"magic-chimes-audio","name":"Sonido Mágico","gifSrc":"assets/gif/Magic.gif"},
+        {"id":"cave-ambience-audio","name":"Cueva","gifSrc":"assets/gif/Cave.gif"}
+    ];
+    
+    const languages = [
+        {"code":"es","name":"Español","flagUrl":"assets/imagenes/Espanol.png"},
+        {"code":"en","name":"English","flagUrl":"assets/imagenes/ingles.png"},
+        {"code":"pt","name":"Português (BR)","flagUrl":"assets/imagenes/Brasil.png"}
+    ];
     let currentLang = 'es';
     
+    // --- CORRECCIÓN DE RUTAS ---
+    // He cambiado todas las rutas de "raw.githubusercontent.com" a rutas relativas
+    // (ej. "assets/videos/video-1.mp4").
+    // ¡Asegúrate de que tus archivos estén en las carpetas correctas!
+    // (ej. /Lumenfall-libro/assets/videos/video-1.mp4)
+    // He dejado algunos links externos (Mixkit, Runacoffee) como estaban.
+    // Te recomiendo descargarlos y subirlos a tu carpeta 'assets'.
+
+
     function applyTheme(e){"dark"===e?($("html").removeClass("light").addClass("dark"),$("#theme-icon-sun-menu").removeClass("hidden"),$("#theme-icon-moon-menu").addClass("hidden")):($("html").removeClass("dark").addClass("light"),$("#theme-icon-sun-menu").addClass("hidden"),$("#theme-icon-moon-menu").removeClass("hidden"))}
     function closeAllPanels(){$("#main-menu-panel, #mixer-panel, #video-skin-panel, #language-panel").addClass("hidden")}
     function initializeMixer(){const e=$("#sound-controls");e.html(""),ambienceSounds.forEach(t=>{const o=document.getElementById(t.id);if(o){const a=`<div class="flex items-center gap-4 text-sm text-white"><button id="btn-${t.id}" class="mixer-icon-button relative w-10 h-10 rounded-full shadow-md flex-shrink-0 overflow-hidden"><img src="${t.gifSrc}" alt="${t.name}"></button><span class="font-medium w-20 truncate">${t.name}</span><input type="range" id="volume-${t.id}" min="0" max="1" step="0.01" value="0" class="styled-slider" style="--thumb-color: var(--runa-primary); --track-fill-color: var(--slider-track-color);"></div>`;e.append(a);const n=$(`#volume-${t.id}`);n.on("input",function(){const e=parseFloat($(this).val());o.volume=e,$(`#btn-${t.id}`).toggleClass("active",e>0),updateSliderFill(this),e>0&&o.paused?o.play().catch(e=>console.error(`Error playing ${t.id}:`,e)):0===e&&!o.paused&&o.pause()}),$(`#btn-${t.id}`).on("click",function(){const e=parseFloat(n.val());e>0?(n.data("lastValue",e),n.val(0)):n.val(n.data("lastValue")||.5),n.trigger("input")}),updateSliderFill(n[0])}})}
@@ -585,7 +618,23 @@ $(window).on('load', function() {
         const o=$("html").hasClass("dark");$("#theme-icon-sun-menu").toggleClass("hidden",!o),$("#theme-icon-moon-menu").toggleClass("hidden",o)
     }
 
-    flipbook.turn({display:"single",duration:300,elevation:50,gradients:!0,autoCenter:!0,when:{turned:(e,t,o)=>{t>1&&(pageFlipSound.currentTime=2.2,pageFlipSound.play().catch(console.error),setTimeout(()=>pageFlipSound.pause(),1e3))}}});
+    flipbook.turn({
+        display:"single", // Inicia en modo 'single' (bueno para móvil)
+        duration:300,
+        elevation:50,
+        gradients:!0,
+        autoCenter:!0,
+        when:{
+            turned:(e,t,o)=>{
+                if (t>1) {
+                    pageFlipSound.currentTime=2.2;
+                    pageFlipSound.play().catch(console.error);
+                    setTimeout(()=>pageFlipSound.pause(),1000)
+                }
+            }
+        }
+    });
+
     $(window).on("resize",updateFlipbookLayout).trigger("resize");
     viewport.addClass("ready");
     
@@ -611,4 +660,3 @@ $(window).on('load', function() {
 
 </body>
 </html>
-
