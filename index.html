@@ -20,7 +20,8 @@
 
     <!-- Metas para PWA -->
     <meta name="theme-color" content="#000000">
-    <link id="manifest-link" rel="manifest">
+    <!-- RUTA CORREGIDA: Ahora apunta a un archivo real -->
+    <link rel="manifest" href="manifest.json">
 
     <!-- Cargar Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -41,7 +42,7 @@
 
     <style>
         /* Importar la fuente de Google para la firma */
-        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display.swap');
 
         /* Estilo base */
         body {
@@ -124,7 +125,6 @@
             <!-- Encabezado con el Título -->
             <header class="text-center my-8 sm:my-10">
                 <h1 class="text-6xl sm:text-7xl md:text-9xl">
-                    <!-- RUTA CORREGIDA: Apunta a Icono-inicio.png -->
                     <img src="assets/imagenes/Icono-inicio.png" alt="Lumenfall Logo" class="mx-auto w-full max-w-lg md:max-w-2xl h-auto">
                 </h1>
             </header>
@@ -224,91 +224,17 @@
             }
             setTimeout(hideSplash, 4000);
 
-            // --- Lógica de PWA (Manifest y Service Worker) ---
-            
-            // 1. Crear el Manifest dinámicamente
-            const pwaManifest = {
-                "name": "LUMENFALL",
-                "short_name": "Lumenfall",
-                "start_url": ".",
-                "display": "standalone",
-                "background_color": "#000000",
-                "theme_color": "#000000",
-                "description": "LUMENFALL - El Atrio",
-                "icons": [
-                    { "src": "assets/imagenes/LUMENFALL-JUEGO-48x48.png", "type": "image/png", "sizes": "48x48" },
-                    { "src": "assets/imagenes/LUMENFALL-JUEGO-72x72.png", "type": "image/png", "sizes": "72x72" },
-                    { "src": "assets/imagenes/LUMENFALL-JUEGO-80x80.png", "type": "image/png", "sizes": "80x80" },
-                    { "src": "assets/imagenes/LUMENFALL-JUEGO-96x96.png", "type": "image/png", "sizes": "96x96" },
-                    { "src": "assets/imagenes/LUMENFALL-JUEGO-120x120.png", "type": "image/png", "sizes": "120x120" },
-                    { "src": "assets/imagenes/LUMENFALL-JUEGO-144x144.png", "type": "image/png", "sizes": "144x144" },
-                    { "src": "assets/imagenes/LUMENFALL-JUEGO-152x152.png", "type": "image/png", "sizes": "152x152" },
-                    { "src": "assets/imagenes/LUMENFALL-JUEGO-167x167.png", "type": "image/png", "sizes": "167x167" },
-                    { "src": "assets/imagenes/LUMENFALL-JUEGO-192x192.png", "type": "image/png", "sizes": "192x192" },
-                    { "src": "assets/imagenes/LUMENFALL-JUEGO-512x512.png", "type": "image/png", "sizes": "512x512" }
-                ]
-            };
-            
-            try {
-                const manifestString = JSON.stringify(pwaManifest);
-                const manifestBlob = new Blob([manifestString], {type: 'application/json'});
-                const manifestUrl = URL.createObjectURL(manifestBlob);
-                document.getElementById('manifest-link').setAttribute('href', manifestUrl);
-            } catch (e) {
-                console.error("Error al crear el manifest:", e);
-            }
-
-
-            // 2. Crear y registrar el Service Worker dinámicamente
-            const swCode = `
-                const CACHE_NAME = 'lumenfall-cache-v1';
-                const ASSETS_TO_CACHE = [
-                    './',
-                    './index.html',
-                    './assets/imagenes/Icono-inicio.png', /* <-- RUTA CORREGIDA */
-                    './assets/flama-bg.mp4',
-                    './assets/imagenes/LUMENFALL-JUEGO-180x180.png',
-                    './assets/imagenes/LUMENFALL-JUEGO-192x192.png',
-                    './assets/imagenes/LUMENFALL-JUEGO-512x512.png'
-                ];
-
-                self.addEventListener('install', (event) => {
-                    event.waitUntil(
-                        caches.open(CACHE_NAME).then((cache) => {
-                            console.log('Cache abierto, añadiendo assets principales');
-                            ASSETS_TO_CACHE.forEach(asset => {
-                                cache.add(asset).catch(err => {
-                                    console.warn('Error al cachear:', asset, err);
-                                });
-                            });
-                        })
-                    );
-                });
-
-                self.addEventListener('fetch', (event) => {
-                    event.respondWith(
-                        caches.match(event.request).then((response) => {
-                            // Si está en cache, lo devuelve. Si no, lo busca en la red.
-                            return response || fetch(event.request);
-                        })
-                    );
-                });
-            `;
-
+            // --- Lógica de PWA (Service Worker) ---
+            // Se ha quitado la lógica del manifest de aquí.
+            // Ahora se registra un archivo sw.js estático.
             if ('serviceWorker' in navigator) {
-                try {
-                    const swBlob = new Blob([swCode], {type: 'application/javascript'});
-                    const swUrl = URL.createObjectURL(swBlob);
-                    navigator.serviceWorker.register(swUrl)
-                        .then((registration) => {
-                            console.log('Service Worker registrado con éxito:', registration);
-                        })
-                        .catch((error) => {
-                            console.error('Error al registrar el Service Worker:', error);
-                        });
-                } catch (e) {
-                     console.error("Error al crear el Blob del Service Worker:", e);
-                }
+                navigator.serviceWorker.register('sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registrado con éxito:', registration);
+                    })
+                    .catch((error) => {
+                        console.error('Error al registrar el Service Worker:', error);
+                    });
             }
         });
     </script>
@@ -460,4 +386,4 @@
     </script>
 
 </body>
-                                                                                                                         </html>
+</html>
