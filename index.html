@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LUMENFALL - El Atrio</title>
     
+    <!-- Open Graph Meta Tags (para Redes Sociales) -->
+    <meta property="og:title" content="LUMENFALL - El Atrio">
+    <meta property="og:description" content="El universo 'Lumenfall'. Activos oficiales del demo, el lore y la marca Joziel.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/imagenes/LUMENFALL-JUEGO-512x512.png">
+    
+    <!-- Apple Touch Icons (para iOS / iPhone / iPad) -->
+    <link rel="apple-touch-icon" href="assets/imagenes/LUMENFALL-JUEGO-180x180.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="assets/imagenes/LUMENFALL-JUEGO-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="assets/imagenes/LUMENFALL-JUEGO-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="assets/imagenes/LUMENFALL-JUEGO-152x152.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="assets/imagenes/LUMENFALL-JUEGO-167x167.png">
+
     <!-- Metas para PWA -->
     <meta name="theme-color" content="#000000">
     <link id="manifest-link" rel="manifest">
@@ -100,7 +113,6 @@
         <!-- Contenedor del Video de Fondo -->
         <div id="bg-video-container">
             <video id="bg-video" autoplay muted loop playsinline>
-                <!-- RUTA CORREGIDA -->
                 <source src="assets/flama-bg.mp4" type="video/mp4">
                 Tu navegador no soporta el video de fondo.
             </video>
@@ -112,11 +124,8 @@
             <!-- Encabezado con el Título -->
             <header class="text-center my-8 sm:my-10">
                 <h1 class="text-6xl sm:text-7xl md:text-9xl">
-                    <!-- RUTA CORREGIDA -->
-                    <img src="assets/lumenfall-logo.png" alt="Lumenfall" class="mx-auto w-full max-w-lg md:max-w-2xl h-auto"
-                         onerror="this.style.display='none'; document.getElementById('lumenfall-fallback-text').style.display='block';">
-                    <!-- Fallback de texto si la imagen del logo no carga -->
-                    <span id="lumenfall-fallback-text" class="font-display uppercase tracking-widest" style="display:none; color: #ef4444;">Lumenfall</span>
+                    <!-- RUTA CORREGIDA: Apunta a Icono-inicio.png -->
+                    <img src="assets/imagenes/Icono-inicio.png" alt="Lumenfall Logo" class="mx-auto w-full max-w-lg md:max-w-2xl h-auto">
                 </h1>
             </header>
 
@@ -164,7 +173,6 @@
                         <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(El Grimorio / El Diario)</span>
                     </a>
                     
-                    <!-- RUTA PENDIENTE (no estaba en la captura) -->
                     <a href="./tienda/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
                         <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">LA ARMERÍA</span>
                         <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(Camisetas y Accesorios)</span>
@@ -228,18 +236,16 @@
                 "theme_color": "#000000",
                 "description": "LUMENFALL - El Atrio",
                 "icons": [
-                    {
-                        // RUTA CORREGIDA
-                        "src": "assets/icon-192.png",
-                        "type": "image/png",
-                        "sizes": "192x192"
-                    },
-                    {
-                        // RUTA CORREGIDA
-                        "src": "assets/icon-512.png",
-                        "type": "image/png",
-                        "sizes": "512x512"
-                    }
+                    { "src": "assets/imagenes/LUMENFALL-JUEGO-48x48.png", "type": "image/png", "sizes": "48x48" },
+                    { "src": "assets/imagenes/LUMENFALL-JUEGO-72x72.png", "type": "image/png", "sizes": "72x72" },
+                    { "src": "assets/imagenes/LUMENFALL-JUEGO-80x80.png", "type": "image/png", "sizes": "80x80" },
+                    { "src": "assets/imagenes/LUMENFALL-JUEGO-96x96.png", "type": "image/png", "sizes": "96x96" },
+                    { "src": "assets/imagenes/LUMENFALL-JUEGO-120x120.png", "type": "image/png", "sizes": "120x120" },
+                    { "src": "assets/imagenes/LUMENFALL-JUEGO-144x144.png", "type": "image/png", "sizes": "144x144" },
+                    { "src": "assets/imagenes/LUMENFALL-JUEGO-152x152.png", "type": "image/png", "sizes": "152x152" },
+                    { "src": "assets/imagenes/LUMENFALL-JUEGO-167x167.png", "type": "image/png", "sizes": "167x167" },
+                    { "src": "assets/imagenes/LUMENFALL-JUEGO-192x192.png", "type": "image/png", "sizes": "192x192" },
+                    { "src": "assets/imagenes/LUMENFALL-JUEGO-512x512.png", "type": "image/png", "sizes": "512x512" }
                 ]
             };
             
@@ -259,16 +265,17 @@
                 const ASSETS_TO_CACHE = [
                     './',
                     './index.html',
-                    './assets/lumenfall-logo.png', // RUTA CORREGIDA
-                    './assets/flama-bg.mp4' // RUTA CORREGIDA
+                    './assets/imagenes/Icono-inicio.png', /* <-- RUTA CORREGIDA */
+                    './assets/flama-bg.mp4',
+                    './assets/imagenes/LUMENFALL-JUEGO-180x180.png',
+                    './assets/imagenes/LUMENFALL-JUEGO-192x192.png',
+                    './assets/imagenes/LUMENFALL-JUEGO-512x512.png'
                 ];
 
                 self.addEventListener('install', (event) => {
                     event.waitUntil(
                         caches.open(CACHE_NAME).then((cache) => {
                             console.log('Cache abierto, añadiendo assets principales');
-                            // a.addAll() es atómico, si uno falla, todo falla.
-                            // Así que lo hacemos más robusto:
                             ASSETS_TO_CACHE.forEach(asset => {
                                 cache.add(asset).catch(err => {
                                     console.warn('Error al cachear:', asset, err);
@@ -453,4 +460,4 @@
     </script>
 
 </body>
-</html>
+                                                                                                                         </html>
