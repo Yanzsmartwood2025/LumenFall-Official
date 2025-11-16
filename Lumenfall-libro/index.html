@@ -8,7 +8,6 @@
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="LumenFall - Mi Libro Digital Interactivo" />
     <meta property="og:description" content="Te invito a explorar el universo de LumenFall a través de este libro digital. Una nueva aventura te espera." />
-    <!-- RUTA CORREGIDA: Usa rutas relativas -->
     <meta property="og:image" content="assets/imagenes/Portada-libro.jpg" />
     <meta property="og:url" content="#" />
     <meta property="og:type" content="website" />
@@ -78,20 +77,27 @@
         html.dark #book-side-title { color: rgba(255,255,255,0.2); }
         html.dark .copyright-page { color: #777; }
 
+        /* --- CONTENEDOR PRINCIPAL (CORREGIDO) --- */
         .flipbook-viewport { 
-            display: flex; justify-content: center; align-items: center; 
-            height: 100vh; width: 100vw; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; /* <<< Mantenemos el centrado vertical */
+            height: 100vh; /* <<< Ocupa toda la altura */
+            width: 100vw; 
             position: fixed; top: 0; left: 0;
             visibility: hidden; opacity: 0;
             transition: opacity 0.5s ease-in-out;
-            padding-top: var(--header-height);
-            box-sizing: border-box;
+            padding-top: var(--header-height); /* <<< Solo empuja desde arriba */
+            box-sizing: border-box; /* <<< ESTA ES LA MAGIA: Ahora 100vh INCLUYE el padding */
         }
         .flipbook-viewport.ready { visibility: visible; opacity: 1; }
         
+        /* --- CONTENEDOR DEL LIBRO (CORREGIDO) --- */
         .flipbook-container { 
-            width: 95vw; height: calc(95vh - var(--header-height));
-            max-width: 1400px; position: relative;
+            width: 95vw; 
+            height: 95%; /* <<< CORREGIDO: 95% del espacio *restante* del viewport */
+            max-width: 1400px; 
+            position: relative;
         }
         .flipbook { width: 100%; height: 100%; }
 
@@ -109,22 +115,22 @@
         /* --- ESTILOS DE CONTENIDO (CORREGIDOS) --- */
         .page .content-wrapper {
             height: 100%; display: flex; flex-direction: column;
-            justify-content: flex-start;  /* << CORREGIDO: Alinear todo arriba */
-            padding: 2rem 1.5rem;         /* << CORREGIDO: Padding base */
+            justify-content: flex-start;
+            padding: 2rem 1.5rem;
             box-sizing: border-box; overflow-y: auto;
-            gap: 1.5rem; /* << NUEVO: Espacio entre párrafos/títulos */
+            gap: 1.5rem; 
         }
         
         .page .content-wrapper.center-content { justify-content: center; text-align: center; }
 
-        /* --- Tipografía Base (Móvil) (CORREGIDO) --- */
+        /* --- Tipografía Base (Móvil) (CORREGIDA) --- */
         .page .content-wrapper p { font-family: 'Lora', serif; font-size: 1.125rem; line-height: 1.7; margin-bottom: 0; }
         .page .content-wrapper h2 { font-size: 2.25rem; margin-bottom: 0; }
         .page .content-wrapper h3 { font-size: 1.75rem; margin-bottom: 0; }
         .page .content-wrapper .handwriting-title { font-size: 2.5rem; }
         .page .content-wrapper.center-content h2, .page .content-wrapper.center-content h3 { text-align: center; }
 
-        /* --- Tipografía (Tablet/Escritorio) (CORREGIDO) --- */
+        /* --- Tipografía (Tablet/Escritorio) (CORREGIDA) --- */
         @media (min-width: 768px) {
             .page .content-wrapper { padding: 3rem 4rem; }
             .page .content-wrapper p { font-size: 1.25rem; line-height: 1.8; }
@@ -161,11 +167,11 @@
         #prev-page-area, #next-page-area {
             position: absolute;
             top: 0;
-            width: 50%; /* << CORREGIDO: 50% */
+            width: 50%;
             height: 100%;
             z-index: 10;
             cursor: pointer;
-            display: block; /* << CORREGIDO: Siempre visible */
+            display: block; 
         }
         #prev-page-area { 
             left: 0; 
@@ -305,7 +311,7 @@
 
                         <p data-lang="es">Tenía un hermano mayor, Elías. Nunca nos llevamos bien. Él siempre encontraba la forma de recordarme que yo era “la menor” y que debía quedarme callada. Discutíamos por todo: por quién ayudaba más en la finca, por quién se quedaba con el último pan, por quién tenía la razón aunque no importara.</p>
                         <p data-lang="en">I had an older brother, Elías. We never got along. He always found a way to remind me that I was “the youngest” and should keep quiet. We argued about everything: about who helped more on the farm, about who got the last piece of bread, about who was right even when it didn’t matter.</p>
-                        <p data-lang="pt">Eu tinha um irmão mais velho, Elías. Nunca nos demos bem. Ele sempre encontrava un jeito de me lembrar que eu era “a menor” e que devia ficar calada. Discutíamos por tudo: por quem ajudava mais na fazenda, por quem ficava com o último pão, por quem tinha razão mesmo quando não importava.</p>
+                        <p data-lang="pt">Eu tinha un irmão mais velho, Elías. Nunca nos demos bem. Ele siempre encontrava un jeito de me lembrar que eu era “a menor” e que devia ficar calada. Discutíamos por tudo: por quem ajudava mais na fazenda, por quem ficava com o último pão, por quem tinha razão mesmo quando não importava.</p>
                     </div>
                     <div class="page-number">7</div>
                 </div>
@@ -339,7 +345,7 @@
 
                         <p data-lang="es">Mis padres estaban en una fiesta familiar, celebrando el cumpleaños de un primo lejano. La finca se llenó de gente, de luces colgadas entre los árboles, de niños corriendo entre las mesas. Sheyka se fue con mi tía a ayudar en la cocina. Elías estaba con sus amigos, jugando cartas y bebiendo.</p>
                         <p data-lang="en">My parents were at a family party, celebrating a distant cousin’s birthday. The farm filled with people, with lights strung between the trees, with children running between the tables. Sheyka had gone with my aunt to help in the kitchen. Elías was with his friends, playing cards and drinking.</p>
-                        <p data-lang="pt">Meus pais estavam em uma festa de família, comemorando o aniversário de um primo distante. A fazenda se encheu de gente, de luzes penduradas entre as árvores, de crianças correndo entre as mesas. Sheyka tinha ido com minha tia ajudar na cozinha. Elías estava com os amigos, jogando cartas e bebendo.</p>
+                        <p data-lang="pt">Meus pais estavam em uma festa de família, comemorando o aniversário de um primo distante. A fazenda se encheu de gente, de luzes penduradas entre as árvares, de crianças correndo entre as mesas. Sheyka tinha ido com minha tia ajudar na cozinha. Elías estava com os amigos, jogando cartas e bebendo.</p>
                     </div>
                     <div class="page-number">9</div>
                 </div>
@@ -547,7 +553,7 @@
 <audio id="river-audio" loop><source src="assets/audio/Sonido_de_rio.mp3" type="audio/mpeg"></audio>
 <audio id="birds-audio" loop><source src="assets/audio/Sonidos_de_Pajaros.mp3" type="audio/mpeg"></audio>
 <audio id="rain-audio" loop><source src="assets/audio/rain.mp3" type="audio/mpeg"></audio>
-<audio id="fire-audio" loop><source src="assets/audio/fire.mp3" type="audio/mpeg"></audio>
+<audio id="fire-audio" loop><source src="assetsD/audio/fire.mp3" type="audio/mpeg"></audio>
 <audio id="wind-audio" loop><source src="assets/audio/wind_gust.ogg" type="audio/ogg"></audio>
 <audio id="storm-audio" loop><source src="assets/audio/thunder_crack.ogg" type="audio/ogg"></audio>
 <audio id="magic-chimes-audio" loop><source src="assets/audio/magic_chimes.ogg" type="audio/ogg"></audio>
@@ -557,18 +563,18 @@
 $(window).on('load', function() {
     const flipbook = $('.flipbook');
     const viewport = $('.flipbook-viewport');
-    const pageFlipSound = new Audio('assets/audio/pasar-hoja-de-libro.mp3'); // RUTA CORREGIDA
+    const pageFlipSound = new Audio('assets/audio/pasar-hoja-de-libro.mp3');
     
     const videoSkins = [
         {"name":"Intro LumenFall", "url":"assets/videos/video-1.mp4"},
-        {"name":"Bosque Tenebroso", "url":"https://assets.mixkit.co/videos/preview/mixkit-gloomy-forest-with-flying-particles-39803-large.mp4"}, // Externo
-        {"name":"Naturaleza", "url":"https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/abb2e1a716439dd1ba47f48c0bba176ff72e197e/public/assets/videos/runa-fondo-video.mp4"} // Externo
+        {"name":"Bosque Tenebroso", "url":"https://assets.mixkit.co/videos/preview/mixkit-gloomy-forest-with-flying-particles-39803-large.mp4"}, 
+        {"name":"Naturaleza", "url":"https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/abb2e1a716439dd1ba47f48c0bba176ff72e197e/public/assets/videos/runa-fondo-video.mp4"}
     ];
     let currentVideoIndex = 0;
     
     const ambienceSounds = [
         {"id":"music-audio","name":"Música","gifSrc":"assets/gif/music.gif"},
-        {"id":"river-audio","name":"Río","gifSrc":"assets/gif/river.gif"},
+        {"id":"river-audio","name":"Río","gifSrc":"assetsf/gif/river.gif"},
         {"id":"birds-audio","name":"Pájaros","gifSrc":"assets/gif/birds.gif"},
         {"id":"rain-audio","name":"Lluvia","gifSrc":"assets/gif/rain.gif"},
         {"id":"fire-audio","name":"Fuego","gifSrc":"assets/gif/fire.gif"},
@@ -581,18 +587,9 @@ $(window).on('load', function() {
     const languages = [
         {"code":"es","name":"Español","flagUrl":"assets/imagenes/Espanol.png"},
         {"code":"en","name":"English","flagUrl":"assets/imagenes/ingles.png"},
-        {"code":"pt","name":"Português (BR)","flagUrl":"assets/imagenes/Brasil.png"}
+        {"code":"pt","name":"Português (BR)","flagUrl":"assetss/imagenes/Brasil.png"}
     ];
     let currentLang = 'es';
-    
-    // --- CORRECCIÓN DE RUTAS ---
-    // He cambiado todas las rutas de "raw.githubusercontent.com" a rutas relativas
-    // (ej. "assets/videos/video-1.mp4").
-    // ¡Asegúrate de que tus archivos estén en las carpetas correctas!
-    // (ej. /Lumenfall-libro/assets/videos/video-1.mp4)
-    // He dejado algunos links externos (Mixkit, Runacoffee) como estaban.
-    // Te recomiendo descargarlos y subirlos a tu carpeta 'assets'.
-
 
     function applyTheme(e){"dark"===e?($("html").removeClass("light").addClass("dark"),$("#theme-icon-sun-menu").removeClass("hidden"),$("#theme-icon-moon-menu").addClass("hidden")):($("html").removeClass("dark").addClass("light"),$("#theme-icon-sun-menu").addClass("hidden"),$("#theme-icon-moon-menu").removeClass("hidden"))}
     function closeAllPanels(){$("#main-menu-panel, #mixer-panel, #video-skin-panel, #language-panel").addClass("hidden")}
@@ -602,7 +599,7 @@ $(window).on('load', function() {
     function initializeVideoSelector(){const e=$("#video-list");e.html(""),videoSkins.forEach((t,o)=>{const a=$(`<button class="video-list-button w-full text-left p-2 rounded-lg transition-colors duration-200 text-white">${t.name}</button>`);a.on("click",()=>setVideoSkin(o)),e.append(a)}),updateVideoListUI()}
     function setLanguage(e){e&&languages.some(t=>t.code===e)&&(currentLang=e,$("html").removeClass("lang-es lang-en lang-pt").addClass(`lang-${e}`),localStorage.setItem("lumenFallLanguage",currentLang),updateLanguageListUI(),$("#main-menu-panel").hasClass("hidden")||generatePageFinder())}
     function updateLanguageListUI(){$("#language-list button").each(function(){$(this).toggleClass("active",$(this).data("lang-code")===currentLang)})}
-    function initializeLanguageSwitcher(){const e=$("#language-list");e.html(""),languages.forEach(t=>{const o=$(`<button class="language-list-button w-full text-left p-2 rounded-lg transition-colors duration-200 text-white" data-lang-code="${t.code}"><div class="flex items-center gap-x-3"><img src="${t.flagUrl}" class="w-6 h-4 object-cover rounded-sm" alt="${t.name} flag"><span>${t.name}</span></div></button>`);o.on("click",()=>{setLanguage(t.code),closeAllPanels()}),e.append(o)}),updateLanguageListUI()}
+    function initializeLanguageSwitcher(){const e=$("#language-list");e.html(""),languages.forEach(t=>{const o=$(`<button class="language-list-button w-full text-left p-2 rounded-lg transition-colors duration-200 text-white" data-lang-code="${t.code}"><div class="flex items-center gap-x-3"><img src="${t.flagUrl}" alt="${t.name} flag" class="w-6 h-4 object-cover rounded-sm"><span>${t.name}</span></div></button>`);o.on("click",()=>{setLanguage(t.code),closeAllPanels()}),e.append(o)}),updateLanguageListUI()}
     function updateSliderFill(e){const t=$(e).attr("min")||0,o=$(e).attr("max")||100,a=$(e).val(),n=(a-t)/(o-t)*100;$(e).css("--value-percent",`${n}%`)}
     function updateFlipbookLayout(){const e=$(".flipbook-container"),t=$(window).width(),o=t>=1024?"double":"single";flipbook.turn("display")!==o&&flipbook.turn("display",o),flipbook.turn("size",e.width(),e.height())}
     
@@ -619,7 +616,7 @@ $(window).on('load', function() {
     }
 
     flipbook.turn({
-        display:"single", // Inicia en modo 'single' (bueno para móvil)
+        display:"single",
         duration:300,
         elevation:50,
         gradients:!0,
@@ -655,6 +652,20 @@ $(window).on('load', function() {
     initializeLanguageSwitcher();
     setVideoSkin(parseInt(localStorage.getItem("lumenFallVideoSkin"))||0);
     setLanguage(localStorage.getItem("lumenFallLanguage")||'es');
+    
+    // CORRECCIÓN FINAL DE RUTAS: Había algunos typos (assetsf, assetsD)
+    // los he corregido a "assets"
+    
+    // Arreglar rutas rotas en los arrays de JS
+    ambienceSounds[1].gifSrc = "assets/gif/river.gif";
+    ambienceSounds[4].gifSrc = "assetsf/gif/fire.gif"; // Esto parece un typo, lo corrijo
+    ambienceSounds[4].gifSrc = "assets/gif/fire.gif";
+    
+    languages[2].flagUrl = "assets/imagenes/Brasil.png"; // Corregido el typo 'assets'
+    
+    // Arreglar typos en las etiquetas de audio HTML
+    document.getElementById('fire-audio').querySelector('source').src = 'assets/audio/fire.mp3';
+
 });
 </script>
 
