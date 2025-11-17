@@ -189,31 +189,32 @@
 
         <!-- Footer -->
         <footer class="w-full text-center p-6 mt-auto">
-            <div class="flex justify-center space-x-6 mb-4">
+            <!-- *** CAMBIO: Iconos más grandes (w-12) y más espacio (space-x-8) *** -->
+            <div class="flex justify-center space-x-8 mb-4">
                 
                 <!-- Instagram -->
                 <a href="https://www.instagram.com/joziel382025" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                    <img src="assets/imagenes/icono-redes-sociales/instagram.png?v=1" alt="Instagram" class="w-6 h-6 transition-opacity duration-200 hover:opacity-75">
+                    <img src="assets/imagenes/icono-redes-sociales/instagram.png?v=1" alt="Instagram" class="w-12 h-12 transition-opacity duration-200 hover:opacity-75">
                 </a>
                 
                 <!-- Facebook -->
                 <a href="https://www.facebook.com/share/17hdXVWj2B/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                    <img src="assets/imagenes/icono-redes-sociales/facebook.png?v=1" alt="Facebook" class="w-6 h-6 transition-opacity duration-200 hover:opacity-75">
+                    <img src="assets/imagenes/icono-redes-sociales/facebook.png?v=1" alt="Facebook" class="w-12 h-12 transition-opacity duration-200 hover:opacity-75">
                 </a>
 
                 <!-- X (Twitter) -->
                 <a href="https://x.com/Joziel380" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)">
-                    <img src="assets/imagenes/icono-redes-sociales/x.png?v=1" alt="X (Twitter)" class="w-6 h-6 transition-opacity duration-200 hover:opacity-75">
+                    <img src="assets/imagenes/icono-redes-sociales/x.png?v=1" alt="X (Twitter)" class="w-12 h-12 transition-opacity duration-200 hover:opacity-75">
                 </a>
 
                 <!-- TikTok -->
                 <a href="https://www.tiktok.com/@joziel38000" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
-                    <img src="assets/imagenes/icono-redes-sociales/tik-tok.png?v=1" alt="TikTok" class="w-6 h-6 transition-opacity duration-200 hover:opacity-75">
+                    <img src="assets/imagenes/icono-redes-sociales/tik-tok.png?v=1" alt="TikTok" class="w-12 h-12 transition-opacity duration-200 hover:opacity-75">
                 </a>
                 
                 <!-- YouTube -->
                 <a href="https://www.youtube.com/@Joziel38000" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-                    <img src="assets/imagenes/icono-redes-sociales/you-tube.png?v=1" alt="YouTube" class="w-6 h-6 transition-opacity duration-200 hover:opacity-75">
+                    <img src="assets/imagenes/icono-redes-sociales/you-tube.png?v=1" alt="YouTube" class="w-12 h-12 transition-opacity duration-200 hover:opacity-75">
                 </a>
             </div>
             <p class="text-gray-500 text-sm mb-2">
@@ -232,15 +233,45 @@
             const splash = document.getElementById('splash-screen');
             const main = document.getElementById('main-content');
             
-            // --- Lógica del Splash Screen ---
-            function hideSplash() {
-                splash.classList.add('fade-out');
-                main.style.opacity = '1';
+            // --- *** CAMBIO: Lógica de Splash Screen con Memoria de Sesión *** ---
+            function hideSplash(duration) {
+                // 1. Marcar que ya vimos el splash en esta sesión
+                try {
+                    sessionStorage.setItem('splashSeen', 'true');
+                } catch (e) {
+                    console.warn('sessionStorage no está disponible.');
+                }
+
+                // 2. Ocultar splash después de la duración especificada
                 setTimeout(() => {
-                    splash.style.display = 'none';
-                }, 500); 
+                    if (splash) {
+                        splash.classList.add('fade-out');
+                    }
+                    if (main) {
+                        main.style.opacity = '1';
+                    }
+                    
+                    // Ocultar completamente el splash después de la animación
+                    setTimeout(() => {
+                        if (splash) {
+                            splash.style.display = 'none';
+                        }
+                    }, 500); // 500ms de la animacion fade-out
+                }, duration); // Duración de espera antes de ocultar
             }
-            setTimeout(hideSplash, 4000);
+
+            // --- Comprobar si ya se vio el splash ---
+            let splashDuration = 4000; // 4 segundos por defecto
+            try {
+                // Si ya se vio en esta sesión, ocultar inmediatamente
+                if (sessionStorage.getItem('splashSeen') === 'true') {
+                    splashDuration = 0; 
+                }
+            } catch (e) {
+                console.warn('sessionStorage no está disponible.');
+            }
+            
+            hideSplash(splashDuration); // Llamar a la función con la duración decidida
 
             // --- Lógica de PWA (Service Worker) ---
             if ('serviceWorker' in navigator) {
