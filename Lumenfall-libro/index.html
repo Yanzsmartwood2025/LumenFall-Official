@@ -8,6 +8,7 @@
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="LumenFall - Mi Libro Digital Interactivo" />
     <meta property="og:description" content="Te invito a explorar el universo de LumenFall a través de este libro digital. Una nueva aventura te espera." />
+    <!-- *** CORREGIDO: Ruta local *** -->
     <meta property="og:image" content="assets/imagenes/Portada-libro.jpg" />
     <meta property="og:url" content="#" />
     <meta property="og:type" content="website" />
@@ -81,21 +82,21 @@
         .flipbook-viewport { 
             display: flex; 
             justify-content: center; 
-            align-items: center; /* <<< Mantenemos el centrado vertical */
-            height: 100vh; /* <<< Ocupa toda la altura */
+            align-items: center; 
+            height: 100vh; 
             width: 100vw; 
             position: fixed; top: 0; left: 0;
             visibility: hidden; opacity: 0;
             transition: opacity 0.5s ease-in-out;
-            padding-top: var(--header-height); /* <<< Solo empuja desde arriba */
-            box-sizing: border-box; /* <<< ESTA ES LA MAGIA: Ahora 100vh INCLUYE el padding */
+            padding-top: var(--header-height); 
+            box-sizing: border-box; 
         }
         .flipbook-viewport.ready { visibility: visible; opacity: 1; }
         
         /* --- CONTENEDOR DEL LIBRO (CORREGIDO) --- */
         .flipbook-container { 
             width: 95vw; 
-            height: 95%; /* <<< CORREGIDO: 95% del espacio *restante* del viewport */
+            height: 95%; 
             max-width: 1400px; 
             position: relative;
         }
@@ -104,7 +105,9 @@
         .flipbook .page { box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
         .flipbook .hard { background-color: #101010; box-shadow: inset 0 0 5px #000; }
         
-        .cover-page { background: #101010 url(assets/imagenes/Portada-libro2.jpg) center/cover no-repeat !important; }
+        /* *** CORREGIDO: Ruta local para la portada *** */
+        .cover-page { background: #101010 url(assets/imagenes/Portada-libro.jpg) center/cover no-repeat !important; }
+        /* *** CORREGIDO: Ruta local para la contraportada *** */
         .back-cover-page { background: #101010 url(assets/imagenes/Contraportada-libro.jpg) center/contain no-repeat !important; }
         
         .page-number { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 0.9em; }
@@ -196,12 +199,14 @@
             <button id="main-menu-toggle" class="w-12 h-12 p-2 rounded-full text-white flex items-center justify-center" aria-label="Abrir menú principal">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
+            <!-- *** CORREGIDO: Ruta local para el selector de idiomas *** -->
             <button id="language-toggle" class="w-12 h-12 rounded-full text-white overflow-hidden" aria-label="Cambiar idioma">
                 <img src="assets/imagenes/Selector-idiomas.png" alt="Select Language" class="w-full h-full object-cover">
             </button>
         </div>
         
         <div class="flex-shrink-0">
+            <!-- *** CORREGIDO: Ruta local para el video del logo *** -->
             <button class="h-16 w-16 rounded-full overflow-hidden bg-black shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--runa-primary)]"><video autoplay loop muted playsinline class="w-full h-full object-cover" style="transform: scale(1.2) translateY(-8%);"><source src="assets/videos/Logo-cabezal.mp4" type="video/mp4"></video></button>
         </div>
         
@@ -209,7 +214,8 @@
             <button id="video-skin-toggle" class="w-12 h-12 p-2 rounded-full text-white flex items-center justify-center" aria-label="Abrir selector de video">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
             </button>
-            <button id="mixer-toggle-button" class="w-12 h-12 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--runa-primary)]" aria-label="Abrir mezclador de ambiente"><video autoplay loop muted playsinline class="w-full h-full object-cover"><source src="https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/5ec8a9f9a44f0f1d347867a8b1293a1f8f5dae5e/public/assets/videos/runa-equalizer-video.mp4" type="video/mp4"></video></button>
+            <!-- *** CORREGIDO: Ruta local para el video del ecualizador *** -->
+            <button id="mixer-toggle-button" class="w-12 h-12 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--runa-primary)]" aria-label="Abrir mezclador de ambiente"><video autoplay loop muted playsinline class="w-full h-full object-cover"><source src="assets/videos/runa-equalizer-video.mp4" type="video/mp4"></video></button>
         </div>
     </nav>
     <div id="main-menu-panel" class="hidden absolute w-full shadow-lg border-t translucent-panel"><div class="container mx-auto px-6 py-4"><div id="theme-toggle-container" class="flex justify-between items-center"></div><div id="page-finder-list"></div></div></div>
@@ -553,7 +559,8 @@
 <audio id="river-audio" loop><source src="assets/audio/Sonido_de_rio.mp3" type="audio/mpeg"></audio>
 <audio id="birds-audio" loop><source src="assets/audio/Sonidos_de_Pajaros.mp3" type="audio/mpeg"></audio>
 <audio id="rain-audio" loop><source src="assets/audio/rain.mp3" type="audio/mpeg"></audio>
-<audio id="fire-audio" loop><source src="assetsD/audio/fire.mp3" type="audio/mpeg"></audio>
+<!-- *** CORREGIDO: Typo 'assetsD' *** -->
+<audio id="fire-audio" loop><source src="assets/audio/fire.mp3" type="audio/mpeg"></audio>
 <audio id="wind-audio" loop><source src="assets/audio/wind_gust.ogg" type="audio/ogg"></audio>
 <audio id="storm-audio" loop><source src="assets/audio/thunder_crack.ogg" type="audio/ogg"></audio>
 <audio id="magic-chimes-audio" loop><source src="assets/audio/magic_chimes.ogg" type="audio/ogg"></audio>
@@ -574,7 +581,7 @@ $(window).on('load', function() {
     
     const ambienceSounds = [
         {"id":"music-audio","name":"Música","gifSrc":"assets/gif/music.gif"},
-        {"id":"river-audio","name":"Río","gifSrc":"assetsf/gif/river.gif"},
+        {"id":"river-audio","name":"Río","gifSrc":"assets/gif/river.gif"}, // *** CORREGIDO: Typo 'assetsf' ***
         {"id":"birds-audio","name":"Pájaros","gifSrc":"assets/gif/birds.gif"},
         {"id":"rain-audio","name":"Lluvia","gifSrc":"assets/gif/rain.gif"},
         {"id":"fire-audio","name":"Fuego","gifSrc":"assets/gif/fire.gif"},
@@ -587,7 +594,7 @@ $(window).on('load', function() {
     const languages = [
         {"code":"es","name":"Español","flagUrl":"assets/imagenes/Espanol.png"},
         {"code":"en","name":"English","flagUrl":"assets/imagenes/ingles.png"},
-        {"code":"pt","name":"Português (BR)","flagUrl":"assetss/imagenes/Brasil.png"}
+        {"code":"pt","name":"Português (BR)","flagUrl":"assets/imagenes/Brasil.png"} // *** CORREGIDO: Typo 'assetss' ***
     ];
     let currentLang = 'es';
 
@@ -652,19 +659,6 @@ $(window).on('load', function() {
     initializeLanguageSwitcher();
     setVideoSkin(parseInt(localStorage.getItem("lumenFallVideoSkin"))||0);
     setLanguage(localStorage.getItem("lumenFallLanguage")||'es');
-    
-    // CORRECCIÓN FINAL DE RUTAS: Había algunos typos (assetsf, assetsD)
-    // los he corregido a "assets"
-    
-    // Arreglar rutas rotas en los arrays de JS
-    ambienceSounds[1].gifSrc = "assets/gif/river.gif";
-    ambienceSounds[4].gifSrc = "assetsf/gif/fire.gif"; // Esto parece un typo, lo corrijo
-    ambienceSounds[4].gifSrc = "assets/gif/fire.gif";
-    
-    languages[2].flagUrl = "assets/imagenes/Brasil.png"; // Corregido el typo 'assets'
-    
-    // Arreglar typos en las etiquetas de audio HTML
-    document.getElementById('fire-audio').querySelector('source').src = 'assets/audio/fire.mp3';
 
 });
 </script>
