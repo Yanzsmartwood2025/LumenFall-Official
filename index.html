@@ -1,436 +1,712 @@
-<!DOCTYPE html>
-<html lang="es">
+<!doctype html>
+<html lang="es" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LUMENFALL - El Atrio</title>
-    
-    <!-- Open Graph Meta Tags (para Redes Sociales) -->
-    <meta property="og:title" content="LUMENFALL - El Atrio">
-    <meta property="og:description" content="El universo 'Lumenfall'. Activos oficiales del demo, el lore y la marca Joziel.">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="assets/imagenes/LUMENFALL-JUEGO-512x512.png">
-    
-    <!-- Apple Touch Icons (para iOS / iPhone / iPad) -->
-    <link rel="apple-touch-icon" href="assets/imagenes/LUMENFALL-JUEGO-180x180.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="assets/imagenes/LUMENFALL-JUEGO-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="assets/imagenes/LUMENFALL-JUEGO-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="assets/imagenes/LUMENFALL-JUEGO-152x152.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="assets/imagenes/LUMENFALL-JUEGO-167x167.png">
+    <title>LumenFall - Libro Interactivo</title>
 
-    <!-- Metas para PWA -->
-    <meta name="theme-color" content="#000000">
-    <link rel="manifest" href="manifest.json">
-
-    <!-- Cargar Tailwind CSS -->
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="LumenFall - Mi Libro Digital Interactivo" />
+    <meta property="og:description" content="Te invito a explorar el universo de LumenFall a través de este libro digital. Una nueva aventura te espera." />
+    <meta property="og:image" content="assets/imagenes/Portada-libro.jpg" />
+    <meta property="og:url" content="#" />
+    <meta property="og:type" content="website" />
+    
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
-    <!-- Configuración personalizada de Tailwind -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        'sans': ['Inter', 'sans-serif'],
-                        'display': ['Impact', 'Arial Black', 'sans-serif'], // Fuente dramática
-                    },
-                },
-            },
-        };
-    </script>
-
-    <style>
-        /* Importar la fuente de Google para la firma */
-        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
-
-        /* Estilo base */
-        body {
-            font-family: 'Inter', sans-serif;
-            overscroll-behavior: none;
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;600;700&family=Merriweather:wght@400;700&family=Lora&display=swap" rel="stylesheet">
+    
+    <style type="text/css">
+        :root {
+            --runa-primary: #D47500;
+            --slider-track-color: #25D366;
+            --header-height: 6rem; /* 96px */
+        }
+        html { scroll-behavior: smooth; }
+        
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            transition: background-color 0.4s ease, color 0.4s ease; 
+            margin: 0;
+            overflow: hidden;
+            /* Evitar el rebote en iOS */
+            overscroll-behavior-y: contain;
         }
 
-        /* --- FASE 1: Estilos del Splash Screen --- */
+        #video-background { 
+            position: fixed; top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            object-fit: cover; z-index: -2; 
+            transition: opacity 0.5s ease-in-out; 
+        }
         
-        #splash-screen {
+        .translucent-panel { 
+            backdrop-filter: blur(16px); 
+            -webkit-backdrop-filter: blur(16px); 
+        }
+
+        /* --- Language Visibility Rules --- */
+        [data-lang] { display: none; }
+        html.lang-es [data-lang="es"],
+        html.lang-en [data-lang="en"],
+        html.lang-pt [data-lang="pt"] { display: block; }
+        .portal-button { display: none; }
+        html.lang-es a.portal-button[data-lang="es"],
+        html.lang-en a.portal-button[data-lang="en"],
+        html.lang-pt a.portal-button[data-lang="pt"] { display: inline-block; }
+
+        /* --- Theme Styles (Light & Dark) --- */
+        html:not(.dark) body { background-color: #e0e0e0; color: #3a2e2a; }
+        html:not(.dark) .translucent-panel { background-color: rgba(255, 255, 255, 0.5); border-color: rgba(0,0,0,0.1); }
+        html:not(.dark) .flipbook .page { background-color: #fdfbf7; color: #333; }
+        html:not(.dark) .page .content-wrapper h2, html:not(.dark) .page .content-wrapper h3 { color: #1c1c1c; }
+        html:not(.dark) .page .content-wrapper p { color: #4a4a4a; }
+        html:not(.dark) .page-number { color: rgba(0, 0, 0, 0.4); }
+        html:not(.dark) #book-side-title { color: rgba(0,0,0,0.2); }
+        html:not(.dark) .copyright-page { color: #888; }
+        
+        html.dark body { background-color: #111; color: #E2E8F0; }
+        html.dark .translucent-panel { background-color: rgba(0, 0, 0, 0.3); border-color: rgba(255, 255, 255, 0.1); }
+        html.dark .flipbook .page { background-color: #2a2a2a; color: #e0e0e0; }
+        html.dark .page .content-wrapper h2, html.dark .page .content-wrapper h3 { color: #f0f0f0; }
+        html.dark .page .content-wrapper p { color: #cccccc; }
+        html.dark .page-number { color: rgba(255, 255, 255, 0.4); }
+        html.dark #book-side-title { color: rgba(255,255,255,0.2); }
+        html.dark .copyright-page { color: #777; }
+
+        /* --- CONTENEDOR PRINCIPAL (CORREGIDO) --- */
+        .flipbook-viewport { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            width: 100vw; 
+            position: fixed; top: 0; left: 0;
+            visibility: hidden; opacity: 0;
             transition: opacity 0.5s ease-in-out;
+            padding-top: var(--header-height); 
+            box-sizing: border-box; 
+        }
+        .flipbook-viewport.ready { visibility: visible; opacity: 1; }
+        
+        /* --- CONTENEDOR DEL LIBRO (CORREGIDO) --- */
+        .flipbook-container { 
+            width: 95vw; 
+            height: 95%; 
+            max-width: 1400px; 
+            position: relative;
+        }
+        .flipbook { width: 100%; height: 100%; }
+
+        .flipbook .page { box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
+        .flipbook .hard { background-color: #101010; box-shadow: inset 0 0 5px #000; }
+        
+        .cover-page { background: #101010 url(assets/imagenes/Portada-libro.jpg) center/cover no-repeat !important; }
+        /* La contraportada (cubierta dura) sigue aquí, pero ahora también hay una página visible */
+        .back-cover-page { background: #101010 url(assets/imagenes/Contraportada-libro.jpg) center/contain no-repeat !important; }
+        
+        .page-number { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 0.9em; }
+
+        #book-side-title { position: absolute; left: 2vw; top: 50%; transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; font-family: 'Poppins', sans-serif; font-size: 8rem; font-weight: 700; letter-spacing: 0.5rem; opacity: 0.4; display: none; pointer-events: none; }
+        @media (min-width: 1024px) { #book-side-title { display: block; } }
+
+        /* --- ESTILOS DE CONTENIDO (CORREGIDOS) --- */
+        .page .content-wrapper {
+            height: 100%; display: flex; flex-direction: column;
+            justify-content: flex-start; 
+            padding: 2rem 1.5rem;
+            box-sizing: border-box; overflow-y: auto;
+            gap: 1.5rem; 
         }
         
-        #splash-screen.fade-out {
-            opacity: 0;
-        }
-        
-        #splash-text {
-            font-family: 'Great Vibes', cursive;
-            font-size: 7rem; 
-            color: white;
-            text-shadow: 0 0 25px rgba(255, 255, 255, 1),
-                         0 0 15px rgba(255, 255, 255, 0.8),
-                         0 0 8px rgba(255, 255, 255, 0.6);
-        }
-        
-        @media (max-width: 640px) {
-            #splash-text {
-                font-size: 5rem;
-            }
+        .page .content-wrapper.center-content { justify-content: center; text-align: center; }
+
+        /* --- Tipografía Base (Móvil) (CORREGIDA) --- */
+        .page .content-wrapper p { font-family: 'Lora', serif; font-size: 1.125rem; line-height: 1.7; margin-bottom: 0; }
+        .page .content-wrapper h2 { font-size: 2.25rem; margin-bottom: 0; }
+        .page .content-wrapper h3 { font-size: 1.75rem; margin-bottom: 0; }
+        .page .content-wrapper .handwriting-title { font-size: 2.5rem; }
+        .page .content-wrapper.center-content h2, .page .content-wrapper.center-content h3 { text-align: center; }
+
+        /* --- Tipografía (Tablet/Escritorio) (CORREGIDA) --- */
+        @media (min-width: 768px) {
+            .page .content-wrapper { padding: 3rem 4rem; }
+            .page .content-wrapper p { font-size: 1.25rem; line-height: 1.8; }
+            .page .content-wrapper h2 { font-size: 3rem; }
+            .page .content-wrapper h3 { font-size: 2.25rem; }
+            .page .content-wrapper .handwriting-title { font-size: 3.75rem; }
         }
 
-        /* --- FASE 2: Estilos de la Página Principal --- */
+        /* --- Estilos para páginas especiales --- */
+        .video-page, .portal-page .content-wrapper { padding: 0 !important; }
+        .video-page .page-background-video, .portal-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .portal-video { z-index: 1; }
+        .portal-overlay { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); }
+        .portal-content { text-align: center; padding: 2rem; color: white; max-width: 90%; }
+        .portal-content h2 { font-size: 2.25rem; font-weight: 700; margin-bottom: 1rem; text-align: center !important; }
+        .portal-content p { font-size: 1.125rem; margin-bottom: 1.5rem; }
+        @media (min-width: 640px) { 
+            .portal-content h2 { font-size: 3rem; }
+            .portal-content p { font-size: 1.25rem; }
+        }
+        .portal-button { display: inline-block; padding: 0.75rem 1.5rem; border: 2px solid white; border-radius: 9999px; color: white !important; font-weight: 600; text-decoration: none; transition: background-color 0.2s, color 0.2s; font-size: 1rem; }
+        .portal-button:hover { background-color: white; color: black !important; }
 
-        #bg-video-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
+        /* --- Estilo para páginas de imagen completa --- */
+        .full-image-page {
+            padding: 0 !important;
             overflow: hidden;
         }
-        
-        #bg-video {
+        .full-image-page img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            filter: blur(8px) brightness(0.4); 
         }
         
-        #main-content {
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
+        /* Estilos para el nuevo menú y el índice de páginas */
+        #page-finder-list { max-height: 40vh; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 1rem; padding-top: 1rem; }
+        .page-finder-item { display: flex; align-items: center; width: 100%; padding: 0.75rem 0.5rem; border-radius: 0.5rem; transition: background-color 0.2s ease; text-align: left; }
+        html:not(.dark) .page-finder-item:hover { background-color: rgba(0,0,0,0.1); }
+        html.dark .page-finder-item:hover { background-color: rgba(255,255,255,0.1); }
+        .page-finder-item .page-number-label { font-weight: 600; margin-right: 1rem; min-width: 60px; }
+        .page-finder-item .page-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* --- ZONAS DE CLIC (100% Alto y Ancho) --- */
+        #prev-page-area, #next-page-area {
+            position: absolute;
+            top: 0;
+            width: 50%; /* 50% de ancho para cada lado */
+            height: 100%; /* 100% de alto */
+            z-index: 10;
+            cursor: pointer;
+            display: block; 
+            /* Descomenta la línea de abajo para ver las zonas: */
+            /* background-color: rgba(255, 0, 0, 0.2); */
         }
+        #prev-page-area { 
+            left: 0; 
+            /* background-color: rgba(0, 255, 0, 0.2); */
+        }
+        #next-page-area { 
+            right: 0; 
+        }
+
     </style>
 </head>
+<body>
 
-<body class="bg-black text-white antialiased">
+<div id="video-background-wrapper">
+    <video id="video-background" autoplay loop muted playsinline>
+        <source id="video-source" src="assets/videos/video-1.mp4" type="video/mp4">
+    </video>
+</div>
 
-    <!-- FASE 1: Splash Screen -->
-    <div id="splash-screen" class="fixed inset-0 bg-black z-50 flex items-center justify-center">
-        <h1 id="splash-text">Joziel</h1>
-    </div>
-
-    <!-- FASE 2: Contenido Principal -->
-    <div id="main-content" class="relative z-10 min-h-screen flex flex-col">
+<header id="main-header" class="fixed top-0 left-0 right-0 z-40">
+    <nav class="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center h-24">
+        <div class="flex-1 flex justify-start items-center space-x-4">
+            <button id="main-menu-toggle" class="w-12 h-12 p-2 rounded-full text-white flex items-center justify-center" aria-label="Abrir menú principal">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <button id="language-toggle" class="w-12 h-12 rounded-full text-white overflow-hidden" aria-label="Cambiar idioma">
+                <img src="assets/imagenes/Selector-idiomas.png" alt="Select Language" class="w-full h-full object-cover">
+            </button>
+        </div>
         
-        <!-- Contenedor del Video de Fondo -->
-        <div id="bg-video-container">
-            <video id="bg-video" autoplay muted loop playsinline>
-                <source src="assets/flama-bg.mp4" type="video/mp4">
-                Tu navegador no soporta el video de fondo.
-            </video>
+        <div class="flex-shrink-0">
+            <button class="h-16 w-16 rounded-full overflow-hidden bg-black shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--runa-primary)]"><video autoplay loop muted playsinline class="w-full h-full object-cover" style="transform: scale(1.2) translateY(-8%);"><source src="assets/videos/Logo-cabezal.mp4" type="video/mp4"></video></button>
         </div>
-
-        <!-- Contenido de la página -->
-        <div class="flex-grow flex flex-col items-center justify-center p-4 sm:p-8">
-
-            <!-- Encabezado con el Título -->
-            <header class="text-center my-8 sm:my-10">
-                <h1 class="text-6xl sm:text-7xl md:text-9xl">
-                    <img src="assets/imagenes/Icono-inicio.png" alt="Lumenfall Logo" class="mx-auto w-full max-w-lg md:max-w-2xl h-auto">
-                </h1>
-            </header>
-
-            <!-- Contenedor de Autenticación -->
-            <section id="auth-container" class="w-full max-w-sm mx-auto my-6 text-center">
-                
-                <div id="login-buttons" class="space-y-4">
-                    
-                    <button id="install-pwa-button" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-teal-500 text-white hover:bg-teal-600 hidden">
-                        <svg class="w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                        </svg>
-                        Instalar Aplicación
-                    </button>
-
-                    <button id="google-login" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-white text-gray-800 hover:bg-gray-200">
-                        <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M43.6111 20.0833H42V20H24V28H35.303C33.6747 32.6596 29.2235 36 24 36C17.373 36 12 30.627 12 24C12 17.373 17.373 12 24 12C26.8543 12 29.4312 13.1118 31.3914 14.888L36.0121 10.2672C32.6393 7.2898 28.5363 5.5 24 5.5C13.797 5.5 5.5 13.797 5.5 24C5.5 34.203 13.797 42.5 24 42.5C34.203 42.5 42.5 34.203 42.5 24C42.5 22.6105 42.3699 21.3533 42.126 20.1388L43.6111 20.0833Z" fill="#FFC107"></path><path d="M43.6111 20.0833H42V20H24V28H35.303C34.5102 30.4187 33.1594 32.5539 31.3914 34.1118L36.0121 38.7328C39.4239 35.034 42.5 29.16 42.5 24C42.5 22.6105 42.3699 21.3533 42.126 20.1388L43.6111 20.0833Z" fill="#FF3D00"></path><path d="M24 5.5C28.5363 5.5 32.6393 7.2898 36.0121 10.2672L31.3914 14.888C29.4312 13.1118 26.8543 12 24 12C20.6974 12 17.817 13.4357 16.0352 15.6961L11.0264 11.8346C14.3315 8.1636 18.892 5.5 24 5.5Z" fill="#4CAF50"></path><path d="M43.6111 20.0833L42.126 20.1388C42.3699 21.3533 42.5 22.6105 42.5 24C42.5 29.16 39.4239 35.034 36.0121 38.7328L31.3914 34.1118C33.1594 32.5539 34.5102 30.4187 35.303 28H24V20H42V20.0833H43.6111Z" fill="#1976D2"></path></svg>
-                        Iniciar con Google
-                    </button>
-                    <button id="facebook-login" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-blue-600 text-white hover:bg-blue-700">
-                        <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.81C10.44 7.31 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96C18.34 21.21 22 17.06 22 12.06C22 6.53 17.5 2.04 12 2.04Z"></path></svg>
-                        Iniciar con Facebook
-                    </button>
-                </div>
-                
-                <div id="user-info" class="hidden space-y-4">
-                    <p id="user-email" class="text-gray-300 text-sm break-all"></p>
-                    <button id="logout-button" class="w-full p-3 rounded-lg font-semibold transition-colors duration-200 bg-red-600 text-white hover:bg-red-700">
-                        Cerrar Sesión
-                    </button>
-                </div>
-            </section>
-
-            <!-- Navegación Principal -->
-            <nav class="w-full max-w-4xl mx-auto my-8 sm:my-10">
-                <div class="flex flex-col sm:grid sm:grid-cols-2 sm:gap-6 space-y-6 sm:space-y-0">
-                    
-                    <a href="./Lumenfall-juego/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
-                        <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">JUGAR EL DEMO</span>
-                        <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(La Experiencia Interactiva)</span>
-                    </a>
-                    
-                    <a href="./Lumenfall-libro/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
-                        <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">LEER EL LORE</span>
-                        <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(El Grimorio / El Diario)</span>
-                    </a>
-                    
-                    <a href="./tienda/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
-                        <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">LA ARMERÍA</span>
-                        <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(Camisetas y Accesorios)</span>
-                    </a>
-                    
-                    <a href="./Musica/index.html" class="group block p-6 sm:p-8 text-center bg-white rounded-lg transition-all duration-300 hover:bg-gray-200 hover:shadow-lg transform hover:-translate-y-1">
-                        <span class="block text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-red-500 transition-colors duration-300">LA BANDA SONORA</span>
-                        <span class="block text-sm text-gray-600 group-hover:text-red-500 transition-colors duration-300">(Escuchar 'MY TEMPO')</span>
-                    </a>
-
-                </div>
-            </nav>
-
+        
+        <div class="flex-1 flex justify-end items-center space-x-4">
+            <button id="video-skin-toggle" class="w-12 h-12 p-2 rounded-full text-white flex items-center justify-center" aria-label="Abrir selector de video">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            </button>
+            <button id="mixer-toggle-button" class="w-12 h-12 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--runa-primary)]" aria-label="Abrir mezclador de ambiente"><video autoplay loop muted playsinline class="w-full h-full object-cover"><source src="assets/videos/runa-equalizer-video.mp4" type="video/mp4"></video></button>
         </div>
+    </nav>
+    <div id="main-menu-panel" class="hidden absolute w-full shadow-lg border-t translucent-panel"><div class="container mx-auto px-6 py-4"><div id="theme-toggle-container" class="flex justify-between items-center"></div><div id="page-finder-list"></div></div></div>
+    <div id="mixer-panel" class="hidden absolute w-full shadow-lg border-t translucent-panel"><div class="container mx-auto px-6 py-4"><h3 class="font-semibold text-lg mb-4">Mezclador de Ambiente</h3><div id="sound-controls" class="space-y-4"></div></div></div>
+    <div id="video-skin-panel" class="hidden absolute w-full shadow-lg border-t translucent-panel"><div class="container mx-auto px-6 py-4"><h3 class="font-semibold text-lg mb-4">Selector de Video de Fondo</h3><div id="video-list" class="space-y-2"></div></div></div>
+    <div id="language-panel" class="hidden absolute w-full shadow-lg border-t translucent-panel"><div class="container mx-auto px-6 py-4"><h3 class="font-semibold text-lg mb-4">Idioma / Language</h3><div id="language-list" class="space-y-2"></div></div></div>
+</header>
 
-        <!-- Footer -->
-        <footer class="w-full text-center p-6 mt-auto">
-            <!-- *** CAMBIO: Iconos más grandes (w-12) y más espacio (space-x-8) *** -->
-            <div class="flex justify-center space-x-8 mb-4">
+<main>
+    <div class="flipbook-viewport">
+        <h1 id="book-side-title">LumenFall</h1>
+        <div class="flipbook-container">
+            <div id="prev-page-area"></div>
+            <div id="next-page-area"></div>
+            <div class="flipbook">
                 
-                <!-- Instagram -->
-                <a href="https://www.instagram.com/joziel382025" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                    <img src="assets/imagenes/icono-redes-sociales/instagram.png?v=1" alt="Instagram" class="w-12 h-12 transition-opacity duration-200 hover:opacity-75">
-                </a>
+                <div class="page hard cover-page"></div> 
+                <div class="page"></div> <!-- Blank flyleaf -->
                 
-                <!-- Facebook -->
-                <a href="https://www.facebook.com/share/17hdXVWj2B/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                    <img src="assets/imagenes/icono-redes-sociales/facebook.png?v=1" alt="Facebook" class="w-12 h-12 transition-opacity duration-200 hover:opacity-75">
-                </a>
+                <div class="page"><div class="content-wrapper center-content"><h2 style="font-family: 'Merriweather', serif; text-align:center;">LumenFall</h2></div></div>
+                <div class="page"><div class="content-wrapper center-content"><h1 class="text-4xl sm:text-5xl md:text-6xl font-bold" style="font-family: 'Poppins', sans-serif;">LUMENFALL</h1><p class="text-xl sm:text-2xl mt-4" style="font-family: 'Merriweather', serif;">A LIGHT DIVIDED</p><p class="mt-24 text-lg sm:text-xl">JUSN38 STUDIO</p></div></div>
+                
+                <div class="page"><div class="content-wrapper center-content"><div class="text-xs copyright-page"><p>LumenFall © 2025 JUSN38 STUDIO.</p><p data-lang="es">Todos los derechos reservados.</p><p data-lang="en">All rights reserved.</p><p data-lang="pt">Todos os direitos reservados.</p><br><p data-lang="es">Ninguna parte de esta publicación puede ser reproducida...</p><p data-lang="en">No part of this publication may be reproduced...</p><p data-lang="pt">Nenhuma parte desta publicação pode ser reproduzida...</p><br><p class="italic mt-8" data-lang="es">Para aquellos que encuentran luz...</p><p class="italic mt-8" data-lang="en">For those who find light...</p><p class="italic mt-8" data-lang="pt">Para aqueles que encontram luz...</p></div></div></div>
+                
+                <div class="page video-page"><video class="page-background-video" autoplay loop muted playsinline><source src="assets/videos/video-1.mp4" type="video/mp4"></video><div class="page-number">1</div></div>
 
-                <!-- X (Twitter) -->
-                <a href="https://x.com/Joziel380" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)">
-                    <img src="assets/imagenes/icono-redes-sociales/x.png?v=1" alt="X (Twitter)" class="w-12 h-12 transition-opacity duration-200 hover:opacity-75">
-                </a>
+                <div class="page">
+                    <div class="content-wrapper">
+                        <h2 class="handwriting-title" data-lang="es">Capítulo 1 – Fragmentos Rotos</h2>
+                        <h2 class="handwriting-title" data-lang="en">Chapter 1 – Broken Fragments</h2>
+                        <h2 class="handwriting-title" data-lang="pt">Capítulo 1 – Fragmentos Quebrados</h2>
+                        
+                        <p data-lang="es">Muchos disfrutan una taza de café por la mañana. Para mí, ese aroma siempre fue un recordatorio de que el día había empezado… y que mi madre seguía ahí.</p>
+                        <p data-lang="en">Many people enjoy a cup of coffee in the morning. For me, that aroma was always a reminder that the day had begun… and that my mother was still there.</p>
+                        <p data-lang="pt">Muitos apreciam uma xícara de café pela manhã. Para mim, esse aroma sempre foi um lembrete de que o dia havia começado… e de que minha mãe ainda estava lá.</p>
+                        
+                        <p data-lang="es">La veía de espaldas, removiendo el café en la olla, el vapor subiendo como un velo entre nosotras. A veces me sonreía. Otras, sin mirarme, dejaba caer frases que se quedaban flotando en el aire, como esa vez que dijo que hubiera preferido que yo no hubiera nacido.</p>
+                        <p data-lang="en">I would see her from behind, stirring the coffee in the pot, the steam rising like a veil between us. Sometimes she smiled at me. Other times, without looking at me, she would let fall phrases that lingered in the air, like that time she said she would have preferred if I had never been born.</p>
+                        <p data-lang="pt">Eu a via de costas, mexendo o café na panela, o vapor subindo como um véu entre nós. Às vezes ela sorria para mim. Outras, sem me olhar, deixava escapar frases que ficavam flutuando no ar, como aquela vez em que disse que teria preferido que eu não tivesse nascido.</p>
+                        
+                        <p data-lang="es">Pero en esas mañanas, con la lluvia golpeando el techo y el olor a tierra mojada entrando por la ventana, yo me aferraba a la ilusión de que todo estaba bien. Que el mundo era tan simple como el calor de la taza entre mis manos.</p>
+                        <p data-lang="en">But on those mornings, with the rain beating on the roof and the smell of wet earth coming in through the window, I clung to the illusion that everything was fine. That the world was as simple as the warmth of the cup between my hands.</p>
+                        <p data-lang="pt">Mas nessas manhãs, com a chuva batendo no telhado e o cheiro de terra molhada entrando pela janela, eu me agarrava à ilusão de que tudo estaba bem. Que o mundo era tão simples quanto o calor da xícara entre minhas mãos.</p>
+                    </div>
+                    <div class="page-number">2</div>
+                </div>
 
-                <!-- TikTok -->
-                <a href="https://www.tiktok.com/@joziel38000" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
-                    <img src="assets/imagenes/icono-redes-sociales/tik-tok.png?v=1" alt="TikTok" class="w-12 h-12 transition-opacity duration-200 hover:opacity-75">
-                </a>
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">Después de todo lo que casi me arruina, entendí que esos días eran un lujo que nunca volvería a tener.</p>
+                        <p data-lang="en">After everything that nearly ruined me, I understood that those days were a luxury I would never have again.</p>
+                        <p data-lang="pt">Depois de tudo que quase me destruiu, entendi que aqueles dias eram um luxo que nunca mais teria.</p>
+
+                        <p data-lang="es">Les voy a contar algo que me pasó hace mucho. No es una historia bonita, pero empieza como si lo fuera.</p>
+                        <p data-lang="en">I’m going to tell you something that happened to me a long time ago. It’s not a pretty story, but it begins as if it were.</p>
+                        <p data-lang="pt">Vou contar algo que me aconteceu há muito tempo. Não é uma história bonita, mas começa como se fosse.</p>
+
+                        <p data-lang="es">El primero fue el alacrán. De pequeña, no soportaba esos bichos. En la finca, los niños mayores me agarraban uno vivo y me lo hacían correr por el brazo, riéndose mientras yo lloraba y pataleaba. Sentía sus patas frías y rápidas sobre mi piel, y ese recuerdo se me quedó pegado como una cicatriz invisible.</p>
+                        <p data-lang="en">The first was the scorpion. As a child, I couldn’t stand those creatures. On the farm, the older kids would grab a live one and make it crawl up my arm, laughing while I cried and kicked. I could feel its cold, quick legs on my skin, and that memory stuck to me like an invisible scar.</p>
+                        <p data-lang="pt">O primeiro foi o escorpião. Quando pequena, eu não suportava esses bichos. Na fazenda, os meninos mais velhos pegavam um vivo e o faziam correr pelo meu braço, rindo enquanto eu chorava e me debatia. Sentia suas patas frías e rápidas sobre minha pele, e essa lembrança ficou grudada em mim como uma cicatriz invisível.</p>
+                    </div>
+                    <div class="page-number">3</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">Esa tarde, estaba descalza en el patio, bailando sola al ritmo de una canción que tarareaba. Entonces lo vi: a centímetros de mi pie, un alacrán negro, vivo, inmóvil, mirándome como si esperara que yo hiciera el primer movimiento. Me quedé helada, sin saber si correr o aplastarlo.</p>
+                        <p data-lang="en">That afternoon, I was barefoot in the yard, dancing alone to the rhythm of a song I was humming. Then I saw it: inches from my foot, a black scorpion, alive, motionless, staring at me as if waiting for me to make the first move. I froze, unsure whether to run or crush it.</p>
+                        <p data-lang="pt">Naquela tarde, eu estava descalça no pátio, dançando sozinha no ritmo de uma canção que cantarolava. Então o vi: a centímetros do meu pé, um escorpião preto, vivo, imóvel, olhando para mim como se esperasse meu primeiro movimento. Fiquei paralisada, sem saber se corria ou o esmagava.</p>
+
+                        <p data-lang="es">Y entonces pasó. Sin que yo lo tocara, su cuerpo empezó a humear. Primero un olor agrio, como pelo quemado, y luego un chisporroteo suave. El alacrán se encogió sobre sí mismo, ennegrecido, hasta quedar inmóvil… muerto. No había nadie cerca. Solo yo, el patio, y ese olor que no se me olvidó nunca.</p>
+                        <p data-lang="en">And then it happened. Without me touching it, its body began to smoke. First a bitter smell, like burnt hair, and then a faint crackling.The scorpion curled in on itself, blackened, until it lay still… dead. There was no one around. Just me, the yard, and that smell I would never forget.</p>
+                        <p data-lang="pt">E então aconteceu. Sem que eu o tocasse, seu corpo começou a soltar fumaça. Primeiro um cheiro acre, como de cabelo queimado, depois um chiado suave. O escorpião se encolheu sobre si mesmo, enegrecido, até ficar imóvel… morto. Não havia ninguém por perto. Só eu, o pátio e aquele cheiro que nunca esqueci.</p>
+                    </div>
+                    <div class="page-number">4</div>
+                </div>
+
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/joziel-grimoire.jpeg" alt="Grimorio de Joziel">
+                    <div class="page-number">5</div>
+                </div>
                 
-                <!-- YouTube -->
-                <a href="https://www.youtube.com/@Joziel38000" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-                    <img src="assets/imagenes/icono-redes-sociales/you-tube.png?v=1" alt="YouTube" class="w-12 h-12 transition-opacity duration-200 hover:opacity-75">
-                </a>
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">El segundo fue un coche. Yo estaba en la acera, esperando a mi mamá, cuando escuché el chirrido de llantas. Un auto venía directo hacia mí, derrapando. Vi el reflejo del sol en el parabrisas, sentí el aire caliente cortarme la cara… y entonces, se detuvo. No frenó: se detuvo, como si hubiera chocado contra algo invisible. El conductor bajó pálido, jurando que el volante se le había trabado solo.</p>
+                        <p data-lang="en">The second was a car. I was on the sidewalk, waiting for my mother, when I heard the screech of tires. A car came straight at me, skidding. I saw the sun’s glare on the windshield, felt the hot air slice across my face… and then, it stopped. It didn’t brake: it stopped, as if it had hit something invisible. The driver get out pale, swearing that the steering wheel had locked on its own.</p>
+                        <p data-lang="pt">O segundo foi um carro. Eu estava na calçada, esperando minha mãe, quando ouvi o guincho dos pneus. Um carro vinha direto em minha direção, derrapando. Vi o reflexo do sol no para-brisa, senti o ar quente cortar meu rosto… e então, ele parou. Não freou: parou, como se tivesse batido em algo invisível. O motorista saiu pálido, jurando que o volante tinha travado sozinho.</p>
+
+                        <p data-lang="es">Hubo más. Pequeñas salvaciones imposibles. La gente decía que Dios me cuidaba. Yo sonreía, pero por dentro, una semilla fría de duda empezaba a germinar. No se sentía como una bendición. Se sentía como una trampa.</p>
+                        <p data-lang="en">There were more. Little impossible salvations. People said God was watching over me. I smiled, but inside, a cold seed of doubt began to sprout. It didn't feel like a blessing. It felt like a trap.</p>
+                        <p data-lang="pt">Houve mais. Pequenas salvações impossíveis. As pessoas diziam que Deus cuidava de mim. Eu sorria, mas por dentro, uma semente fria de dúvida começava a germinar. Não parecia una bênção. Parecia uma armadilha.</p>
+                    </div>
+                    <div class="page-number">6</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">Crecí en una familia que vivía del café. Desde que tengo memoria, las mañanas olían a granos tostándose y a tierra húmeda. Mi madre decía que el café era nuestra sangre, y que sin él no seríamos nada.</p>
+                        <p data-lang="en">I grew up in a family that lived off coffee. For as long as I can remember, the mornings smelled of roasting beans and damp soil. My mother said coffee was our blood, and that without it we would be nothing.</p>
+                        <p data-lang="pt">Cresci em uma família que vivia do café. Desde que me lembro, as manhãs cheiravam a grãos torrando e a terra úmida. Minha mãe dizia que o café era nosso sangue e que sem ele não seríamos nada.</p>
+
+                        <p data-lang="es">Tenía un hermano mayor, Elías. Nunca nos llevamos bien. Él siempre encontraba la forma de recordarme que yo era “la menor” y que debía quedarme callada. Discutíamos por todo: por quién ayudaba más en la finca, por quién se quedaba con el último pan, por quién tenía la razón aunque no importara.</p>
+                        <p data-lang="en">I had an older brother, Elías. We never got along. He always found a way to remind me that I was “the youngest” and should keep quiet. We argued about everything: about who helped more on the farm, about who got the last piece of bread, about who was right even when it didn’t matter.</p>
+                        <p data-lang="pt">Eu tinha un irmão mais velho, Elías. Nunca nos demos bem. Ele siempre encontrava un jeito de me lembrar que eu era “a menor” e que devia ficar calada. Discutíamos por tudo: por quem ajudava mais na fazenda, por quem ficava com o último pão, por quem tinha razão mesmo quando não importava.</p>
+                    </div>
+                    <div class="page-number">7</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">Y estaba mi hermana, Sheyka. En ese entonces, yo no sabía que un día cambiaría mi vida para siempre. Para mí, era solo mi hermana: la que me peinaba cuando mamá no tenía paciencia, la que me prestaba su ropa a escondidas, la que me defendía de Elías cuando las peleas se ponían feas.</p>
+                        <p data-lang="en">And there was my sister, Sheyka. Back then, I didn’t know that one day she would change my life forever. To me, she was just my sister: the one who braided my hair when mom had no patience, the one who secretly lent me her clothes, the one who defended me from Elías when the fights got ugly.</p>
+                        <p data-lang="pt">E havia minha irmã, Sheyka. Naquele tempo, eu não sabia que um dia ela mudaria minha vida para sempre. Para mim, ela era apenas minha irmã: a que me penteava quando mamãe não tinha paciência, a que me emprestava roupas às escondidas, a que me defendia de Elías quando as brigas ficavam feias.</p>
+
+                        <p data-lang="es">Éramos una familia como tantas, unida por el trabajo y separada por los silencios.</p>
+                        <p data-lang="en">We were a family like so many others, bound by work and divided by silences.</p>
+                        <p data-lang="pt">Éramos uma família como tantas, unida pelo trabalho e separada pelos silêncios.</p>
+
+                        <p data-lang="es">Y entonces llegó el momento que lo cambió todo. El que me marcó para siempre. La noche en la finca. El jornalero.</p>
+                        <p data-lang="en">And then came the moment that changed everything. The one that marked me forever. The night on the farm. The farmhand.</p>
+                        <p data-lang="pt">E então chegou o momento que mudou tudo. Aquele que me marcou para sempre. A noite na fazenda. O trabalhador.</p>
+                    </div>
+                    <div class="page-number">8</div>
+                </div>
+
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/joziel-library.png" alt="Biblioteca">
+                    <div class="page-number">9</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <h3 data-lang="es">La noche en que la sombra me salvó</h3>
+                        <h3 data-lang="en">The night the shadow saved me</h3>
+                        <h3 data-lang="pt">A noite em que a sombra me salvou</h3>
+
+                        <p data-lang="es">A veces sueño con esa noche. No porque no la recuerde, sino porque mi mente insiste en repetirla, como si no bastara con haberla vivido una vez.</p>
+                        <p data-lang="en">Sometimes I dream of that night. Not because I don’t remember it, but because my mind insists on replaying it, as if once hadn’t been enough.</p>
+                        <p data-lang="pt">Às vezes eu sonho com aquela noite. Não porque eu não a lembre, mas porque minha mente insiste em repeti-la, como se uma vez não tivesse bastado.</p>
+
+                        <p data-lang="es">Mis padres estaban en una fiesta familiar, celebrando el cumpleaños de un primo lejano. La finca se llenó de gente, de luces colgadas entre los árboles, de niños corriendo entre las mesas. Sheyka se fue con mi tía a ayudar en la cocina. Elías estaba con sus amigos, jugando cartas y bebiendo.</p>
+                        <p data-lang="en">My parents were at a family party, celebrating a distant cousin’s birthday. The farm filled with people, with lights strung between the trees, with children running between the tables. Sheyka had gone with my aunt to help in the kitchen. Elías was with his friends, playing cards and drinking.</p>
+                        <p data-lang="pt">Meus pais estavam em uma festa de família, comemorando o aniversário de um primo distante. A fazenda se encheu de gente, de luzes penduradas entre as árvares, de crianças correndo entre as mesas. Sheyka tinha ido com minha tia ajudar na cozinha. Elías estava com os amigos, jogando cartas e bebendo.</p>
+                        
+                        <p data-lang="es">Y yo… yo estaba sola. No sé por qué. Tal vez porque nadie notó que me había alejado. Tal vez porque yo misma me alejé.</p>
+                        <p data-lang="en">And I… I was alone. I don’t know why. Maybe because no one noticed I had slipped away. Maybe because I wanted to.</p>
+                        <p data-lang="pt">E eu… eu estava sozinha. Não sei por quê. Talvez porque ninguém notou que eu tinha me afastado. Talvez porque eu misma quis me afastar.</p>
+                    </div>
+                    <div class="page-number">10</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">El jornalero había estado bebiendo desde temprano. Lo vi tambaleándose entre los adultos, riéndose con una voz ronca, con los ojos brillantes y perdidos. No era parte de la familia, pero lo habían invitado por cortesía.</p>
+                        <p data-lang="en">The farmhand had been drinking since early. I saw him stumbling among the adults, laughing with a hoarse voice, his eyes shiny and unfocused. He wasn’t family, but they had invited him out of courtesy.</p>
+                        <p data-lang="pt">O trabalhador tinha bebido desde cedo. Eu o vi cambaleando entre los adultos, rindo com uma voz rouca, os olhos brilhando, perdidos. Não era da família, mas o haviam convidado por cortesia.</p>
+
+                        <p data-lang="es">Cuando me vio, algo cambió en su mirada. Al principio pensé que era casual, que solo pasaba por ahí. Pero empezó a seguirme. No con pasos rápidos, sino con esa lentitud que da más miedo que la prisa. Me llamaba con voz suave, como si jugara. “Muñequita… ven, quiero mostrarte algo.”</p>
+                        <p data-lang="en">When he saw me, something changed in his gaze. At first I thought it was coincidence, that he was just passing by. But he began to follow me. Not with quick steps, but with that slowness that is scarier than haste. He called me in a soft voice, as if playing. “Doll… come, I want to show you something.”</p>
+                        <p data-lang="pt">Quando me viu, algo mudou no seu olhar. No começo pensei que fosse acaso, que ele só passava por ali. Mas começou a me seguir. Não com passos rápidos, mas com aquela lentidão que dá mais medo que a pressa. Chamava-me com voz suave, como se brincasse. “Bonequinha… vem, quero te mostrar uma coisa.”</p>
+                    </div>
+                    <div class="page-number">11</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">Me alejé. Caminé hacia la parte trasera de la finca, donde la luz de la fiesta no llegaba. Él me siguió.</p>
+                        <p data-lang="en">I pulled away. Walked toward the back of the farm, where the party’s light didn’t reach. He followed me.</p>
+                        <p data-lang="pt">Me afastei. Caminhei para os fundos da fazenda, onde a luz da festa não chegava. Ele me seguiu.</p>
+                        
+                        <p data-lang="es">La tierra estaba húmeda por la lluvia de la tarde. El aire olía a café y a hojas mojadas. Yo sentía que algo no estaba bien, pero no sabía cómo pedir ayuda sin parecer exagerada.</p>
+                        <p data-lang="en">The ground was damp from the afternoon rain. The air smelled of coffee and wet leaves. I felt that something wasn’t right, but I didn’t know how to ask for help without seeming dramatic.</p>
+                        <p data-lang="pt">A terra estava úmida pela chuva da tarde. O ar cheirava a café e folhas molhadas. Eu sentia que algo não estava certo, mas não sabia como pedir ajuda sem parecer exagerada.</p>
+
+                        <p data-lang="es">Cuando me di cuenta, estábamos solos. Él se acercó, tambaleante, con las manos ásperas y el aliento a aguardiente. Me acorraló contra la pared de madera del galpón. Sus dedos rozaron los tirantes de mi vestido. Su voz se volvió un susurro:</p>
+                        <p data-lang="en">Before I realized it, we were alone. He staggered closer, with rough hands and a breath of liquor. He cornered me against the wooden wall of the shed. His fingers brushed the straps of my dress. His voice dropped to a whisper:</p>
+                        <p data-lang="pt">Quando percebi, estávamos sozinhos. Ele se aproximou, cambaleante, com as mãos ásperas e o hálito de aguardente. Me encurralou contra a parede de madeira do galpão. Seus dedos roçaram as alças do meu vestido. Sua voz virou um sussurro:</p>
+                        
+                        <p data-lang="es">—Quieta, muñequita. Vamos a jugar un juego…</p>
+                        <p data-lang="en">—Still, doll. We’re going to play a game…</p>
+                        <p data-lang="pt">—Quietinha, bonequinha. Vamos brincar de um jogo…</p>
+                    </div>
+                    <div class="page-number">12</div>
+                </div>
+                
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">Y entonces, algo golpeó la puerta. Un sonido seco, fuerte, como si alguien hubiera lanzado una piedra. Él se giró, molesto.</p>
+                        <p data-lang="en">And then, something struck the door. A dry, heavy sound, as if someone had thrown a rock. He turned, annoyed.</p>
+                        <p data-lang="pt">E então, algo bateu na porta. Um som seco, forte, como se alguém tivesse jogado uma pedra. Ele se virou, irritado.</p>
+                        
+                        <p data-lang="es">Y ahí… mi memoria se corta.</p>
+                        <p data-lang="en">And there… my memory cuts off.</p>
+                        <p data-lang="pt">E aí… minha memória se corta.</p>
+                        
+                        <p data-lang="es">Lo que vino después no lo viví despierta. Lo vi en sueños.</p>
+                        <p data-lang="en">What came next I didn’t live awake. I saw it in dreams.</p>
+                        <p data-lang="pt">O que veio depois eu não vivi desperta. Vi em sonhos.</p>
+
+                        <p data-lang="es">Y en esos sueños, la sombra tenía un parecido a mí. No era idéntica. Era como si alguien hubiera tomado mi rostro y lo hubiera estirado, suavizado, corrompido.</p>
+                        <p data-lang="en">And in those dreams, the shadow looked like me. Not identical. As if someone had taken my face and stretched it, softened it, corrupted it.</p>
+                        <p data-lang="pt">E nesses sonhos, a sombra se parecia comigo. Não era idêntica. Era como se alguém tivesse pegado meu rosto e o tivesse esticado, suavizado, corrompido.</p>
+                    </div>
+                    <div class="page-number">13</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">Su cuerpo empapado se pegaba al del jornalero bajo la lluvia. “¿A dónde ibas, hombre?”, le susurraba con una voz que parecía la mía, pero más grave, más dulce, más venenosa. “Te estaba esperando… ven.”</p>
+                        <p data-lang="en">Its drenched body pressed against the farmhand’s in the rain. “Where were you going, man?” it whispered with a voice that was mine, but deeper, sweeter, more venomous. “I was waiting for you… come.”</p>
+                        <p data-lang="pt">Seu corpo encharcado se colava ao do trabalhador sob a chuva. “Onde você ia, homem?”, ela sussurrava com uma voz que parecia a minha, mas mais grave, mais doce, mais venenosa. “Eu estaba te esperando… vem.”</p>
+
+                        <p data-lang="es">Él, borracho de deseo y confusión, la agarraba con fuerza. Y aquí empieza mi infierno personal. No es lo que hace, sino lo que siento.</p>
+                        <p data-lang="en">He, drunk with desire and confusion, grabbed her hard. And here begins my personal hell. It’s not what he does, but what I feel.</p>
+                        <p data-lang="pt">Ele, bêbado de desejo e confusão, a agarrava com força. E aqui começa meu inferno pessoal. Não é o que ele faz, mas o que eu sinto.</p>
+
+                        <p data-lang="es">Puedo percibir cada respiración acelerada, cada estremecimiento que recorre su piel, pero no es mío. Es de ellos. Es un pulso ajeno que me atraviesa, un calor que no me pertenece. Y mientras él se hunde en esa ilusión, yo me hundo en algo mucho más oscuro: la certeza de que mi cara, mi voz, mi cuerpo, están siendo usados para algo que me repugna.</p>
+                        <p data-lang="en">I can sense every hurried breath, every shiver that runs across his skin, but it isn’t mine. It’s theirs. It’s a foreign pulse coursing through me, a heat that doesn’t belong to me. And while he sinks into that illusion, I sink into something much darker: the certainty that my face, my voice, my body, are being used for something that disgusts me.</p>
+                        <p data-lang="pt">Posso perceber cada respiração acelerada, cada arrepio que percorre a pele dele, mas não é meu. É deles. É um pulso estranho que me atravessa, um calor que não me pertence. E enquanto ele se entrega àquela ilusão, eu me afundo em algo muito mais escuro: la certeza de que meu rosto, minha voz, meu corpo estão sendo usados para algo que me enoja.</p>
+                    </div>
+                    <div class="page-number">14</div>
+                </div>
+
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/Midnight-mantras.png" alt="Midnight Mantras">
+                    <div class="page-number">15</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">Y entonces la escucho, con mi propia voz, pero deformada, susurrarle al oído:</p>
+                        <p data-lang="en">And then I hear her, with my own voice but distorted, whisper in his ear:</p>
+                        <p data-lang="pt">E então a ouço, com minha própria voz, mas deformada, sussurrando em seu ouvido:</p>
+
+                        <p data-lang="es">—Más… más… así…</p>
+                        <p data-lang="en">—More… more… like that…</p>
+                        <p data-lang="pt">—Mais… mais… assim…</p>
+
+                        <p data-lang="es">Cada palabra es un latigazo en mi mente. No hay dolor físico en mí, pero hay un dolor más profundo: el de sentir que mi alma se mancha con cada segundo. Es como si me obligaran a beber un veneno que no mata, solo quema por dentro. Y lo peor es que, en ese rincón de mi mente donde no puedo cerrar los ojos, percibo que ellos lo disfrutan. Que se alimentan de ese momento.</p>
+                        <p data-lang="en">Each word lashes my mind. There is no physical pain in me, but a deeper pain: the pain of feeling my soul stained with every second. As if I were being forced to drink a poison that doesn’t kill, only burns inside. And the worst part is that, in that corner of my mind where I cannot close my eyes, I sense that they are enjoying it. That they are feeding on that moment.</p>
+                        <p data-lang="pt">Cada palavra é um chicote na minha mente. Não há dor física em mim, mas há uma dor mais profunda: a de sentir minha alma se manchando a cada segundo. Como se me obrigassem a beber um veneno que não mata, apenas queima por dentro. E o pior é que, nesse canto da minha mente onde não posso fechar los olhos, percebo que eles estão aproveitando. Que se alimentam daquele momento.</p>
+                    </div>
+                    <div class="page-number">16</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">Yo quiero gritar, pero mi garganta en el sueño no existe. Solo me queda mirar, atrapada, mientras la lluvia afuera se mezcla con un calor nauseabundo que me envuelve. Y en ese instante, entiendo que no me están salvando. Me están marcando.</p>
+                        <p data-lang="en">I want to scream, but in the dream my throat doesn’t exist. All I can do is watch, trapped, while the rain outside mixes with a nauseating heat that envelops me. And in that instant, I understand that they are not saving me. They are marking me.</p>
+                        <p data-lang="pt">Quero gritar, mas no sonho minha garganta não existe. Só me resta olhar, presa, enquanto a chuva lá fora se mistura a um calor nauseante que me envolve. E nesse instante, entendo que não estão me salvando. Estão me marcando.</p>
+
+                        <p data-lang="es">Justo cuando él se abandona al momento, la cara de la aparición se deforma. Su sonrisa se ensancha hasta ser imposible, inhumana, revelando demasiados dientes. Sus ojos azules brillan con una luz helada.</p>
+                        <p data-lang="en">Just when he gives in to the moment, the apparition’s face warps. Its smile widens until it is impossible, inhuman, revealing too many teeth. Its blue eyes gleam with an icy light.</p>
+                        <p data-lang="pt">Justo quando ele se entrega ao momento, o rosto da aparição se deforma. Seu sorriso se alarga até ser impossível, desumano, revelando dentes demais. Seus olhos azuis brilham com uma luz gelada.</p>
+                    </div>
+                    <div class="page-number">17</div>
+                </div>
+                
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/Shadow-files.jpeg" alt="Shadow Files">
+                    <div class="page-number">18</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">Con una velocidad que no es de este mundo, le arrebata el machete que el hombre lleva colgando del cinto. El jornalero no tiene tiempo ni de sorprenderse. Antes de que pueda procesar el cambio, la hoja del machete ya está en el aire.</p>
+                        <p data-lang="en">With a speed not of this world, it snatches the machete hanging from the man’s belt. The farmhand doesn’t even have time to be surprised. Before he can process the change, the blade is already in the air.</p>
+                        <p data-lang="pt">Com uma velocidade que não é deste mundo, ela arranca o facão que o homem trazia preso no cinto. O trabalhador não tem tempo nem de se surpreender. Antes que consiga processar a mudança, a lâmina já está no ar.</p>
+
+                        <p data-lang="es">Un destello plateado corta la noche. El sueño se vuelve lento y nítido. Veo el silbido agudo de la hoja al cortar el aire empapado, seguido de un tajo húmedo, pesado y final.</p>
+                        <p data-lang="en">A silver flash cuts the night. The dream becomes slow and vivid. I see the sharp whistle of the blade slicing through the soaked air, followed by a wet, heavy, final slash.</p>
+                        <p data-lang="pt">Um clarão prateado corta a noite. O sonho se torna lento e nítido. Vejo o assobio agudo da lâmina rasgando o ar encharcado, seguido de um golpe úmido, pesado e final.</p>
+                    </div>
+                    <div class="page-number">19</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">El grito del hombre es un gargajo ahogado que muere antes de nacer. Su cabeza se separa de su cuerpo en una fuente oscura y caliente que se mezcla con la lluvia fría. El cuerpo decapitado se desploma en el barro con un ruido sordo.</p>
+                        <p data-lang="en">The man’s scream is a choking gargle that dies before it’s born. His head separates from his body in a hot, dark fountain that mingles with the cold rain. The decapitated body collapses in the mud with a dull thud.</p>
+                        <p data-lang="pt">O grito do homem é um gargarejo sufocado que morre antes de nascer. Sua cabeça se separa do corpo em uma fonte quente e escura que se mistura à chuva fria. O corpo decapitado desaba na lama com um baque surdo.</p>
+                        
+                        <p data-lang="es">La aparición no grita. Creo que sonríe, con la cara salpicada por la sangre de él.</p>
+                        <p data-lang="en">The apparition does not scream. I think it smiles, its face splattered with his blood.</p>
+                        <p data-lang="pt">A aparição não grita. Acho que sorri, com o rosto salpicado pelo sangue dele.</p>
+
+                        <p data-lang="es">El sueño nunca me deja ver más. Me devuelve de golpe a mi cuerpo de niña, en el suelo de madera, con el eco de ese sonido final rebotando en mi cabeza. Sola. A salvo.</p>
+                        <p data-lang="en">The dream never lets me see more. It hurls me back into my child’s body, on the wooden floor, with the echo of that final sound bouncing in my head. Alone. Safe.</p>
+                        <p data-lang="pt">O sonho nunca me deixa ver mais. Me devolve de repente ao meu corpo de menina, no chão de madeira, com o eco daquele som final martelando em minha cabeça. Sozinha. A salvo.</p>
+                    </div>
+                    <div class="page-number">20</div>
+                </div>
+                
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">Solo recé, sin entender por qué, de repente, el animal helado en mi estómago se sentía un poco más cálido.</p>
+                        <p data-lang="en">I only prayed, without understanding why, suddenly, the icy animal in my stomach felt a little warmer.</p>
+                        <p data-lang="pt">Só rezei, sem entender por que, de repente, o animal gelado no meu estômago parecia um pouco mais quente.</p>
+
+                        <p data-lang="es">Como si algo me hubiera marcado. Como si algo me hubiera elegido.</p>
+                        <p data-lang="en">As if something had marked me. As if something had chosen me.</p>
+                        <p data-lang="pt">Como se algo tivesse me marcado. Como se algo tivesse me escolhido.</p>
+                        
+                        <p data-lang="es">Y yo… no sabía si debía agradecerlo o temerlo.</p>
+                        <p data-lang="en">And I… didn’t know whether I should be grateful or afraid.</p>
+                        <p data-lang="pt">E eu… não sabia se devia agradecer ou temer.</p>
+                    </div>
+                    <div class="page-number">21</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper center-content">
+                        <div>
+                            <p data-lang="es">Me llamo Joziel.</p>
+                            <p data-lang="en">My name is Joziel.</p>
+                            <p data-lang="pt">Meu nome é Joziel.</p>
+
+                            <p data-lang="es">Y esta es la historia de cómo la sombra que me salva… también me destruye.</p>
+                            <p data-lang="en">And this is the story of how the shadow that saves me… also destroys me.</p>
+                            <p data-lang="pt">E esta é a história de como a sombra que me salva… também me destrói.</p>
+                        </div>
+                    </div>
+                    <div class="page-number">22</div>
+                </div>
+
+                <!-- Páginas en blanco -->
+                <div class="page"><div class="content-wrapper"></div></div>
+                <div class="page"><div class="content-wrapper"></div></div>
+                
+                <!-- PÁGINAS DEL PORTAL (como estaban) -->
+                <div class="page portal-page"><div class="content-wrapper"><video class="portal-video" autoplay loop muted playsinline src="https://assets.mixkit.co/videos/preview/mixkit-flying-through-a-metaverse-landscape-42846-large.mp4"></video><div class="portal-overlay"><div class="portal-content"><h2 data-lang="es">Comunidad LumenFall</h2><h2 data-lang="en">LumenFall Community</h2><h2 data-lang="pt">Comunidade LumenFall</h2><p data-lang="es">Únete a nuestra comunidad...</p><p data-lang="en">Join our community...</p><p data-lang="pt">Junte-se à nossa comunidade...</p><a href="#" class="portal-button" data-lang="es">Ir a la Comunidad</a><a href="#" class="portal-button" data-lang="en">Go to Community</a><a href="#" class="portal-button" data-lang="pt">Ir para a Comunidade</a></div></div></div><div class="page-number">25</div></div>
+                <div class="page portal-page"><div class="content-wrapper"><video class="portal-video" autoplay loop muted playsinline src="https://assets.mixkit.co/videos/preview/mixkit-a-man-in-a-suit-works-with-a-futuristic-interface-42403-large.mp4"></video><div class="portal-overlay"><div class="portal-content"><h2 data-lang="es">Conviértete en Tester</h2><h2 data-lang="en">Become a Tester</h2><h2 data-lang="pt">Torne-se um Tester</h2><p data-lang="es">¿Quieres ser de los primeros en explorar Aethel? ...</p><p data-lang="en">Want to be among the first to explore Aethel? ...</p><p data-lang="pt">Quer ser um dos primeros a explorar Aethel? ...</p><a href="#" class="portal-button" data-lang="es">Inscribirse</a><a href="#" class="portal-button" data-lang="en">Sign Up</a><a href="#" class="portal-button" data-lang="pt">Inscrever-se</a></div></div></div><div class="page-number">26</div></div>
+                
+                <!-- *** CAMBIO: Página 'Fin' reemplazada por la contraportada visible *** -->
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/Contraportada-libro.jpg" alt="Contraportada" style="object-fit: contain; background-color: #101010;">
+                    <div class="page-number">27</div>
+                </div>
+
+                <div class="page hard back-cover-page"></div>
             </div>
-            <p class="text-gray-500 text-sm mb-2">
-                <a href="mailto:joziel.official@gmail.com" class="hover:text-gray-300 transition-colors duration-200">
-                    joziel.official@gmail.com
-                </a>
-            </p>
-            <p class="text-gray-500 text-sm">&copy; 2025 JUSN38</p>
-        </footer>
-
+        </div>
     </div>
+</main>
+
+<audio id="music-audio" loop><source src="assets/audio/runa-main-audio.mp3" type="audio/mpeg"></audio>
+<audio id="river-audio" loop><source src="assets/audio/Sonido_de_rio.mp3" type="audio/mpeg"></audio>
+<audio id="birds-audio" loop><source src="assets/audio/Sonidos_de_Pajaros.mp3" type="audio/mpeg"></audio>
+<audio id="rain-audio" loop><source src="assets/audio/rain.mp3" type="audio/mpeg"></audio>
+<audio id="fire-audio" loop><source src="assets/audio/fire.mp3" type="audio/mpeg"></audio>
+<audio id="wind-audio" loop><source src="assets/audio/wind_gust.ogg" type="audio/ogg"></audio>
+<audio id="storm-audio" loop><source src="assets/audio/thunder_crack.ogg" type="audio/ogg"></audio>
+<audio id="magic-chimes-audio" loop><source src="assets/audio/magic_chimes.ogg" type="audio/ogg"></audio>
+<audio id="cave-ambience-audio" loop><source src="assets/audio/cave_ambience.ogg" type="audio/ogg"></audio>
+
+<script type="module">
+$(window).on('load', function() {
+    const flipbook = $('.flipbook');
+    const viewport = $('.flipbook-viewport');
+    const pageFlipSound = new Audio('assets/audio/pasar-hoja-de-libro.mp3');
     
-    <!-- Lógica del Splash Screen y PWA -->
-    <script>
-        window.addEventListener('load', () => {
-            const splash = document.getElementById('splash-screen');
-            const main = document.getElementById('main-content');
-            
-            // --- *** CAMBIO: Lógica de Splash Screen con Memoria de Sesión *** ---
-            function hideSplash(duration) {
-                // 1. Marcar que ya vimos el splash en esta sesión
-                try {
-                    sessionStorage.setItem('splashSeen', 'true');
-                } catch (e) {
-                    console.warn('sessionStorage no está disponible.');
-                }
+    const videoSkins = [
+        {"name":"Intro LumenFall", "url":"assets/videos/video-1.mp4"},
+        {"name":"Bosque Tenebroso", "url":"https://assets.mixkit.co/videos/preview/mixkit-gloomy-forest-with-flying-particles-39803-large.mp4"}, 
+        {"name":"Naturaleza", "url":"https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/abb2e1a716439dd1ba47f48c0bba176ff72e197e/public/assets/videos/runa-fondo-video.mp4"}
+    ];
+    let currentVideoIndex = 0;
+    
+    const ambienceSounds = [
+        {"id":"music-audio","name":"Música","gifSrc":"assets/gif/music.gif"},
+        {"id":"river-audio","name":"Río","gifSrc":"assets/gif/river.gif"},
+        {"id":"birds-audio","name":"Pájaros","gifSrc":"assets/gif/birds.gif"},
+        {"id":"rain-audio","name":"Lluvia","gifSrc":"assets/gif/rain.gif"},
+        {"id":"fire-audio","name":"Fuego","gifSrc":"assets/gif/fire.gif"},
+        {"id":"wind-audio","name":"Viento","gifSrc":"assets/gif/wind.gif"}, // Corregido el typo 'assetsG'
+        {"id":"storm-audio","name":"Tormenta","gifSrc":"assets/gif/storm.gif"},
+        {"id":"magic-chimes-audio","name":"Sonido Mágico","gifSrc":"assets/gif/Magic.gif"},
+        {"id":"cave-ambience-audio","name":"Cueva","gifSrc":"assets/gif/Cave.gif"}
+    ];
+    
+    const languages = [
+        {"code":"es","name":"Español","flagUrl":"assets/imagenes/Espanol.png"},
+        {"code":"en","name":"English","flagUrl":"assetss/imagenes/ingles.png"}, // <<< ¡OJO! Revisa si 'assets' o 'assetss' es correcto
+        {"code":"pt","name":"Português (BR)","flagUrl":"assets/imagenes/Brasil.png"}
+    ];
+    let currentLang = 'es';
 
-                // 2. Ocultar splash después de la duración especificada
-                setTimeout(() => {
-                    if (splash) {
-                        splash.classList.add('fade-out');
+    function applyTheme(e){"dark"===e?($("html").removeClass("light").addClass("dark"),$("#theme-icon-sun-menu").removeClass("hidden"),$("#theme-icon-moon-menu").addClass("hidden")):($("html").removeClass("dark").addClass("light"),$("#theme-icon-sun-menu").addClass("hidden"),$("#theme-icon-moon-menu").removeClass("hidden"))}
+    function closeAllPanels(){$("#main-menu-panel, #mixer-panel, #video-skin-panel, #language-panel").addClass("hidden")}
+    function initializeMixer(){const e=$("#sound-controls");e.html(""),ambienceSounds.forEach(t=>{const o=document.getElementById(t.id);if(o){const a=`<div class="flex items-center gap-4 text-sm text-white"><button id="btn-${t.id}" class="mixer-icon-button relative w-10 h-10 rounded-full shadow-md flex-shrink-0 overflow-hidden"><img src="${t.gifSrc}" alt="${t.name}"></button><span class="font-medium w-20 truncate">${t.name}</span><input type="range" id="volume-${t.id}" min="0" max="1" step="0.01" value="0" class="styled-slider" style="--thumb-color: var(--runa-primary); --track-fill-color: var(--slider-track-color);"></div>`;e.append(a);const n=$(`#volume-${t.id}`);n.on("input",function(){const e=parseFloat($(this).val());o.volume=e,$(`#btn-${t.id}`).toggleClass("active",e>0),updateSliderFill(this),e>0&&o.paused?o.play().catch(e=>console.error(`Error playing ${t.id}:`,e)):0===e&&!o.paused&&o.pause()}),$(`#btn-${t.id}`).on("click",function(){const e=parseFloat(n.val());e>0?(n.data("lastValue",e),n.val(0)):n.val(n.data("lastValue")||.5),n.trigger("input")}),updateSliderFill(n[0])}})}
+    function setVideoSkin(e){const t=$("#video-background"),o=$("#video-source");t.length&&o.length&&(t.css("opacity",0),setTimeout(()=>{currentVideoIndex=e,o.attr("src",videoSkins[currentVideoIndex].url);const a=t[0];a.load(),$(a).off("canplaythrough.autoplay").on("canplaythrough.autoplay",function(){$(this).off("canplaythrough.autoplay");const e=a.play();void 0!==e&&e.then(()=>{t.css("opacity",1)}).catch(e=>{console.error("Video autoplay was prevented:",e),t.css("opacity",1)})}),localStorage.setItem("lumenFallVideoSkin",currentVideoIndex),updateVideoListUI()},500))}
+    function updateVideoListUI(){$("#video-list button").each(function(e){$(this).toggleClass("active",e===currentVideoIndex)})}
+    function initializeVideoSelector(){const e=$("#video-list");e.html(""),videoSkins.forEach((t,o)=>{const a=$(`<button class="video-list-button w-full text-left p-2 rounded-lg transition-colors duration-200 text-white">${t.name}</button>`);a.on("click",()=>setVideoSkin(o)),e.append(a)}),updateVideoListUI()}
+    function setLanguage(e){e&&languages.some(t=>t.code===e)&&(currentLang=e,$("html").removeClass("lang-es lang-en lang-pt").addClass(`lang-${e}`),localStorage.setItem("lumenFallLanguage",currentLang),updateLanguageListUI(),$("#main-menu-panel").hasClass("hidden")||generatePageFinder())}
+    function updateLanguageListUI(){$("#language-list button").each(function(){$(this).toggleClass("active",$(this).data("lang-code")===currentLang)})}
+    function initializeLanguageSwitcher(){const e=$("#language-list");e.html(""),languages.forEach(t=>{const o=$(`<button class="language-list-button w-full text-left p-2 rounded-lg transition-colors duration-200 text-white" data-lang-code="${t.code}"><div class="flex items-center gap-x-3"><img src="${t.flagUrl}" alt="${t.name} flag" class="w-6 h-4 object-cover rounded-sm"><span>${t.name}</span></div></button>`);o.on("click",()=>{setLanguage(t.code),closeAllPanels()}),e.append(o)}),updateLanguageListUI()}
+    function updateSliderFill(e){const t=$(e).attr("min")||0,o=$(e).attr("max")||100,a=$(e).val(),n=(a-t)/(o-t)*100;$(e).css("--value-percent",`${n}%`)}
+    function updateFlipbookLayout(){const e=$(".flipbook-container"),t=$(window).width(),o=t>=1024?"double":"single";flipbook.turn("display")!==o&&flipbook.turn("display",o),flipbook.turn("size",e.width(),e.height())}
+    
+    function generatePageFinder(){const e=$("#page-finder-list"),t=$("html").hasClass("dark"),o=flipbook.turn("pages"),a={es:"Índice de Páginas",en:"Page Index",pt:"Índice de Páginas"},n={es:"Pág.",en:"Pg.",pt:"Pág."};e.html(`<h3 class="font-semibold text-lg mb-2">${a[currentLang]}</h3>`);for(let l=1;l<=o;l++){const s=$(".flipbook .page").eq(l-1);let r="Página "+l;1===l?r={es:"Portada",en:"Cover",pt:"Capa"}[currentLang]:s.hasClass("back-cover-page")?r={es:"Contraportada",en:"Back Cover",pt:"Contracapa"}[currentLang]:s.find("h2.handwriting-title[data-lang='"+currentLang+"']").length>0?r=s.find("h2.handwriting-title[data-lang='"+currentLang+"']").text():s.find("h3[data-lang='"+currentLang+"']").length>0?r=s.find("h3[data-lang='"+currentLang+"']").text():s.find(".portal-content h2[data-lang='"+currentLang+"']").length>0&&(r=s.find(".portal-content h2[data-lang='"+currentLang+"']").text());const i=$(`<button class="page-finder-item" data-page="${l}"><span class="page-number-label">${n[currentLang]} ${l}</span><span class="page-title">${r}</span></button>`);i.on("click",function(){flipbook.turn("page",$(this).data("page")),closeAllPanels()}),e.append(i)}}
+
+    function initializeThemeToggle(){const e=$("#theme-toggle-container"),t={es:"Tema",en:"Theme",pt:"Tema"};e.html(`
+        <span class="font-semibold text-lg">${t[currentLang]}</span>
+        <button id="theme-toggle-button" class="p-2 rounded-full">
+            <svg id="theme-icon-sun-menu" class="h-8 w-8" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-1.414 8.486l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414-1.414zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z"></path></svg>
+            <svg id="theme-icon-moon-menu" class="h-8 w-8" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+        </button>`);
+        $("#theme-toggle-button").on("click",()=>{const o=$("html").hasClass("dark")?"light":"dark";localStorage.setItem("lumenFallTheme",o),applyTheme(o)});
+        const o=$("html").hasClass("dark");$("#theme-icon-sun-menu").toggleClass("hidden",!o),$("#theme-icon-moon-menu").toggleClass("hidden",o)
+    }
+
+    flipbook.turn({
+        display:"single",
+        duration:300,
+        elevation:50,
+        gradients:!0,
+        autoCenter:!0,
+        when:{
+            turned:(e,t,o)=>{
+                if (t>1) {
+                    try {
+                        pageFlipSound.currentTime=2.2;
+                        pageFlipSound.play().catch(console.error);
+                        setTimeout(()=>pageFlipSound.pause(),1000)
+                    } catch(err) {
+                        console.error("Error al reproducir sonido:", err);
                     }
-                    if (main) {
-                        main.style.opacity = '1';
-                    }
-                    
-                    // Ocultar completamente el splash después de la animación
-                    setTimeout(() => {
-                        if (splash) {
-                            splash.style.display = 'none';
-                        }
-                    }, 500); // 500ms de la animacion fade-out
-                }, duration); // Duración de espera antes de ocultar
-            }
-
-            // --- Comprobar si ya se vio el splash ---
-            let splashDuration = 4000; // 4 segundos por defecto
-            try {
-                // Si ya se vio en esta sesión, ocultar inmediatamente
-                if (sessionStorage.getItem('splashSeen') === 'true') {
-                    splashDuration = 0; 
                 }
-            } catch (e) {
-                console.warn('sessionStorage no está disponible.');
-            }
-            
-            hideSplash(splashDuration); // Llamar a la función con la duración decidida
-
-            // --- Lógica de PWA (Service Worker) ---
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js')
-                    .then((registration) => {
-                        console.log('Service Worker registrado con éxito:', registration);
-                    })
-                    .catch((error) => {
-                        console.error('Error al registrar el Service Worker:', error);
-                    });
-            }
-        });
-    </script>
-
-    <!-- Lógica de Firebase y Prompt de Instalación -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            onAuthStateChanged, 
-            signInWithPopup, 
-            GoogleAuthProvider, 
-            FacebookAuthProvider,
-            signInWithCustomToken,
-            signInAnonymously,
-            signOut 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // --- 1. Configuración de Firebase ---
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config)
-            : {
-                apiKey: "TU_API_KEY",
-                authDomain: "TU_AUTH_DOMAIN",
-                projectId: "TU_PROJECT_ID",
-                // ...etc
-            };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-lumenfall-app';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        try {
-            setLogLevel('Debug');
-        } catch (e) {
-            console.error("Error al configurar el nivel de log de Firestore:", e);
-        }
-
-        // --- 2. Inicialización de Firebase ---
-        let app, auth, db;
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            console.log("Firebase inicializado correctamente.");
-        } catch (e) {
-            console.error("Error al inicializar Firebase:", e);
-            document.getElementById("auth-container").innerHTML = '<p class="text-red-500">Error al conectar con el servidor.</p>';
-            return; 
-        }
-
-        // --- 3. Referencias al DOM ---
-        const loginButtons = document.getElementById('login-buttons');
-        const userInfo = document.getElementById('user-info');
-        const userEmail = document.getElementById('user-email');
-        const googleLoginBtn = document.getElementById('google-login');
-        const facebookLoginBtn = document.getElementById('facebook-login');
-        const logoutBtn = document.getElementById('logout-button');
-        const installButton = document.getElementById('install-pwa-button'); // Botón de PWA
-
-        // --- 4. Lógica de Autenticación Firebase ---
-        const googleProvider = new GoogleAuthProvider();
-        const facebookProvider = new FacebookAuthProvider();
-
-        async function signIn(provider) {
-            try {
-                const result = await signInWithPopup(auth, provider);
-                console.log("Inicio de sesión exitoso:", result.user);
-            } catch (error) {
-                console.error("Error en el inicio de sesión:", error.code, error.message);
             }
         }
+    });
 
-        async function logOut() {
-            try {
-                await signOut(auth);
-                console.log("Sesión cerrada.");
-            } catch (error) {
-                console.error("Error al cerrar sesión:", error);
-            }
-        }
+    $(window).on("resize",updateFlipbookLayout).trigger("resize");
+    viewport.addClass("ready");
+    
+    $("#main-menu-toggle").on("click",e=>{e.stopPropagation();const t=!$("#main-menu-panel").hasClass("hidden");closeAllPanels(),t||($("#main-menu-panel").removeClass("hidden"),generatePageFinder(),initializeThemeToggle())});
+    $("#mixer-toggle-button").on("click",e=>{e.stopPropagation();const t=!$("#mixer-panel").hasClass("hidden");closeAllPanels(),t||$("#mixer-panel").removeClass("hidden")});
+    $("#video-skin-toggle").on("click",e=>{e.stopPropagation();const t=!$("#video-skin-panel").hasClass("hidden");closeAllPanels(),t||$("#video-skin-panel").removeClass("hidden")});
+    $("#language-toggle").on("click",e=>{e.stopPropagation();const t=!$("#language-panel").hasClass("hidden");closeAllPanels(),t||$("#language-panel").removeClass("hidden")});
+    $(document).on("click",e=>{$(e.target).closest("#main-header").length||closeAllPanels()});
+    
+    /* --- *** CAMBIO: AÑADIDO 'touchstart' PARA MAYOR SENSIBILIDAD *** --- */
+    
+    // Para PC (click)
+    $("#prev-page-area").on("click", (e) => {
+        e.preventDefault();
+        flipbook.turn("previous");
+    });
+    $("#next-page-area").on("click", (e) => {
+        e.preventDefault();
+        flipbook.turn("next");
+    });
+    
+    // Para Móvil (touchstart) - Mucho más rápido
+    $("#prev-page-area").on("touchstart", (e) => {
+        e.preventDefault(); // Previene "ghost clicks"
+        flipbook.turn("previous");
+    });
+    $("#next-page-area").on("touchstart", (e) => {
+        e.preventDefault(); // Previene "ghost clicks"
+        flipbook.turn("next");
+    });
+    
+    const pageTurnHint=$("#page-turn-hint");"true"!==localStorage.getItem("lumenFallHintSeen")&&(setTimeout(()=>pageTurnHint.addClass("visible"),1500),flipbook.one("turned",()=>{pageTurnHint.removeClass("visible"),localStorage.setItem("lumenFallHintSeen","true")}));
+    
+    applyTheme(localStorage.getItem("lumenFallTheme")||"dark");
+    initializeMixer();
+    initializeVideoSelector();
+    initializeLanguageSwitcher();
+    setVideoSkin(parseInt(localStorage.getItem("lumenFallVideoSkin"))||0);
+    setLanguage(localStorage.getItem("lumenFallLanguage")||'es');
 
-        if(googleLoginBtn) googleLoginBtn.addEventListener('click', () => signIn(googleProvider));
-        if(facebookLoginBtn) facebookLoginBtn.addEventListener('click', () => signIn(facebookProvider));
-        if(logoutBtn) logoutBtn.addEventListener('click', logOut);
-
-        // --- 5. Observador de Autenticación ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log("Usuario autenticado:", user.email, "UID:", user.uid);
-                userEmail.textContent = `Conectado como: ${user.email || 'Usuario Anónimo'}`;
-                loginButtons.classList.add('hidden');
-                userInfo.classList.remove('hidden');
-            } else {
-                console.log("Usuario no autenticado.");
-                userEmail.textContent = '';
-                loginButtons.classList.remove('hidden');
-                userInfo.classList.add('hidden');
-            }
-        });
-
-        // --- 6. Inicio de Sesión Inicial ---
-        (async () => {
-            if (auth.currentUser) {
-                 console.log("Usuario ya autenticado:", auth.currentUser.uid);
-                 return;
-            }
-            try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Error durante el inicio de sesión inicial:", error);
-            }
-        })();
-
-        // --- 7. Lógica del Prompt de Instalación PWA ---
-        let deferredPrompt;
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            if(installButton) {
-                installButton.classList.remove('hidden');
-            }
-            console.log('Evento beforeinstallprompt disparado.');
-        });
-
-        if(installButton) {
-            installButton.addEventListener('click', async () => {
-                installButton.classList.add('hidden');
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    console.log(`Resultado del prompt de instalación: ${outcome}`);
-                    deferredPrompt = null;
-                }
-            });
-        }
-
-        window.addEventListener('appinstalled', () => {
-            if(installButton) {
-                installButton.classList.add('hidden');
-            }
-            deferredPrompt = null;
-            console.log('PWA fue instalada');
-        });
-
-    </script>
+    // Corrección final de typos
+    try {
+        ambienceSounds[5].gifSrc = "assets/gif/wind.gif";
+        languages[1].flagUrl = "assets/imagenes/ingles.png";
+    } catch(e) {
+        console.error("Error al corregir typos en arrays", e);
+    }
+});
+</script>
 
 </body>
 </html>
