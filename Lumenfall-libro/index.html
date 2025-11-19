@@ -2,7 +2,7 @@
 <html lang="es" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LumenFall - Libro Interactivo</title>
 
     <!-- Open Graph Meta Tags -->
@@ -34,7 +34,9 @@
             transition: background-color 0.4s ease, color 0.4s ease; 
             margin: 0;
             overflow: hidden;
-            overscroll-behavior-y: contain;
+            /* Importante para que el navegador no intente hacer scroll nativo al arrastrar la hoja */
+            touch-action: none; 
+            background-color: #101010; 
         }
 
         #video-background { 
@@ -65,19 +67,21 @@
         html:not(.dark) .translucent-panel { background-color: rgba(255, 255, 255, 0.5); border-color: rgba(0,0,0,0.1); }
         html:not(.dark) .flipbook .page { background-color: #fdfbf7; color: #333; }
         html:not(.dark) .page .content-wrapper h2, html:not(.dark) .page .content-wrapper h3 { color: #1c1c1c; }
-        html:not(.dark) .page .content-wrapper p { color: #4a4a4a; }
+        html:not(.dark) .page .content-wrapper p { color: #2d2d2d; }
         html:not(.dark) .page-number { color: rgba(0, 0, 0, 0.4); }
         html:not(.dark) #book-side-title { color: rgba(0,0,0,0.2); }
         html:not(.dark) .copyright-page { color: #888; }
+        html:not(.dark) hr { border-color: rgba(0,0,0,0.2); }
         
         html.dark body { background-color: #111; color: #E2E8F0; }
         html.dark .translucent-panel { background-color: rgba(0, 0, 0, 0.3); border-color: rgba(255, 255, 255, 0.1); }
         html.dark .flipbook .page { background-color: #2a2a2a; color: #e0e0e0; }
         html.dark .page .content-wrapper h2, html.dark .page .content-wrapper h3 { color: #f0f0f0; }
-        html.dark .page .content-wrapper p { color: #cccccc; }
+        html.dark .page .content-wrapper p { color: #d4d4d4; }
         html.dark .page-number { color: rgba(255, 255, 255, 0.4); }
         html.dark #book-side-title { color: rgba(255,255,255,0.2); }
         html.dark .copyright-page { color: #777; }
+        html.dark hr { border-color: rgba(255,255,255,0.2); }
 
         /* --- CONTENEDOR PRINCIPAL --- */
         .flipbook-viewport { 
@@ -87,7 +91,8 @@
             height: 100vh; 
             width: 100vw; 
             position: fixed; top: 0; left: 0;
-            visibility: hidden; opacity: 0;
+            visibility: hidden; 
+            opacity: 0;
             transition: opacity 0.5s ease-in-out;
             padding-top: var(--header-height); 
             box-sizing: border-box; 
@@ -107,50 +112,61 @@
         .flipbook .page { box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
         .flipbook .hard { background-color: #101010; box-shadow: inset 0 0 5px #000; }
         
-        /* --- PORTADA PRINCIPAL --- */
+        /* --- PORTADAS --- */
         .cover-page { 
             background: #101010 url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/be10babecd71c85fcbf447231accb45c83607f28/Lumenfall-libro/assets/imagenes/portada-inicio.jpg') center/100% 100% no-repeat !important; 
         }
-        .back-cover-page { background: #101010 url(assets/imagenes/Contraportada-libro.jpg) center/contain no-repeat !important; }
+        
+        .back-cover-page { 
+            background: #101010 url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/fb3659f718eff77d90136ff789e194c94d67ce82/Lumenfall-libro/assets/imagenes/contraportada-libro.jpg') center/100% 100% no-repeat !important; 
+        }
         
         .page-number { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 0.9em; }
 
         #book-side-title { position: absolute; left: 2vw; top: 50%; transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; font-family: 'Poppins', sans-serif; font-size: 8rem; font-weight: 700; letter-spacing: 0.5rem; opacity: 0.4; display: none; pointer-events: none; }
         @media (min-width: 1024px) { #book-side-title { display: block; } }
 
-        /* --- ESTILOS DE CONTENIDO (Ajustado para llenar la hoja) --- */
+        /* --- ESTILOS DE CONTENIDO --- */
         .page .content-wrapper {
             height: 100%; display: flex; flex-direction: column;
             justify-content: flex-start; 
-            padding: 2.5rem 2rem; /* Más padding para que no se pegue a los bordes */
+            padding: 2rem 1.8rem; 
             box-sizing: border-box; overflow-y: auto;
-            gap: 1rem; /* Reducido ligeramente el gap para que quepa más texto */
-            text-align: justify; /* Justificar texto para que se vea lleno */
+            gap: 0.8rem; 
+            text-align: justify; 
         }
         
         .page .content-wrapper.center-content { justify-content: center; text-align: center; }
 
-        /* --- Tipografía Base --- */
-        .page .content-wrapper p { font-family: 'Lora', serif; font-size: 1.1rem; line-height: 1.6; margin-bottom: 0.5rem; }
-        .page .content-wrapper h2 { font-size: 2rem; margin-bottom: 0.5rem; text-align: left; }
-        .page .content-wrapper h3 { font-size: 1.5rem; margin-bottom: 0.5rem; text-align: left; }
+        /* --- Tipografía --- */
+        .page .content-wrapper p { 
+            font-family: 'Lora', serif; 
+            font-size: 1.35rem; 
+            line-height: 1.8;   
+            margin-bottom: 0.8rem; 
+            font-weight: 400;
+        }
+        .page .content-wrapper h2 { font-size: 2.4rem; margin-bottom: 0.5rem; text-align: left; line-height: 1.2; }
+        .page .content-wrapper h3 { font-size: 1.8rem; margin-bottom: 0.5rem; text-align: left; font-weight: 700; }
         
-        @media (min-width: 768px) {
-            .page .content-wrapper { padding: 3rem 4rem; }
-            .page .content-wrapper p { font-size: 1.25rem; line-height: 1.8; margin-bottom: 1rem; }
-            .page .content-wrapper h2 { font-size: 3rem; }
-            .page .content-wrapper h3 { font-size: 2.25rem; }
+        .footer-quote {
+            margin-top: auto; 
+            padding-top: 1rem;
+            font-style: italic;
+            text-align: center;
+            font-size: 1.1rem;
+            opacity: 0.8;
+            border-top: 1px solid;
         }
 
-        .video-page, .portal-page .content-wrapper { padding: 0 !important; }
-        .video-page .page-background-video, .portal-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-        .portal-video { z-index: 1; }
-        
-        .portal-overlay { position: relative; z-index: 20; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); }
-        .portal-content { text-align: center; padding: 2rem; color: white; max-width: 90%; position: relative; z-index: 30; }
-        .portal-content h2 { font-size: 2.25rem; font-weight: 700; margin-bottom: 1rem; text-align: center !important; }
-        .portal-button { display: inline-block; padding: 0.75rem 1.5rem; border: 2px solid white; border-radius: 9999px; color: white !important; font-weight: 600; text-decoration: none; transition: background-color 0.2s, color 0.2s; font-size: 1rem; cursor: pointer; position: relative; z-index: 40; }
-        .portal-button:hover { background-color: white; color: black !important; }
+        @media (min-width: 768px) {
+            .page .content-wrapper { padding: 3rem 4rem; }
+            .page .content-wrapper p { font-size: 1.3rem; line-height: 1.8; margin-bottom: 1rem; }
+            .page .content-wrapper h2 { font-size: 3.5rem; }
+            .page .content-wrapper h3 { font-size: 2.2rem; }
+        }
+
+        .video-page .page-background-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
 
         .full-image-page { padding: 0 !important; overflow: hidden; }
         .full-image-page img { width: 100%; height: 100%; object-fit: cover; }
@@ -162,9 +178,7 @@
         .page-finder-item .page-number-label { font-weight: 600; margin-right: 1rem; min-width: 60px; }
         .page-finder-item .page-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        #prev-page-area, #next-page-area { position: absolute; top: 0; width: 15%; height: 100%; z-index: 50; cursor: pointer; display: block; }
-        #prev-page-area { left: 0; }
-        #next-page-area { right: 0; }
+        /* Importante: Zonas de clic eliminadas para permitir el arrastre nativo en esquinas */
     </style>
 </head>
 <body>
@@ -185,9 +199,15 @@
                 <img src="assets/imagenes/Selector-idiomas.png" alt="Select Language" class="w-full h-full object-cover">
             </button>
         </div>
+        
         <div class="flex-shrink-0">
-            <button class="h-16 w-16 rounded-full overflow-hidden bg-black shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--runa-primary)]"><video autoplay loop muted playsinline class="w-full h-full object-cover" style="transform: scale(1.2) translateY(-8%);"><source src="assets/videos/Logo-cabezal.mp4" type="video/mp4"></video></button>
+            <button class="h-16 w-16 rounded-full overflow-hidden bg-black shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--runa-primary)]">
+                <video autoplay loop muted playsinline class="w-full h-full object-cover" style="transform: scale(1.2) translateY(-8%);">
+                    <source src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/fb3659f718eff77d90136ff789e194c94d67ce82/Lumenfall-libro/assets/videos/Logo-cabezal.mp4" type="video/mp4">
+                </video>
+            </button>
         </div>
+        
         <div class="flex-1 flex justify-end items-center space-x-4">
             <button id="video-skin-toggle" class="w-12 h-12 p-2 rounded-full text-white flex items-center justify-center" aria-label="Abrir selector de video">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
@@ -205,57 +225,98 @@
     <div class="flipbook-viewport">
         <h1 id="book-side-title">LumenFall</h1>
         <div class="flipbook-container">
-            <div id="prev-page-area"></div>
-            <div id="next-page-area"></div>
             <div class="flipbook">
                 
                 <!-- PORTADA EXTERNA -->
                 <div class="page hard cover-page"></div> 
                 
-                <!-- PÁGINAS DE INTRODUCCIÓN -->
+                <!-- PÁGINA EN BLANCO (RESGUARDO) -->
                 <div class="page"></div>
-                
+
+                <!-- === 1. GALERÍA Y DESCRIPCIONES (PRIMERO) === -->
+
+                <!-- 1. BIENVENIDA (MANIFIESTO) -->
+                <div class="page full-image-page">
+                    <img src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/be10babecd71c85fcbf447231accb45c83607f28/Lumenfall-libro/assets/imagenes/portada-libro0.jpg" alt="Bienvenida">
+                    <div class="page-number">1</div>
+                </div>
+                <div class="page">
+                    <div class="content-wrapper">
+                        <h3 class="font-bold">I. MANIFIESTO (El Umbral)</h3>
+                        <p><strong>La Premisa:</strong><br>Esto no es una historia sobre encontrar la luz, sino sobre sobrevivir a la ausencia de ella. LumenFall no es un refugio; es un espejo. Antes de avanzar, debes aceptar una verdad incómoda: el caos no es tu enemigo, es tu origen.</p>
+                        <hr class="my-2 opacity-30">
+                        <p><strong>El Pacto:</strong><br>Al cruzar este umbral, dejas atrás la búsqueda de consuelo. Aquí no hay promesas vacías ni finales felices garantizados. Solo hay estrategia, disciplina y la voluntad de mirar al abismo sin parpadear. Estás entrando en la mente de Joziel, y una vez dentro, la única salida es atravesarlo todo.</p>
+                        <div class="footer-quote">"El control es absoluto."</div>
+                    </div>
+                    <div class="page-number">2</div>
+                </div>
+
+                <!-- 2. GRIMORIO -->
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/joziel-grimoire.jpeg" alt="Grimorio de Joziel">
+                    <div class="page-number">3</div>
+                </div>
+                <div class="page">
+                    <div class="content-wrapper">
+                        <h3 class="font-bold">II. JOZIEL’S GRIMOIRE (El Manual)</h3>
+                        <p><strong>El Origen del Tomo:</strong><br>Este libro no nació de la imaginación, sino de la supervivencia. El Grimorio es el registro tangible de la guerra interna que libró la Anfitriona para someter a la entidad Joziel. Escrito metafóricamente con "tinta de sangre y ceniza", representa la codificación del trauma convertido en arma. Es la evidencia física de que el infierno puede ser atravesado si se tiene el mapa correcto.</p>
+                        <hr class="my-2 opacity-30">
+                        <p><strong>El Contenido Prohibido:</strong><br>Este pilar es una masterclass de poder. Joziel abre las páginas de este texto para enseñar lo que las escuelas convencionales temen tocar: la manipulación ética, la lectura de intenciones, la soberanía emocional y las leyes inmutables del dominio jerárquico. Es un estudio frío sobre la naturaleza humana y cómo navegarla sin ser devorado. El Grimorio enseña que en el gran tablero de la vida, o eres el jugador que mueve las piezas, o eres el peón que es sacrificado. Aquí aprendemos a tomar el control de la mano que juega.</p>
+                        <div class="footer-quote">"El dolor es temporal. La gloria es eterna."</div>
+                    </div>
+                    <div class="page-number">4</div>
+                </div>
+
+                <!-- 3. SHADOW FILES -->
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/Shadow-files.jpeg" alt="Shadow Files">
+                    <div class="page-number">5</div>
+                </div>
+                <div class="page">
+                    <div class="content-wrapper">
+                        <h3 class="font-bold">III. SHADOW FILES (Las Crónicas)</h3>
+                        <p><strong>La Inmersión:</strong><br>Cuando se abren los Archivos de la Sombra, la atmósfera cambia. La voz de la Anfitriona cede el paso a las frecuencias más graves y ancestrales del Demonio. Este no es un espacio para cuentos de hadas, sino para la crónica documental del universo Lumenfall, el plano dimensional de oscuridad y entropía de donde proviene la entidad.</p>
+                        <hr class="my-2 opacity-30">
+                        <p><strong>El Propósito del Miedo:</strong><br>Joziel narra historias de pactos rotos, entidades devoradoras y horrores cósmicos, no con la intención de asustar, sino de entrenar. El miedo, bajo esta doctrina, es una herramienta de agudeza sensorial. Al exponer al espectador al abismo, Shadow Files enseña una lección estoica fundamental: el horror existe, y la única forma de sobrevivir a él no es cerrando los ojos, sino devolviéndole la mirada con absoluta frialdad. Es el entrenamiento final para perder el miedo a la oscuridad del mundo real.</p>
+                        <div class="footer-quote">"Si miras al abismo, el abismo te devuelve la mirada."</div>
+                    </div>
+                    <div class="page-number">6</div>
+                </div>
+
+                <!-- 4. MIDNIGHT MANTRAS (DIARIO) -->
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/Midnight-mantras.png" alt="Midnight Mantras">
+                    <div class="page-number">7</div>
+                </div>
+                <div class="page">
+                    <div class="content-wrapper">
+                        <h3 class="font-bold">IV. MIDNIGHT MANTRAS (La Doctrina)</h3>
+                        <p><strong>La Filosofía:</strong><br>En un mundo adicto al consuelo rápido y la validación vacía, los Midnight Mantras surgen como un correctivo brutal y necesario. No son simples frases motivacionales; son códigos de reprogramación subconsciente. La premisa central es la "Motivación Oscura": la comprensión de que la ira, el rechazo y las cicatrices son combustibles más densos y duraderos que la efímera alegría.</p>
+                        <hr class="my-2 opacity-30">
+                        <p><strong>El Método:</strong><br>Joziel destila verdades complejas en dosis de menos de sesenta segundos, diseñadas para cortar el ruido mental como un bisturí. Cada mantra es una orden de batalla que exige la erradicación inmediata de la mentalidad de víctima. Aquí no se viene a buscar un abrazo, sino a recibir una estrategia. Es la disciplina militar aplicada al espíritu humano: levántate, cállate y conquista. Si te duele escucharlo, es porque tu debilidad se está muriendo.</p>
+                        <div class="footer-quote">"Levántate. Cállate. Conquista."</div>
+                    </div>
+                    <div class="page-number">8</div>
+                </div>
+
+                <!-- === 2. PÁGINAS DE TÍTULO / INTRODUCCIÓN === -->
+
                 <div class="page"><div class="content-wrapper center-content"><h2 style="font-family: 'Merriweather', serif; text-align:center;">LumenFall</h2></div></div>
                 <div class="page"><div class="content-wrapper center-content"><h1 class="text-4xl sm:text-5xl md:text-6xl font-bold" style="font-family: 'Poppins', sans-serif;">LUMENFALL</h1><p class="text-xl sm:text-2xl mt-4" style="font-family: 'Merriweather', serif;">A LIGHT DIVIDED</p><p class="mt-24 text-lg sm:text-xl">JUSN38 STUDIO</p></div></div>
                 
                 <div class="page"><div class="content-wrapper center-content"><div class="text-xs copyright-page"><p>LumenFall © 2025 JUSN38 STUDIO.</p><p data-lang="es">Todos los derechos reservados.</p><p data-lang="en">All rights reserved.</p><p data-lang="pt">Todos os direitos reservados.</p><br><p data-lang="es">Ninguna parte de esta publicación puede ser reproducida...</p><p data-lang="en">No part of this publication may be reproduced...</p><p data-lang="pt">Nenhuma parte desta publicação pode ser reproduzida...</p><br><p class="italic mt-8" data-lang="es">Para aquellos que encuentran luz...</p><p class="italic mt-8" data-lang="en">For those who find light...</p><p class="italic mt-8" data-lang="pt">Para aqueles que encontram luz...</p></div></div></div>
                 
-                <div class="page video-page"><video class="page-background-video" autoplay loop muted playsinline><source src="assets/videos/video-1.mp4" type="video/mp4"></video><div class="page-number">1</div></div>
-
-                <!-- === GALERÍA (IMÁGENES + DESCRIPCIONES) === -->
-
-                <!-- 1. BIENVENIDA -->
-                <div class="page full-image-page">
-                    <img src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/be10babecd71c85fcbf447231accb45c83607f28/Lumenfall-libro/assets/imagenes/portada-libro0.jpg" alt="Bienvenida">
-                    <div class="page-number">2</div>
+                <!-- VIDEO INTRODUCTORIO -->
+                <div class="page video-page">
+                    <video class="page-background-video" autoplay loop muted playsinline>
+                        <source src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/fb3659f718eff77d90136ff789e194c94d67ce82/Lumenfall-libro/assets/videos/video-1.mp4" type="video/mp4">
+                    </video>
+                    <div class="page-number">9</div>
                 </div>
-                <div class="page"><div class="content-wrapper center-content"><p class="italic text-gray-500">Espacio para descripción de Bienvenida...</p></div><div class="page-number">3</div></div>
-
-                <!-- 2. GRIMORIO -->
-                <div class="page full-image-page">
-                    <img src="assets/imagenes/joziel-grimoire.jpeg" alt="Grimorio de Joziel">
-                    <div class="page-number">4</div>
-                </div>
-                <div class="page"><div class="content-wrapper center-content"><p class="italic text-gray-500">Espacio para descripción del Grimorio...</p></div><div class="page-number">5</div></div>
-
-                <!-- 3. SHADOW FILES -->
-                <div class="page full-image-page">
-                    <img src="assets/imagenes/Shadow-files.jpeg" alt="Shadow Files">
-                    <div class="page-number">6</div>
-                </div>
-                <div class="page"><div class="content-wrapper center-content"><p class="italic text-gray-500">Espacio para descripción de Shadow Files...</p></div><div class="page-number">7</div></div>
-
-                <!-- 4. DIARIO -->
-                <div class="page full-image-page">
-                    <img src="assets/imagenes/Midnight-mantras.png" alt="Midnight Mantras">
-                    <div class="page-number">8</div>
-                </div>
-                <div class="page"><div class="content-wrapper center-content"><p class="italic text-gray-500">Espacio para descripción del Diario...</p></div><div class="page-number">9</div></div>
 
 
-                <!-- === HISTORIA COMPACTADA (HOJAS LLENAS) === -->
+                <!-- === 3. HISTORIA (CAPÍTULO 1) === -->
                 
-                <!-- PÁGINA 1 DE HISTORIA: Introducción y Alacrán -->
                 <div class="page">
                     <div class="content-wrapper">
                         <h2 class="handwriting-title" data-lang="es">Capítulo 1 – Fragmentos Rotos</h2>
@@ -277,7 +338,6 @@
                     <div class="page-number">10</div>
                 </div>
 
-                <!-- PÁGINA 2 DE HISTORIA: El coche y la Familia -->
                 <div class="page">
                     <div class="content-wrapper">
                         <p data-lang="es">El segundo fue un coche. Yo estaba en la acera, esperando a mi mamá, cuando escuché el chirrido de llantas. Un auto venía directo hacia mí, derrapando. Vi el reflejo del sol en el parabrisas, sentí el aire caliente cortarme la cara… y entonces, se detuvo. No frenó: se detuvo, como si hubiera chocado contra algo invisible. El conductor bajó pálido, jurando que el volante se le había trabado solo. Hubo más. Pequeñas salvaciones imposibles. La gente decía que Dios me cuidaba. Yo sonreía, pero por dentro, una semilla fría de duda empezaba a germinar.</p>
@@ -295,7 +355,6 @@
                     <div class="page-number">11</div>
                 </div>
 
-                <!-- PÁGINA 3 DE HISTORIA: La Fiesta y El Encuentro -->
                 <div class="page">
                     <div class="content-wrapper">
                         <h3 data-lang="es">La noche en que la sombra me salvó</h3>
@@ -313,7 +372,6 @@
                     <div class="page-number">12</div>
                 </div>
 
-                <!-- PÁGINA 4 DE HISTORIA: El Sueño y El Final -->
                 <div class="page">
                     <div class="content-wrapper">
                         <p data-lang="es">Lo que vino después no lo viví despierta. Lo vi en sueños. La sombra tenía un parecido a mí, pero corrompido. Su cuerpo empapado se pegaba al del jornalero. “¿A dónde ibas, hombre?”, susurraba con mi voz deformada. Él, borracho, la agarraba con fuerza. Y aquí empieza mi infierno: siento lo que ella siente, un pulso ajeno, oscuro. Y entonces la escucho: “—Más… más… así…”.</p>
@@ -331,55 +389,14 @@
                     <div class="page-number">13</div>
                 </div>
 
-                <!-- Páginas en blanco finales -->
-                <div class="page"><div class="content-wrapper"></div></div>
-                
-                <!-- PÁGINAS DEL PORTAL -->
-                <div class="page portal-page">
-                    <div class="content-wrapper">
-                        <video class="portal-video" autoplay loop muted playsinline src="https://assets.mixkit.co/videos/preview/mixkit-flying-through-a-metaverse-landscape-42846-large.mp4"></video>
-                        <div class="portal-overlay">
-                            <div class="portal-content">
-                                <h2 data-lang="es">Comunidad LumenFall</h2>
-                                <h2 data-lang="en">LumenFall Community</h2>
-                                <h2 data-lang="pt">Comunidade LumenFall</h2>
-                                <p data-lang="es">Únete a nuestra comunidad...</p>
-                                <p data-lang="en">Join our community...</p>
-                                <p data-lang="pt">Junte-se à nossa comunidade...</p>
-                                <a href="#" class="portal-button" data-lang="es">Ir a la Comunidad</a>
-                                <a href="#" class="portal-button" data-lang="en">Go to Community</a>
-                                <a href="#" class="portal-button" data-lang="pt">Ir para a Comunidade</a>
-                            </div>
-                        </div>
+                <!-- PÁGINA "CONTINUARÁ..." (NUEVA) -->
+                <div class="page">
+                    <div class="content-wrapper center-content">
+                        <h2 style="font-family: 'Merriweather', serif; font-size: 3rem;">Continuará...</h2>
                     </div>
-                    <div class="page-number">25</div>
                 </div>
                 
-                <div class="page portal-page">
-                    <div class="content-wrapper">
-                        <video class="portal-video" autoplay loop muted playsinline src="https://assets.mixkit.co/videos/preview/mixkit-a-man-in-a-suit-works-with-a-futuristic-interface-42403-large.mp4"></video>
-                        <div class="portal-overlay">
-                            <div class="portal-content">
-                                <h2 data-lang="es">Conviértete en Tester</h2>
-                                <h2 data-lang="en">Become a Tester</h2>
-                                <h2 data-lang="pt">Torne-se um Tester</h2>
-                                <p data-lang="es">¿Quieres ser de los primeros en explorar Aethel? ...</p>
-                                <p data-lang="en">Want to be among the first to explore Aethel? ...</p>
-                                <p data-lang="pt">Quer ser um dos primeros a explorar Aethel? ...</p>
-                                <a href="#" class="portal-button" data-lang="es">Inscribirse</a>
-                                <a href="#" class="portal-button" data-lang="en">Sign Up</a>
-                                <a href="#" class="portal-button" data-lang="pt">Inscrever-se</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="page-number">26</div>
-                </div>
-                
-                <div class="page full-image-page">
-                    <img src="assets/imagenes/Contraportada-libro.jpg" alt="Contraportada" style="object-fit: contain; background-color: #101010;">
-                    <div class="page-number">27</div>
-                </div>
-
+                <!-- CONTRAPORTADA DEFINITIVA (Última Página 'Dura') -->
                 <div class="page hard back-cover-page"></div>
             </div>
         </div>
@@ -458,6 +475,7 @@ $(window).on('load', function() {
         elevation:50,
         gradients:!0,
         autoCenter:!0,
+        acceleration: true, // Importante para el efecto fluido
         when:{
             turned:(e,t,o)=>{
                 if (t>1) {
@@ -482,11 +500,8 @@ $(window).on('load', function() {
     $("#language-toggle").on("click",e=>{e.stopPropagation();const t=!$("#language-panel").hasClass("hidden");closeAllPanels(),t||$("#language-panel").removeClass("hidden")});
     $(document).on("click",e=>{$(e.target).closest("#main-header").length||closeAllPanels()});
     
-    // Eventos de clic
-    $("#prev-page-area").on("click", (e) => { e.preventDefault(); flipbook.turn("previous"); });
-    $("#next-page-area").on("click", (e) => { e.preventDefault(); flipbook.turn("next"); });
-    $("#prev-page-area").on("touchstart", (e) => { e.preventDefault(); flipbook.turn("previous"); });
-    $("#next-page-area").on("touchstart", (e) => { e.preventDefault(); flipbook.turn("next"); });
+    // NOTA: Se han eliminado los event listeners personalizados de 'touch'
+    // para permitir que turn.js maneje el arrastre nativo de la hoja.
     
     const pageTurnHint=$("#page-turn-hint");"true"!==localStorage.getItem("lumenFallHintSeen")&&(setTimeout(()=>pageTurnHint.addClass("visible"),1500),flipbook.one("turned",()=>{pageTurnHint.removeClass("visible"),localStorage.setItem("lumenFallHintSeen","true")}));
     
