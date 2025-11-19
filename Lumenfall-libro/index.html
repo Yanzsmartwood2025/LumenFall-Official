@@ -8,7 +8,7 @@
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="LumenFall - Mi Libro Digital Interactivo" />
     <meta property="og:description" content="Te invito a explorar el universo de LumenFall a través de este libro digital. Una nueva aventura te espera." />
-    <meta property="og:image" content="assets/imagenes/Portada-libro.jpg" />
+    <meta property="og:image" content="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/be10babecd71c85fcbf447231accb45c83607f28/Lumenfall-libro/assets/imagenes/portada-inicio.jpg" />
     <meta property="og:url" content="#" />
     <meta property="og:type" content="website" />
     
@@ -34,7 +34,6 @@
             transition: background-color 0.4s ease, color 0.4s ease; 
             margin: 0;
             overflow: hidden;
-            /* Evitar el rebote en iOS */
             overscroll-behavior-y: contain;
         }
 
@@ -55,6 +54,7 @@
         html.lang-es [data-lang="es"],
         html.lang-en [data-lang="en"],
         html.lang-pt [data-lang="pt"] { display: block; }
+        
         .portal-button { display: none; }
         html.lang-es a.portal-button[data-lang="es"],
         html.lang-en a.portal-button[data-lang="en"],
@@ -79,7 +79,7 @@
         html.dark #book-side-title { color: rgba(255,255,255,0.2); }
         html.dark .copyright-page { color: #777; }
 
-        /* --- CONTENEDOR PRINCIPAL (CORREGIDO) --- */
+        /* --- CONTENEDOR PRINCIPAL --- */
         .flipbook-viewport { 
             display: flex; 
             justify-content: center; 
@@ -94,20 +94,23 @@
         }
         .flipbook-viewport.ready { visibility: visible; opacity: 1; }
         
-        /* --- CONTENEDOR DEL LIBRO (CORREGIDO) --- */
+        /* --- CONTENEDOR DEL LIBRO --- */
         .flipbook-container { 
             width: 95vw; 
             height: 95%; 
             max-width: 1400px; 
             position: relative;
+            z-index: 1;
         }
         .flipbook { width: 100%; height: 100%; }
 
         .flipbook .page { box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
         .flipbook .hard { background-color: #101010; box-shadow: inset 0 0 5px #000; }
         
-        .cover-page { background: #101010 url(assets/imagenes/Portada-libro.jpg) center/cover no-repeat !important; }
-        /* La contraportada (cubierta dura) sigue aquí, pero ahora también hay una página visible */
+        /* --- PORTADA PRINCIPAL --- */
+        .cover-page { 
+            background: #101010 url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/be10babecd71c85fcbf447231accb45c83607f28/Lumenfall-libro/assets/imagenes/portada-inicio.jpg') center/100% 100% no-repeat !important; 
+        }
         .back-cover-page { background: #101010 url(assets/imagenes/Contraportada-libro.jpg) center/contain no-repeat !important; }
         
         .page-number { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 0.9em; }
@@ -115,60 +118,43 @@
         #book-side-title { position: absolute; left: 2vw; top: 50%; transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; font-family: 'Poppins', sans-serif; font-size: 8rem; font-weight: 700; letter-spacing: 0.5rem; opacity: 0.4; display: none; pointer-events: none; }
         @media (min-width: 1024px) { #book-side-title { display: block; } }
 
-        /* --- ESTILOS DE CONTENIDO (CORREGIDOS) --- */
+        /* --- ESTILOS DE CONTENIDO (Ajustado para llenar la hoja) --- */
         .page .content-wrapper {
             height: 100%; display: flex; flex-direction: column;
             justify-content: flex-start; 
-            padding: 2rem 1.5rem;
+            padding: 2.5rem 2rem; /* Más padding para que no se pegue a los bordes */
             box-sizing: border-box; overflow-y: auto;
-            gap: 1.5rem; 
+            gap: 1rem; /* Reducido ligeramente el gap para que quepa más texto */
+            text-align: justify; /* Justificar texto para que se vea lleno */
         }
         
         .page .content-wrapper.center-content { justify-content: center; text-align: center; }
 
-        /* --- Tipografía Base (Móvil) (CORREGIDA) --- */
-        .page .content-wrapper p { font-family: 'Lora', serif; font-size: 1.125rem; line-height: 1.7; margin-bottom: 0; }
-        .page .content-wrapper h2 { font-size: 2.25rem; margin-bottom: 0; }
-        .page .content-wrapper h3 { font-size: 1.75rem; margin-bottom: 0; }
-        .page .content-wrapper .handwriting-title { font-size: 2.5rem; }
-        .page .content-wrapper.center-content h2, .page .content-wrapper.center-content h3 { text-align: center; }
-
-        /* --- Tipografía (Tablet/Escritorio) (CORREGIDA) --- */
+        /* --- Tipografía Base --- */
+        .page .content-wrapper p { font-family: 'Lora', serif; font-size: 1.1rem; line-height: 1.6; margin-bottom: 0.5rem; }
+        .page .content-wrapper h2 { font-size: 2rem; margin-bottom: 0.5rem; text-align: left; }
+        .page .content-wrapper h3 { font-size: 1.5rem; margin-bottom: 0.5rem; text-align: left; }
+        
         @media (min-width: 768px) {
             .page .content-wrapper { padding: 3rem 4rem; }
-            .page .content-wrapper p { font-size: 1.25rem; line-height: 1.8; }
+            .page .content-wrapper p { font-size: 1.25rem; line-height: 1.8; margin-bottom: 1rem; }
             .page .content-wrapper h2 { font-size: 3rem; }
             .page .content-wrapper h3 { font-size: 2.25rem; }
-            .page .content-wrapper .handwriting-title { font-size: 3.75rem; }
         }
 
-        /* --- Estilos para páginas especiales --- */
         .video-page, .portal-page .content-wrapper { padding: 0 !important; }
         .video-page .page-background-video, .portal-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         .portal-video { z-index: 1; }
-        .portal-overlay { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); }
-        .portal-content { text-align: center; padding: 2rem; color: white; max-width: 90%; }
+        
+        .portal-overlay { position: relative; z-index: 20; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); }
+        .portal-content { text-align: center; padding: 2rem; color: white; max-width: 90%; position: relative; z-index: 30; }
         .portal-content h2 { font-size: 2.25rem; font-weight: 700; margin-bottom: 1rem; text-align: center !important; }
-        .portal-content p { font-size: 1.125rem; margin-bottom: 1.5rem; }
-        @media (min-width: 640px) { 
-            .portal-content h2 { font-size: 3rem; }
-            .portal-content p { font-size: 1.25rem; }
-        }
-        .portal-button { display: inline-block; padding: 0.75rem 1.5rem; border: 2px solid white; border-radius: 9999px; color: white !important; font-weight: 600; text-decoration: none; transition: background-color 0.2s, color 0.2s; font-size: 1rem; }
+        .portal-button { display: inline-block; padding: 0.75rem 1.5rem; border: 2px solid white; border-radius: 9999px; color: white !important; font-weight: 600; text-decoration: none; transition: background-color 0.2s, color 0.2s; font-size: 1rem; cursor: pointer; position: relative; z-index: 40; }
         .portal-button:hover { background-color: white; color: black !important; }
 
-        /* --- Estilo para páginas de imagen completa --- */
-        .full-image-page {
-            padding: 0 !important;
-            overflow: hidden;
-        }
-        .full-image-page img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .full-image-page { padding: 0 !important; overflow: hidden; }
+        .full-image-page img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Estilos para el nuevo menú y el índice de páginas */
         #page-finder-list { max-height: 40vh; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 1rem; padding-top: 1rem; }
         .page-finder-item { display: flex; align-items: center; width: 100%; padding: 0.75rem 0.5rem; border-radius: 0.5rem; transition: background-color 0.2s ease; text-align: left; }
         html:not(.dark) .page-finder-item:hover { background-color: rgba(0,0,0,0.1); }
@@ -176,26 +162,9 @@
         .page-finder-item .page-number-label { font-weight: 600; margin-right: 1rem; min-width: 60px; }
         .page-finder-item .page-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* --- ZONAS DE CLIC (100% Alto y Ancho) --- */
-        #prev-page-area, #next-page-area {
-            position: absolute;
-            top: 0;
-            width: 50%; /* 50% de ancho para cada lado */
-            height: 100%; /* 100% de alto */
-            z-index: 10;
-            cursor: pointer;
-            display: block; 
-            /* Descomenta la línea de abajo para ver las zonas: */
-            /* background-color: rgba(255, 0, 0, 0.2); */
-        }
-        #prev-page-area { 
-            left: 0; 
-            /* background-color: rgba(0, 255, 0, 0.2); */
-        }
-        #next-page-area { 
-            right: 0; 
-        }
-
+        #prev-page-area, #next-page-area { position: absolute; top: 0; width: 15%; height: 100%; z-index: 50; cursor: pointer; display: block; }
+        #prev-page-area { left: 0; }
+        #next-page-area { right: 0; }
     </style>
 </head>
 <body>
@@ -216,11 +185,9 @@
                 <img src="assets/imagenes/Selector-idiomas.png" alt="Select Language" class="w-full h-full object-cover">
             </button>
         </div>
-        
         <div class="flex-shrink-0">
             <button class="h-16 w-16 rounded-full overflow-hidden bg-black shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--runa-primary)]"><video autoplay loop muted playsinline class="w-full h-full object-cover" style="transform: scale(1.2) translateY(-8%);"><source src="assets/videos/Logo-cabezal.mp4" type="video/mp4"></video></button>
         </div>
-        
         <div class="flex-1 flex justify-end items-center space-x-4">
             <button id="video-skin-toggle" class="w-12 h-12 p-2 rounded-full text-white flex items-center justify-center" aria-label="Abrir selector de video">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
@@ -242,8 +209,11 @@
             <div id="next-page-area"></div>
             <div class="flipbook">
                 
+                <!-- PORTADA EXTERNA -->
                 <div class="page hard cover-page"></div> 
-                <div class="page"></div> <!-- Blank flyleaf -->
+                
+                <!-- PÁGINAS DE INTRODUCCIÓN -->
+                <div class="page"></div>
                 
                 <div class="page"><div class="content-wrapper center-content"><h2 style="font-family: 'Merriweather', serif; text-align:center;">LumenFall</h2></div></div>
                 <div class="page"><div class="content-wrapper center-content"><h1 class="text-4xl sm:text-5xl md:text-6xl font-bold" style="font-family: 'Poppins', sans-serif;">LUMENFALL</h1><p class="text-xl sm:text-2xl mt-4" style="font-family: 'Merriweather', serif;">A LIGHT DIVIDED</p><p class="mt-24 text-lg sm:text-xl">JUSN38 STUDIO</p></div></div>
@@ -252,314 +222,159 @@
                 
                 <div class="page video-page"><video class="page-background-video" autoplay loop muted playsinline><source src="assets/videos/video-1.mp4" type="video/mp4"></video><div class="page-number">1</div></div>
 
+                <!-- === GALERÍA (IMÁGENES + DESCRIPCIONES) === -->
+
+                <!-- 1. BIENVENIDA -->
+                <div class="page full-image-page">
+                    <img src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/be10babecd71c85fcbf447231accb45c83607f28/Lumenfall-libro/assets/imagenes/portada-libro0.jpg" alt="Bienvenida">
+                    <div class="page-number">2</div>
+                </div>
+                <div class="page"><div class="content-wrapper center-content"><p class="italic text-gray-500">Espacio para descripción de Bienvenida...</p></div><div class="page-number">3</div></div>
+
+                <!-- 2. GRIMORIO -->
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/joziel-grimoire.jpeg" alt="Grimorio de Joziel">
+                    <div class="page-number">4</div>
+                </div>
+                <div class="page"><div class="content-wrapper center-content"><p class="italic text-gray-500">Espacio para descripción del Grimorio...</p></div><div class="page-number">5</div></div>
+
+                <!-- 3. SHADOW FILES -->
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/Shadow-files.jpeg" alt="Shadow Files">
+                    <div class="page-number">6</div>
+                </div>
+                <div class="page"><div class="content-wrapper center-content"><p class="italic text-gray-500">Espacio para descripción de Shadow Files...</p></div><div class="page-number">7</div></div>
+
+                <!-- 4. DIARIO -->
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/Midnight-mantras.png" alt="Midnight Mantras">
+                    <div class="page-number">8</div>
+                </div>
+                <div class="page"><div class="content-wrapper center-content"><p class="italic text-gray-500">Espacio para descripción del Diario...</p></div><div class="page-number">9</div></div>
+
+
+                <!-- === HISTORIA COMPACTADA (HOJAS LLENAS) === -->
+                
+                <!-- PÁGINA 1 DE HISTORIA: Introducción y Alacrán -->
                 <div class="page">
                     <div class="content-wrapper">
                         <h2 class="handwriting-title" data-lang="es">Capítulo 1 – Fragmentos Rotos</h2>
                         <h2 class="handwriting-title" data-lang="en">Chapter 1 – Broken Fragments</h2>
                         <h2 class="handwriting-title" data-lang="pt">Capítulo 1 – Fragmentos Quebrados</h2>
                         
-                        <p data-lang="es">Muchos disfrutan una taza de café por la mañana. Para mí, ese aroma siempre fue un recordatorio de que el día había empezado… y que mi madre seguía ahí.</p>
-                        <p data-lang="en">Many people enjoy a cup of coffee in the morning. For me, that aroma was always a reminder that the day had begun… and that my mother was still there.</p>
-                        <p data-lang="pt">Muitos apreciam uma xícara de café pela manhã. Para mim, esse aroma sempre foi um lembrete de que o dia havia começado… e de que minha mãe ainda estava lá.</p>
-                        
-                        <p data-lang="es">La veía de espaldas, removiendo el café en la olla, el vapor subiendo como un velo entre nosotras. A veces me sonreía. Otras, sin mirarme, dejaba caer frases que se quedaban flotando en el aire, como esa vez que dijo que hubiera preferido que yo no hubiera nacido.</p>
-                        <p data-lang="en">I would see her from behind, stirring the coffee in the pot, the steam rising like a veil between us. Sometimes she smiled at me. Other times, without looking at me, she would let fall phrases that lingered in the air, like that time she said she would have preferred if I had never been born.</p>
-                        <p data-lang="pt">Eu a via de costas, mexendo o café na panela, o vapor subindo como um véu entre nós. Às vezes ela sorria para mim. Outras, sem me olhar, deixava escapar frases que ficavam flutuando no ar, como aquela vez em que disse que teria preferido que eu não tivesse nascido.</p>
-                        
-                        <p data-lang="es">Pero en esas mañanas, con la lluvia golpeando el techo y el olor a tierra mojada entrando por la ventana, yo me aferraba a la ilusión de que todo estaba bien. Que el mundo era tan simple como el calor de la taza entre mis manos.</p>
-                        <p data-lang="en">But on those mornings, with the rain beating on the roof and the smell of wet earth coming in through the window, I clung to the illusion that everything was fine. That the world was as simple as the warmth of the cup between my hands.</p>
-                        <p data-lang="pt">Mas nessas manhãs, com a chuva batendo no telhado e o cheiro de terra molhada entrando pela janela, eu me agarrava à ilusão de que tudo estaba bem. Que o mundo era tão simples quanto o calor da xícara entre minhas mãos.</p>
+                        <p data-lang="es">Muchos disfrutan una taza de café por la mañana. Para mí, ese aroma siempre fue un recordatorio de que el día había empezado… y que mi madre seguía ahí. La veía de espaldas, removiendo el café en la olla, el vapor subiendo como un velo entre nosotras. A veces me sonreía. Otras, sin mirarme, dejaba caer frases que se quedaban flotando en el aire, como esa vez que dijo que hubiera preferido que yo no hubiera nacido.</p>
+                        <p data-lang="en">Many people enjoy a cup of coffee in the morning. For me, that aroma was always a reminder that the day had begun… and that my mother was still there. I would see her from behind, stirring the coffee in the pot, the steam rising like a veil between us. Sometimes she smiled at me. Other times, without looking at me, she would let fall phrases that lingered in the air, like that time she said she would have preferred if I had never been born.</p>
+                        <p data-lang="pt">Muitos apreciam uma xícara de café pela manhã. Para mim, esse aroma sempre foi um lembrete de que o dia havia começado… e de que minha mãe ainda estava lá. Eu a via de costas, mexendo o café na panela, o vapor subindo como um véu entre nós. Às vezes ela sorria para mim. Outras, sem me olhar, deixava escapar frases que ficavam flutuando no ar, como aquela vez em que disse que teria preferido que eu não tivesse nascido.</p>
+
+                        <p data-lang="es">Pero en esas mañanas, con la lluvia golpeando el techo y el olor a tierra mojada entrando por la ventana, yo me aferraba a la ilusión de que todo estaba bien. Después de todo lo que casi me arruina, entendí que esos días eran un lujo que nunca volvería a tener.</p>
+                        <p data-lang="en">But on those mornings, with the rain beating on the roof and the smell of wet earth coming in through the window, I clung to the illusion that everything was fine. After everything that nearly ruined me, I understood that those days were a luxury I would never have again.</p>
+                        <p data-lang="pt">Mas nessas manhãs, com a chuva batendo no telhado e o cheiro de terra molhada entrando pela janela, eu me agarrava à ilusão de que tudo estaba bem. Depois de tudo que quase me destruiu, entendi que aqueles dias eram um luxo que nunca mais teria.</p>
+
+                        <p data-lang="es">Les voy a contar algo que me pasó hace mucho. El primero fue el alacrán. De pequeña, no soportaba esos bichos. En la finca, los niños mayores me agarraban uno vivo y me lo hacían correr por el brazo, riéndose mientras yo lloraba y pataleaba. Esa tarde, estaba descalza en el patio, bailando sola. Entonces lo vi: a centímetros de mi pie, un alacrán negro, vivo, inmóvil. Y entonces pasó. Sin que yo lo tocara, su cuerpo empezó a humear. El alacrán se encogió sobre sí mismo, ennegrecido, hasta quedar muerto. No había nadie cerca.</p>
+                        <p data-lang="en">I’m going to tell you something that happened long ago. The first was the scorpion. As a child, I couldn’t stand them. On the farm, older kids would put one on my arm, laughing while I cried. That afternoon, barefoot in the yard, I saw it: a black scorpion, inches from my foot. Then it happened. Without touching it, its body began to smoke. It curled up, blackened, until dead. No one was around.</p>
+                        <p data-lang="pt">Vou contar algo que aconteceu há muito tempo. O primeiro foi o escorpião. Quando pequena, não suportava. Na fazenda, os meninos colocavam no meu braço, rindo enquanto eu chorava. Naquela tarde, descalça no pátio, vi: um escorpião preto, a centímetros do meu pé. Então aconteceu. Sem tocar, começou a soltar fumaça. Encolheu-se, enegrecido, até morrer. Não havia ninguém por perto.</p>
                     </div>
-                    <div class="page-number">2</div>
+                    <div class="page-number">10</div>
                 </div>
 
+                <!-- PÁGINA 2 DE HISTORIA: El coche y la Familia -->
                 <div class="page">
                     <div class="content-wrapper">
-                        <p data-lang="es">Después de todo lo que casi me arruina, entendí que esos días eran un lujo que nunca volvería a tener.</p>
-                        <p data-lang="en">After everything that nearly ruined me, I understood that those days were a luxury I would never have again.</p>
-                        <p data-lang="pt">Depois de tudo que quase me destruiu, entendi que aqueles dias eram um luxo que nunca mais teria.</p>
+                        <p data-lang="es">El segundo fue un coche. Yo estaba en la acera, esperando a mi mamá, cuando escuché el chirrido de llantas. Un auto venía directo hacia mí, derrapando. Vi el reflejo del sol en el parabrisas, sentí el aire caliente cortarme la cara… y entonces, se detuvo. No frenó: se detuvo, como si hubiera chocado contra algo invisible. El conductor bajó pálido, jurando que el volante se le había trabado solo. Hubo más. Pequeñas salvaciones imposibles. La gente decía que Dios me cuidaba. Yo sonreía, pero por dentro, una semilla fría de duda empezaba a germinar.</p>
+                        <p data-lang="en">The second was a car. I was on the sidewalk when I heard tires screeching. A car came straight at me. I felt the hot air... then it stopped. It didn't brake; it stopped as if hitting something invisible. The driver got out pale, swearing the wheel locked. There were more impossible salvations. People said God watched over me. I smiled, but a cold seed of doubt sprouted inside.</p>
+                        <p data-lang="pt">O segundo foi um carro. Eu estava na calçada quando ouvi pneus cantando. Um carro vinha em minha direção. Senti o ar quente... então parou. Não freou; parou como se batesse em algo invisível. O motorista saiu pálido, jurando que o volante travou. Houve mais salvações impossíveis. Diziam que Deus cuidava de mim. Eu sorria, mas uma semente fria de dúvida brotava.</p>
 
-                        <p data-lang="es">Les voy a contar algo que me pasó hace mucho. No es una historia bonita, pero empieza como si lo fuera.</p>
-                        <p data-lang="en">I’m going to tell you something that happened to me a long time ago. It’s not a pretty story, but it begins as if it were.</p>
-                        <p data-lang="pt">Vou contar algo que me aconteceu há muito tempo. Não é uma história bonita, mas começa como se fosse.</p>
+                        <p data-lang="es">Crecí en una familia que vivía del café. Desde que tengo memoria, las mañanas olían a granos tostándose y a tierra húmeda. Tenía un hermano mayor, Elías. Nunca nos llevamos bien. Él siempre encontraba la forma de recordarme que yo era “la menor” y que debía quedarme callada. Discutíamos por todo. Y estaba mi hermana, Sheyka. En ese entonces, yo no sabía que un día cambiaría mi vida para siempre. Para mí, era solo mi hermana: la que me peinaba, la que me prestaba su ropa a escondidas, la que me defendía de Elías.</p>
+                        <p data-lang="en">I grew up in a coffee family. Mornings smelled of roasting beans. I had an older brother, Elías. We never got along. He always reminded me I was "the youngest." We argued about everything. And there was my sister, Sheyka. Back then, I didn't know she'd change my life. She was just my sister: the one who braided my hair, lent me clothes, defended me from Elías.</p>
+                        <p data-lang="pt">Cresci numa família de café. As manhãs cheiravam a grãos torrados. Tinha um irmão mais velho, Elías. Nunca nos demos bem. Ele sempre lembrava que eu era "a menor". Discutíamos por tudo. E havia minha irmã, Sheyka. Na época, não sabia que ela mudaria minha vida. Era apenas minha irmã: a que penteava meu cabelo, emprestava roupas, me defendia de Elías.</p>
 
-                        <p data-lang="es">El primero fue el alacrán. De pequeña, no soportaba esos bichos. En la finca, los niños mayores me agarraban uno vivo y me lo hacían correr por el brazo, riéndose mientras yo lloraba y pataleaba. Sentía sus patas frías y rápidas sobre mi piel, y ese recuerdo se me quedó pegado como una cicatriz invisible.</p>
-                        <p data-lang="en">The first was the scorpion. As a child, I couldn’t stand those creatures. On the farm, the older kids would grab a live one and make it crawl up my arm, laughing while I cried and kicked. I could feel its cold, quick legs on my skin, and that memory stuck to me like an invisible scar.</p>
-                        <p data-lang="pt">O primeiro foi o escorpião. Quando pequena, eu não suportava esses bichos. Na fazenda, os meninos mais velhos pegavam um vivo e o faziam correr pelo meu braço, rindo enquanto eu chorava e me debatia. Sentia suas patas frías e rápidas sobre minha pele, e essa lembrança ficou grudada em mim como uma cicatriz invisível.</p>
+                        <p data-lang="es">Éramos una familia como tantas, unida por el trabajo y separada por los silencios. Y entonces llegó el momento que lo cambió todo. El que me marcó para siempre. La noche en la finca. El jornalero.</p>
+                        <p data-lang="en">We were a family like many, bound by work, separated by silence. Then came the moment that changed everything. The one that marked me forever. The night on the farm. The farmhand.</p>
+                        <p data-lang="pt">Éramos uma família como tantas, unida pelo trabalho, separada pelo silêncio. Então chegou o momento que mudou tudo. O que me marcou para sempre. A noite na fazenda. O trabalhador.</p>
                     </div>
-                    <div class="page-number">3</div>
+                    <div class="page-number">11</div>
                 </div>
 
-                <div class="page">
-                    <div class="content-wrapper">
-                        <p data-lang="es">Esa tarde, estaba descalza en el patio, bailando sola al ritmo de una canción que tarareaba. Entonces lo vi: a centímetros de mi pie, un alacrán negro, vivo, inmóvil, mirándome como si esperara que yo hiciera el primer movimiento. Me quedé helada, sin saber si correr o aplastarlo.</p>
-                        <p data-lang="en">That afternoon, I was barefoot in the yard, dancing alone to the rhythm of a song I was humming. Then I saw it: inches from my foot, a black scorpion, alive, motionless, staring at me as if waiting for me to make the first move. I froze, unsure whether to run or crush it.</p>
-                        <p data-lang="pt">Naquela tarde, eu estava descalça no pátio, dançando sozinha no ritmo de uma canção que cantarolava. Então o vi: a centímetros do meu pé, um escorpião preto, vivo, imóvel, olhando para mim como se esperasse meu primeiro movimento. Fiquei paralisada, sem saber se corria ou o esmagava.</p>
-
-                        <p data-lang="es">Y entonces pasó. Sin que yo lo tocara, su cuerpo empezó a humear. Primero un olor agrio, como pelo quemado, y luego un chisporroteo suave. El alacrán se encogió sobre sí mismo, ennegrecido, hasta quedar inmóvil… muerto. No había nadie cerca. Solo yo, el patio, y ese olor que no se me olvidó nunca.</p>
-                        <p data-lang="en">And then it happened. Without me touching it, its body began to smoke. First a bitter smell, like burnt hair, and then a faint crackling.The scorpion curled in on itself, blackened, until it lay still… dead. There was no one around. Just me, the yard, and that smell I would never forget.</p>
-                        <p data-lang="pt">E então aconteceu. Sem que eu o tocasse, seu corpo começou a soltar fumaça. Primeiro um cheiro acre, como de cabelo queimado, depois um chiado suave. O escorpião se encolheu sobre si mesmo, enegrecido, até ficar imóvel… morto. Não havia ninguém por perto. Só eu, o pátio e aquele cheiro que nunca esqueci.</p>
-                    </div>
-                    <div class="page-number">4</div>
-                </div>
-
-                <div class="page full-image-page">
-                    <img src="assets/imagenes/joziel-grimoire.jpeg" alt="Grimorio de Joziel">
-                    <div class="page-number">5</div>
-                </div>
-                
-                <div class="page">
-                    <div class="content-wrapper">
-                        <p data-lang="es">El segundo fue un coche. Yo estaba en la acera, esperando a mi mamá, cuando escuché el chirrido de llantas. Un auto venía directo hacia mí, derrapando. Vi el reflejo del sol en el parabrisas, sentí el aire caliente cortarme la cara… y entonces, se detuvo. No frenó: se detuvo, como si hubiera chocado contra algo invisible. El conductor bajó pálido, jurando que el volante se le había trabado solo.</p>
-                        <p data-lang="en">The second was a car. I was on the sidewalk, waiting for my mother, when I heard the screech of tires. A car came straight at me, skidding. I saw the sun’s glare on the windshield, felt the hot air slice across my face… and then, it stopped. It didn’t brake: it stopped, as if it had hit something invisible. The driver get out pale, swearing that the steering wheel had locked on its own.</p>
-                        <p data-lang="pt">O segundo foi um carro. Eu estava na calçada, esperando minha mãe, quando ouvi o guincho dos pneus. Um carro vinha direto em minha direção, derrapando. Vi o reflexo do sol no para-brisa, senti o ar quente cortar meu rosto… e então, ele parou. Não freou: parou, como se tivesse batido em algo invisível. O motorista saiu pálido, jurando que o volante tinha travado sozinho.</p>
-
-                        <p data-lang="es">Hubo más. Pequeñas salvaciones imposibles. La gente decía que Dios me cuidaba. Yo sonreía, pero por dentro, una semilla fría de duda empezaba a germinar. No se sentía como una bendición. Se sentía como una trampa.</p>
-                        <p data-lang="en">There were more. Little impossible salvations. People said God was watching over me. I smiled, but inside, a cold seed of doubt began to sprout. It didn't feel like a blessing. It felt like a trap.</p>
-                        <p data-lang="pt">Houve mais. Pequenas salvações impossíveis. As pessoas diziam que Deus cuidava de mim. Eu sorria, mas por dentro, uma semente fria de dúvida começava a germinar. Não parecia una bênção. Parecia uma armadilha.</p>
-                    </div>
-                    <div class="page-number">6</div>
-                </div>
-
-                <div class="page">
-                    <div class="content-wrapper">
-                        <p data-lang="es">Crecí en una familia que vivía del café. Desde que tengo memoria, las mañanas olían a granos tostándose y a tierra húmeda. Mi madre decía que el café era nuestra sangre, y que sin él no seríamos nada.</p>
-                        <p data-lang="en">I grew up in a family that lived off coffee. For as long as I can remember, the mornings smelled of roasting beans and damp soil. My mother said coffee was our blood, and that without it we would be nothing.</p>
-                        <p data-lang="pt">Cresci em uma família que vivia do café. Desde que me lembro, as manhãs cheiravam a grãos torrando e a terra úmida. Minha mãe dizia que o café era nosso sangue e que sem ele não seríamos nada.</p>
-
-                        <p data-lang="es">Tenía un hermano mayor, Elías. Nunca nos llevamos bien. Él siempre encontraba la forma de recordarme que yo era “la menor” y que debía quedarme callada. Discutíamos por todo: por quién ayudaba más en la finca, por quién se quedaba con el último pan, por quién tenía la razón aunque no importara.</p>
-                        <p data-lang="en">I had an older brother, Elías. We never got along. He always found a way to remind me that I was “the youngest” and should keep quiet. We argued about everything: about who helped more on the farm, about who got the last piece of bread, about who was right even when it didn’t matter.</p>
-                        <p data-lang="pt">Eu tinha un irmão mais velho, Elías. Nunca nos demos bem. Ele siempre encontrava un jeito de me lembrar que eu era “a menor” e que devia ficar calada. Discutíamos por tudo: por quem ajudava mais na fazenda, por quem ficava com o último pão, por quem tinha razão mesmo quando não importava.</p>
-                    </div>
-                    <div class="page-number">7</div>
-                </div>
-
-                <div class="page">
-                    <div class="content-wrapper">
-                        <p data-lang="es">Y estaba mi hermana, Sheyka. En ese entonces, yo no sabía que un día cambiaría mi vida para siempre. Para mí, era solo mi hermana: la que me peinaba cuando mamá no tenía paciencia, la que me prestaba su ropa a escondidas, la que me defendía de Elías cuando las peleas se ponían feas.</p>
-                        <p data-lang="en">And there was my sister, Sheyka. Back then, I didn’t know that one day she would change my life forever. To me, she was just my sister: the one who braided my hair when mom had no patience, the one who secretly lent me her clothes, the one who defended me from Elías when the fights got ugly.</p>
-                        <p data-lang="pt">E havia minha irmã, Sheyka. Naquele tempo, eu não sabia que um dia ela mudaria minha vida para sempre. Para mim, ela era apenas minha irmã: a que me penteava quando mamãe não tinha paciência, a que me emprestava roupas às escondidas, a que me defendia de Elías quando as brigas ficavam feias.</p>
-
-                        <p data-lang="es">Éramos una familia como tantas, unida por el trabajo y separada por los silencios.</p>
-                        <p data-lang="en">We were a family like so many others, bound by work and divided by silences.</p>
-                        <p data-lang="pt">Éramos uma família como tantas, unida pelo trabalho e separada pelos silêncios.</p>
-
-                        <p data-lang="es">Y entonces llegó el momento que lo cambió todo. El que me marcó para siempre. La noche en la finca. El jornalero.</p>
-                        <p data-lang="en">And then came the moment that changed everything. The one that marked me forever. The night on the farm. The farmhand.</p>
-                        <p data-lang="pt">E então chegou o momento que mudou tudo. Aquele que me marcou para sempre. A noite na fazenda. O trabalhador.</p>
-                    </div>
-                    <div class="page-number">8</div>
-                </div>
-
-                <div class="page full-image-page">
-                    <img src="assets/imagenes/joziel-library.png" alt="Biblioteca">
-                    <div class="page-number">9</div>
-                </div>
-
+                <!-- PÁGINA 3 DE HISTORIA: La Fiesta y El Encuentro -->
                 <div class="page">
                     <div class="content-wrapper">
                         <h3 data-lang="es">La noche en que la sombra me salvó</h3>
                         <h3 data-lang="en">The night the shadow saved me</h3>
                         <h3 data-lang="pt">A noite em que a sombra me salvou</h3>
-
-                        <p data-lang="es">A veces sueño con esa noche. No porque no la recuerde, sino porque mi mente insiste en repetirla, como si no bastara con haberla vivido una vez.</p>
-                        <p data-lang="en">Sometimes I dream of that night. Not because I don’t remember it, but because my mind insists on replaying it, as if once hadn’t been enough.</p>
-                        <p data-lang="pt">Às vezes eu sonho com aquela noite. Não porque eu não a lembre, mas porque minha mente insiste em repeti-la, como se uma vez não tivesse bastado.</p>
-
-                        <p data-lang="es">Mis padres estaban en una fiesta familiar, celebrando el cumpleaños de un primo lejano. La finca se llenó de gente, de luces colgadas entre los árboles, de niños corriendo entre las mesas. Sheyka se fue con mi tía a ayudar en la cocina. Elías estaba con sus amigos, jugando cartas y bebiendo.</p>
-                        <p data-lang="en">My parents were at a family party, celebrating a distant cousin’s birthday. The farm filled with people, with lights strung between the trees, with children running between the tables. Sheyka had gone with my aunt to help in the kitchen. Elías was with his friends, playing cards and drinking.</p>
-                        <p data-lang="pt">Meus pais estavam em uma festa de família, comemorando o aniversário de um primo distante. A fazenda se encheu de gente, de luzes penduradas entre as árvares, de crianças correndo entre as mesas. Sheyka tinha ido com minha tia ajudar na cozinha. Elías estava com os amigos, jogando cartas e bebendo.</p>
                         
-                        <p data-lang="es">Y yo… yo estaba sola. No sé por qué. Tal vez porque nadie notó que me había alejado. Tal vez porque yo misma me alejé.</p>
-                        <p data-lang="en">And I… I was alone. I don’t know why. Maybe because no one noticed I had slipped away. Maybe because I wanted to.</p>
-                        <p data-lang="pt">E eu… eu estava sozinha. Não sei por quê. Talvez porque ninguém notou que eu tinha me afastado. Talvez porque eu misma quis me afastar.</p>
-                    </div>
-                    <div class="page-number">10</div>
-                </div>
+                        <p data-lang="es">A veces sueño con esa noche. Mis padres estaban en una fiesta familiar. La finca se llenó de gente, de luces colgadas entre los árboles. Sheyka se fue con mi tía a ayudar en la cocina. Elías estaba con sus amigos. Y yo… yo estaba sola. El jornalero había estado bebiendo desde temprano. Lo vi tambaleándose entre los adultos. Cuando me vio, algo cambió en su mirada. Empezó a seguirme con esa lentitud que da más miedo que la prisa. Me llamaba con voz suave: “Muñequita… ven, quiero mostrarte algo.”</p>
+                        <p data-lang="en">Sometimes I dream of that night. My parents were at a party. The farm was full of people and lights. Sheyka was in the kitchen. Elías was with friends. And I... I was alone. The farmhand had been drinking. I saw him stumbling. When he saw me, his look changed. He followed me with a scary slowness. He called softly: "Doll... come, I want to show you something."</p>
+                        <p data-lang="pt">Às vezes sonho com essa noite. Meus pais estavam numa festa. A fazenda cheia de gente e luzes. Sheyka estava na cozinha. Elías com amigos. E eu... sozinha. O trabalhador tinha bebido. Vi ele cambaleando. Quando me viu, o olhar mudou. Seguiu-me com uma lentidão assustadora. Chamou suavemente: "Bonequinha... vem, quero te mostrar algo."</p>
 
-                <div class="page">
-                    <div class="content-wrapper">
-                        <p data-lang="es">El jornalero había estado bebiendo desde temprano. Lo vi tambaleándose entre los adultos, riéndose con una voz ronca, con los ojos brillantes y perdidos. No era parte de la familia, pero lo habían invitado por cortesía.</p>
-                        <p data-lang="en">The farmhand had been drinking since early. I saw him stumbling among the adults, laughing with a hoarse voice, his eyes shiny and unfocused. He wasn’t family, but they had invited him out of courtesy.</p>
-                        <p data-lang="pt">O trabalhador tinha bebido desde cedo. Eu o vi cambaleando entre los adultos, rindo com uma voz rouca, os olhos brilhando, perdidos. Não era da família, mas o haviam convidado por cortesia.</p>
-
-                        <p data-lang="es">Cuando me vio, algo cambió en su mirada. Al principio pensé que era casual, que solo pasaba por ahí. Pero empezó a seguirme. No con pasos rápidos, sino con esa lentitud que da más miedo que la prisa. Me llamaba con voz suave, como si jugara. “Muñequita… ven, quiero mostrarte algo.”</p>
-                        <p data-lang="en">When he saw me, something changed in his gaze. At first I thought it was coincidence, that he was just passing by. But he began to follow me. Not with quick steps, but with that slowness that is scarier than haste. He called me in a soft voice, as if playing. “Doll… come, I want to show you something.”</p>
-                        <p data-lang="pt">Quando me viu, algo mudou no seu olhar. No começo pensei que fosse acaso, que ele só passava por ali. Mas começou a me seguir. Não com passos rápidos, mas com aquela lentidão que dá mais medo que a pressa. Chamava-me com voz suave, como se brincasse. “Bonequinha… vem, quero te mostrar uma coisa.”</p>
-                    </div>
-                    <div class="page-number">11</div>
-                </div>
-
-                <div class="page">
-                    <div class="content-wrapper">
-                        <p data-lang="es">Me alejé. Caminé hacia la parte trasera de la finca, donde la luz de la fiesta no llegaba. Él me siguió.</p>
-                        <p data-lang="en">I pulled away. Walked toward the back of the farm, where the party’s light didn’t reach. He followed me.</p>
-                        <p data-lang="pt">Me afastei. Caminhei para os fundos da fazenda, onde a luz da festa não chegava. Ele me seguiu.</p>
-                        
-                        <p data-lang="es">La tierra estaba húmeda por la lluvia de la tarde. El aire olía a café y a hojas mojadas. Yo sentía que algo no estaba bien, pero no sabía cómo pedir ayuda sin parecer exagerada.</p>
-                        <p data-lang="en">The ground was damp from the afternoon rain. The air smelled of coffee and wet leaves. I felt that something wasn’t right, but I didn’t know how to ask for help without seeming dramatic.</p>
-                        <p data-lang="pt">A terra estava úmida pela chuva da tarde. O ar cheirava a café e folhas molhadas. Eu sentia que algo não estava certo, mas não sabia como pedir ajuda sem parecer exagerada.</p>
-
-                        <p data-lang="es">Cuando me di cuenta, estábamos solos. Él se acercó, tambaleante, con las manos ásperas y el aliento a aguardiente. Me acorraló contra la pared de madera del galpón. Sus dedos rozaron los tirantes de mi vestido. Su voz se volvió un susurro:</p>
-                        <p data-lang="en">Before I realized it, we were alone. He staggered closer, with rough hands and a breath of liquor. He cornered me against the wooden wall of the shed. His fingers brushed the straps of my dress. His voice dropped to a whisper:</p>
-                        <p data-lang="pt">Quando percebi, estávamos sozinhos. Ele se aproximou, cambaleante, com as mãos ásperas e o hálito de aguardente. Me encurralou contra a parede de madeira do galpão. Seus dedos roçaram as alças do meu vestido. Sua voz virou um sussurro:</p>
-                        
-                        <p data-lang="es">—Quieta, muñequita. Vamos a jugar un juego…</p>
-                        <p data-lang="en">—Still, doll. We’re going to play a game…</p>
-                        <p data-lang="pt">—Quietinha, bonequinha. Vamos brincar de um jogo…</p>
+                        <p data-lang="es">Me alejé hacia la parte trasera de la finca. Él me siguió. La tierra estaba húmeda. Cuando me di cuenta, estábamos solos. Él se acercó, tambaleante, con las manos ásperas. Me acorraló contra la pared del galpón. Su voz se volvió un susurro: “—Quieta, muñequita. Vamos a jugar un juego…”. Y entonces, algo golpeó la puerta. Un sonido seco, fuerte. Él se giró, molesto. Y ahí… mi memoria se corta.</p>
+                        <p data-lang="en">I walked away to the back. He followed. The ground was wet. Suddenly, we were alone. He staggered closer, rough hands reaching. He cornered me against the shed. His voice whispered: "Still, doll. Let's play a game..." Then, something hit the door. A hard sound. He turned, annoyed. And there... my memory cuts off.</p>
+                        <p data-lang="pt">Afastei-me para os fundos. Ele seguiu. O chão estava úmido. De repente, estávamos sós. Ele se aproximou cambaleando, mãos ásperas. Encurralou-me no galpão. Sussurrou: "Quieta, bonequinha. Vamos brincar..." Então, algo bateu na porta. Um som forte. Ele virou, irritado. E aí... minha memória corta.</p>
                     </div>
                     <div class="page-number">12</div>
                 </div>
-                
+
+                <!-- PÁGINA 4 DE HISTORIA: El Sueño y El Final -->
                 <div class="page">
                     <div class="content-wrapper">
-                        <p data-lang="es">Y entonces, algo golpeó la puerta. Un sonido seco, fuerte, como si alguien hubiera lanzado una piedra. Él se giró, molesto.</p>
-                        <p data-lang="en">And then, something struck the door. A dry, heavy sound, as if someone had thrown a rock. He turned, annoyed.</p>
-                        <p data-lang="pt">E então, algo bateu na porta. Um som seco, forte, como se alguém tivesse jogado uma pedra. Ele se virou, irritado.</p>
-                        
-                        <p data-lang="es">Y ahí… mi memoria se corta.</p>
-                        <p data-lang="en">And there… my memory cuts off.</p>
-                        <p data-lang="pt">E aí… minha memória se corta.</p>
-                        
-                        <p data-lang="es">Lo que vino después no lo viví despierta. Lo vi en sueños.</p>
-                        <p data-lang="en">What came next I didn’t live awake. I saw it in dreams.</p>
-                        <p data-lang="pt">O que veio depois eu não vivi desperta. Vi em sonhos.</p>
+                        <p data-lang="es">Lo que vino después no lo viví despierta. Lo vi en sueños. La sombra tenía un parecido a mí, pero corrompido. Su cuerpo empapado se pegaba al del jornalero. “¿A dónde ibas, hombre?”, susurraba con mi voz deformada. Él, borracho, la agarraba con fuerza. Y aquí empieza mi infierno: siento lo que ella siente, un pulso ajeno, oscuro. Y entonces la escucho: “—Más… más… así…”.</p>
+                        <p data-lang="en">What followed I saw in dreams. The shadow looked like a corrupted me. Its wet body pressed against him. "Where were you going?" it whispered with my distorted voice. Drunk, he grabbed her. My hell began: I felt what she felt, a dark, foreign pulse. Then I heard her: "More... more... like that..."</p>
+                        <p data-lang="pt">O que veio depois vi em sonhos. A sombra parecia uma eu corrompida. Seu corpo molhado colado nele. "Onde ia?" sussurrou com minha voz distorcida. Bêbado, ele a agarrou. Meu inferno começou: senti o que ela sentia, um pulso escuro e estranho. Então a ouvi: "Mais... mais... assim..."</p>
 
-                        <p data-lang="es">Y en esos sueños, la sombra tenía un parecido a mí. No era idéntica. Era como si alguien hubiera tomado mi rostro y lo hubiera estirado, suavizado, corrompido.</p>
-                        <p data-lang="en">And in those dreams, the shadow looked like me. Not identical. As if someone had taken my face and stretched it, softened it, corrupted it.</p>
-                        <p data-lang="pt">E nesses sonhos, a sombra se parecia comigo. Não era idêntica. Era como se alguém tivesse pegado meu rosto e o tivesse esticado, suavizado, corrompido.</p>
+                        <p data-lang="es">Justo cuando él se abandona, la cara de la aparición se deforma en una sonrisa inhumana. Con velocidad sobrenatural, le arrebata el machete del cinto. Un destello plateado corta la noche. El grito del hombre muere antes de nacer. Su cabeza se separa del cuerpo. La aparición sonríe, salpicada de sangre. El sueño me devuelve de golpe a mi cuerpo de niña, sola y a salvo.</p>
+                        <p data-lang="en">Just as he gives in, the apparition's face warps into an inhuman smile. With supernatural speed, it snatches his machete. A silver flash cuts the night. His scream dies instantly. His head separates from his body. The apparition smiles, blood-spattered. The dream slams me back into my child body, alone and safe.</p>
+                        <p data-lang="pt">Quando ele se entrega, o rosto da aparição vira um sorriso desumano. Com velocidade sobrenatural, ela toma o facão. Um clarão prateado corta a noite. O grito morre instantaneamente. A cabeça separa-se do corpo. A aparição sorri, salpicada de sangue. O sonho me joga de volta ao corpo de criança, sozinha e salva.</p>
+
+                        <p data-lang="es">Solo recé, sin entender por qué el frío en mi estómago se sentía cálido. Como si algo me hubiera marcado y elegido. Me llamo Joziel. Y esta es la historia de cómo la sombra que me salva… también me destruye.</p>
+                        <p data-lang="en">I just prayed, not understanding why the cold inside felt warm. As if something marked and chose me. I am Joziel. And this is the story of how the shadow that saves me... also destroys me.</p>
+                        <p data-lang="pt">Só rezei, sem entender por que o frio dentro parecia quente. Como se algo me marcasse e escolhesse. Sou Joziel. E esta é a história de como a sombra que me salva... também me destrói.</p>
                     </div>
                     <div class="page-number">13</div>
                 </div>
 
-                <div class="page">
-                    <div class="content-wrapper">
-                        <p data-lang="es">Su cuerpo empapado se pegaba al del jornalero bajo la lluvia. “¿A dónde ibas, hombre?”, le susurraba con una voz que parecía la mía, pero más grave, más dulce, más venenosa. “Te estaba esperando… ven.”</p>
-                        <p data-lang="en">Its drenched body pressed against the farmhand’s in the rain. “Where were you going, man?” it whispered with a voice that was mine, but deeper, sweeter, more venomous. “I was waiting for you… come.”</p>
-                        <p data-lang="pt">Seu corpo encharcado se colava ao do trabalhador sob a chuva. “Onde você ia, homem?”, ela sussurrava com uma voz que parecia a minha, mas mais grave, mais doce, mais venenosa. “Eu estaba te esperando… vem.”</p>
-
-                        <p data-lang="es">Él, borracho de deseo y confusión, la agarraba con fuerza. Y aquí empieza mi infierno personal. No es lo que hace, sino lo que siento.</p>
-                        <p data-lang="en">He, drunk with desire and confusion, grabbed her hard. And here begins my personal hell. It’s not what he does, but what I feel.</p>
-                        <p data-lang="pt">Ele, bêbado de desejo e confusão, a agarrava com força. E aqui começa meu inferno pessoal. Não é o que ele faz, mas o que eu sinto.</p>
-
-                        <p data-lang="es">Puedo percibir cada respiración acelerada, cada estremecimiento que recorre su piel, pero no es mío. Es de ellos. Es un pulso ajeno que me atraviesa, un calor que no me pertenece. Y mientras él se hunde en esa ilusión, yo me hundo en algo mucho más oscuro: la certeza de que mi cara, mi voz, mi cuerpo, están siendo usados para algo que me repugna.</p>
-                        <p data-lang="en">I can sense every hurried breath, every shiver that runs across his skin, but it isn’t mine. It’s theirs. It’s a foreign pulse coursing through me, a heat that doesn’t belong to me. And while he sinks into that illusion, I sink into something much darker: the certainty that my face, my voice, my body, are being used for something that disgusts me.</p>
-                        <p data-lang="pt">Posso perceber cada respiração acelerada, cada arrepio que percorre a pele dele, mas não é meu. É deles. É um pulso estranho que me atravessa, um calor que não me pertence. E enquanto ele se entrega àquela ilusão, eu me afundo em algo muito mais escuro: la certeza de que meu rosto, minha voz, meu corpo estão sendo usados para algo que me enoja.</p>
-                    </div>
-                    <div class="page-number">14</div>
-                </div>
-
-                <div class="page full-image-page">
-                    <img src="assets/imagenes/Midnight-mantras.png" alt="Midnight Mantras">
-                    <div class="page-number">15</div>
-                </div>
-
-                <div class="page">
-                    <div class="content-wrapper">
-                        <p data-lang="es">Y entonces la escucho, con mi propia voz, pero deformada, susurrarle al oído:</p>
-                        <p data-lang="en">And then I hear her, with my own voice but distorted, whisper in his ear:</p>
-                        <p data-lang="pt">E então a ouço, com minha própria voz, mas deformada, sussurrando em seu ouvido:</p>
-
-                        <p data-lang="es">—Más… más… así…</p>
-                        <p data-lang="en">—More… more… like that…</p>
-                        <p data-lang="pt">—Mais… mais… assim…</p>
-
-                        <p data-lang="es">Cada palabra es un latigazo en mi mente. No hay dolor físico en mí, pero hay un dolor más profundo: el de sentir que mi alma se mancha con cada segundo. Es como si me obligaran a beber un veneno que no mata, solo quema por dentro. Y lo peor es que, en ese rincón de mi mente donde no puedo cerrar los ojos, percibo que ellos lo disfrutan. Que se alimentan de ese momento.</p>
-                        <p data-lang="en">Each word lashes my mind. There is no physical pain in me, but a deeper pain: the pain of feeling my soul stained with every second. As if I were being forced to drink a poison that doesn’t kill, only burns inside. And the worst part is that, in that corner of my mind where I cannot close my eyes, I sense that they are enjoying it. That they are feeding on that moment.</p>
-                        <p data-lang="pt">Cada palavra é um chicote na minha mente. Não há dor física em mim, mas há uma dor mais profunda: a de sentir minha alma se manchando a cada segundo. Como se me obrigassem a beber um veneno que não mata, apenas queima por dentro. E o pior é que, nesse canto da minha mente onde não posso fechar los olhos, percebo que eles estão aproveitando. Que se alimentam daquele momento.</p>
-                    </div>
-                    <div class="page-number">16</div>
-                </div>
-
-                <div class="page">
-                    <div class="content-wrapper">
-                        <p data-lang="es">Yo quiero gritar, pero mi garganta en el sueño no existe. Solo me queda mirar, atrapada, mientras la lluvia afuera se mezcla con un calor nauseabundo que me envuelve. Y en ese instante, entiendo que no me están salvando. Me están marcando.</p>
-                        <p data-lang="en">I want to scream, but in the dream my throat doesn’t exist. All I can do is watch, trapped, while the rain outside mixes with a nauseating heat that envelops me. And in that instant, I understand that they are not saving me. They are marking me.</p>
-                        <p data-lang="pt">Quero gritar, mas no sonho minha garganta não existe. Só me resta olhar, presa, enquanto a chuva lá fora se mistura a um calor nauseante que me envolve. E nesse instante, entendo que não estão me salvando. Estão me marcando.</p>
-
-                        <p data-lang="es">Justo cuando él se abandona al momento, la cara de la aparición se deforma. Su sonrisa se ensancha hasta ser imposible, inhumana, revelando demasiados dientes. Sus ojos azules brillan con una luz helada.</p>
-                        <p data-lang="en">Just when he gives in to the moment, the apparition’s face warps. Its smile widens until it is impossible, inhuman, revealing too many teeth. Its blue eyes gleam with an icy light.</p>
-                        <p data-lang="pt">Justo quando ele se entrega ao momento, o rosto da aparição se deforma. Seu sorriso se alarga até ser impossível, desumano, revelando dentes demais. Seus olhos azuis brilham com uma luz gelada.</p>
-                    </div>
-                    <div class="page-number">17</div>
-                </div>
+                <!-- Páginas en blanco finales -->
+                <div class="page"><div class="content-wrapper"></div></div>
                 
-                <div class="page full-image-page">
-                    <img src="assets/imagenes/Shadow-files.jpeg" alt="Shadow Files">
-                    <div class="page-number">18</div>
-                </div>
-
-                <div class="page">
+                <!-- PÁGINAS DEL PORTAL -->
+                <div class="page portal-page">
                     <div class="content-wrapper">
-                        <p data-lang="es">Con una velocidad que no es de este mundo, le arrebata el machete que el hombre lleva colgando del cinto. El jornalero no tiene tiempo ni de sorprenderse. Antes de que pueda procesar el cambio, la hoja del machete ya está en el aire.</p>
-                        <p data-lang="en">With a speed not of this world, it snatches the machete hanging from the man’s belt. The farmhand doesn’t even have time to be surprised. Before he can process the change, the blade is already in the air.</p>
-                        <p data-lang="pt">Com uma velocidade que não é deste mundo, ela arranca o facão que o homem trazia preso no cinto. O trabalhador não tem tempo nem de se surpreender. Antes que consiga processar a mudança, a lâmina já está no ar.</p>
-
-                        <p data-lang="es">Un destello plateado corta la noche. El sueño se vuelve lento y nítido. Veo el silbido agudo de la hoja al cortar el aire empapado, seguido de un tajo húmedo, pesado y final.</p>
-                        <p data-lang="en">A silver flash cuts the night. The dream becomes slow and vivid. I see the sharp whistle of the blade slicing through the soaked air, followed by a wet, heavy, final slash.</p>
-                        <p data-lang="pt">Um clarão prateado corta a noite. O sonho se torna lento e nítido. Vejo o assobio agudo da lâmina rasgando o ar encharcado, seguido de um golpe úmido, pesado e final.</p>
-                    </div>
-                    <div class="page-number">19</div>
-                </div>
-
-                <div class="page">
-                    <div class="content-wrapper">
-                        <p data-lang="es">El grito del hombre es un gargajo ahogado que muere antes de nacer. Su cabeza se separa de su cuerpo en una fuente oscura y caliente que se mezcla con la lluvia fría. El cuerpo decapitado se desploma en el barro con un ruido sordo.</p>
-                        <p data-lang="en">The man’s scream is a choking gargle that dies before it’s born. His head separates from his body in a hot, dark fountain that mingles with the cold rain. The decapitated body collapses in the mud with a dull thud.</p>
-                        <p data-lang="pt">O grito do homem é um gargarejo sufocado que morre antes de nascer. Sua cabeça se separa do corpo em uma fonte quente e escura que se mistura à chuva fria. O corpo decapitado desaba na lama com um baque surdo.</p>
-                        
-                        <p data-lang="es">La aparición no grita. Creo que sonríe, con la cara salpicada por la sangre de él.</p>
-                        <p data-lang="en">The apparition does not scream. I think it smiles, its face splattered with his blood.</p>
-                        <p data-lang="pt">A aparição não grita. Acho que sorri, com o rosto salpicado pelo sangue dele.</p>
-
-                        <p data-lang="es">El sueño nunca me deja ver más. Me devuelve de golpe a mi cuerpo de niña, en el suelo de madera, con el eco de ese sonido final rebotando en mi cabeza. Sola. A salvo.</p>
-                        <p data-lang="en">The dream never lets me see more. It hurls me back into my child’s body, on the wooden floor, with the echo of that final sound bouncing in my head. Alone. Safe.</p>
-                        <p data-lang="pt">O sonho nunca me deixa ver mais. Me devolve de repente ao meu corpo de menina, no chão de madeira, com o eco daquele som final martelando em minha cabeça. Sozinha. A salvo.</p>
-                    </div>
-                    <div class="page-number">20</div>
-                </div>
-                
-                <div class="page">
-                    <div class="content-wrapper">
-                        <p data-lang="es">Solo recé, sin entender por qué, de repente, el animal helado en mi estómago se sentía un poco más cálido.</p>
-                        <p data-lang="en">I only prayed, without understanding why, suddenly, the icy animal in my stomach felt a little warmer.</p>
-                        <p data-lang="pt">Só rezei, sem entender por que, de repente, o animal gelado no meu estômago parecia um pouco mais quente.</p>
-
-                        <p data-lang="es">Como si algo me hubiera marcado. Como si algo me hubiera elegido.</p>
-                        <p data-lang="en">As if something had marked me. As if something had chosen me.</p>
-                        <p data-lang="pt">Como se algo tivesse me marcado. Como se algo tivesse me escolhido.</p>
-                        
-                        <p data-lang="es">Y yo… no sabía si debía agradecerlo o temerlo.</p>
-                        <p data-lang="en">And I… didn’t know whether I should be grateful or afraid.</p>
-                        <p data-lang="pt">E eu… não sabia se devia agradecer ou temer.</p>
-                    </div>
-                    <div class="page-number">21</div>
-                </div>
-
-                <div class="page">
-                    <div class="content-wrapper center-content">
-                        <div>
-                            <p data-lang="es">Me llamo Joziel.</p>
-                            <p data-lang="en">My name is Joziel.</p>
-                            <p data-lang="pt">Meu nome é Joziel.</p>
-
-                            <p data-lang="es">Y esta es la historia de cómo la sombra que me salva… también me destruye.</p>
-                            <p data-lang="en">And this is the story of how the shadow that saves me… also destroys me.</p>
-                            <p data-lang="pt">E esta é a história de como a sombra que me salva… também me destrói.</p>
+                        <video class="portal-video" autoplay loop muted playsinline src="https://assets.mixkit.co/videos/preview/mixkit-flying-through-a-metaverse-landscape-42846-large.mp4"></video>
+                        <div class="portal-overlay">
+                            <div class="portal-content">
+                                <h2 data-lang="es">Comunidad LumenFall</h2>
+                                <h2 data-lang="en">LumenFall Community</h2>
+                                <h2 data-lang="pt">Comunidade LumenFall</h2>
+                                <p data-lang="es">Únete a nuestra comunidad...</p>
+                                <p data-lang="en">Join our community...</p>
+                                <p data-lang="pt">Junte-se à nossa comunidade...</p>
+                                <a href="#" class="portal-button" data-lang="es">Ir a la Comunidad</a>
+                                <a href="#" class="portal-button" data-lang="en">Go to Community</a>
+                                <a href="#" class="portal-button" data-lang="pt">Ir para a Comunidade</a>
+                            </div>
                         </div>
                     </div>
-                    <div class="page-number">22</div>
+                    <div class="page-number">25</div>
                 </div>
-
-                <!-- Páginas en blanco -->
-                <div class="page"><div class="content-wrapper"></div></div>
-                <div class="page"><div class="content-wrapper"></div></div>
                 
-                <!-- PÁGINAS DEL PORTAL (como estaban) -->
-                <div class="page portal-page"><div class="content-wrapper"><video class="portal-video" autoplay loop muted playsinline src="https://assets.mixkit.co/videos/preview/mixkit-flying-through-a-metaverse-landscape-42846-large.mp4"></video><div class="portal-overlay"><div class="portal-content"><h2 data-lang="es">Comunidad LumenFall</h2><h2 data-lang="en">LumenFall Community</h2><h2 data-lang="pt">Comunidade LumenFall</h2><p data-lang="es">Únete a nuestra comunidad...</p><p data-lang="en">Join our community...</p><p data-lang="pt">Junte-se à nossa comunidade...</p><a href="#" class="portal-button" data-lang="es">Ir a la Comunidad</a><a href="#" class="portal-button" data-lang="en">Go to Community</a><a href="#" class="portal-button" data-lang="pt">Ir para a Comunidade</a></div></div></div><div class="page-number">25</div></div>
-                <div class="page portal-page"><div class="content-wrapper"><video class="portal-video" autoplay loop muted playsinline src="https://assets.mixkit.co/videos/preview/mixkit-a-man-in-a-suit-works-with-a-futuristic-interface-42403-large.mp4"></video><div class="portal-overlay"><div class="portal-content"><h2 data-lang="es">Conviértete en Tester</h2><h2 data-lang="en">Become a Tester</h2><h2 data-lang="pt">Torne-se um Tester</h2><p data-lang="es">¿Quieres ser de los primeros en explorar Aethel? ...</p><p data-lang="en">Want to be among the first to explore Aethel? ...</p><p data-lang="pt">Quer ser um dos primeros a explorar Aethel? ...</p><a href="#" class="portal-button" data-lang="es">Inscribirse</a><a href="#" class="portal-button" data-lang="en">Sign Up</a><a href="#" class="portal-button" data-lang="pt">Inscrever-se</a></div></div></div><div class="page-number">26</div></div>
+                <div class="page portal-page">
+                    <div class="content-wrapper">
+                        <video class="portal-video" autoplay loop muted playsinline src="https://assets.mixkit.co/videos/preview/mixkit-a-man-in-a-suit-works-with-a-futuristic-interface-42403-large.mp4"></video>
+                        <div class="portal-overlay">
+                            <div class="portal-content">
+                                <h2 data-lang="es">Conviértete en Tester</h2>
+                                <h2 data-lang="en">Become a Tester</h2>
+                                <h2 data-lang="pt">Torne-se um Tester</h2>
+                                <p data-lang="es">¿Quieres ser de los primeros en explorar Aethel? ...</p>
+                                <p data-lang="en">Want to be among the first to explore Aethel? ...</p>
+                                <p data-lang="pt">Quer ser um dos primeros a explorar Aethel? ...</p>
+                                <a href="#" class="portal-button" data-lang="es">Inscribirse</a>
+                                <a href="#" class="portal-button" data-lang="en">Sign Up</a>
+                                <a href="#" class="portal-button" data-lang="pt">Inscrever-se</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-number">26</div>
+                </div>
                 
-                <!-- *** CAMBIO: Página 'Fin' reemplazada por la contraportada visible *** -->
                 <div class="page full-image-page">
                     <img src="assets/imagenes/Contraportada-libro.jpg" alt="Contraportada" style="object-fit: contain; background-color: #101010;">
                     <div class="page-number">27</div>
@@ -600,7 +415,7 @@ $(window).on('load', function() {
         {"id":"birds-audio","name":"Pájaros","gifSrc":"assets/gif/birds.gif"},
         {"id":"rain-audio","name":"Lluvia","gifSrc":"assets/gif/rain.gif"},
         {"id":"fire-audio","name":"Fuego","gifSrc":"assets/gif/fire.gif"},
-        {"id":"wind-audio","name":"Viento","gifSrc":"assets/gif/wind.gif"}, // Corregido el typo 'assetsG'
+        {"id":"wind-audio","name":"Viento","gifSrc":"assets/gif/wind.gif"},
         {"id":"storm-audio","name":"Tormenta","gifSrc":"assets/gif/storm.gif"},
         {"id":"magic-chimes-audio","name":"Sonido Mágico","gifSrc":"assets/gif/Magic.gif"},
         {"id":"cave-ambience-audio","name":"Cueva","gifSrc":"assets/gif/Cave.gif"}
@@ -608,7 +423,7 @@ $(window).on('load', function() {
     
     const languages = [
         {"code":"es","name":"Español","flagUrl":"assets/imagenes/Espanol.png"},
-        {"code":"en","name":"English","flagUrl":"assetss/imagenes/ingles.png"}, // <<< ¡OJO! Revisa si 'assets' o 'assetss' es correcto
+        {"code":"en","name":"English","flagUrl":"assets/imagenes/ingles.png"}, 
         {"code":"pt","name":"Português (BR)","flagUrl":"assets/imagenes/Brasil.png"}
     ];
     let currentLang = 'es';
@@ -667,27 +482,11 @@ $(window).on('load', function() {
     $("#language-toggle").on("click",e=>{e.stopPropagation();const t=!$("#language-panel").hasClass("hidden");closeAllPanels(),t||$("#language-panel").removeClass("hidden")});
     $(document).on("click",e=>{$(e.target).closest("#main-header").length||closeAllPanels()});
     
-    /* --- *** CAMBIO: AÑADIDO 'touchstart' PARA MAYOR SENSIBILIDAD *** --- */
-    
-    // Para PC (click)
-    $("#prev-page-area").on("click", (e) => {
-        e.preventDefault();
-        flipbook.turn("previous");
-    });
-    $("#next-page-area").on("click", (e) => {
-        e.preventDefault();
-        flipbook.turn("next");
-    });
-    
-    // Para Móvil (touchstart) - Mucho más rápido
-    $("#prev-page-area").on("touchstart", (e) => {
-        e.preventDefault(); // Previene "ghost clicks"
-        flipbook.turn("previous");
-    });
-    $("#next-page-area").on("touchstart", (e) => {
-        e.preventDefault(); // Previene "ghost clicks"
-        flipbook.turn("next");
-    });
+    // Eventos de clic
+    $("#prev-page-area").on("click", (e) => { e.preventDefault(); flipbook.turn("previous"); });
+    $("#next-page-area").on("click", (e) => { e.preventDefault(); flipbook.turn("next"); });
+    $("#prev-page-area").on("touchstart", (e) => { e.preventDefault(); flipbook.turn("previous"); });
+    $("#next-page-area").on("touchstart", (e) => { e.preventDefault(); flipbook.turn("next"); });
     
     const pageTurnHint=$("#page-turn-hint");"true"!==localStorage.getItem("lumenFallHintSeen")&&(setTimeout(()=>pageTurnHint.addClass("visible"),1500),flipbook.one("turned",()=>{pageTurnHint.removeClass("visible"),localStorage.setItem("lumenFallHintSeen","true")}));
     
@@ -698,13 +497,7 @@ $(window).on('load', function() {
     setVideoSkin(parseInt(localStorage.getItem("lumenFallVideoSkin"))||0);
     setLanguage(localStorage.getItem("lumenFallLanguage")||'es');
 
-    // Corrección final de typos
-    try {
-        ambienceSounds[5].gifSrc = "assets/gif/wind.gif";
-        languages[1].flagUrl = "assets/imagenes/ingles.png";
-    } catch(e) {
-        console.error("Error al corregir typos en arrays", e);
-    }
+    try { ambienceSounds[5].gifSrc = "assets/gif/wind.gif"; } catch(e) { console.error("Error al corregir typos en arrays", e); }
 });
 </script>
 
