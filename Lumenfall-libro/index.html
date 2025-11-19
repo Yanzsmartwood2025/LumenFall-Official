@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LumenFall - Libro Interactivo</title>
 
-    <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="LumenFall - Mi Libro Digital Interactivo" />
     <meta property="og:description" content="Te invito a explorar el universo de LumenFall a través de este libro digital. Una nueva aventura te espera." />
     <meta property="og:image" content="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/be10babecd71c85fcbf447231accb45c83607f28/Lumenfall-libro/assets/imagenes/portada-inicio.jpg" />
@@ -25,7 +24,7 @@
         :root {
             --runa-primary: #D47500;
             --slider-track-color: #25D366;
-            --header-height: 6rem; /* 96px */
+            --header-height: 6rem;
         }
         html { scroll-behavior: smooth; }
         
@@ -34,8 +33,7 @@
             transition: background-color 0.4s ease, color 0.4s ease; 
             margin: 0;
             overflow: hidden;
-            /* Importante para que el navegador no intente hacer scroll nativo al arrastrar la hoja */
-            touch-action: none; 
+            touch-action: none; /* CRÍTICO para que el dedo mueva la hoja y no la pantalla */
             background-color: #101010; 
         }
 
@@ -51,7 +49,6 @@
             -webkit-backdrop-filter: blur(16px); 
         }
 
-        /* --- Language Visibility Rules --- */
         [data-lang] { display: none; }
         html.lang-es [data-lang="es"],
         html.lang-en [data-lang="en"],
@@ -62,7 +59,7 @@
         html.lang-en a.portal-button[data-lang="en"],
         html.lang-pt a.portal-button[data-lang="pt"] { display: inline-block; }
 
-        /* --- Theme Styles (Light & Dark) --- */
+        /* --- Theme Styles --- */
         html:not(.dark) body { background-color: #e0e0e0; color: #3a2e2a; }
         html:not(.dark) .translucent-panel { background-color: rgba(255, 255, 255, 0.5); border-color: rgba(0,0,0,0.1); }
         html:not(.dark) .flipbook .page { background-color: #fdfbf7; color: #333; }
@@ -83,7 +80,6 @@
         html.dark .copyright-page { color: #777; }
         html.dark hr { border-color: rgba(255,255,255,0.2); }
 
-        /* --- CONTENEDOR PRINCIPAL --- */
         .flipbook-viewport { 
             display: flex; 
             justify-content: center; 
@@ -91,28 +87,21 @@
             height: 100vh; 
             width: 100vw; 
             position: fixed; top: 0; left: 0;
-            visibility: hidden; 
-            opacity: 0;
+            visibility: hidden; opacity: 0;
             transition: opacity 0.5s ease-in-out;
             padding-top: var(--header-height); 
             box-sizing: border-box; 
         }
         .flipbook-viewport.ready { visibility: visible; opacity: 1; }
         
-        /* --- CONTENEDOR DEL LIBRO --- */
         .flipbook-container { 
-            width: 95vw; 
-            height: 95%; 
-            max-width: 1400px; 
-            position: relative;
-            z-index: 1;
+            width: 95vw; height: 95%; max-width: 1400px; position: relative; z-index: 1;
         }
         .flipbook { width: 100%; height: 100%; }
 
         .flipbook .page { box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
         .flipbook .hard { background-color: #101010; box-shadow: inset 0 0 5px #000; }
         
-        /* --- PORTADAS --- */
         .cover-page { 
             background: #101010 url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/be10babecd71c85fcbf447231accb45c83607f28/Lumenfall-libro/assets/imagenes/portada-inicio.jpg') center/100% 100% no-repeat !important; 
         }
@@ -126,48 +115,48 @@
         #book-side-title { position: absolute; left: 2vw; top: 50%; transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; font-family: 'Poppins', sans-serif; font-size: 8rem; font-weight: 700; letter-spacing: 0.5rem; opacity: 0.4; display: none; pointer-events: none; }
         @media (min-width: 1024px) { #book-side-title { display: block; } }
 
-        /* --- ESTILOS DE CONTENIDO --- */
+        /* --- SOLUCIÓN AL ESPACIO VACÍO: FLEXBOX VERTICAL --- */
         .page .content-wrapper {
-            height: 100%; display: flex; flex-direction: column;
-            justify-content: flex-start; 
-            padding: 2rem 1.8rem; 
-            box-sizing: border-box; overflow-y: auto;
-            gap: 0.8rem; 
+            height: 100%; 
+            display: flex; 
+            flex-direction: column;
+            /* ESTA ES LA CLAVE: Distribuye el espacio uniformemente entre elementos */
+            justify-content: space-between; 
+            padding: 2.5rem 2rem 3.5rem 2rem; /* Padding inferior extra para el número de página */
+            box-sizing: border-box; 
             text-align: justify; 
         }
         
         .page .content-wrapper.center-content { justify-content: center; text-align: center; }
 
-        /* --- Tipografía --- */
         .page .content-wrapper p { 
             font-family: 'Lora', serif; 
-            font-size: 1.35rem; 
-            line-height: 1.8;   
-            margin-bottom: 0.8rem; 
+            font-size: 1.25rem; 
+            line-height: 1.6;   
+            margin: 0; /* El margen lo maneja el justify-content ahora */
             font-weight: 400;
         }
-        .page .content-wrapper h2 { font-size: 2.4rem; margin-bottom: 0.5rem; text-align: left; line-height: 1.2; }
-        .page .content-wrapper h3 { font-size: 1.8rem; margin-bottom: 0.5rem; text-align: left; font-weight: 700; }
+        .page .content-wrapper h2 { font-size: 2.4rem; margin: 0; text-align: left; line-height: 1.2; }
+        .page .content-wrapper h3 { font-size: 1.8rem; margin: 0; text-align: left; font-weight: 700; }
         
         .footer-quote {
-            margin-top: auto; 
             padding-top: 1rem;
             font-style: italic;
             text-align: center;
             font-size: 1.1rem;
             opacity: 0.8;
             border-top: 1px solid;
+            width: 100%;
         }
 
         @media (min-width: 768px) {
-            .page .content-wrapper { padding: 3rem 4rem; }
-            .page .content-wrapper p { font-size: 1.3rem; line-height: 1.8; margin-bottom: 1rem; }
+            .page .content-wrapper { padding: 3rem 4rem 4rem 4rem; }
+            .page .content-wrapper p { font-size: 1.4rem; line-height: 1.8; }
             .page .content-wrapper h2 { font-size: 3.5rem; }
             .page .content-wrapper h3 { font-size: 2.2rem; }
         }
 
         .video-page .page-background-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-
         .full-image-page { padding: 0 !important; overflow: hidden; }
         .full-image-page img { width: 100%; height: 100%; object-fit: cover; }
         
@@ -177,8 +166,6 @@
         html.dark .page-finder-item:hover { background-color: rgba(255,255,255,0.1); }
         .page-finder-item .page-number-label { font-weight: 600; margin-right: 1rem; min-width: 60px; }
         .page-finder-item .page-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        /* Importante: Zonas de clic eliminadas para permitir el arrastre nativo en esquinas */
     </style>
 </head>
 <body>
@@ -230,10 +217,8 @@
                 <!-- PORTADA EXTERNA -->
                 <div class="page hard cover-page"></div> 
                 
-                <!-- PÁGINA EN BLANCO (RESGUARDO) -->
+                <!-- PÁGINA EN BLANCO -->
                 <div class="page"></div>
-
-                <!-- === 1. GALERÍA Y DESCRIPCIONES (PRIMERO) === -->
 
                 <!-- 1. BIENVENIDA (MANIFIESTO) -->
                 <div class="page full-image-page">
@@ -261,7 +246,7 @@
                         <h3 class="font-bold">II. JOZIEL’S GRIMOIRE (El Manual)</h3>
                         <p><strong>El Origen del Tomo:</strong><br>Este libro no nació de la imaginación, sino de la supervivencia. El Grimorio es el registro tangible de la guerra interna que libró la Anfitriona para someter a la entidad Joziel. Escrito metafóricamente con "tinta de sangre y ceniza", representa la codificación del trauma convertido en arma. Es la evidencia física de que el infierno puede ser atravesado si se tiene el mapa correcto.</p>
                         <hr class="my-2 opacity-30">
-                        <p><strong>El Contenido Prohibido:</strong><br>Este pilar es una masterclass de poder. Joziel abre las páginas de este texto para enseñar lo que las escuelas convencionales temen tocar: la manipulación ética, la lectura de intenciones, la soberanía emocional y las leyes inmutables del dominio jerárquico. Es un estudio frío sobre la naturaleza humana y cómo navegarla sin ser devorado. El Grimorio enseña que en el gran tablero de la vida, o eres el jugador que mueve las piezas, o eres el peón que es sacrificado. Aquí aprendemos a tomar el control de la mano que juega.</p>
+                        <p><strong>El Contenido Prohibido:</strong><br>Este pilar es una masterclass de poder. Joziel abre las páginas de este texto para enseñar lo que las escuelas convencionales temen tocar: la manipulación ética, la lectura de intenciones, la soberanía emocional y las leyes inmutables del dominio jerárquico. Es un estudio frío sobre la naturaleza humana y cómo navegarla sin ser devorado. El Grimorio enseña que en el gran tablero de la vida, o eres el jugador que mueve las piezas, o eres el peón que es sacrificado.</p>
                         <div class="footer-quote">"El dolor es temporal. La gloria es eterna."</div>
                     </div>
                     <div class="page-number">4</div>
@@ -283,7 +268,7 @@
                     <div class="page-number">6</div>
                 </div>
 
-                <!-- 4. MIDNIGHT MANTRAS (DIARIO) -->
+                <!-- 4. MIDNIGHT MANTRAS -->
                 <div class="page full-image-page">
                     <img src="assets/imagenes/Midnight-mantras.png" alt="Midnight Mantras">
                     <div class="page-number">7</div>
@@ -293,20 +278,18 @@
                         <h3 class="font-bold">IV. MIDNIGHT MANTRAS (La Doctrina)</h3>
                         <p><strong>La Filosofía:</strong><br>En un mundo adicto al consuelo rápido y la validación vacía, los Midnight Mantras surgen como un correctivo brutal y necesario. No son simples frases motivacionales; son códigos de reprogramación subconsciente. La premisa central es la "Motivación Oscura": la comprensión de que la ira, el rechazo y las cicatrices son combustibles más densos y duraderos que la efímera alegría.</p>
                         <hr class="my-2 opacity-30">
-                        <p><strong>El Método:</strong><br>Joziel destila verdades complejas en dosis de menos de sesenta segundos, diseñadas para cortar el ruido mental como un bisturí. Cada mantra es una orden de batalla que exige la erradicación inmediata de la mentalidad de víctima. Aquí no se viene a buscar un abrazo, sino a recibir una estrategia. Es la disciplina militar aplicada al espíritu humano: levántate, cállate y conquista. Si te duele escucharlo, es porque tu debilidad se está muriendo.</p>
+                        <p><strong>El Método:</strong><br>Joziel destila verdades complejas en dosis de menos de sesenta segundos, diseñadas para cortar el ruido mental como un bisturí. Cada mantra es una orden de batalla que exige la erradicación inmediata de la mentalidad de víctima. Aquí no se viene a buscar un abrazo, sino a recibir una estrategia. Es la disciplina militar aplicada al espíritu humano: levántate, cállate y conquista.</p>
                         <div class="footer-quote">"Levántate. Cállate. Conquista."</div>
                     </div>
                     <div class="page-number">8</div>
                 </div>
 
-                <!-- === 2. PÁGINAS DE TÍTULO / INTRODUCCIÓN === -->
-
+                <!-- INTRODUCCIÓN -->
                 <div class="page"><div class="content-wrapper center-content"><h2 style="font-family: 'Merriweather', serif; text-align:center;">LumenFall</h2></div></div>
                 <div class="page"><div class="content-wrapper center-content"><h1 class="text-4xl sm:text-5xl md:text-6xl font-bold" style="font-family: 'Poppins', sans-serif;">LUMENFALL</h1><p class="text-xl sm:text-2xl mt-4" style="font-family: 'Merriweather', serif;">A LIGHT DIVIDED</p><p class="mt-24 text-lg sm:text-xl">JUSN38 STUDIO</p></div></div>
-                
                 <div class="page"><div class="content-wrapper center-content"><div class="text-xs copyright-page"><p>LumenFall © 2025 JUSN38 STUDIO.</p><p data-lang="es">Todos los derechos reservados.</p><p data-lang="en">All rights reserved.</p><p data-lang="pt">Todos os direitos reservados.</p><br><p data-lang="es">Ninguna parte de esta publicación puede ser reproducida...</p><p data-lang="en">No part of this publication may be reproduced...</p><p data-lang="pt">Nenhuma parte desta publicação pode ser reproduzida...</p><br><p class="italic mt-8" data-lang="es">Para aquellos que encuentran luz...</p><p class="italic mt-8" data-lang="en">For those who find light...</p><p class="italic mt-8" data-lang="pt">Para aqueles que encontram luz...</p></div></div></div>
                 
-                <!-- VIDEO INTRODUCTORIO -->
+                <!-- VIDEO 1 -->
                 <div class="page video-page">
                     <video class="page-background-video" autoplay loop muted playsinline>
                         <source src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/fb3659f718eff77d90136ff789e194c94d67ce82/Lumenfall-libro/assets/videos/video-1.mp4" type="video/mp4">
@@ -314,9 +297,7 @@
                     <div class="page-number">9</div>
                 </div>
 
-
-                <!-- === 3. HISTORIA (CAPÍTULO 1) === -->
-                
+                <!-- CAPÍTULO 1: COMPACTADO Y JUSTIFICADO VERTICALMENTE -->
                 <div class="page">
                     <div class="content-wrapper">
                         <h2 class="handwriting-title" data-lang="es">Capítulo 1 – Fragmentos Rotos</h2>
@@ -327,13 +308,13 @@
                         <p data-lang="en">Many people enjoy a cup of coffee in the morning. For me, that aroma was always a reminder that the day had begun… and that my mother was still there. I would see her from behind, stirring the coffee in the pot, the steam rising like a veil between us. Sometimes she smiled at me. Other times, without looking at me, she would let fall phrases that lingered in the air, like that time she said she would have preferred if I had never been born.</p>
                         <p data-lang="pt">Muitos apreciam uma xícara de café pela manhã. Para mim, esse aroma sempre foi um lembrete de que o dia havia começado… e de que minha mãe ainda estava lá. Eu a via de costas, mexendo o café na panela, o vapor subindo como um véu entre nós. Às vezes ela sorria para mim. Outras, sem me olhar, deixava escapar frases que ficavam flutuando no ar, como aquela vez em que disse que teria preferido que eu não tivesse nascido.</p>
 
-                        <p data-lang="es">Pero en esas mañanas, con la lluvia golpeando el techo y el olor a tierra mojada entrando por la ventana, yo me aferraba a la ilusión de que todo estaba bien. Después de todo lo que casi me arruina, entendí que esos días eran un lujo que nunca volvería a tener.</p>
-                        <p data-lang="en">But on those mornings, with the rain beating on the roof and the smell of wet earth coming in through the window, I clung to the illusion that everything was fine. After everything that nearly ruined me, I understood that those days were a luxury I would never have again.</p>
-                        <p data-lang="pt">Mas nessas manhãs, com a chuva batendo no telhado e o cheiro de terra molhada entrando pela janela, eu me agarrava à ilusão de que tudo estaba bem. Depois de tudo que quase me destruiu, entendi que aqueles dias eram um luxo que nunca mais teria.</p>
+                        <p data-lang="es">Pero en esas mañanas, con la lluvia golpeando el techo y el olor a tierra mojada entrando por la ventana, yo me aferraba a la ilusión de que todo estaba bien. Después de todo lo que casi me arruina, entendí que esos días eran un lujo que nunca volvería a tener. Les voy a contar algo que me pasó hace mucho. El primero fue el alacrán. De pequeña, no soportaba esos bichos. En la finca, los niños mayores me agarraban uno vivo y me lo hacían correr por el brazo, riéndose mientras yo lloraba y pataleaba.</p>
+                        <p data-lang="en">But on those mornings, with the rain beating on the roof and the smell of wet earth coming in through the window, I clung to the illusion that everything was fine. After everything that nearly ruined me, I understood that those days were a luxury I would never have again. I’m going to tell you something that happened long ago. The first was the scorpion. As a child, I couldn’t stand them. On the farm, older kids would put one on my arm, laughing while I cried.</p>
+                        <p data-lang="pt">Mas nessas manhãs, com a chuva batendo no telhado e o cheiro de terra molhada entrando pela janela, eu me agarrava à ilusão de que tudo estaba bem. Depois de tudo que quase me destruiu, entendi que aqueles dias eram um luxo que nunca mais teria. Vou contar algo que aconteceu há muito tempo. O primeiro foi o escorpião. Quando pequena, não suportava. Na fazenda, os meninos colocavam no meu braço, rindo enquanto eu chorava.</p>
 
-                        <p data-lang="es">Les voy a contar algo que me pasó hace mucho. El primero fue el alacrán. De pequeña, no soportaba esos bichos. En la finca, los niños mayores me agarraban uno vivo y me lo hacían correr por el brazo, riéndose mientras yo lloraba y pataleaba. Esa tarde, estaba descalza en el patio, bailando sola. Entonces lo vi: a centímetros de mi pie, un alacrán negro, vivo, inmóvil. Y entonces pasó. Sin que yo lo tocara, su cuerpo empezó a humear. El alacrán se encogió sobre sí mismo, ennegrecido, hasta quedar muerto. No había nadie cerca.</p>
-                        <p data-lang="en">I’m going to tell you something that happened long ago. The first was the scorpion. As a child, I couldn’t stand them. On the farm, older kids would put one on my arm, laughing while I cried. That afternoon, barefoot in the yard, I saw it: a black scorpion, inches from my foot. Then it happened. Without touching it, its body began to smoke. It curled up, blackened, until dead. No one was around.</p>
-                        <p data-lang="pt">Vou contar algo que aconteceu há muito tempo. O primeiro foi o escorpião. Quando pequena, não suportava. Na fazenda, os meninos colocavam no meu braço, rindo enquanto eu chorava. Naquela tarde, descalça no pátio, vi: um escorpião preto, a centímetros do meu pé. Então aconteceu. Sem tocar, começou a soltar fumaça. Encolheu-se, enegrecido, até morrer. Não havia ninguém por perto.</p>
+                        <p data-lang="es">Esa tarde, estaba descalza en el patio, bailando sola. Entonces lo vi: a centímetros de mi pie, un alacrán negro, vivo, inmóvil. Y entonces pasó. Sin que yo lo tocara, su cuerpo empezó a humear. El alacrán se encogió sobre sí mismo, ennegrecido, hasta quedar muerto. No había nadie cerca.</p>
+                        <p data-lang="en">That afternoon, barefoot in the yard, I saw it: a black scorpion, inches from my foot. Then it happened. Without touching it, its body began to smoke. It curled up, blackened, until dead. No one was around.</p>
+                        <p data-lang="pt">Naquela tarde, descalça no pátio, vi: um escorpião preto, a centímetros do meu pé. Então aconteceu. Sem tocar, começou a soltar fumaça. Encolheu-se, enegrecido, até morrer. Não havia ninguém por perto.</p>
                     </div>
                     <div class="page-number">10</div>
                 </div>
@@ -389,7 +370,7 @@
                     <div class="page-number">13</div>
                 </div>
 
-                <!-- PÁGINA "CONTINUARÁ..." (NUEVA) -->
+                <!-- PÁGINA "CONTINUARÁ..." -->
                 <div class="page">
                     <div class="content-wrapper center-content">
                         <h2 style="font-family: 'Merriweather', serif; font-size: 3rem;">Continuará...</h2>
@@ -475,7 +456,7 @@ $(window).on('load', function() {
         elevation:50,
         gradients:!0,
         autoCenter:!0,
-        acceleration: true, // Importante para el efecto fluido
+        acceleration: true,
         when:{
             turned:(e,t,o)=>{
                 if (t>1) {
@@ -499,9 +480,6 @@ $(window).on('load', function() {
     $("#video-skin-toggle").on("click",e=>{e.stopPropagation();const t=!$("#video-skin-panel").hasClass("hidden");closeAllPanels(),t||$("#video-skin-panel").removeClass("hidden")});
     $("#language-toggle").on("click",e=>{e.stopPropagation();const t=!$("#language-panel").hasClass("hidden");closeAllPanels(),t||$("#language-panel").removeClass("hidden")});
     $(document).on("click",e=>{$(e.target).closest("#main-header").length||closeAllPanels()});
-    
-    // NOTA: Se han eliminado los event listeners personalizados de 'touch'
-    // para permitir que turn.js maneje el arrastre nativo de la hoja.
     
     const pageTurnHint=$("#page-turn-hint");"true"!==localStorage.getItem("lumenFallHintSeen")&&(setTimeout(()=>pageTurnHint.addClass("visible"),1500),flipbook.one("turned",()=>{pageTurnHint.removeClass("visible"),localStorage.setItem("lumenFallHintSeen","true")}));
     
