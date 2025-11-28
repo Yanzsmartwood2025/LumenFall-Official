@@ -1,1 +1,322 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MY TEMPO | Lumenfall Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'display': ['Impact', 'Arial Black', 'sans-serif'],
+                        'mono': ['Courier New', 'monospace'],
+                    },
+                    colors: {
+                        neonCyan: '#00f3ff',
+                        neonPink: '#ff00ff',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                },
+            },
+        };
+    </script>
 
+    <style>
+        body { background-color: #000; color: white; overflow: hidden; }
+        
+        /* Video de Fondo (Canvas) */
+        #canvas-video {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: -1; opacity: 0.5;
+            filter: brightness(0.6) contrast(1.2);
+            transition: opacity 1s ease;
+        }
+
+        /* Estilos de Letras */
+        .lyrics-container {
+            height: 35vh;
+            overflow-y: auto;
+            mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+            scrollbar-width: none; 
+            padding: 1rem 0;
+        }
+        .lyrics-container::-webkit-scrollbar { display: none; } 
+
+        .lyric-line {
+            font-size: 1.1rem; margin-bottom: 1.2rem; opacity: 0.5; transition: all 0.5s;
+        }
+        .lyric-line:hover {
+            opacity: 1; text-shadow: 0 0 10px #00f3ff; transform: scale(1.05); cursor: default;
+        }
+        .section-title {
+            color: #ff00ff; font-weight: bold; font-size: 0.9rem; margin-top: 2rem; margin-bottom: 1rem; letter-spacing: 0.1em;
+        }
+        
+        /* Animación de entrada */
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0; transform: translateY(20px);
+        }
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen relative">
+
+    <!-- Video de Fondo (Canvas) -->
+    <!-- Asegúrate de que 'flama-bg.mp4' esté en la carpeta 'assets' fuera de 'Musica' -->
+    <video id="canvas-video" autoplay loop muted playsinline>
+        <source src="../assets/flama-bg.mp4" type="video/mp4"> 
+    </video>
+
+    <!-- Botón Regresar -->
+    <a href="../index.html" class="absolute top-6 left-6 text-white/50 hover:text-neonCyan transition z-50 bg-black/20 p-2 rounded-full backdrop-blur-sm">
+        <i class="fa-solid fa-arrow-left text-xl"></i>
+    </a>
+
+    <!-- Contenido Principal -->
+    <div class="flex-grow flex flex-col items-center justify-center px-4 z-10 w-full max-w-md mx-auto mt-4">
+        
+        <!-- Header de Canción -->
+        <div class="text-center mb-4 fade-in-up" style="animation-delay: 0.1s;">
+            <div class="w-48 h-48 mx-auto mb-4 rounded shadow-[0_0_40px_rgba(0,243,255,0.2)] overflow-hidden border border-white/20">
+                <img src="../assets/imagenes/LUMENFALL-JUEGO-512x512.png" class="w-full h-full object-cover">
+            </div>
+            <h1 class="font-display text-3xl tracking-widest text-white drop-shadow-lg">MY TEMPO</h1>
+            <p class="text-neonCyan font-mono text-xs tracking-[0.3em]">JOZIEL // SINGLE</p>
+        </div>
+
+        <!-- Selector de Plataforma -->
+        <div id="platform-selector" class="w-full mb-6 fade-in-up" style="animation-delay: 0.3s;">
+            <p class="text-center text-xs text-gray-400 mb-3 uppercase tracking-wider">Selecciona tu plataforma para reproducir:</p>
+            <div class="grid grid-cols-4 gap-2">
+                <!-- SPOTIFY -->
+                <button onclick="loadEmbed('spotify')" class="bg-[#1DB954]/20 border border-[#1DB954] hover:bg-[#1DB954] text-white p-3 rounded-lg transition flex flex-col items-center gap-1 group">
+                    <i class="fa-brands fa-spotify text-2xl group-hover:text-black"></i>
+                </button>
+                <!-- APPLE -->
+                <button onclick="loadEmbed('apple')" class="bg-[#FA243C]/20 border border-[#FA243C] hover:bg-[#FA243C] text-white p-3 rounded-lg transition flex flex-col items-center gap-1 group">
+                    <i class="fa-brands fa-apple text-2xl group-hover:text-black"></i>
+                </button>
+                <!-- DEEZER -->
+                <button onclick="loadEmbed('deezer')" class="bg-white/10 border border-white hover:bg-white text-white p-3 rounded-lg transition flex flex-col items-center gap-1 group">
+                    <i class="fa-brands fa-deezer text-2xl group-hover:text-black"></i>
+                </button>
+                <!-- AMAZON -->
+                <button onclick="loadEmbed('amazon')" class="bg-[#00A8E1]/20 border border-[#00A8E1] hover:bg-[#00A8E1] text-white p-3 rounded-lg transition flex flex-col items-center gap-1 group">
+                    <i class="fa-brands fa-amazon text-2xl group-hover:text-black"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Reproductor Embed (Oculto al inicio) -->
+        <div id="player-container" class="w-full hidden fade-in-up mb-4 relative">
+            <div class="flex justify-between items-center mb-2 px-1">
+                <p class="text-[10px] text-neonCyan animate-pulse">● DALE PLAY AL REPRODUCTOR</p>
+                <button onclick="resetPlayer()" class="text-[10px] text-gray-500 hover:text-white uppercase tracking-wider">
+                    <i class="fa-solid fa-rotate-left mr-1"></i> Cambiar
+                </button>
+            </div>
+            <!-- Aquí se inyectará el iframe oficial -->
+            <div id="embed-frame" class="rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-black"></div>
+        </div>
+
+        <!-- Contenedor de Letras -->
+        <div id="lyrics-section" class="w-full relative fade-in-up hidden" style="animation-delay: 0.5s;">
+            <!-- Botón de Idioma -->
+            <div class="flex justify-center mb-2">
+                <button id="lang-toggle" onclick="toggleLyrics()" class="text-[10px] border border-white/30 bg-black/50 backdrop-blur text-gray-300 px-4 py-1 rounded-full hover:border-neonCyan hover:text-neonCyan transition uppercase tracking-widest">
+                    Traducir a Español
+                </button>
+            </div>
+
+            <!-- Letras (INGLÉS - Default) -->
+            <div id="lyrics-en" class="lyrics-container text-center font-mono text-sm">
+                <p class="section-title">[ INTRO ]</p>
+                <p class="lyric-line">Shhh... don't fight it.</p>
+                <p class="lyric-line">It's too late.</p>
+
+                <p class="section-title">[ VERSE 1 ]</p>
+                <p class="lyric-line">You don't have to think,</p>
+                <p class="lyric-line">I'm the voice in your head.</p>
+                <p class="lyric-line">Every doubt that you had</p>
+                <p class="lyric-line">has been silenced and fled.</p>
+                <p class="lyric-line">Every step that you take</p>
+                <p class="lyric-line">is a path that I laid.</p>
+                <p class="lyric-line">You are right where I want you,</p>
+                <p class="lyric-line">a part you have played.</p>
+
+                <p class="section-title">[ PRE-CHORUS ]</p>
+                <p class="lyric-line">You feel the impulse,</p>
+                <p class="lyric-line">don't know where it began.</p>
+                <p class="lyric-line">That thought in your mind</p>
+                <p class="lyric-line">is part of my plan.</p>
+                <p class="lyric-line">You think it's your choice,</p>
+                <p class="lyric-line">so precious and true.</p>
+                <p class="lyric-line">But my will is the whisper</p>
+                <p class="lyric-line">that's pushing you through.</p>
+
+                <p class="section-title text-neonCyan">[ CHORUS ]</p>
+                <p class="lyric-line font-bold text-white">I don't ask you to kneel,</p>
+                <p class="lyric-line font-bold text-white">I don't demand you to follow.</p>
+                <p class="lyric-line">You just breathe to my tempo...</p>
+                <p class="lyric-line">and you need me.</p>
+                <p class="lyric-line font-bold text-white">I don't ask you to kneel,</p>
+                <p class="lyric-line font-bold text-white">I don't demand you to follow.</p>
+                <p class="lyric-line">You are dancing to my tempo...</p>
+                <p class="lyric-line">you can't help it.</p>
+
+                <p class="section-title">[ VERSE 2 ]</p>
+                <p class="lyric-line">Your friends see the warning,</p>
+                <p class="lyric-line">it's there in your gaze.</p>
+                <p class="lyric-line">A different kind of sparkle,</p>
+                <p class="lyric-line">a programmed-out haze.</p>
+                <p class="lyric-line">You tell them you're fine,</p>
+                <p class="lyric-line">you've never felt so free.</p>
+                <p class="lyric-line">But my name on your lips</p>
+                <p class="lyric-line">is your one decree.</p>
+
+                <p class="section-title">[ BRIDGE ]</p>
+                <p class="lyric-line">I'm the gravity in your voice,</p>
+                <p class="lyric-line">The echo deep inside.</p>
+                <p class="lyric-line">There's no force in the world</p>
+                <p class="lyric-line">that can offer a choice,</p>
+                <p class="lyric-line">From the invisible thread where you're tied.</p>
+
+                <p class="section-title">[ OUTRO ]</p>
+                <p class="lyric-line">I don't ask you to kneel...</p>
+                <p class="lyric-line">(ask you to kneel...)</p>
+                <p class="lyric-line">I don't demand you to follow...</p>
+                <p class="lyric-line">(demand you to follow...)</p>
+                <p class="lyric-line">I don't ask...</p>
+                <p class="lyric-line">I don't demand...</p>
+            </div>
+
+            <!-- Letras (ESPAÑOL - Oculto) -->
+            <div id="lyrics-es" class="lyrics-container text-center font-mono text-sm hidden">
+                <p class="section-title">[ INTRO ]</p>
+                <p class="lyric-line">Shhh... no luches.</p>
+                <p class="lyric-line">Es demasiado tarde.</p>
+
+                <p class="section-title">[ VERSO 1 ]</p>
+                <p class="lyric-line">No tienes que pensar,</p>
+                <p class="lyric-line">soy la voz en tu cabeza.</p>
+                <p class="lyric-line">Cada duda que tenías</p>
+                <p class="lyric-line">ha sido silenciada y huyó.</p>
+                <p class="lyric-line">Cada paso que das</p>
+                <p class="lyric-line">es un camino que yo tracé.</p>
+                <p class="lyric-line">Estás justo donde te quiero,</p>
+                <p class="lyric-line">un papel que has interpretado.</p>
+
+                <p class="section-title">[ PRE-CORO ]</p>
+                <p class="lyric-line">Sientes el impulso,</p>
+                <p class="lyric-line">no sabes dónde empezó.</p>
+                <p class="lyric-line">Ese pensamiento en tu mente</p>
+                <p class="lyric-line">es parte de mi plan.</p>
+                <p class="lyric-line">Crees que es tu elección,</p>
+                <p class="lyric-line">tan preciosa y verdadera.</p>
+                <p class="lyric-line">Pero mi voluntad es el susurro</p>
+                <p class="lyric-line">que te empuja a través.</p>
+
+                <p class="section-title text-neonCyan">[ CORO ]</p>
+                <p class="lyric-line font-bold text-white">No te pido que te arrodilles,</p>
+                <p class="lyric-line font-bold text-white">no te exijo que me sigas.</p>
+                <p class="lyric-line">Solo respiras a mi ritmo...</p>
+                <p class="lyric-line">y me necesitas.</p>
+                <p class="lyric-line font-bold text-white">No te pido que te arrodilles,</p>
+                <p class="lyric-line font-bold text-white">no te exijo que me sigas.</p>
+                <p class="lyric-line">Estás bailando a mi ritmo...</p>
+                <p class="lyric-line">no puedes evitarlo.</p>
+
+                <!-- ... (Traducción continúa simplificada) ... -->
+                <p class="section-title">[ PUENTE ]</p>
+                <p class="lyric-line">Soy la gravedad en tu voz,</p>
+                <p class="lyric-line">El eco en lo profundo.</p>
+                <p class="lyric-line">No hay fuerza en el mundo</p>
+                <p class="lyric-line">que pueda ofrecer una opción.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // IDs y Enlaces Oficiales
+        // AQUÍ ESTÁ TU ID DE SPOTIFY CONFIGURADO
+        const musicLinks = {
+            spotify_id: "4QjVTcm14IcFnFCRAzb7Nr", 
+            deezer_id: "143827362", // ID de ejemplo (cámbialo si lo tienes)
+            apple_embed: "https://embed.music.apple.com/us/album/my-tempo/123456789?i=123456789",
+            amazon_id: "B08F2" 
+        };
+
+        function loadEmbed(platform) {
+            const selector = document.getElementById('platform-selector');
+            const playerContainer = document.getElementById('player-container');
+            const embedFrame = document.getElementById('embed-frame');
+            const lyricsSection = document.getElementById('lyrics-section');
+            const videoBg = document.getElementById('canvas-video');
+
+            // Ocultar selector
+            selector.style.display = 'none';
+            
+            // Mostrar reproductor y letras
+            playerContainer.classList.remove('hidden');
+            lyricsSection.classList.remove('hidden');
+            
+            // Oscurecer un poco más el video para leer
+            videoBg.style.opacity = "0.3";
+
+            let html = '';
+
+            if(platform === 'spotify') {
+                // Widget Oficial de Spotify (Album Embed)
+                // Usamos 'album' porque tu link era de album, si es single funcionará igual
+                html = `<iframe style="border-radius:12px" src="https://open.spotify.com/embed/album/${musicLinks.spotify_id}?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
+            } 
+            else if (platform === 'apple') {
+                html = `<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="175" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="${musicLinks.apple_embed}"></iframe>`;
+            }
+            else if (platform === 'deezer') {
+                html = `<iframe title="deezer-widget" src="https://widget.deezer.com/widget/dark/track/${musicLinks.deezer_id}" width="100%" height="150" frameborder="0" allowtransparency="true" allow="encrypted-media; clipboard-write"></iframe>`;
+            }
+            else {
+                html = `<div class="bg-gray-900 p-6 text-center border border-gray-700"><p class="mb-4 text-sm">Abre en Amazon Music:</p><a href="#" class="inline-block bg-blue-500 text-white px-6 py-2 rounded-full font-bold text-sm">ABRIR APP</a></div>`;
+            }
+
+            embedFrame.innerHTML = html;
+        }
+
+        function resetPlayer() {
+            document.getElementById('platform-selector').style.display = 'block';
+            document.getElementById('player-container').classList.add('hidden');
+            document.getElementById('lyrics-section').classList.add('hidden');
+            document.getElementById('embed-frame').innerHTML = '';
+            document.getElementById('canvas-video').style.opacity = "0.5";
+        }
+
+        function toggleLyrics() {
+            const en = document.getElementById('lyrics-en');
+            const es = document.getElementById('lyrics-es');
+            const btn = document.getElementById('lang-toggle');
+
+            if (en.classList.contains('hidden')) {
+                en.classList.remove('hidden');
+                es.classList.add('hidden');
+                btn.innerText = "TRADUCIR A ESPAÑOL";
+            } else {
+                en.classList.add('hidden');
+                es.classList.remove('hidden');
+                btn.innerText = "VOLVER A INGLÉS";
+            }
+        }
+    </script>
+</body>
+</html>
