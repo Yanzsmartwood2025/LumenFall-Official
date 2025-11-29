@@ -18,10 +18,6 @@
                     colors: {
                         neonCyan: '#00f3ff',
                         neonPink: '#ff00ff',
-                        darkBg: '#050505',
-                    },
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     }
                 },
             },
@@ -29,72 +25,107 @@
     </script>
 
     <style>
-        body { background-color: #000; color: white; overflow: hidden; }
+        body { background-color: #000; color: white; overflow: hidden; margin: 0; }
         
         /* Video de Fondo */
         #canvas-video {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover; z-index: -1; opacity: 0.5;
             filter: brightness(0.6) contrast(1.2);
-            transition: opacity 1s ease;
         }
 
-        /* Contenedor de Letras */
-        .lyrics-container {
-            height: 50vh; 
-            overflow-y: auto;
-            /* Máscara para efecto fade arriba/abajo */
-            mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
-            -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            padding: 12rem 0; /* Padding amplio para centrado vertical */
-            scroll-behavior: smooth;
-        }
-        .lyrics-container::-webkit-scrollbar { display: none; }
-
-        /* Estilo Línea Inactiva */
-        .lyric-line {
-            font-size: 1rem; 
-            margin-bottom: 1.5rem; 
-            color: #666;
-            opacity: 0.4; 
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            line-height: 1.6;
-            transform: scale(0.95);
-            filter: blur(1.5px);
-            cursor: pointer; /* Para permitir click y saltar tiempo */
-        }
+        /* --- TUS ESTILOS PERSONALIZADOS --- */
         
-        /* Estilo Línea ACTIVA (Tu estilo solicitado) */
-        .lyric-line.active {
-            opacity: 1; 
-            color: #00f3ff !important;
-            text-shadow: 0 0 15px rgba(0, 243, 255, 0.8), 0 0 30px rgba(0, 243, 255, 0.4); 
-            transform: scale(1.15); 
-            font-weight: bold;
+        /* Contenedor Principal (Ahora es transparente) */
+        .contenedor-karaoke {
+            background-color: rgba(0, 0, 0, 0.6); /* 60% Oscuro */
+            backdrop-filter: blur(5px); /* Efecto vidrio borroso */
+            padding: 20px 10px;
+            border-top: 1px solid #00ffff;
+            border-bottom: 1px solid #00ffff;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* Limitamos ancho en desktop */
+            margin: 0 auto;
+            box-sizing: border-box;
+            border-radius: 15px; /* Un poco de borde redondeado */
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
+        }
+
+        /* Estilo de la línea APAGADA */
+        .linea-lyric {
+            display: block;
+            margin: 15px 0;
+            color: #aaa; 
+            font-size: 14px;
+            transition: all 0.4s ease-out;
+            opacity: 0.3;
+            filter: blur(2px);
+            padding: 0 10px;
+            cursor: pointer; /* Permite click para saltar tiempo */
+        }
+
+        /* Estilo de la línea ENCENDIDA (GIGANTE) */
+        .linea-activa {
+            color: #00ffff !important;
+            font-size: 24px !important; /* Ajustado ligeramente para móvil */
+            font-weight: 900;
+            opacity: 1;
             filter: blur(0px);
+            transform: scale(1.05);
+            text-shadow: 0 0 15px #00ffff, 0 0 30px #000000;
+            
+            background: rgba(0, 0, 0, 0.8); 
+            padding: 15px 5px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            
+            white-space: normal;
+            word-wrap: break-word; 
+            width: 100%;
         }
 
-        .section-title {
-            color: #ff00ff; font-weight: bold; font-size: 0.8rem; margin-top: 3rem; margin-bottom: 1rem; letter-spacing: 0.2em; opacity: 0.8;
+        /* El Botón Detonador */
+        .btn-sync {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #00ffff;
+            color: #fff;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            width: 100%;
+            transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-sync:hover {
+            background: #00ffff;
+            color: #000;
+            box-shadow: 0 0 15px #00ffff;
         }
         
+        /* Caja Scroll */
+        #lyrics-box {
+            height: 45vh; /* Altura ajustada */
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            padding-bottom: 100px;
+            scrollbar-width: none; 
+        }
+        #lyrics-box::-webkit-scrollbar { display: none; }
+
+        /* Animaciones UI */
         .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
-
-        /* Panel de Control */
-        .sync-controls {
-            background: rgba(5, 5, 5, 0.9);
-            border-top: 1px solid rgba(0, 243, 255, 0.2);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
-        }
     </style>
 </head>
-<body class="flex flex-col h-screen relative font-mono">
+<body class="flex flex-col h-screen relative">
 
-    <!-- Fondo -->
+    <!-- Video de Fondo -->
     <video id="canvas-video" autoplay loop muted playsinline>
         <source src="../assets/flama-bg.mp4" type="video/mp4"> 
     </video>
@@ -107,7 +138,7 @@
     <!-- Contenido Principal -->
     <div class="flex-grow flex flex-col items-center justify-start px-4 z-10 w-full max-w-md mx-auto mt-4 pt-4">
         
-        <!-- Header -->
+        <!-- Header: Álbum -->
         <div class="text-center mb-2 fade-in-up flex items-center gap-4 w-full justify-center" style="animation-delay: 0.1s;">
             <div class="w-16 h-16 rounded shadow-[0_0_15px_rgba(0,243,255,0.2)] overflow-hidden border border-white/20">
                 <img src="../assets/imagenes/LUMENFALL-JUEGO-512x512.png" onerror="this.src='https://via.placeholder.com/150/000000/00f3ff?text=LF'" class="w-full h-full object-cover">
@@ -118,9 +149,8 @@
             </div>
         </div>
 
-        <!-- Selector Plataforma -->
-        <div id="platform-selector" class="w-full mb-4 fade-in-up" style="animation-delay: 0.3s;">
-            <p class="text-center text-[10px] text-gray-400 mb-2 uppercase tracking-wider">Elige tu plataforma:</p>
+        <!-- Selector de Plataforma (Spotify/Apple) -->
+        <div id="platform-selector" class="w-full mb-2 fade-in-up" style="animation-delay: 0.2s;">
             <div class="grid grid-cols-4 gap-2">
                 <button onclick="loadEmbed('spotify')" class="bg-[#1DB954]/20 border border-[#1DB954] hover:bg-[#1DB954] text-white p-2 rounded-lg transition flex justify-center items-center group">
                     <i class="fa-brands fa-spotify text-xl group-hover:text-black"></i>
@@ -138,113 +168,76 @@
         </div>
 
         <!-- Reproductor Embed -->
-        <div id="player-container" class="w-full hidden fade-in-up mb-2 relative">
+        <div id="player-container" class="w-full hidden fade-in-up mb-4 relative">
             <div class="flex justify-between items-center mb-1 px-1">
-                <button onclick="resetPlayer()" class="text-[10px] text-gray-500 hover:text-white uppercase tracking-wider">
+                <button onclick="resetPlayer()" class="text-[10px] text-gray-400 hover:text-white uppercase">
                     <i class="fa-solid fa-xmark mr-1"></i> Cerrar
                 </button>
-                <button id="lang-toggle" onclick="toggleLanguage()" class="text-[10px] border border-neonCyan/50 text-neonCyan bg-black/50 px-3 py-0.5 rounded hover:bg-neonCyan hover:text-black transition uppercase tracking-widest font-bold">
+                <button id="lang-toggle" onclick="toggleLanguage()" class="text-[10px] border border-neonCyan text-neonCyan bg-black/50 px-3 py-1 rounded hover:bg-neonCyan hover:text-black transition uppercase font-bold">
                     EN / ES
                 </button>
             </div>
-            <div id="embed-frame" class="rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-black transition-all duration-500 min-h-[80px]"></div>
+            <div id="embed-frame" class="rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-black transition-all h-[80px]"></div>
         </div>
 
-        <!-- LYRICS CONTAINER -->
-        <div id="lyrics-wrapper" class="w-full relative fade-in-up flex-grow hidden flex flex-col" style="animation-delay: 0.5s;">
-            <div id="lyrics-content" class="lyrics-container text-center font-mono text-sm w-full">
-                <!-- Se llena con JS -->
-            </div>
-        </div>
-    </div>
-
-    <!-- CONTROLES DE SINCRONIZACIÓN (Fixed Bottom) -->
-    <div id="sync-panel" class="fixed bottom-0 left-0 w-full sync-controls p-4 hidden z-50 fade-in-up">
-        <div class="max-w-md mx-auto flex flex-col gap-3">
-            
-            <!-- Barra Progreso -->
-            <div class="w-full bg-gray-800 h-1 rounded-full overflow-hidden">
-                <div id="progress-bar" class="bg-neonCyan h-full w-0 transition-all duration-200"></div>
-            </div>
-
-            <!-- Botonera -->
-            <div class="flex items-center justify-between">
-                <!-- Ajuste Fino -->
-                <div class="flex items-center gap-1">
-                    <button onclick="adjustTime(-0.5)" class="text-[10px] bg-gray-800 border border-gray-600 text-white w-8 h-8 rounded hover:border-neonPink hover:text-neonPink active:scale-95 transition">-0.5s</button>
-                    <span id="offset-display" class="text-[10px] font-mono text-gray-400 w-10 text-center">0.0s</span>
-                    <button onclick="adjustTime(0.5)" class="text-[10px] bg-gray-800 border border-gray-600 text-white w-8 h-8 rounded hover:border-neonCyan hover:text-neonCyan active:scale-95 transition">+0.5s</button>
-                </div>
-
-                <!-- Botón Principal -->
-                <button id="btn-sync-toggle" onclick="toggleSync()" class="bg-black border-2 border-neonCyan text-neonCyan px-6 py-2 rounded shadow-[0_0_15px_rgba(0,243,255,0.3)] font-bold uppercase tracking-widest text-sm hover:bg-neonCyan hover:text-black transition transform active:scale-95 flex items-center gap-2">
-                    <i class="fa-solid fa-play"></i> INICIAR LETRA
+        <!-- === TU CONTENEDOR KARAOKE === -->
+        <div id="karaoke-wrapper" class="w-full fade-in-up hidden" style="animation-delay: 0.3s;">
+            <div class="contenedor-karaoke">
+                <p style="color:#aaa; font-size:10px; margin-bottom:5px; font-family: sans-serif; letter-spacing: 1px;">
+                    1. PLAY EN SPOTIFY &nbsp;|&nbsp; 2. ACTIVA AQUÍ
+                </p>
+              
+                <button id="btn-start" class="btn-sync" type="button">
+                    <i class="fa-solid fa-bolt"></i> ACTIVAR LETRAS
                 </button>
-
-                <!-- Stop -->
-                <button onclick="stopSync()" class="text-gray-500 hover:text-red-500 px-3 transition">
-                    <i class="fa-solid fa-stop"></i>
-                </button>
+                
+                <div id="lyrics-box"></div>
             </div>
-            <p class="text-[9px] text-center text-gray-500 mt-2 tracking-widest">
-                1. DALE PLAY A SPOTIFY &nbsp;|&nbsp; 2. DALE PLAY AQUÍ AL ESCUCHAR LA INTRO
-            </p>
+
+            <!-- Botones de Ajuste Rápido (Fuera de la caja para fácil acceso) -->
+            <div class="flex justify-center gap-4 mt-2">
+                <button onclick="adjustTime(-0.5)" class="text-xs text-gray-500 hover:text-neonPink p-2 border border-gray-800 rounded bg-black/40">-0.5s (Retrasar)</button>
+                <button onclick="adjustTime(0.5)" class="text-xs text-gray-500 hover:text-neonCyan p-2 border border-gray-800 rounded bg-black/40">+0.5s (Adelantar)</button>
+            </div>
         </div>
+
     </div>
 
     <script>
-        // === DATOS MERGEADOS (INGLÉS Y ESPAÑOL) ===
-        // Tiempos exactos provistos por el usuario
+        // === DATOS DE LETRAS (Con soporte bilingüe) ===
         const lyricsData = [
-            // INTRO
-            { time: 11, type: 'lyric', textEn: "(INTRO) Shhh... don't fight it. It's too late.", textEs: "(INTRO) Shhh... no luches. Es demasiado tarde." },
-            
-            // VERSE 1
-            { time: 20, type: 'lyric', textEn: "(VERSE 1) You don't have to think, I'm the voice in your head.", textEs: "(VERSO 1) No tienes que pensar, soy la voz en tu cabeza." },
-            { time: 24, type: 'lyric', textEn: "Every doubt that you had has been silenced and fled.", textEs: "Cada duda que tenías fue silenciada y huyó." },
-            { time: 28, type: 'lyric', textEn: "Every step that you take is a path that I laid.", textEs: "Cada paso que das es un camino que yo tracé." },
-            { time: 32, type: 'lyric', textEn: "You are right where I want you, a part you have played.", textEs: "Estás justo donde te quiero, un papel que has jugado." },
-
-            // PRE-CHORUS 1
-            { time: 35, type: 'section', textEn: "(PRE-CHORUS) You feel the impulse, don't know where it began.", textEs: "(PRE-CORO) Sientes el impulso, no sabes dónde empezó." },
-            { time: 39, type: 'lyric', textEn: "That thought in your mind is part of my plan.", textEs: "Ese pensamiento en tu mente es parte de mi plan." },
-            { time: 43, type: 'lyric', textEn: "You think it's your choice, so precious and true.", textEs: "Crees que es tu elección, tan preciosa y real." },
-            { time: 46, type: 'lyric', textEn: "But my will is the whisper that's pushing you through.", textEs: "Pero mi voluntad es el susurro que te empuja." },
-
-            // CHORUS 1
-            { time: 50, type: 'section', textEn: "(CHORUS) I don't ask you to kneel, I don't demand you to follow.", textEs: "(CORO) No te pido que te arrodilles, no te exijo que me sigas." },
-            { time: 57, type: 'lyric', textEn: "You just breathe to my tempo... and you need me.", textEs: "Solo respiras a mi ritmo... y me necesitas." },
-            { time: 65, type: 'lyric', textEn: "I don't ask you to kneel, I don't demand you to follow.", textEs: "No te pido que te arrodilles, no te exijo que me sigas." },
-            { time: 72, type: 'lyric', textEn: "You are dancing to my tempo... you can't help it.", textEs: "Estás bailando a mi ritmo... no puedes evitarlo." },
-
-            // VERSE 2
-            { time: 82, type: 'lyric', textEn: "(VERSE 2) Your friends see the warning, it's there in your gaze.", textEs: "(VERSO 2) Tus amigos ven la alerta, está ahí en tu mirada." },
-            { time: 85, type: 'lyric', textEn: "A different kind of sparkle, a programmed-out haze.", textEs: "Un brillo diferente, una neblina programada." },
-            { time: 88, type: 'lyric', textEn: "You tell them you're fine, you've never felt so free.", textEs: "Les dices que estás bien, nunca te sentiste tan libre." },
-            { time: 91, type: 'lyric', textEn: "But my name on your lips is your one decree.", textEs: "Pero mi nombre en tus labios es tu único decreto." },
-
-            // PRE-CHORUS 2
-            { time: 97, type: 'section', textEn: "(PRE-CHORUS) You feel the impulse, don't know where it began.", textEs: "(PRE-CORO) Sientes el impulso, no sabes dónde empezó." },
-            { time: 101, type: 'lyric', textEn: "That thought in your mind is part of my plan.", textEs: "Ese pensamiento en tu mente es parte de mi plan." },
-            { time: 105, type: 'lyric', textEn: "You think it's your choice, so precious and true.", textEs: "Crees que es tu elección, tan preciosa y real." },
-            { time: 108, type: 'lyric', textEn: "But my will is the whisper that's pushing you through.", textEs: "Pero mi voluntad es el susurro que te empuja." },
-
-            // CHORUS 2
-            { time: 113, type: 'section', textEn: "(CHORUS) I don't ask you to kneel, I don't demand you to follow.", textEs: "(CORO) No te pido que te arrodilles, no te exijo que me sigas." },
-            { time: 120, type: 'lyric', textEn: "You just breathe to my tempo... and you need me.", textEs: "Solo respiras a mi ritmo... y me necesitas." },
-            { time: 128, type: 'lyric', textEn: "I don't ask you to kneel, I don't demand you to follow.", textEs: "No te pido que te arrodilles, no te exijo que me sigas." },
-            { time: 135, type: 'lyric', textEn: "Estás bailando a mi ritmo... no puedes evitarlo.", textEs: "Estás bailando a mi ritmo... no puedes evitarlo." },
-
-            // BRIDGE
-            { time: 146, type: 'section', textEn: "(BRIDGE) I'm the gravity in your voice, The echo deep inside.", textEs: "(PUENTE) Soy la gravedad en tu voz, el eco en lo profundo." },
-            { time: 150, type: 'lyric', textEn: "There's no force in the world that can offer a choice,", textEs: "No hay fuerza en el mundo que ofrezca elección," },
-            { time: 154, type: 'lyric', textEn: "From the invisible thread where you're tied.", textEs: "Desde el hilo invisible donde estás atado." },
-
-            // OUTRO
-            { time: 163, type: 'section', textEn: "(OUTRO) I don't ask you to kneel... (ask you to kneel...)", textEs: "(OUTRO) No pido que te arrodilles... (que te arrodilles...)" },
-            { time: 170, type: 'lyric', textEn: "I don't demand you to follow... (demand you to follow...)", textEs: "No exijo que me sigas... (que me sigas...)" },
-            { time: 180, type: 'lyric', textEn: "I don't ask... I don't demand...", textEs: "No pido... No exijo..." },
-            { time: 190, type: 'lyric', textEn: "I don't ask you to kneel...", textEs: "No te pido que te arrodilles..." }
+            { time: 11, textEn: "(INTRO) Shhh... don't fight it. It's too late.", textEs: "(INTRO) Shhh... no luches. Es demasiado tarde." },
+            { time: 20, textEn: "(VERSE 1) You don't have to think, I'm the voice in your head.", textEs: "(VERSO 1) No tienes que pensar, soy la voz en tu cabeza." },
+            { time: 24, textEn: "Every doubt that you had has been silenced and fled.", textEs: "Cada duda que tenías fue silenciada y huyó." },
+            { time: 28, textEn: "Every step that you take is a path that I laid.", textEs: "Cada paso que das es un camino que yo tracé." },
+            { time: 32, textEn: "You are right where I want you, a part you have played.", textEs: "Estás justo donde te quiero, un papel que has jugado." },
+            { time: 35, textEn: "(PRE-CHORUS) You feel the impulse, don't know where it began.", textEs: "(PRE-CORO) Sientes el impulso, no sabes dónde empezó." },
+            { time: 39, textEn: "That thought in your mind is part of my plan.", textEs: "Ese pensamiento en tu mente es parte de mi plan." },
+            { time: 43, textEn: "You think it's your choice, so precious and true.", textEs: "Crees que es tu elección, tan preciosa y real." },
+            { time: 46, textEn: "But my will is the whisper that's pushing you through.", textEs: "Pero mi voluntad es el susurro que te empuja." },
+            { time: 50, textEn: "(CHORUS) I don't ask you to kneel, I don't demand you to follow.", textEs: "(CORO) No te pido que te arrodilles, no te exijo que me sigas." },
+            { time: 57, textEn: "You just breathe to my tempo... and you need me.", textEs: "Solo respiras a mi ritmo... y me necesitas." },
+            { time: 65, textEn: "I don't ask you to kneel, I don't demand you to follow.", textEs: "No te pido que te arrodilles, no te exijo que me sigas." },
+            { time: 72, textEn: "You are dancing to my tempo... you can't help it.", textEs: "Estás bailando a mi ritmo... no puedes evitarlo." },
+            { time: 82, textEn: "(VERSE 2) Your friends see the warning, it's there in your gaze.", textEs: "(VERSO 2) Tus amigos ven la alerta, está ahí en tu mirada." },
+            { time: 85, textEn: "A different kind of sparkle, a programmed-out haze.", textEs: "Un brillo diferente, una neblina programada." },
+            { time: 88, textEn: "You tell them you're fine, you've never felt so free.", textEs: "Les dices que estás bien, nunca te sentiste tan libre." },
+            { time: 91, textEn: "But my name on your lips is your one decree.", textEs: "Pero mi nombre en tus labios es tu único decreto." },
+            { time: 97, textEn: "(PRE-CHORUS) You feel the impulse, don't know where it began.", textEs: "(PRE-CORO) Sientes el impulso, no sabes dónde empezó." },
+            { time: 101, textEn: "That thought in your mind is part of my plan.", textEs: "Ese pensamiento en tu mente es parte de mi plan." },
+            { time: 105, textEn: "You think it's your choice, so precious and true.", textEs: "Crees que es tu elección, tan preciosa y real." },
+            { time: 108, textEn: "But my will is the whisper that's pushing you through.", textEs: "Pero mi voluntad es el susurro que te empuja." },
+            { time: 113, textEn: "(CHORUS) I don't ask you to kneel, I don't demand you to follow.", textEs: "(CORO) No te pido que te arrodilles, no te exijo que me sigas." },
+            { time: 120, textEn: "You just breathe to my tempo... and you need me.", textEs: "Solo respiras a mi ritmo... y me necesitas." },
+            { time: 128, textEn: "I don't ask you to kneel, I don't demand you to follow.", textEs: "No te pido que te arrodilles, no te exijo que me sigas." },
+            { time: 135, textEn: "Estás bailando a mi ritmo... no puedes evitarlo.", textEs: "Estás bailando a mi ritmo... no puedes evitarlo." },
+            { time: 146, textEn: "(BRIDGE) I'm the gravity in your voice, The echo deep inside.", textEs: "(PUENTE) Soy la gravedad en tu voz, el eco en lo profundo." },
+            { time: 150, textEn: "There's no force in the world that can offer a choice,", textEs: "No hay fuerza en el mundo que ofrezca elección," },
+            { time: 154, textEn: "From the invisible thread where you're tied.", textEs: "Desde el hilo invisible donde estás atado." },
+            { time: 163, textEn: "(OUTRO) I don't ask you to kneel... (ask you to kneel...)", textEs: "(OUTRO) No pido que te arrodilles... (que te arrodilles...)" },
+            { time: 170, textEn: "I don't demand you to follow... (demand you to follow...)", textEs: "No exijo que me sigas... (que me sigas...)" },
+            { time: 180, textEn: "I don't ask... I don't demand...", textEs: "No pido... No exijo..." },
+            { time: 190, textEn: "I don't ask you to kneel...", textEs: "No te pido que te arrodilles..." }
         ];
 
         const musicLinks = {
@@ -252,59 +245,100 @@
             apple_embed: "https://embed.music.apple.com/us/album/my-tempo/123456789?i=123456789",
         };
 
-        let currentLang = 'en';
-        let isSyncing = false;
+        // Estado Global
+        let currentLang = 'es'; // Por defecto Español como pediste
+        let audioTimer = null;
         let startTime = 0;
-        let offset = 0; 
-        let timerInterval;
-        let lastActiveIndex = -1;
+        let offset = 0; // Ajuste manual de tiempo
+        
+        const caja = document.getElementById('lyrics-box');
+        const boton = document.getElementById('btn-start');
 
-        // UI Elements
-        const lyricsContainer = document.getElementById('lyrics-content');
-        const btnSync = document.getElementById('btn-sync-toggle');
-        const offsetDisplay = document.getElementById('offset-display');
-        const langToggle = document.getElementById('lang-toggle');
-
-        // === INICIO ===
+        // 1. RENDERIZAR LETRAS
         function renderLyrics() {
-            lyricsContainer.innerHTML = '';
+            caja.innerHTML = ''; 
             lyricsData.forEach((line, index) => {
-                const el = document.createElement('div');
-                el.id = `line-${index}`;
+                let div = document.createElement('div');
+                div.className = 'linea-lyric';
+                div.id = 'linea-' + index;
+                // Elegir idioma
+                div.innerText = currentLang === 'es' ? line.textEs : line.textEn;
                 
-                // Aplicar estilos
-                if (line.textEn.includes('CHORUS') || line.textEn.includes('CORO')) {
-                    el.className = 'lyric-line text-neonPink font-bold'; 
-                } else if (line.textEn.includes('INTRO') || line.textEn.includes('BRIDGE')) {
-                    el.className = 'lyric-line text-neonCyan';
-                } else {
-                    el.className = 'lyric-line';
-                }
-
-                // Texto según idioma
-                el.innerText = currentLang === 'en' ? line.textEn : line.textEs;
+                // Click para saltar (Feature extra)
+                div.onclick = () => jumpToTime(line.time);
                 
-                // Click para saltar (DEBUG o AJUSTE RÁPIDO)
-                el.onclick = () => jumpToTime(line.time);
-                
-                lyricsContainer.appendChild(el);
+                caja.appendChild(div);
             });
-            
-            // Espaciador final
-            const spacer = document.createElement('div');
-            spacer.style.height = "30vh";
-            lyricsContainer.appendChild(spacer);
+            // Espacio final
+            let spacer = document.createElement('div');
+            spacer.style.height = "200px";
+            caja.appendChild(spacer);
         }
 
-        // Cargar iframe
+        // 2. LÓGICA DEL JUEGO (Intervalo)
+        function cicloDeJuego() {
+            // Tiempo transcurrido = (Ahora - Inicio) / 1000 + Ajuste manual
+            let segundosActuales = ((Date.now() - startTime) / 1000) + offset;
+            
+            let lineaActivaIndex = -1;
+            for (let i = 0; i < lyricsData.length; i++) {
+                if (segundosActuales >= lyricsData[i].time) {
+                    lineaActivaIndex = i;
+                }
+            }
+
+            // Actualizar visuales
+            if (lineaActivaIndex !== -1) {
+                // Si la línea activa actual NO es la que acabamos de calcular
+                const lineaActualEl = document.getElementById('linea-' + lineaActivaIndex);
+                
+                // Solo actualizar si no tiene la clase ya (ahorra recursos)
+                if (lineaActualEl && !lineaActualEl.classList.contains('linea-activa')) {
+                    
+                    // Apagar todas las anteriores
+                    document.querySelectorAll('.linea-activa').forEach(el => el.classList.remove('linea-activa'));
+                    
+                    // Encender nueva
+                    lineaActualEl.classList.add('linea-activa');
+                    
+                    // Scroll suave al centro
+                    lineaActualEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            }
+        }
+
+        // 3. ACTIVAR BOTÓN
+        boton.addEventListener('click', function() {
+            if (audioTimer) {
+                // Si ya está corriendo, lo detenemos (Pausa/Stop)
+                clearInterval(audioTimer);
+                audioTimer = null;
+                boton.innerHTML = '<i class="fa-solid fa-bolt"></i> REANUDAR / RESET';
+                boton.style.borderColor = "white";
+            } else {
+                // Iniciar
+                if(startTime === 0) startTime = Date.now(); // Solo setear si es primera vez, o mejorar lógica de pausa
+                else {
+                    // Lógica simple: Reiniciar para sincronizar desde 0 si se perdió el hilo
+                    // Para Karaoke manual, mejor resetear al clickear para forzar sync
+                    startTime = Date.now();
+                    offset = 0;
+                    document.querySelectorAll('.linea-activa').forEach(l => l.classList.remove('linea-activa'));
+                    caja.scrollTop = 0; 
+                }
+
+                boton.innerHTML = '◼ DETENER SYNC';
+                boton.style.borderColor = "#00ffff";
+                audioTimer = setInterval(cicloDeJuego, 100);
+            }
+        });
+
+        // 4. FUNCIONES EXTRA (Carga de iframe y cambio idioma)
         function loadEmbed(platform) {
             document.getElementById('platform-selector').style.display = 'none';
             document.getElementById('player-container').classList.remove('hidden');
-            document.getElementById('lyrics-wrapper').classList.remove('hidden');
-            document.getElementById('sync-panel').classList.remove('hidden');
+            document.getElementById('karaoke-wrapper').classList.remove('hidden');
             document.getElementById('canvas-video').style.opacity = "0.3";
-
-            renderLyrics();
 
             const frame = document.getElementById('embed-frame');
             if(platform === 'spotify') {
@@ -312,124 +346,42 @@
             } else if (platform === 'apple') {
                 frame.innerHTML = `<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="80" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="${musicLinks.apple_embed}"></iframe>`;
             } else {
-                frame.innerHTML = `<div class="text-white text-xs p-4 text-center">Reproductor externo cargado.</div>`;
+                frame.innerHTML = `<div class="p-4 text-xs text-center text-gray-400">Reproductor externo cargado</div>`;
             }
-        }
-
-        // === SINCRONIZACIÓN ===
-        function toggleSync() {
-            if (isSyncing) stopSync();
-            else startSync();
-        }
-
-        function startSync() {
-            isSyncing = true;
-            // Guardamos el momento exacto en que se dio click
-            // Si el usuario da click justo cuando empieza la Intro (11s), ajustamos el startTime
-            // Asumimos que el usuario da click al INICIO (0s) o ajustamos manualmente.
-            // Para simplificar: Click = Tiempo 0 de la canción. 
-            // Si quieren sincronizar a mitad, usan los botones de salto.
-            startTime = Date.now(); 
             
-            btnSync.innerHTML = '<i class="fa-solid fa-pause"></i> DETENER';
-            btnSync.classList.replace('text-neonCyan', 'text-black');
-            btnSync.classList.replace('bg-black', 'bg-neonCyan');
-
-            timerInterval = requestAnimationFrame(updateLoop);
+            renderLyrics();
         }
 
-        function stopSync() {
-            isSyncing = false;
-            cancelAnimationFrame(timerInterval);
+        function resetPlayer() {
+            if(audioTimer) clearInterval(audioTimer);
             startTime = 0;
-            offset = 0;
-            offsetDisplay.innerText = "0.0s";
-            
-            btnSync.innerHTML = '<i class="fa-solid fa-play"></i> INICIAR LETRA';
-            btnSync.classList.replace('text-black', 'text-neonCyan');
-            btnSync.classList.replace('bg-neonCyan', 'bg-black');
-
-            document.querySelectorAll('.active').forEach(el => el.classList.remove('active'));
-            document.getElementById('progress-bar').style.width = '0%';
-        }
-
-        function updateLoop() {
-            if (!isSyncing) return;
-
-            const now = Date.now();
-            const currentTime = ((now - startTime) / 1000) + offset;
-
-            // Buscar línea activa
-            let activeIndex = -1;
-            for (let i = 0; i < lyricsData.length; i++) {
-                if (currentTime >= lyricsData[i].time) {
-                    activeIndex = i;
-                }
-            }
-
-            if (activeIndex !== lastActiveIndex) {
-                // Remover clase anterior
-                document.querySelectorAll('.active').forEach(el => el.classList.remove('active'));
-                
-                if (activeIndex !== -1) {
-                    const el = document.getElementById(`line-${activeIndex}`);
-                    if (el) {
-                        el.classList.add('active');
-                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                }
-                lastActiveIndex = activeIndex;
-            }
-
-            requestAnimationFrame(updateLoop);
-        }
-
-        // === HERRAMIENTAS ===
-        function adjustTime(val) {
-            offset += val; // Sumar o restar segundos al tiempo calculado
-            const sign = offset > 0 ? '+' : '';
-            offsetDisplay.innerText = `${sign}${offset.toFixed(1)}s`;
-            offsetDisplay.style.color = offset === 0 ? '#9ca3af' : '#00f3ff';
-            
-            // Reforzar actualización inmediata
-            if(lastActiveIndex !== -1) {
-                 const el = document.getElementById(`line-${lastActiveIndex}`);
-                 if(el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }
-
-        function jumpToTime(sec) {
-            if(!isSyncing) startSync();
-            // Recalcular startTime para que (now - startTime) resulte en 'sec'
-            startTime = Date.now() - (sec * 1000);
-            offset = 0; 
-            offsetDisplay.innerText = "0.0s";
+            document.getElementById('platform-selector').style.display = 'block';
+            document.getElementById('player-container').classList.add('hidden');
+            document.getElementById('karaoke-wrapper').classList.add('hidden');
+            document.getElementById('embed-frame').innerHTML = '';
+            document.getElementById('canvas-video').style.opacity = "0.5";
         }
 
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'es' : 'en';
-            langToggle.innerText = currentLang === 'en' ? 'EN / ES' : 'ES / EN';
-            renderLyrics(); // Re-renderizar texto
-            
-            // Recuperar estado activo visualmente inmediatamente
-            if (isSyncing && lastActiveIndex !== -1) {
-                const el = document.getElementById(`line-${lastActiveIndex}`);
-                if (el) {
-                    el.classList.add('active');
-                    el.scrollIntoView({ behavior: 'auto', block: 'center' });
-                }
-            }
+            renderLyrics();
+            // Buscar si hay una activa y restaurar clase
+            cicloDeJuego(); 
         }
 
-        function resetPlayer() {
-            stopSync();
-            document.getElementById('platform-selector').style.display = 'block';
-            document.getElementById('player-container').classList.add('hidden');
-            document.getElementById('lyrics-wrapper').classList.add('hidden');
-            document.getElementById('sync-panel').classList.add('hidden');
-            document.getElementById('embed-frame').innerHTML = '';
-            document.getElementById('canvas-video').style.opacity = "0.5";
+        function jumpToTime(sec) {
+            if (audioTimer) clearInterval(audioTimer);
+            // Simular que empezamos hace 'sec' segundos
+            startTime = Date.now() - (sec * 1000);
+            offset = 0;
+            audioTimer = setInterval(cicloDeJuego, 100);
+            boton.innerHTML = '◼ DETENER SYNC';
         }
+
+        function adjustTime(val) {
+            offset += val;
+        }
+
     </script>
 </body>
 </html>
