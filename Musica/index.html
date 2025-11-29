@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -17,7 +17,7 @@
                     },
                     colors: {
                         neonCyan: '#00f3ff',
-                        neonPink: '#ff00ff',
+                        neonMint: '#00ffaa', 
                     }
                 },
             },
@@ -30,101 +30,110 @@
         /* Video de Fondo */
         #canvas-video {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover; z-index: -1; opacity: 0.5;
-            filter: brightness(0.6) contrast(1.2);
+            object-fit: cover; z-index: -1; opacity: 0.4;
+            filter: brightness(0.5) contrast(1.3) hue-rotate(-10deg); 
         }
 
         /* --- CONTENEDOR KARAOKE --- */
         .contenedor-karaoke {
-            background-color: rgba(0, 0, 0, 0.6); 
-            backdrop-filter: blur(5px);
-            width: 95%; 
-            max-width: 800px;
-            margin: 10px auto;
-            border-top: 1px solid #00ffff;
-            border-bottom: 1px solid #00ffff;
+            background-color: rgba(0, 10, 20, 0.4); 
+            backdrop-filter: blur(4px);
+            width: 98%; 
+            max-width: 900px;
+            margin: 5px auto;
+            border-top: 1px solid rgba(0, 243, 255, 0.5);
+            border-bottom: 1px solid rgba(0, 243, 255, 0.5);
             font-family: 'Courier New', monospace;
             text-align: center;
             position: relative;
             box-sizing: border-box;
-            padding: 15px 5px;
-            border-radius: 12px;
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
-            transition: background-color 0.5s;
+            padding: 10px 2px;
+            border-radius: 16px;
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.1);
         }
 
-        /* --- ESTADO 1: LETRA NORMAL (VISIBILIDAD TOTAL) --- */
+        /* --- ESTADO 1: LETRA NORMAL (VISIBILIDAD ALTA PERO NO TOTAL) --- */
+        /* Importante: Un poco menos de opacidad para que el cambio a activo se note */
         .linea-lyric {
             display: block;
-            margin: 14px 0;
-            /* CAMBIO: Letra Blanca y visible por defecto */
-            color: #ffffff; 
+            margin: 15px 0;
+            color: rgba(255, 255, 255, 0.7); /* Blanco al 70% */
             font-size: 16px; 
-            transition: all 0.4s ease-out;
-            opacity: 0.9; /* Casi 100% visible */
-            filter: blur(0px); /* Sin desenfoque */
-            padding: 5px 10px;
+            font-weight: 500;
+            transition: all 0.3s ease-out; /* Transición rápida */
+            padding: 8px 5px;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
         }
-        
-        /* Efecto Hover suave en PC */
-        .linea-lyric:hover {
-            opacity: 1;
-            text-shadow: 0 0 5px white;
-        }
 
-        /* --- ESTADO 2: LETRA ACTIVA (ENCENDIDA) --- */
-        .linea-activa {
-            color: #00ffff !important;
-            font-size: 24px !important;
-            font-weight: 900;
+        /* --- ESTADO 2: LETRA ACTIVA (CLASE DE ALTA PRIORIDAD) --- */
+        /* Usamos !important para asegurar que sobreescriba todo */
+        div.linea-activa {
+            /* COLOR: Blanco puro y brillante */
+            color: #ffffff !important;
             opacity: 1 !important;
-            filter: blur(0px) !important;
-            transform: scale(1.05);
-            text-shadow: 0 0 15px #00ffff, 0 0 30px #000;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 8px;
-            padding: 15px 5px;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-            width: 100%;
+            
+            /* TAMAÑO: Forzamos el doble de tamaño */
+            font-size: 28px !important; 
+            line-height: 1.2 !important;
+            font-weight: 900 !important;
+            
+            /* TRANSFORMACIÓN */
+            transform: scale(1.1) !important; 
+            
+            /* SOMBRA / RESPLANDOR (Tu color verde/blanco) */
+            text-shadow: 
+                0 0 10px #ffffff,
+                0 0 20px #00ffaa, 
+                0 0 40px #00ffaa !important; 
+
+            /* FONDO DE CONTRASTE DETRÁS DE LA LETRA */
+            background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.8) 20%, rgba(0, 0, 0, 0.8) 80%, transparent 100%);
+            
+            padding: 25px 5px !important; /* Más espacio vertical */
+            margin: 30px 0 !important; /* Separar de las otras */
+            
+            z-index: 50;
+            position: relative;
+            border-radius: 10px;
         }
 
         /* --- ESTADO 3: MODO AUTO (OSCURECER LAS OTRAS) --- */
-        /* Esta clase se agrega al contenedor padre cuando inicia el Auto-Sync */
         .modo-automatico .linea-lyric:not(.linea-activa) {
-            opacity: 0.3;     /* Aquí sí se apagan las que no se cantan */
-            filter: blur(2px); /* Se desenfocan un poco */
-            color: #aaa;
-            transform: scale(0.95);
+            opacity: 0.2;     
+            filter: blur(2px); 
+            transform: scale(0.9);
         }
 
         /* Botón Principal */
         .btn-sync {
-            background: rgba(0,0,0,0.5);
-            border: 1px solid #00ffff;
+            background: rgba(0, 20, 40, 0.6);
+            border: 1px solid #00f3ff;
             color: #fff;
-            padding: 12px 0;
+            padding: 14px 0;
             width: 100%;
             cursor: pointer;
             font-weight: bold;
             font-size: 14px;
             text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 15px;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
+            border-radius: 8px;
             transition: all 0.3s;
         }
-        .btn-sync:hover { background: #00ffff; color: #000; }
+        .btn-sync:hover { background: #00f3ff; color: #000; box-shadow: 0 0 30px #00f3ff; }
         
         /* Scroll Box */
         #lyrics-box {
-            height: 50vh;
+            height: 55vh; 
             overflow-y: auto;
             scroll-behavior: smooth;
-            padding-bottom: 150px;
+            padding-bottom: 200px; 
             scrollbar-width: none; 
+            mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
         }
         #lyrics-box::-webkit-scrollbar { display: none; }
 
@@ -132,7 +141,7 @@
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="flex flex-col h-screen relative">
+<body class="flex flex-col h-screen relative font-mono">
 
     <!-- Video Fondo -->
     <video id="canvas-video" autoplay loop muted playsinline>
@@ -144,63 +153,62 @@
         <i class="fa-solid fa-arrow-left text-xl"></i>
     </a>
 
-    <div class="flex-grow flex flex-col items-center justify-start px-4 z-10 w-full max-w-md mx-auto mt-4 pt-4">
+    <div class="flex-grow flex flex-col items-center justify-start px-2 z-10 w-full max-w-lg mx-auto mt-2 pt-2">
         
-        <!-- Header -->
-        <div class="text-center mb-2 fade-in-up flex items-center gap-4 w-full justify-center">
-            <div class="w-16 h-16 rounded shadow-[0_0_15px_rgba(0,243,255,0.2)] overflow-hidden border border-white/20">
+        <!-- Header Compacto -->
+        <div class="text-center mb-2 fade-in-up flex items-center gap-3 w-full justify-center transform scale-90 origin-top">
+            <div class="w-14 h-14 rounded shadow-[0_0_20px_rgba(0,255,170,0.3)] overflow-hidden border border-white/30">
                 <img src="../assets/imagenes/LUMENFALL-JUEGO-512x512.png" onerror="this.src='https://via.placeholder.com/150/000000/00f3ff?text=LF'" class="w-full h-full object-cover">
             </div>
             <div class="text-left">
-                <h1 class="font-display text-2xl tracking-widest text-white drop-shadow-lg leading-none">MY TEMPO</h1>
-                <p class="text-neonCyan font-mono text-xs tracking-[0.3em]">JOZIEL</p>
+                <h1 class="font-display text-2xl tracking-widest text-white drop-shadow-[0_0_10px_rgba(0,243,255,0.8)] leading-none">MY TEMPO</h1>
+                <p class="text-neonMint font-mono text-xs tracking-[0.4em] drop-shadow-md">JOZIEL</p>
             </div>
         </div>
 
         <!-- Selector Plataformas -->
-        <div id="platform-selector" class="w-full mb-2 fade-in-up">
+        <div id="platform-selector" class="w-full mb-2 fade-in-up px-2">
             <div class="grid grid-cols-4 gap-2">
-                <button onclick="loadEmbed('spotify')" class="bg-[#1DB954]/20 border border-[#1DB954] hover:bg-[#1DB954] text-white p-2 rounded-lg transition flex justify-center items-center"><i class="fa-brands fa-spotify text-xl"></i></button>
-                <button onclick="loadEmbed('apple')" class="bg-[#FA243C]/20 border border-[#FA243C] hover:bg-[#FA243C] text-white p-2 rounded-lg transition flex justify-center items-center"><i class="fa-brands fa-apple text-xl"></i></button>
-                <button onclick="loadEmbed('deezer')" class="bg-white/10 border border-white hover:bg-white text-white p-2 rounded-lg transition flex justify-center items-center"><i class="fa-brands fa-deezer text-xl"></i></button>
-                <button onclick="loadEmbed('amazon')" class="bg-[#00A8E1]/20 border border-[#00A8E1] hover:bg-[#00A8E1] text-white p-2 rounded-lg transition flex justify-center items-center"><i class="fa-brands fa-amazon text-xl"></i></button>
+                <button onclick="loadEmbed('spotify')" class="bg-[#1DB954]/20 border border-[#1DB954] hover:bg-[#1DB954] text-white p-2 rounded-lg transition flex justify-center items-center backdrop-blur-sm"><i class="fa-brands fa-spotify text-xl"></i></button>
+                <button onclick="loadEmbed('apple')" class="bg-[#FA243C]/20 border border-[#FA243C] hover:bg-[#FA243C] text-white p-2 rounded-lg transition flex justify-center items-center backdrop-blur-sm"><i class="fa-brands fa-apple text-xl"></i></button>
+                <button onclick="loadEmbed('deezer')" class="bg-white/10 border border-white hover:bg-white text-white p-2 rounded-lg transition flex justify-center items-center backdrop-blur-sm"><i class="fa-brands fa-deezer text-xl"></i></button>
+                <button onclick="loadEmbed('amazon')" class="bg-[#00A8E1]/20 border border-[#00A8E1] hover:bg-[#00A8E1] text-white p-2 rounded-lg transition flex justify-center items-center backdrop-blur-sm"><i class="fa-brands fa-amazon text-xl"></i></button>
             </div>
         </div>
 
         <!-- Reproductor -->
-        <div id="player-container" class="w-full hidden fade-in-up mb-2 relative">
+        <div id="player-container" class="w-full hidden fade-in-up mb-2 relative px-2">
             <div class="flex justify-between items-center mb-1 px-1">
                 <button onclick="resetPlayer()" class="text-[10px] text-gray-400 hover:text-white uppercase"><i class="fa-solid fa-xmark mr-1"></i> Cerrar</button>
-                <button id="lang-toggle" onclick="toggleLanguage()" class="text-[10px] border border-neonCyan text-neonCyan bg-black/50 px-3 py-1 rounded hover:bg-neonCyan hover:text-black transition uppercase font-bold">EN / ES</button>
+                <button id="lang-toggle" onclick="toggleLanguage()" class="text-[10px] border border-neonMint text-neonMint bg-black/60 px-3 py-1 rounded hover:bg-neonMint hover:text-black transition uppercase font-bold shadow-[0_0_10px_rgba(0,255,170,0.3)]">EN / ES</button>
             </div>
-            <div id="embed-frame" class="rounded-xl overflow-hidden bg-black min-h-[80px]"></div>
+            <div id="embed-frame" class="rounded-xl overflow-hidden bg-black/80 border border-white/10 min-h-[80px]"></div>
         </div>
 
         <!-- KARAOKE WRAPPER -->
-        <div id="karaoke-wrapper" class="w-full fade-in-up hidden">
-            <div id="main-container" class="contenedor-karaoke">
-                <p style="color:#aaa; font-size:10px; margin-bottom:8px; letter-spacing:1px; font-family: sans-serif;">
-                    1. PLAY EN APP &nbsp;|&nbsp; 2. ACTIVA SYNC
-                </p>
-
-                <button id="btn-start" class="btn-sync" type="button">
-                    <i class="fa-solid fa-bolt mr-2"></i> ACTIVAR AUTO-SYNC
+        <div id="karaoke-wrapper" class="w-full fade-in-up hidden flex-grow flex flex-col">
+            <div id="main-container" class="contenedor-karaoke flex flex-col flex-grow">
+                
+                <button id="btn-start" class="btn-sync flex-shrink-0" type="button">
+                    <i class="fa-solid fa-bolt mr-2 animate-pulse"></i> SYNC AUTO
                 </button>
                 
-                <div id="lyrics-box"></div>
+                <p style="color:#00ffaa; font-size:9px; margin-bottom:5px; margin-top:-5px; letter-spacing:1px; opacity: 0.7;">
+                    ● TOCA UNA LÍNEA PARA ILUMINARLA
+                </p>
+
+                <div id="lyrics-box" class="flex-grow"></div>
             </div>
 
-            <!-- Botones Ajuste -->
-            <div class="flex justify-center gap-4 mt-2">
-                <button onclick="adjustTime(-0.5)" class="text-xs text-gray-400 hover:text-neonPink p-2 border border-white/20 rounded bg-black/40">-0.5s</button>
-                <button onclick="adjustTime(0.5)" class="text-xs text-gray-400 hover:text-neonCyan p-2 border border-white/20 rounded bg-black/40">+0.5s</button>
+            <div class="flex justify-center gap-3 mt-3 mb-4 flex-shrink-0">
+                <button onclick="adjustTime(-0.5)" class="text-xs text-white hover:text-neonPink py-2 px-4 border border-white/20 rounded-full bg-black/60 backdrop-blur-md active:bg-neonPink active:text-black transition">- 0.5s</button>
+                <button onclick="adjustTime(0.5)" class="text-xs text-white hover:text-neonCyan py-2 px-4 border border-white/20 rounded-full bg-black/60 backdrop-blur-md active:bg-neonCyan active:text-black transition">+ 0.5s</button>
             </div>
         </div>
 
     </div>
 
     <script>
-        // === DATOS DE LETRAS (MERGEADOS) ===
         const lyricsData = [
             { time: 11, textEn: "(INTRO) Shhh... don't fight it. It's too late.", textEs: "(INTRO) Shhh... no luches. Es demasiado tarde." },
             { time: 20, textEn: "(VERSE 1) You don't have to think, I'm the voice in your head.", textEs: "(VERSO 1) No tienes que pensar, soy la voz en tu cabeza." },
@@ -241,8 +249,7 @@
             apple_embed: "https://embed.music.apple.com/us/album/my-tempo/123456789?i=123456789",
         };
 
-        // Variables Globales
-        let currentLang = 'en'; // Inglés por defecto en los datos que pasaste
+        let currentLang = 'en';
         let audioTimer = null;
         let startTime = 0;
         let offset = 0;
@@ -252,37 +259,40 @@
         const boton = document.getElementById('btn-start');
         const mainContainer = document.getElementById('main-container');
 
-        // 1. RENDERIZADO (MODO MANUAL VISIBLE)
         function renderLyrics() {
             caja.innerHTML = ''; 
             lyricsData.forEach((line, index) => {
                 let div = document.createElement('div');
-                div.className = 'linea-lyric';
+                div.className = 'linea-lyric'; // Clase base
                 div.id = 'linea-' + index;
                 div.innerText = currentLang === 'en' ? line.textEn : line.textEs;
                 
-                // EVENTO MANUAL
-                div.addEventListener('click', function() {
-                    // Si NO estamos en automático, permitir encender manualmente
+                // EVENTO CLICK: Activa la clase 'linea-activa'
+                div.onclick = function() {
+                    // Si NO es auto, encender manualmente
                     if (!autoMode) {
-                        document.querySelectorAll('.linea-activa').forEach(l => l.classList.remove('linea-activa'));
+                        // 1. Apagar todas
+                        const activas = document.querySelectorAll('.linea-activa');
+                        activas.forEach(l => l.classList.remove('linea-activa'));
+                        
+                        // 2. Encender esta (Esto dispara el CSS gigante)
                         this.classList.add('linea-activa');
+                        
+                        // 3. Centrar
                         this.scrollIntoView({ behavior: "smooth", block: "center" });
                     } else {
-                        // Si ESTAMOS en automático, click = saltar a ese tiempo
+                        // En auto, saltar tiempo
                         jumpToTime(line.time);
                     }
-                });
+                };
                 
                 caja.appendChild(div);
             });
-            // Espacio final
             let spacer = document.createElement('div');
             spacer.style.height = "250px";
             caja.appendChild(spacer);
         }
 
-        // 2. CICLO AUTOMÁTICO
         function cicloDeJuego() {
             let segundosActuales = ((Date.now() - startTime) / 1000) + offset;
             
@@ -303,38 +313,35 @@
             }
         }
 
-        // 3. CONTROL BOTÓN
         boton.addEventListener('click', function() {
             if (autoMode) {
-                // DETENER / RESETEAR
                 clearInterval(audioTimer);
                 autoMode = false;
-                mainContainer.classList.remove('modo-automatico'); // Quitar efecto oscuro
+                mainContainer.classList.remove('modo-automatico'); 
                 
-                boton.innerHTML = '<i class="fa-solid fa-bolt mr-2"></i> ACTIVAR AUTO-SYNC';
-                boton.style.borderColor = "#00ffff";
+                boton.innerHTML = '<i class="fa-solid fa-bolt mr-2 animate-pulse"></i> SYNC AUTO';
+                boton.style.borderColor = "#00f3ff";
                 boton.style.color = "white";
+                boton.style.background = "rgba(0, 20, 40, 0.6)";
                 
-                // Limpiar activa para volver a estado "Todo Blanco"
                 document.querySelectorAll('.linea-activa').forEach(l => l.classList.remove('linea-activa'));
                 caja.scrollTop = 0;
             } else {
-                // INICIAR
                 autoMode = true;
                 startTime = Date.now();
                 offset = 0;
                 
-                mainContainer.classList.add('modo-automatico'); // Activar efecto oscuro
+                mainContainer.classList.add('modo-automatico'); 
                 
                 boton.innerHTML = '◼ DETENER SYNC';
                 boton.style.borderColor = "#ff0055"; 
-                boton.style.color = "#ff0055";
+                boton.style.color = "white";
+                boton.style.background = "#ff0055";
                 
                 audioTimer = setInterval(cicloDeJuego, 100);
             }
         });
 
-        // 4. FUNCIONES DE APOYO
         function loadEmbed(platform) {
             document.getElementById('platform-selector').style.display = 'none';
             document.getElementById('player-container').classList.remove('hidden');
@@ -346,6 +353,8 @@
                 frame.innerHTML = `<iframe style="border-radius:12px" src="https://open.spotify.com/embed/album/${musicLinks.spotify_id}?utm_source=generator&theme=0" width="100%" height="80" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
             } else if (platform === 'apple') {
                 frame.innerHTML = `<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="80" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="${musicLinks.apple_embed}"></iframe>`;
+            } else {
+                 frame.innerHTML = `<div class="p-4 text-xs text-center text-gray-400">Reproductor externo cargado.</div>`;
             }
             renderLyrics();
         }
@@ -364,7 +373,6 @@
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'es' : 'en';
             renderLyrics();
-            // Restaurar estado visual
             if(autoMode) cicloDeJuego();
         }
 
@@ -376,10 +384,8 @@
             if(!autoMode) return; 
             startTime = Date.now() - (sec * 1000);
             offset = 0;
-            // Forzar actualización inmediata visual
             cicloDeJuego();
         }
-
     </script>
 </body>
-</html>
+</html>  
