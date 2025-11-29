@@ -1,4 +1,4 @@
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -36,80 +36,101 @@
 
         /* --- CONTENEDOR KARAOKE --- */
         .contenedor-karaoke {
-            background-color: rgba(0, 10, 20, 0.4); 
-            backdrop-filter: blur(4px);
+            background-color: rgba(0, 10, 20, 0.5); 
+            backdrop-filter: blur(5px);
             width: 98%; 
             max-width: 900px;
             margin: 5px auto;
-            border-top: 1px solid rgba(0, 243, 255, 0.5);
-            border-bottom: 1px solid rgba(0, 243, 255, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
             font-family: 'Courier New', monospace;
             text-align: center;
             position: relative;
             box-sizing: border-box;
             padding: 10px 2px;
             border-radius: 16px;
-            box-shadow: 0 0 40px rgba(0, 243, 255, 0.1);
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.05);
         }
 
-        /* --- ESTADO 1: LETRA NORMAL (VISIBILIDAD ALTA PERO NO TOTAL) --- */
-        /* Importante: Un poco menos de opacidad para que el cambio a activo se note */
+        /* --- ESTADO 1: LETRA NORMAL (BLANCA VISIBLE) --- */
         .linea-lyric {
             display: block;
             margin: 15px 0;
-            color: rgba(255, 255, 255, 0.7); /* Blanco al 70% */
+            color: #ffffff; /* Blanco sólido */
             font-size: 16px; 
             font-weight: 500;
-            transition: all 0.3s ease-out; /* Transición rápida */
-            padding: 8px 5px;
+            transition: transform 0.1s ease-out, opacity 0.2s; /* Transición muy rápida */
+            padding: 10px 5px;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
-            user-select: none;
+            user-select: none; 
+            opacity: 0.9;
         }
 
-        /* --- ESTADO 2: LETRA ACTIVA (CLASE DE ALTA PRIORIDAD) --- */
-        /* Usamos !important para asegurar que sobreescriba todo */
+        /* --- ESTADO 2: LETRA ACTIVA (AL PRESIONAR) --- */
         div.linea-activa {
-            /* COLOR: Blanco puro y brillante */
             color: #ffffff !important;
             opacity: 1 !important;
             
-            /* TAMAÑO: Forzamos el doble de tamaño */
+            /* TAMAÑO: EXPLOSIÓN */
             font-size: 28px !important; 
-            line-height: 1.2 !important;
+            line-height: 1.1 !important;
             font-weight: 900 !important;
             
             /* TRANSFORMACIÓN */
-            transform: scale(1.1) !important; 
+            transform: scale(1.15) !important; 
             
-            /* SOMBRA / RESPLANDOR (Tu color verde/blanco) */
+            /* SOMBRA / RESPLANDOR */
             text-shadow: 
                 0 0 10px #ffffff,
-                0 0 20px #00ffaa, 
-                0 0 40px #00ffaa !important; 
+                0 0 25px #00ffaa, 
+                0 0 50px #00f3ff !important; 
 
-            /* FONDO DE CONTRASTE DETRÁS DE LA LETRA */
-            background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.8) 20%, rgba(0, 0, 0, 0.8) 80%, transparent 100%);
+            /* FONDO DE CONTRASTE */
+            background: linear-gradient(90deg, transparent 0%, rgba(0, 20, 20, 0.9) 20%, rgba(0, 20, 20, 0.9) 80%, transparent 100%);
             
-            padding: 25px 5px !important; /* Más espacio vertical */
-            margin: 30px 0 !important; /* Separar de las otras */
+            padding: 30px 5px !important;
+            margin: 20px 0 !important;
             
             z-index: 50;
             position: relative;
-            border-radius: 10px;
+            border-radius: 12px;
+            border-top: 1px solid rgba(0, 255, 170, 0.3);
+            border-bottom: 1px solid rgba(0, 255, 170, 0.3);
         }
 
-        /* --- ESTADO 3: MODO AUTO (OSCURECER LAS OTRAS) --- */
+        /* --- MODO AUTOMÁTICO --- */
         .modo-automatico .linea-lyric:not(.linea-activa) {
-            opacity: 0.2;     
-            filter: blur(2px); 
-            transform: scale(0.9);
+            opacity: 0.3;     
+            filter: blur(1px); 
+            transform: scale(0.95);
+            color: #ccc;
         }
 
-        /* Botón Principal */
+        /* BOTONES DE PLATAFORMA (BLANCOS) */
+        .platform-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        .platform-btn:hover {
+            background: white;
+            color: black;
+            border-color: white;
+            box-shadow: 0 0 15px rgba(255,255,255,0.5);
+        }
+
+        /* Botón Principal Sync */
         .btn-sync {
-            background: rgba(0, 20, 40, 0.6);
-            border: 1px solid #00f3ff;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #fff;
             color: #fff;
             padding: 14px 0;
             width: 100%;
@@ -119,11 +140,11 @@
             text-transform: uppercase;
             letter-spacing: 4px;
             margin-bottom: 10px;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             transition: all 0.3s;
         }
-        .btn-sync:hover { background: #00f3ff; color: #000; box-shadow: 0 0 30px #00f3ff; }
+        .btn-sync:hover { background: #fff; color: #000; box-shadow: 0 0 20px #fff; }
         
         /* Scroll Box */
         #lyrics-box {
@@ -132,8 +153,8 @@
             scroll-behavior: smooth;
             padding-bottom: 200px; 
             scrollbar-width: none; 
-            mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
-            -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+            mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
         }
         #lyrics-box::-webkit-scrollbar { display: none; }
 
@@ -149,30 +170,34 @@
     </video>
 
     <!-- Botón Regresar -->
-    <a href="../index.html" class="absolute top-6 left-6 text-white/50 hover:text-neonCyan transition z-50 bg-black/20 p-2 rounded-full backdrop-blur-sm">
+    <a href="../index.html" class="absolute top-6 left-6 text-white/50 hover:text-white transition z-50 bg-black/30 p-2 rounded-full backdrop-blur-sm border border-white/10">
         <i class="fa-solid fa-arrow-left text-xl"></i>
     </a>
 
     <div class="flex-grow flex flex-col items-center justify-start px-2 z-10 w-full max-w-lg mx-auto mt-2 pt-2">
         
-        <!-- Header Compacto -->
-        <div class="text-center mb-2 fade-in-up flex items-center gap-3 w-full justify-center transform scale-90 origin-top">
-            <div class="w-14 h-14 rounded shadow-[0_0_20px_rgba(0,255,170,0.3)] overflow-hidden border border-white/30">
-                <img src="../assets/imagenes/LUMENFALL-JUEGO-512x512.png" onerror="this.src='https://via.placeholder.com/150/000000/00f3ff?text=LF'" class="w-full h-full object-cover">
+        <!-- HEADER NUEVO CON IMÁGENES -->
+        <div class="text-center mb-2 fade-in-up flex items-center gap-3 w-full justify-center transform scale-95 origin-top">
+            
+            <!-- 1. LA PORTADA PEQUEÑA (portada-my-tempo.jpg) -->
+            <div class="w-16 h-16 rounded shadow-[0_0_20px_rgba(255,255,255,0.2)] overflow-hidden border border-white/50 flex-shrink-0">
+                <img src="../assets/imagenes/portada-my-tempo.jpg" onerror="this.src='https://via.placeholder.com/150/000000/ffffff?text=COVER'" class="w-full h-full object-cover">
             </div>
-            <div class="text-left">
-                <h1 class="font-display text-2xl tracking-widest text-white drop-shadow-[0_0_10px_rgba(0,243,255,0.8)] leading-none">MY TEMPO</h1>
-                <p class="text-neonMint font-mono text-xs tracking-[0.4em] drop-shadow-md">JOZIEL</p>
+
+            <!-- 2. EL TEXTO COMO IMAGEN (Icono-my-tempo.png) -->
+            <div class="text-left flex items-center h-16">
+                 <!-- Ajusta el h-12 según el tamaño real de tu PNG para que se vea bien -->
+                 <img src="../assets/imagenes/Icono-my-tempo.png" onerror="this.src='https://via.placeholder.com/200x50/000000/ffffff?text=MY+TEMPO'" class="h-12 w-auto object-contain drop-shadow-[0_0_8px_rgba(0,243,255,0.6)]">
             </div>
         </div>
 
-        <!-- Selector Plataformas -->
+        <!-- Selector Plataformas (BLANCO) -->
         <div id="platform-selector" class="w-full mb-2 fade-in-up px-2">
             <div class="grid grid-cols-4 gap-2">
-                <button onclick="loadEmbed('spotify')" class="bg-[#1DB954]/20 border border-[#1DB954] hover:bg-[#1DB954] text-white p-2 rounded-lg transition flex justify-center items-center backdrop-blur-sm"><i class="fa-brands fa-spotify text-xl"></i></button>
-                <button onclick="loadEmbed('apple')" class="bg-[#FA243C]/20 border border-[#FA243C] hover:bg-[#FA243C] text-white p-2 rounded-lg transition flex justify-center items-center backdrop-blur-sm"><i class="fa-brands fa-apple text-xl"></i></button>
-                <button onclick="loadEmbed('deezer')" class="bg-white/10 border border-white hover:bg-white text-white p-2 rounded-lg transition flex justify-center items-center backdrop-blur-sm"><i class="fa-brands fa-deezer text-xl"></i></button>
-                <button onclick="loadEmbed('amazon')" class="bg-[#00A8E1]/20 border border-[#00A8E1] hover:bg-[#00A8E1] text-white p-2 rounded-lg transition flex justify-center items-center backdrop-blur-sm"><i class="fa-brands fa-amazon text-xl"></i></button>
+                <button onclick="loadEmbed('spotify')" class="platform-btn"><i class="fa-brands fa-spotify text-xl"></i></button>
+                <button onclick="loadEmbed('apple')" class="platform-btn"><i class="fa-brands fa-apple text-xl"></i></button>
+                <button onclick="loadEmbed('deezer')" class="platform-btn"><i class="fa-brands fa-deezer text-xl"></i></button>
+                <button onclick="loadEmbed('amazon')" class="platform-btn"><i class="fa-brands fa-amazon text-xl"></i></button>
             </div>
         </div>
 
@@ -180,9 +205,9 @@
         <div id="player-container" class="w-full hidden fade-in-up mb-2 relative px-2">
             <div class="flex justify-between items-center mb-1 px-1">
                 <button onclick="resetPlayer()" class="text-[10px] text-gray-400 hover:text-white uppercase"><i class="fa-solid fa-xmark mr-1"></i> Cerrar</button>
-                <button id="lang-toggle" onclick="toggleLanguage()" class="text-[10px] border border-neonMint text-neonMint bg-black/60 px-3 py-1 rounded hover:bg-neonMint hover:text-black transition uppercase font-bold shadow-[0_0_10px_rgba(0,255,170,0.3)]">EN / ES</button>
+                <button id="lang-toggle" onclick="toggleLanguage()" class="text-[10px] border border-white text-white bg-black/60 px-3 py-1 rounded hover:bg-white hover:text-black transition uppercase font-bold">EN / ES</button>
             </div>
-            <div id="embed-frame" class="rounded-xl overflow-hidden bg-black/80 border border-white/10 min-h-[80px]"></div>
+            <div id="embed-frame" class="rounded-xl overflow-hidden bg-black/80 border border-white/20 min-h-[80px]"></div>
         </div>
 
         <!-- KARAOKE WRAPPER -->
@@ -190,19 +215,19 @@
             <div id="main-container" class="contenedor-karaoke flex flex-col flex-grow">
                 
                 <button id="btn-start" class="btn-sync flex-shrink-0" type="button">
-                    <i class="fa-solid fa-bolt mr-2 animate-pulse"></i> SYNC AUTO
+                    <i class="fa-solid fa-play mr-2"></i> SYNC AUTO
                 </button>
                 
-                <p style="color:#00ffaa; font-size:9px; margin-bottom:5px; margin-top:-5px; letter-spacing:1px; opacity: 0.7;">
-                    ● TOCA UNA LÍNEA PARA ILUMINARLA
+                <p style="color:#aaa; font-size:9px; margin-bottom:5px; margin-top:-5px; letter-spacing:1px; opacity: 0.8;">
+                    MANTÉN PRESIONADO PARA ILUMINAR
                 </p>
 
                 <div id="lyrics-box" class="flex-grow"></div>
             </div>
 
             <div class="flex justify-center gap-3 mt-3 mb-4 flex-shrink-0">
-                <button onclick="adjustTime(-0.5)" class="text-xs text-white hover:text-neonPink py-2 px-4 border border-white/20 rounded-full bg-black/60 backdrop-blur-md active:bg-neonPink active:text-black transition">- 0.5s</button>
-                <button onclick="adjustTime(0.5)" class="text-xs text-white hover:text-neonCyan py-2 px-4 border border-white/20 rounded-full bg-black/60 backdrop-blur-md active:bg-neonCyan active:text-black transition">+ 0.5s</button>
+                <button onclick="adjustTime(-0.5)" class="text-xs text-white hover:bg-white hover:text-black py-2 px-4 border border-white/30 rounded-full bg-black/60 backdrop-blur-md transition">- 0.5s</button>
+                <button onclick="adjustTime(0.5)" class="text-xs text-white hover:bg-white hover:text-black py-2 px-4 border border-white/30 rounded-full bg-black/60 backdrop-blur-md transition">+ 0.5s</button>
             </div>
         </div>
 
@@ -247,6 +272,7 @@
         const musicLinks = {
             spotify_id: "4QjVTcm14IcFnFCRAzb7Nr", 
             apple_embed: "https://embed.music.apple.com/us/album/my-tempo/123456789?i=123456789",
+            deezer_link: "https://link.deezer.com/s/31JHZGUw412xSUuNRZMeN" 
         };
 
         let currentLang = 'en';
@@ -263,28 +289,28 @@
             caja.innerHTML = ''; 
             lyricsData.forEach((line, index) => {
                 let div = document.createElement('div');
-                div.className = 'linea-lyric'; // Clase base
+                div.className = 'linea-lyric';
                 div.id = 'linea-' + index;
                 div.innerText = currentLang === 'en' ? line.textEn : line.textEs;
                 
-                // EVENTO CLICK: Activa la clase 'linea-activa'
-                div.onclick = function() {
-                    // Si NO es auto, encender manualmente
-                    if (!autoMode) {
-                        // 1. Apagar todas
-                        const activas = document.querySelectorAll('.linea-activa');
-                        activas.forEach(l => l.classList.remove('linea-activa'));
-                        
-                        // 2. Encender esta (Esto dispara el CSS gigante)
-                        this.classList.add('linea-activa');
-                        
-                        // 3. Centrar
-                        this.scrollIntoView({ behavior: "smooth", block: "center" });
-                    } else {
-                        // En auto, saltar tiempo
-                        jumpToTime(line.time);
-                    }
+                // === LÓGICA DE PRESIONAR ===
+                const activate = (e) => {
+                    if (autoMode) return; 
+                    div.classList.add('linea-activa');
                 };
+
+                const deactivate = (e) => {
+                    if (autoMode) return;
+                    div.classList.remove('linea-activa');
+                };
+
+                div.addEventListener('mousedown', activate);
+                div.addEventListener('mouseup', deactivate);
+                div.addEventListener('mouseleave', deactivate);
+                div.addEventListener('touchstart', activate, {passive: true});
+                div.addEventListener('touchend', deactivate);
+                div.addEventListener('touchcancel', deactivate);
+                div.addEventListener('click', () => { if(autoMode) jumpToTime(line.time); });
                 
                 caja.appendChild(div);
             });
@@ -295,14 +321,12 @@
 
         function cicloDeJuego() {
             let segundosActuales = ((Date.now() - startTime) / 1000) + offset;
-            
             let lineaActivaIndex = -1;
             for (let i = 0; i < lyricsData.length; i++) {
                 if (segundosActuales >= lyricsData[i].time) {
                     lineaActivaIndex = i;
                 }
             }
-
             if (lineaActivaIndex !== -1) {
                 const lineaActualEl = document.getElementById('linea-' + lineaActivaIndex);
                 if (lineaActualEl && !lineaActualEl.classList.contains('linea-activa')) {
@@ -318,26 +342,21 @@
                 clearInterval(audioTimer);
                 autoMode = false;
                 mainContainer.classList.remove('modo-automatico'); 
-                
-                boton.innerHTML = '<i class="fa-solid fa-bolt mr-2 animate-pulse"></i> SYNC AUTO';
-                boton.style.borderColor = "#00f3ff";
-                boton.style.color = "white";
-                boton.style.background = "rgba(0, 20, 40, 0.6)";
-                
+                boton.innerHTML = '<i class="fa-solid fa-play mr-2"></i> SYNC AUTO';
+                boton.style.borderColor = "#fff";
+                boton.style.color = "#fff";
+                boton.style.background = "rgba(0,0,0,0.6)";
                 document.querySelectorAll('.linea-activa').forEach(l => l.classList.remove('linea-activa'));
                 caja.scrollTop = 0;
             } else {
                 autoMode = true;
                 startTime = Date.now();
                 offset = 0;
-                
                 mainContainer.classList.add('modo-automatico'); 
-                
                 boton.innerHTML = '◼ DETENER SYNC';
-                boton.style.borderColor = "#ff0055"; 
-                boton.style.color = "white";
-                boton.style.background = "#ff0055";
-                
+                boton.style.borderColor = "#fff"; 
+                boton.style.color = "#000";
+                boton.style.background = "#fff";
                 audioTimer = setInterval(cicloDeJuego, 100);
             }
         });
@@ -353,6 +372,8 @@
                 frame.innerHTML = `<iframe style="border-radius:12px" src="https://open.spotify.com/embed/album/${musicLinks.spotify_id}?utm_source=generator&theme=0" width="100%" height="80" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
             } else if (platform === 'apple') {
                 frame.innerHTML = `<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="80" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="${musicLinks.apple_embed}"></iframe>`;
+            } else if (platform === 'deezer') {
+                 frame.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-white"><p class="text-xs mb-2">Escuchar en Deezer</p><a href="${musicLinks.deezer_link}" target="_blank" class="bg-white text-black px-4 py-1 rounded text-xs font-bold uppercase">Abrir App</a></div>`;
             } else {
                  frame.innerHTML = `<div class="p-4 text-xs text-center text-gray-400">Reproductor externo cargado.</div>`;
             }
@@ -388,4 +409,4 @@
         }
     </script>
 </body>
-</html>  
+</html>
