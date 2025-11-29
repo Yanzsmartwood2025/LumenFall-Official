@@ -42,12 +42,13 @@
         .lyrics-container {
             height: 40vh; /* Altura ajustada para ver más texto */
             overflow-y: auto;
-            /* Máscara para desvanecer bordes */
+            /* Máscara para desvanecer bordes arriba y abajo */
             mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
             -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
             scrollbar-width: thin; 
             scrollbar-color: #00f3ff #111;
             padding: 2rem 0;
+            scroll-behavior: smooth;
         }
         /* Scrollbar personalizado suave */
         .lyrics-container::-webkit-scrollbar { width: 4px; }
@@ -62,8 +63,9 @@
         .lyric-line:hover {
             opacity: 1; text-shadow: 0 0 10px #00f3ff; transform: scale(1.02); cursor: default; color: white;
         }
+        
         .section-title {
-            color: #ff00ff; font-weight: bold; font-size: 0.8rem; margin-top: 2rem; margin-bottom: 0.5rem; letter-spacing: 0.2em; opacity: 0.8;
+            color: #ff00ff; font-weight: bold; font-size: 0.8rem; margin-top: 2.5rem; margin-bottom: 0.5rem; letter-spacing: 0.2em; opacity: 0.9;
         }
         
         .fade-in-up {
@@ -79,6 +81,7 @@
 
     <!-- Video de Fondo -->
     <video id="canvas-video" autoplay loop muted playsinline>
+        <!-- Asegúrate de que la ruta sea correcta respecto a dónde guardas este archivo -->
         <source src="../assets/flama-bg.mp4" type="video/mp4"> 
     </video>
 
@@ -161,7 +164,7 @@
                 <p class="lyric-line">But my will is the whisper<br>that's pushing you through.</p>
 
                 <p class="section-title text-neonCyan">[ CHORUS ]</p>
-                <div class="text-white font-bold">
+                <div class="text-white font-bold mb-4">
                     <p class="lyric-line">I don't ask you to kneel,</p>
                     <p class="lyric-line">I don't demand you to follow.</p>
                     <p class="lyric-line">You just breathe to my tempo...</p>
@@ -179,11 +182,21 @@
                 <p class="lyric-line">But my name on your lips<br>is your one decree.</p>
 
                 <p class="section-title">[ PRE-CHORUS ]</p>
-                <p class="lyric-line">You feel the impulse,<br>don't know where it began...</p>
+                <p class="lyric-line">You feel the impulse,<br>don't know where it began.</p>
+                <p class="lyric-line">That thought in your mind<br>is part of my plan.</p>
+                <p class="lyric-line">You think it's your choice,<br>so precious and true.</p>
+                <p class="lyric-line">But my will is the whisper<br>that's pushing you through.</p>
 
                 <p class="section-title text-neonCyan">[ CHORUS ]</p>
-                <div class="text-white font-bold">
-                    <p class="lyric-line">I don't ask you to kneel...</p>
+                <div class="text-white font-bold mb-4">
+                    <p class="lyric-line">I don't ask you to kneel,</p>
+                    <p class="lyric-line">I don't demand you to follow.</p>
+                    <p class="lyric-line">You just breathe to my tempo...</p>
+                    <p class="lyric-line text-neonPink">and you need me.</p>
+                    <p class="lyric-line">I don't ask you to kneel,</p>
+                    <p class="lyric-line">I don't demand you to follow.</p>
+                    <p class="lyric-line">You are dancing to my tempo...</p>
+                    <p class="lyric-line text-neonPink">you can't help it.</p>
                 </div>
 
                 <p class="section-title">[ BRIDGE ]</p>
@@ -195,9 +208,11 @@
                 <p class="section-title">[ OUTRO ]</p>
                 <p class="lyric-line">I don't ask you to kneel...<br>(ask you to kneel...)</p>
                 <p class="lyric-line">I don't demand you to follow...<br>(demand you to follow...)</p>
+                <p class="lyric-line">I don't ask...</p>
+                <p class="lyric-line">I don't demand...</p>
                 <p class="lyric-line">I don't ask you to kneel...</p>
                 <p class="lyric-line">I don't demand you to follow...</p>
-                <p class="lyric-line text-neonCyan">I don't ask... I don't demand...</p>
+                <p class="lyric-line text-neonCyan text-xs mt-4">I don't ask... I don't demand...</p>
             </div>
 
             <!-- ================= LETRAS EN ESPAÑOL (COMPLETA Y TRADUCIDA) ================= -->
@@ -219,7 +234,7 @@
                 <p class="lyric-line">Pero mi voluntad es el susurro<br>que te empuja a través.</p>
 
                 <p class="section-title text-neonCyan">[ CORO ]</p>
-                <div class="text-white font-bold">
+                <div class="text-white font-bold mb-4">
                     <p class="lyric-line">No te pido que te arrodilles,</p>
                     <p class="lyric-line">no te exijo que me sigas.</p>
                     <p class="lyric-line">Solo respiras a mi ritmo...</p>
@@ -237,11 +252,21 @@
                 <p class="lyric-line">Pero mi nombre en tus labios<br>es tu único decreto.</p>
 
                 <p class="section-title">[ PRE-CORO ]</p>
-                <p class="lyric-line">Sientes el impulso...</p>
+                <p class="lyric-line">Sientes el impulso,<br>no sabes dónde empezó.</p>
+                <p class="lyric-line">Ese pensamiento en tu mente<br>es parte de mi plan.</p>
+                <p class="lyric-line">Crees que es tu elección,<br>tan preciosa y verdadera.</p>
+                <p class="lyric-line">Pero mi voluntad es el susurro<br>que te empuja a través.</p>
 
                 <p class="section-title text-neonCyan">[ CORO ]</p>
-                <div class="text-white font-bold">
-                    <p class="lyric-line">No te pido que te arrodilles...</p>
+                <div class="text-white font-bold mb-4">
+                    <p class="lyric-line">No te pido que te arrodilles,</p>
+                    <p class="lyric-line">no te exijo que me sigas.</p>
+                    <p class="lyric-line">Solo respiras a mi ritmo...</p>
+                    <p class="lyric-line text-neonPink">y me necesitas.</p>
+                    <p class="lyric-line">No te pido que te arrodilles,</p>
+                    <p class="lyric-line">no te exijo que me sigas.</p>
+                    <p class="lyric-line">Estás bailando a mi ritmo...</p>
+                    <p class="lyric-line text-neonPink">no puedes evitarlo.</p>
                 </div>
 
                 <p class="section-title">[ PUENTE ]</p>
@@ -253,9 +278,11 @@
                 <p class="section-title">[ OUTRO ]</p>
                 <p class="lyric-line">No te pido que te arrodilles...<br>(te pido que te arrodilles...)</p>
                 <p class="lyric-line">No te exijo que me sigas...<br>(exijo que me sigas...)</p>
-                <p class="lyric-line">No pido... No exijo...</p>
+                <p class="lyric-line">No pido...</p>
+                <p class="lyric-line">No exijo...</p>
                 <p class="lyric-line">No te pido que te arrodilles...</p>
-                <p class="lyric-line text-neonCyan">No pido... No exijo...</p>
+                <p class="lyric-line">No te exijo que me sigas...</p>
+                <p class="lyric-line text-neonCyan text-xs mt-4">No pido... No exijo...</p>
             </div>
         </div>
 
