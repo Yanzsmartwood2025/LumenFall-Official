@@ -34,80 +34,95 @@
             filter: brightness(0.5) contrast(1.3) hue-rotate(-10deg); 
         }
 
-        /* --- CONTENEDOR KARAOKE --- */
+        /* --- CONTENEDOR KARAOKE (SOLUCIÓN DE ANCHO) --- */
         .contenedor-karaoke {
             background-color: rgba(0, 10, 20, 0.5); 
             backdrop-filter: blur(5px);
-            width: 98%; 
-            max-width: 900px;
-            margin: 5px auto;
+            /* CAMBIO: Usar 100% del ancho disponible sin bordes extraños */
+            width: 100%; 
+            max-width: 1000px;
+            margin: 0 auto; /* Centrado total */
             border-top: 1px solid rgba(255, 255, 255, 0.3);
             border-bottom: 1px solid rgba(255, 255, 255, 0.3);
             font-family: 'Courier New', monospace;
             text-align: center;
             position: relative;
             box-sizing: border-box;
-            padding: 10px 2px;
-            border-radius: 16px;
+            /* CAMBIO: Padding vertical solamente, horizontal manejado por hijos */
+            padding: 10px 0; 
+            border-radius: 0; /* Bordes rectos para aprovechar pantalla en móvil */
             box-shadow: 0 0 40px rgba(0, 243, 255, 0.05);
         }
 
-        /* --- ESTADO 1: LETRA NORMAL (BLANCA VISIBLE) --- */
+        @media (min-width: 640px) {
+            .contenedor-karaoke {
+                width: 90%;
+                border-radius: 16px;
+                margin-top: 10px;
+            }
+        }
+
+        /* --- ESTADO 1: LETRA NORMAL --- */
         .linea-lyric {
             display: block;
             margin: 15px 0;
-            color: #ffffff; /* Blanco sólido */
+            color: #ffffff; 
             font-size: 16px; 
             font-weight: 500;
-            transition: transform 0.1s ease-out, opacity 0.2s; /* Transición muy rápida */
-            padding: 10px 5px;
+            transition: all 0.2s ease-out;
+            padding: 10px 15px; /* Margen seguro a los lados */
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
             user-select: none; 
             opacity: 0.9;
         }
 
-        /* --- ESTADO 2: LETRA ACTIVA (AL PRESIONAR) --- */
+        /* --- ESTADO 2: LETRA ACTIVA (CORREGIDO CORTE) --- */
         div.linea-activa {
             color: #ffffff !important;
             opacity: 1 !important;
             
-            /* TAMAÑO: EXPLOSIÓN */
-            font-size: 28px !important; 
-            line-height: 1.1 !important;
+            /* TAMAÑO: Grande pero controlado */
+            font-size: 24px !important; /* Un poco menos que 28px para asegurar ajuste en móviles estrechos */
+            line-height: 1.3 !important;
             font-weight: 900 !important;
             
-            /* TRANSFORMACIÓN */
-            transform: scale(1.15) !important; 
+            /* CAMBIO CRÍTICO: Quitamos transform:scale para evitar cortes */
+            transform: none !important; 
             
             /* SOMBRA / RESPLANDOR */
             text-shadow: 
                 0 0 10px #ffffff,
-                0 0 25px #00ffaa, 
-                0 0 50px #00f3ff !important; 
+                0 0 20px #00ffaa, 
+                0 0 40px #00f3ff !important; 
 
             /* FONDO DE CONTRASTE */
-            background: linear-gradient(90deg, transparent 0%, rgba(0, 20, 20, 0.9) 20%, rgba(0, 20, 20, 0.9) 80%, transparent 100%);
+            background: linear-gradient(90deg, transparent 0%, rgba(0, 20, 20, 0.95) 15%, rgba(0, 20, 20, 0.95) 85%, transparent 100%);
             
-            padding: 30px 5px !important;
-            margin: 20px 0 !important;
+            /* Espaciado para que respire */
+            padding: 25px 10px !important; 
+            margin: 25px 0 !important;
+            
+            /* Asegurar que el texto baje de línea si es largo */
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            width: 100%;
+            box-sizing: border-box;
             
             z-index: 50;
             position: relative;
-            border-radius: 12px;
-            border-top: 1px solid rgba(0, 255, 170, 0.3);
-            border-bottom: 1px solid rgba(0, 255, 170, 0.3);
+            border-top: 1px solid rgba(0, 255, 170, 0.4);
+            border-bottom: 1px solid rgba(0, 255, 170, 0.4);
         }
 
         /* --- MODO AUTOMÁTICO --- */
         .modo-automatico .linea-lyric:not(.linea-activa) {
             opacity: 0.3;     
             filter: blur(1px); 
-            transform: scale(0.95);
             color: #ccc;
         }
 
-        /* BOTONES DE PLATAFORMA (BLANCOS) */
+        /* BOTONES DE PLATAFORMA */
         .platform-btn {
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -133,13 +148,14 @@
             border: 1px solid #fff;
             color: #fff;
             padding: 14px 0;
-            width: 100%;
+            width: 90%; /* Un poco menos del ancho total */
+            margin: 0 auto 10px auto; /* Centrado */
+            display: block;
             cursor: pointer;
             font-weight: bold;
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 4px;
-            margin-bottom: 10px;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             transition: all 0.3s;
@@ -151,10 +167,12 @@
             height: 55vh; 
             overflow-y: auto;
             scroll-behavior: smooth;
-            padding-bottom: 200px; 
+            padding-bottom: 250px; 
             scrollbar-width: none; 
+            /* Máscara suave */
             mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
             -webkit-mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
+            width: 100%;
         }
         #lyrics-box::-webkit-scrollbar { display: none; }
 
@@ -174,21 +192,18 @@
         <i class="fa-solid fa-arrow-left text-xl"></i>
     </a>
 
-    <div class="flex-grow flex flex-col items-center justify-start px-2 z-10 w-full max-w-lg mx-auto mt-2 pt-2">
+    <!-- Main Wrapper (Full width padding fix) -->
+    <div class="flex-grow flex flex-col items-center justify-start px-0 sm:px-2 z-10 w-full max-w-lg mx-auto mt-2 pt-2">
         
         <!-- HEADER SOLO PORTADA -->
-        <!-- Se oculta al cargar el player -->
         <div id="header-info" class="text-center mb-6 mt-4 fade-in-up flex flex-col items-center gap-2 w-full justify-center transition-all duration-500">
-            
-            <!-- PORTADA CENTRALIZADA (Más grande para destacar) -->
             <div class="w-32 h-32 rounded shadow-[0_0_30px_rgba(255,255,255,0.15)] overflow-hidden border border-white/60">
                 <img src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/156f4e54ca2c2fadd5e05083c1defabd2a075e0a/Musica/assets/imagenes/portada-my-tempo.jpg" onerror="this.src='https://via.placeholder.com/150/000000/ffffff?text=COVER'" class="w-full h-full object-cover">
             </div>
-
         </div>
 
         <!-- Selector Plataformas (BLANCO) -->
-        <div id="platform-selector" class="w-full mb-2 fade-in-up px-2">
+        <div id="platform-selector" class="w-full mb-2 fade-in-up px-4">
             <div class="grid grid-cols-4 gap-2">
                 <button onclick="loadEmbed('spotify')" class="platform-btn"><i class="fa-brands fa-spotify text-xl"></i></button>
                 <button onclick="loadEmbed('apple')" class="platform-btn"><i class="fa-brands fa-apple text-xl"></i></button>
