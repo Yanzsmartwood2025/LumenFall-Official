@@ -176,19 +176,15 @@
 
     <div class="flex-grow flex flex-col items-center justify-start px-2 z-10 w-full max-w-lg mx-auto mt-2 pt-2">
         
-        <!-- HEADER NUEVO CON IMÁGENES -->
-        <div class="text-center mb-2 fade-in-up flex items-center gap-3 w-full justify-center transform scale-95 origin-top">
+        <!-- HEADER SOLO PORTADA -->
+        <!-- Se oculta al cargar el player -->
+        <div id="header-info" class="text-center mb-6 mt-4 fade-in-up flex flex-col items-center gap-2 w-full justify-center transition-all duration-500">
             
-            <!-- 1. LA PORTADA PEQUEÑA (portada-my-tempo.jpg) -->
-            <div class="w-16 h-16 rounded shadow-[0_0_20px_rgba(255,255,255,0.2)] overflow-hidden border border-white/50 flex-shrink-0">
-                <img src="../assets/imagenes/portada-my-tempo.jpg" onerror="this.src='https://via.placeholder.com/150/000000/ffffff?text=COVER'" class="w-full h-full object-cover">
+            <!-- PORTADA CENTRALIZADA (Más grande para destacar) -->
+            <div class="w-32 h-32 rounded shadow-[0_0_30px_rgba(255,255,255,0.15)] overflow-hidden border border-white/60">
+                <img src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/156f4e54ca2c2fadd5e05083c1defabd2a075e0a/Musica/assets/imagenes/portada-my-tempo.jpg" onerror="this.src='https://via.placeholder.com/150/000000/ffffff?text=COVER'" class="w-full h-full object-cover">
             </div>
 
-            <!-- 2. EL TEXTO COMO IMAGEN (Icono-my-tempo.png) -->
-            <div class="text-left flex items-center h-16">
-                 <!-- Ajusta el h-12 según el tamaño real de tu PNG para que se vea bien -->
-                 <img src="../assets/imagenes/Icono-my-tempo.png" onerror="this.src='https://via.placeholder.com/200x50/000000/ffffff?text=MY+TEMPO'" class="h-12 w-auto object-contain drop-shadow-[0_0_8px_rgba(0,243,255,0.6)]">
-            </div>
         </div>
 
         <!-- Selector Plataformas (BLANCO) -->
@@ -362,7 +358,10 @@
         });
 
         function loadEmbed(platform) {
+            // Ocultar selectores y HEADER
             document.getElementById('platform-selector').style.display = 'none';
+            document.getElementById('header-info').style.display = 'none'; 
+            
             document.getElementById('player-container').classList.remove('hidden');
             document.getElementById('karaoke-wrapper').classList.remove('hidden');
             document.getElementById('canvas-video').style.opacity = "0.3";
@@ -384,7 +383,11 @@
             if(audioTimer) clearInterval(audioTimer);
             autoMode = false;
             mainContainer.classList.remove('modo-automatico');
+            
+            // Mostrar de nuevo el HEADER
             document.getElementById('platform-selector').style.display = 'block';
+            document.getElementById('header-info').style.display = 'flex'; 
+            
             document.getElementById('player-container').classList.add('hidden');
             document.getElementById('karaoke-wrapper').classList.add('hidden');
             document.getElementById('embed-frame').innerHTML = '';
