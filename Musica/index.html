@@ -60,44 +60,54 @@
             }
         }
 
-        /* --- ESTADO 1: LETRA NORMAL --- */
+        /* --- ESTADO 1: LETRA NORMAL (AUMENTADA y ESPACIADA) --- */
         .linea-lyric {
             display: block;
-            margin: 15px 0;
+            margin: 20px 0; /* Más separación vertical entre frases */
             color: #ffffff; 
-            font-size: 16px; 
+            font-size: 18px; /* Texto normal más grande y legible */
             font-weight: 500;
             transition: all 0.2s ease-out;
-            padding: 10px 15px;
+            padding: 10px 5px; /* Padding interno pequeño */
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
             user-select: none; 
-            opacity: 0.9;
+            opacity: 0.8;
+            line-height: 1.4;
         }
 
-        /* --- ESTADO 2: LETRA ACTIVA --- */
+        /* --- ESTADO 2: LETRA ACTIVA (GRANDE Y CLARA) --- */
         div.linea-activa {
             color: #ffffff !important;
             opacity: 1 !important;
-            font-size: 24px !important;
+            
+            /* TAMAÑO BALANCEADO: Grande pero sin romper palabras */
+            font-size: 26px !important; 
             line-height: 1.3 !important;
             font-weight: 900 !important;
             transform: none !important; 
+            
             text-shadow: 
                 0 0 10px #ffffff,
                 0 0 20px #00ffaa, 
                 0 0 40px #00f3ff !important; 
-            background: linear-gradient(90deg, transparent 0%, rgba(0, 20, 20, 0.95) 15%, rgba(0, 20, 20, 0.95) 85%, transparent 100%);
-            padding: 25px 10px !important; 
-            margin: 25px 0 !important;
+            
+            /* Fondo ajustado para no parecer una barrera cortada */
+            background: linear-gradient(90deg, transparent 0%, rgba(0, 30, 30, 0.9) 20%, rgba(0, 30, 30, 0.9) 80%, transparent 100%);
+            
+            padding: 30px 0 !important; /* Más aire arriba y abajo */
+            margin: 30px 0 !important;
+            
             white-space: normal !important;
             word-wrap: break-word !important;
             width: 100%;
             box-sizing: border-box;
             z-index: 50;
             position: relative;
-            border-top: 1px solid rgba(0, 255, 170, 0.4);
-            border-bottom: 1px solid rgba(0, 255, 170, 0.4);
+            
+            /* Bordes más sutiles */
+            border-top: 1px solid rgba(0, 255, 170, 0.3);
+            border-bottom: 1px solid rgba(0, 255, 170, 0.3);
         }
 
         /* --- MODO AUTOMÁTICO --- */
@@ -155,13 +165,12 @@
             padding-bottom: 250px; 
             padding-top: 20px; 
             
-            /* --- MEJORA UX: ZONA DE SCROLL LATERAL --- */
-            /* Agregamos padding horizontal GRANDE (15% a cada lado) */
-            /* Esto empuja el texto al centro y deja espacio vacío a los lados para el dedo */
-            padding-left: 15%; 
-            padding-right: 15%;
-            box-sizing: border-box; /* Asegura que el padding no rompa el ancho */
-
+            /* --- ZONA DE DEDO (PADDING LATERAL) --- */
+            /* 45px a cada lado fijos. Suficiente para el pulgar, deja espacio al texto */
+            padding-left: 45px; 
+            padding-right: 45px;
+            
+            box-sizing: border-box; 
             scrollbar-width: none; 
             mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
             -webkit-mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
@@ -238,6 +247,7 @@
                     MANTÉN PRESIONADO PARA ILUMINAR
                 </p>
 
+                <!-- El Lyrics Box con padding lateral optimizado -->
                 <div id="lyrics-box" class="flex-grow"></div>
             </div>
 
@@ -387,13 +397,14 @@
 
             const frameContainer = document.getElementById('embed-frame');
             
-            // --- AJUSTE DE ALTURA PARA APPLE MUSIC ---
+            // --- AJUSTE DE ALTURA PARA APPLE MUSIC (GRANDE) ---
             if(platform === 'spotify') {
                 frameContainer.style.height = "80px";
                 frameContainer.innerHTML = `<iframe style="border-radius:0px; width:100%; height:80px;" src="https://open.spotify.com/embed/album/${musicLinks.spotify_id}?utm_source=generator&theme=0" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
             } else if (platform === 'apple') {
-                frameContainer.style.height = "175px";
-                frameContainer.innerHTML = `<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="175" style="width:100%;max-width:100%;overflow:hidden;background:transparent;" scrolling="no" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="${musicLinks.apple_embed}"></iframe>`;
+                // CAMBIO: 450px para mostrar el player "Tarjeta" completo con portada grande
+                frameContainer.style.height = "450px";
+                frameContainer.innerHTML = `<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:100%;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="${musicLinks.apple_embed}"></iframe>`;
             } else if (platform === 'deezer') {
                  frameContainer.style.height = "80px";
                  frameContainer.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-white"><p class="text-xs mb-2">Escuchar en Deezer</p><a href="${musicLinks.deezer_link}" target="_blank" class="bg-white text-black px-4 py-1 rounded text-xs font-bold uppercase">Abrir App</a></div>`;
