@@ -149,11 +149,19 @@
         
         /* Scroll Box */
         #lyrics-box {
-            height: 55vh; 
+            height: 50vh; 
             overflow-y: auto;
             scroll-behavior: smooth;
             padding-bottom: 250px; 
             padding-top: 20px; 
+            
+            /* --- MEJORA UX: ZONA DE SCROLL LATERAL --- */
+            /* Agregamos padding horizontal GRANDE (15% a cada lado) */
+            /* Esto empuja el texto al centro y deja espacio vacío a los lados para el dedo */
+            padding-left: 15%; 
+            padding-right: 15%;
+            box-sizing: border-box; /* Asegura que el padding no rompa el ancho */
+
             scrollbar-width: none; 
             mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
             -webkit-mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
@@ -214,8 +222,8 @@
                 <button id="lang-toggle" onclick="toggleLanguage()" class="text-[10px] border border-white text-white bg-black/60 px-3 py-1 rounded hover:bg-white hover:text-black transition uppercase font-bold">EN / ES</button>
             </div>
             
-            <!-- Contenedor del Iframe con altura dinámica -->
-            <div id="embed-frame" class="overflow-hidden bg-black/80 border-t border-b border-white/20 w-full"></div>
+            <!-- Contenedor del Iframe con altura dinámica y overflow hidden para evitar scroll -->
+            <div id="embed-frame" class="overflow-hidden bg-black/80 border-t border-b border-white/20 w-full" style="height: 80px;"></div>
         </div>
 
         <!-- KARAOKE WRAPPER -->
@@ -277,7 +285,6 @@
             { time: 190, textEn: "I don't ask you to kneel...", textEs: "No te pido que te arrodilles..." }
         ];
 
-        // ACTUALIZADO: ENLACE DE APPLE MUSIC REAL
         const musicLinks = {
             spotify_id: "4QjVTcm14IcFnFCRAzb7Nr", 
             apple_embed: "https://embed.music.apple.com/co/album/my-tempo-single/1850887573",
@@ -302,7 +309,6 @@
                 div.id = 'linea-' + index;
                 div.innerText = currentLang === 'en' ? line.textEn : line.textEs;
                 
-                // === LÓGICA DE PRESIONAR ===
                 const activate = (e) => {
                     if (autoMode) return; 
                     div.classList.add('linea-activa');
@@ -381,14 +387,13 @@
 
             const frameContainer = document.getElementById('embed-frame');
             
+            // --- AJUSTE DE ALTURA PARA APPLE MUSIC ---
             if(platform === 'spotify') {
-                // Spotify funciona bien pequeño (80px)
                 frameContainer.style.height = "80px";
                 frameContainer.innerHTML = `<iframe style="border-radius:0px; width:100%; height:80px;" src="https://open.spotify.com/embed/album/${musicLinks.spotify_id}?utm_source=generator&theme=0" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
             } else if (platform === 'apple') {
-                // Apple Music NECESITA más altura (175px estándar)
                 frameContainer.style.height = "175px";
-                frameContainer.innerHTML = `<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="175" style="width:100%;max-width:100%;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="${musicLinks.apple_embed}"></iframe>`;
+                frameContainer.innerHTML = `<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="175" style="width:100%;max-width:100%;overflow:hidden;background:transparent;" scrolling="no" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="${musicLinks.apple_embed}"></iframe>`;
             } else if (platform === 'deezer') {
                  frameContainer.style.height = "80px";
                  frameContainer.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-white"><p class="text-xs mb-2">Escuchar en Deezer</p><a href="${musicLinks.deezer_link}" target="_blank" class="bg-white text-black px-4 py-1 rounded text-xs font-bold uppercase">Abrir App</a></div>`;
