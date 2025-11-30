@@ -34,23 +34,21 @@
             filter: brightness(0.5) contrast(1.3) hue-rotate(-10deg); 
         }
 
-        /* --- CONTENEDOR KARAOKE (SOLUCIÓN DE ANCHO) --- */
+        /* --- CONTENEDOR KARAOKE --- */
         .contenedor-karaoke {
             background-color: rgba(0, 10, 20, 0.5); 
             backdrop-filter: blur(5px);
-            /* CAMBIO: Usar 100% del ancho disponible sin bordes extraños */
             width: 100%; 
             max-width: 1000px;
-            margin: 0 auto; /* Centrado total */
+            margin: 0 auto; 
             border-top: 1px solid rgba(255, 255, 255, 0.3);
             border-bottom: 1px solid rgba(255, 255, 255, 0.3);
             font-family: 'Courier New', monospace;
             text-align: center;
             position: relative;
             box-sizing: border-box;
-            /* CAMBIO: Padding vertical solamente, horizontal manejado por hijos */
             padding: 10px 0; 
-            border-radius: 0; /* Bordes rectos para aprovechar pantalla en móvil */
+            border-radius: 0; 
             box-shadow: 0 0 40px rgba(0, 243, 255, 0.05);
         }
 
@@ -70,40 +68,35 @@
             font-size: 16px; 
             font-weight: 500;
             transition: all 0.2s ease-out;
-            padding: 10px 15px; /* Margen seguro a los lados */
+            padding: 10px 15px; 
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
             user-select: none; 
             opacity: 0.9;
         }
 
-        /* --- ESTADO 2: LETRA ACTIVA (CORREGIDO CORTE) --- */
+        /* --- ESTADO 2: LETRA ACTIVA (CORREGIDO) --- */
         div.linea-activa {
             color: #ffffff !important;
             opacity: 1 !important;
             
-            /* TAMAÑO: Grande pero controlado */
-            font-size: 24px !important; /* Un poco menos que 28px para asegurar ajuste en móviles estrechos */
+            font-size: 24px !important; 
             line-height: 1.3 !important;
             font-weight: 900 !important;
             
-            /* CAMBIO CRÍTICO: Quitamos transform:scale para evitar cortes */
             transform: none !important; 
             
-            /* SOMBRA / RESPLANDOR */
             text-shadow: 
                 0 0 10px #ffffff,
                 0 0 20px #00ffaa, 
                 0 0 40px #00f3ff !important; 
 
-            /* FONDO DE CONTRASTE */
             background: linear-gradient(90deg, transparent 0%, rgba(0, 20, 20, 0.95) 15%, rgba(0, 20, 20, 0.95) 85%, transparent 100%);
             
-            /* Espaciado para que respire */
-            padding: 25px 10px !important; 
+            /* CAMBIO CRÍTICO: Aumentado padding lateral de 10px a 60px para que el dedo no tape la letra */
+            padding: 25px 60px !important; 
             margin: 25px 0 !important;
             
-            /* Asegurar que el texto baje de línea si es largo */
             white-space: normal !important;
             word-wrap: break-word !important;
             width: 100%;
@@ -148,8 +141,8 @@
             border: 1px solid #fff;
             color: #fff;
             padding: 14px 0;
-            width: 90%; /* Un poco menos del ancho total */
-            margin: 0 auto 10px auto; /* Centrado */
+            width: 90%; 
+            margin: 0 auto 10px auto; 
             display: block;
             cursor: pointer;
             font-weight: bold;
@@ -162,14 +155,15 @@
         }
         .btn-sync:hover { background: #fff; color: #000; box-shadow: 0 0 20px #fff; }
         
-        /* Scroll Box */
+        /* Scroll Box (CORREGIDO) */
         #lyrics-box {
             height: 55vh; 
             overflow-y: auto;
             scroll-behavior: smooth;
-            padding-bottom: 250px; 
+            padding-bottom: 250px;
+            /* CAMBIO CRÍTICO: Añadido padding-top para bajar la primera línea */
+            padding-top: 100px; 
             scrollbar-width: none; 
-            /* Máscara suave */
             mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
             -webkit-mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
             width: 100%;
@@ -192,7 +186,7 @@
         <i class="fa-solid fa-arrow-left text-xl"></i>
     </a>
 
-    <!-- Main Wrapper (Full width padding fix) -->
+    <!-- Main Wrapper -->
     <div class="flex-grow flex flex-col items-center justify-start px-0 sm:px-2 z-10 w-full max-w-lg mx-auto mt-2 pt-2">
         
         <!-- HEADER SOLO PORTADA -->
@@ -206,6 +200,7 @@
         <div id="platform-selector" class="w-full mb-2 fade-in-up px-4">
             <div class="grid grid-cols-4 gap-2">
                 <button onclick="loadEmbed('spotify')" class="platform-btn"><i class="fa-brands fa-spotify text-xl"></i></button>
+                <!-- Botón Apple ahora funcional -->
                 <button onclick="loadEmbed('apple')" class="platform-btn"><i class="fa-brands fa-apple text-xl"></i></button>
                 <button onclick="loadEmbed('deezer')" class="platform-btn"><i class="fa-brands fa-deezer text-xl"></i></button>
                 <button onclick="loadEmbed('amazon')" class="platform-btn"><i class="fa-brands fa-amazon text-xl"></i></button>
@@ -282,7 +277,8 @@
 
         const musicLinks = {
             spotify_id: "4QjVTcm14IcFnFCRAzb7Nr", 
-            apple_embed: "https://embed.music.apple.com/us/album/my-tempo/123456789?i=123456789",
+            // ENLACE APPLE MUSIC ACTUALIZADO
+            apple_embed: "https://embed.music.apple.com/co/album/my-tempo-single/1850887573", 
             deezer_link: "https://link.deezer.com/s/31JHZGUw412xSUuNRZMeN" 
         };
 
