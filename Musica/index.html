@@ -34,23 +34,21 @@
             filter: brightness(0.5) contrast(1.3) hue-rotate(-10deg); 
         }
 
-        /* --- CONTENEDOR KARAOKE (SOLUCIÓN DE ANCHO) --- */
+        /* --- CONTENEDOR KARAOKE --- */
         .contenedor-karaoke {
             background-color: rgba(0, 10, 20, 0.5); 
             backdrop-filter: blur(5px);
-            /* CAMBIO: Usar 100% del ancho disponible sin bordes extraños */
             width: 100%; 
             max-width: 1000px;
-            margin: 0 auto; /* Centrado total */
+            margin: 0 auto;
             border-top: 1px solid rgba(255, 255, 255, 0.3);
             border-bottom: 1px solid rgba(255, 255, 255, 0.3);
             font-family: 'Courier New', monospace;
             text-align: center;
             position: relative;
             box-sizing: border-box;
-            /* CAMBIO: Padding vertical solamente, horizontal manejado por hijos */
             padding: 10px 0; 
-            border-radius: 0; /* Bordes rectos para aprovechar pantalla en móvil */
+            border-radius: 0;
             box-shadow: 0 0 40px rgba(0, 243, 255, 0.05);
         }
 
@@ -70,45 +68,32 @@
             font-size: 16px; 
             font-weight: 500;
             transition: all 0.2s ease-out;
-            padding: 10px 15px; /* Margen seguro a los lados */
+            padding: 10px 15px;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
             user-select: none; 
             opacity: 0.9;
         }
 
-        /* --- ESTADO 2: LETRA ACTIVA (CORREGIDO CORTE) --- */
+        /* --- ESTADO 2: LETRA ACTIVA --- */
         div.linea-activa {
             color: #ffffff !important;
             opacity: 1 !important;
-            
-            /* TAMAÑO: Grande pero controlado */
-            font-size: 24px !important; /* Un poco menos que 28px para asegurar ajuste en móviles estrechos */
+            font-size: 24px !important;
             line-height: 1.3 !important;
             font-weight: 900 !important;
-            
-            /* CAMBIO CRÍTICO: Quitamos transform:scale para evitar cortes */
             transform: none !important; 
-            
-            /* SOMBRA / RESPLANDOR */
             text-shadow: 
                 0 0 10px #ffffff,
                 0 0 20px #00ffaa, 
                 0 0 40px #00f3ff !important; 
-
-            /* FONDO DE CONTRASTE */
             background: linear-gradient(90deg, transparent 0%, rgba(0, 20, 20, 0.95) 15%, rgba(0, 20, 20, 0.95) 85%, transparent 100%);
-            
-            /* Espaciado para que respire */
             padding: 25px 10px !important; 
             margin: 25px 0 !important;
-            
-            /* Asegurar que el texto baje de línea si es largo */
             white-space: normal !important;
             word-wrap: break-word !important;
             width: 100%;
             box-sizing: border-box;
-            
             z-index: 50;
             position: relative;
             border-top: 1px solid rgba(0, 255, 170, 0.4);
@@ -117,7 +102,7 @@
 
         /* --- MODO AUTOMÁTICO --- */
         .modo-automatico .linea-lyric:not(.linea-activa) {
-            opacity: 0.3;     
+            opacity: 0.3;       
             filter: blur(1px); 
             color: #ccc;
         }
@@ -148,8 +133,8 @@
             border: 1px solid #fff;
             color: #fff;
             padding: 14px 0;
-            width: 90%; /* Un poco menos del ancho total */
-            margin: 0 auto 10px auto; /* Centrado */
+            width: 90%; 
+            margin: 0 auto 10px auto; 
             display: block;
             cursor: pointer;
             font-weight: bold;
@@ -168,10 +153,8 @@
             overflow-y: auto;
             scroll-behavior: smooth;
             padding-bottom: 250px; 
-            /* Padding top para separar del botón */
             padding-top: 20px; 
             scrollbar-width: none; 
-            /* Máscara suave */
             mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
             -webkit-mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
             width: 100%;
@@ -181,10 +164,14 @@
         .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
         
-        /* Ajuste del iframe para que ocupe todo el ancho */
         iframe {
             width: 100% !important;
             display: block;
+        }
+        
+        /* Transición suave para la altura del reproductor */
+        #embed-frame {
+            transition: height 0.3s ease;
         }
     </style>
 </head>
@@ -200,7 +187,7 @@
         <i class="fa-solid fa-arrow-left text-xl"></i>
     </a>
 
-    <!-- Main Wrapper (Full width padding fix) -->
+    <!-- Main Wrapper -->
     <div class="flex-grow flex flex-col items-center justify-start px-0 sm:px-2 z-10 w-full max-w-lg mx-auto mt-2 pt-2">
         
         <!-- HEADER SOLO PORTADA -->
@@ -221,14 +208,14 @@
         </div>
 
         <!-- Reproductor -->
-        <!-- CAMBIO: Quitamos el padding horizontal (px-2) para que llegue al borde -->
         <div id="player-container" class="w-full hidden fade-in-up mb-0 relative px-0">
             <div class="flex justify-between items-center mb-1 px-2">
                 <button onclick="resetPlayer()" class="text-[10px] text-gray-400 hover:text-white uppercase"><i class="fa-solid fa-xmark mr-1"></i> Cerrar</button>
                 <button id="lang-toggle" onclick="toggleLanguage()" class="text-[10px] border border-white text-white bg-black/60 px-3 py-1 rounded hover:bg-white hover:text-black transition uppercase font-bold">EN / ES</button>
             </div>
-            <!-- CAMBIO: border-radius: 0 y width 100% para ocupar todo -->
-            <div id="embed-frame" class="overflow-hidden bg-black/80 border-t border-b border-white/20 min-h-[80px] w-full"></div>
+            
+            <!-- Contenedor del Iframe con altura dinámica -->
+            <div id="embed-frame" class="overflow-hidden bg-black/80 border-t border-b border-white/20 w-full"></div>
         </div>
 
         <!-- KARAOKE WRAPPER -->
@@ -290,9 +277,10 @@
             { time: 190, textEn: "I don't ask you to kneel...", textEs: "No te pido que te arrodilles..." }
         ];
 
+        // ACTUALIZADO: ENLACE DE APPLE MUSIC REAL
         const musicLinks = {
             spotify_id: "4QjVTcm14IcFnFCRAzb7Nr", 
-            apple_embed: "https://embed.music.apple.com/us/album/my-tempo/123456789?i=123456789",
+            apple_embed: "https://embed.music.apple.com/co/album/my-tempo-single/1850887573",
             deezer_link: "https://link.deezer.com/s/31JHZGUw412xSUuNRZMeN" 
         };
 
@@ -391,17 +379,22 @@
             document.getElementById('karaoke-wrapper').classList.remove('hidden');
             document.getElementById('canvas-video').style.opacity = "0.3";
 
-            const frame = document.getElementById('embed-frame');
+            const frameContainer = document.getElementById('embed-frame');
+            
             if(platform === 'spotify') {
-                // ANCHO DEL REPRODUCTOR CAMBIADO
-                frame.innerHTML = `<iframe style="border-radius:0px; width:100%; height:80px;" src="https://open.spotify.com/embed/album/${musicLinks.spotify_id}?utm_source=generator&theme=0" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
+                // Spotify funciona bien pequeño (80px)
+                frameContainer.style.height = "80px";
+                frameContainer.innerHTML = `<iframe style="border-radius:0px; width:100%; height:80px;" src="https://open.spotify.com/embed/album/${musicLinks.spotify_id}?utm_source=generator&theme=0" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
             } else if (platform === 'apple') {
-                 // ANCHO DEL REPRODUCTOR CAMBIADO
-                frame.innerHTML = `<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="80" style="width:100%;max-width:100%;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="${musicLinks.apple_embed}"></iframe>`;
+                // Apple Music NECESITA más altura (175px estándar)
+                frameContainer.style.height = "175px";
+                frameContainer.innerHTML = `<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="175" style="width:100%;max-width:100%;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="${musicLinks.apple_embed}"></iframe>`;
             } else if (platform === 'deezer') {
-                 frame.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-white"><p class="text-xs mb-2">Escuchar en Deezer</p><a href="${musicLinks.deezer_link}" target="_blank" class="bg-white text-black px-4 py-1 rounded text-xs font-bold uppercase">Abrir App</a></div>`;
+                 frameContainer.style.height = "80px";
+                 frameContainer.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-white"><p class="text-xs mb-2">Escuchar en Deezer</p><a href="${musicLinks.deezer_link}" target="_blank" class="bg-white text-black px-4 py-1 rounded text-xs font-bold uppercase">Abrir App</a></div>`;
             } else {
-                 frame.innerHTML = `<div class="p-4 text-xs text-center text-gray-400">Reproductor externo cargado.</div>`;
+                 frameContainer.style.height = "80px";
+                 frameContainer.innerHTML = `<div class="p-4 text-xs text-center text-gray-400">Reproductor externo cargado.</div>`;
             }
             renderLyrics();
         }
