@@ -227,7 +227,7 @@
         }
         .shake-error {
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-            border: 2px solid #ef4444 !important; /* Rojo Error */
+            border-color: #ef4444 !important; /* Rojo Error */
         }
     </style>
 </head>
@@ -244,7 +244,7 @@
         <!-- BOTÓN CARRITO -->
         <button onclick="toggleCart()" id="cart-btn" class="pointer-events-auto relative text-white w-14 h-14 flex items-center justify-center rounded-full bg-white/10 backdrop-blur border-2 border-white/30 hover:bg-white/20 transition hover:border-lumenGold shadow-lg">
             <i class="fa-solid fa-bag-shopping text-3xl"></i>
-            <!-- BADGE CONTADOR (MODIFICADO: Blanco y Negro con Sombra Suave) -->
+            <!-- BADGE CONTADOR (BLANCO Y NEGRO) -->
             <span id="cart-count" class="absolute -top-1 -right-1 bg-white text-black text-sm font-bold w-7 h-7 rounded-full flex items-center justify-center border-2 border-black transition-opacity opacity-0 transform scale-0 transition-transform duration-300 shadow-[0_0_8px_rgba(255,255,255,0.4)]">0</span>
         </button>
     </header>
@@ -259,7 +259,6 @@
         <div class="absolute inset-0" onclick="toggleMenu()"></div>
         <div class="side-menu-content relative">
             <div class="mb-10 flex justify-center border-b border-white/10 pb-8">
-                <!-- Placeholder Logo -->
                 <div class="text-4xl text-lumenGold font-serif font-bold tracking-widest border-2 border-lumenGold p-4">LUMENFALL</div>
             </div>
             <div class="mb-10">
@@ -440,6 +439,12 @@
             </div>
         </div>
         <div class="p-8 bg-[#111] border-t border-white/20">
+            <!-- INPUT NOMBRE DEL CLIENTE (SIN POPUP MOLESTO) -->
+            <div class="mb-4">
+                <label for="client-name" class="block text-gray-400 text-xs font-bold uppercase tracking-widest mb-2 ml-1">NOMBRE DEL AGENTE:</label>
+                <input type="text" id="client-name" placeholder="INGRESA TU NOMBRE AQUÍ" class="w-full bg-[#222] text-white border-2 border-[#333] rounded-lg p-4 font-bold outline-none focus:border-lumenGold transition-colors placeholder-gray-600">
+            </div>
+
             <div class="flex justify-between text-white mb-6 text-2xl font-bold"><span data-i18n="total">TOTAL</span><span id="cart-total">$0.00</span></div>
             <button onclick="startCheckout()" class="w-full h-16 bg-lumenGold text-black font-extrabold text-lg rounded-lg uppercase tracking-widest shadow-lg hover:bg-white transition-colors flex items-center justify-center gap-3"><span data-i18n="checkout">FINALIZAR PEDIDO</span> <i class="fa-brands fa-whatsapp text-2xl"></i></button>
         </div>
@@ -658,10 +663,24 @@
             totalEl.innerText = "$" + total.toFixed(2);
         }
 
+        // --- CHECKOUT SIN PROMPTS NI BLOQUEOS ---
         function startCheckout() {
             if(cart.length === 0) return;
-            const name = prompt("Por favor, ingresa tu NOMBRE para el pedido:"); if(!name) return;
             
+            // 1. Obtener nombre del INPUT en el carrito (No del prompt)
+            const nameInput = document.getElementById('client-name');
+            const name = nameInput.value.trim();
+
+            // 2. Validación visual
+            if(!name) {
+                nameInput.classList.add('shake-error');
+                nameInput.focus();
+                // Remover la clase de animación después
+                setTimeout(() => nameInput.classList.remove('shake-error'), 500);
+                return;
+            }
+            
+            // 3. Construir mensaje
             let message = `*NUEVO PEDIDO LA ARMERÍA*\n`;
             message += `👤 Cliente: ${name}\n`;
             message += `📅 Fecha: ${new Date().toLocaleDateString()}\n`;
@@ -681,7 +700,11 @@
             message += `📍 Método de Envío: [Por definir en chat]\n`;
             message += `⚠️ (Entiendo el tiempo de forjado: 8-12 días)`;
 
-            window.open(`https://wa.me/593996480843?text=${encodeURIComponent(message)}`, '_blank');
+            // 4. ABRIR DIRECTAMENTE (Esto evita el bloqueo de popup)
+            const url = `https://wa.me/593996480843?text=${encodeURIComponent(message)}`;
+            
+            // En móviles, window.open funciona mejor si es por click directo
+            window.open(url, '_blank');
         }
 
         function toggleMenu() { document.getElementById('side-menu').classList.toggle('active'); }
@@ -694,7 +717,6 @@
         function removeFromCart(i) { cart.splice(i, 1); renderCartList(); updateCartBadge(); }
         
         function updateCartBadge() { 
-            // Sumar la CANTIDAD total de items, no solo el largo del array
             const count = cart.reduce((acc, item) => acc + item.qty, 0); 
             const b = document.getElementById('cart-count'); 
             b.innerText = count; 
