@@ -172,7 +172,8 @@
                         <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(El Grimorio / El Diario)</span>
                     </a>
                     
-                    <a href="./tienda/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
+                    <!-- *** CAMBIO AQUÍ: Apuntando a la carpeta correcta 'Armeria' *** -->
+                    <a href="./Armeria/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
                         <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">LA ARMERÍA</span>
                         <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(Camisetas y Accesorios)</span>
                     </a>
@@ -189,7 +190,7 @@
 
         <!-- Footer -->
         <footer class="w-full text-center p-6 mt-auto">
-            <!-- *** CAMBIO: Iconos más grandes (w-12) y más espacio (space-x-8) *** -->
+            <!-- Iconos de redes sociales -->
             <div class="flex justify-center space-x-8 mb-4">
                 
                 <!-- Instagram -->
@@ -233,16 +234,14 @@
             const splash = document.getElementById('splash-screen');
             const main = document.getElementById('main-content');
             
-            // --- *** CAMBIO: Lógica de Splash Screen con Memoria de Sesión *** ---
+            // Lógica de Splash Screen
             function hideSplash(duration) {
-                // 1. Marcar que ya vimos el splash en esta sesión
                 try {
                     sessionStorage.setItem('splashSeen', 'true');
                 } catch (e) {
                     console.warn('sessionStorage no está disponible.');
                 }
 
-                // 2. Ocultar splash después de la duración especificada
                 setTimeout(() => {
                     if (splash) {
                         splash.classList.add('fade-out');
@@ -251,19 +250,16 @@
                         main.style.opacity = '1';
                     }
                     
-                    // Ocultar completamente el splash después de la animación
                     setTimeout(() => {
                         if (splash) {
                             splash.style.display = 'none';
                         }
-                    }, 500); // 500ms de la animacion fade-out
-                }, duration); // Duración de espera antes de ocultar
+                    }, 500);
+                }, duration);
             }
 
-            // --- Comprobar si ya se vio el splash ---
-            let splashDuration = 4000; // 4 segundos por defecto
+            let splashDuration = 4000;
             try {
-                // Si ya se vio en esta sesión, ocultar inmediatamente
                 if (sessionStorage.getItem('splashSeen') === 'true') {
                     splashDuration = 0; 
                 }
@@ -271,9 +267,9 @@
                 console.warn('sessionStorage no está disponible.');
             }
             
-            hideSplash(splashDuration); // Llamar a la función con la duración decidida
+            hideSplash(splashDuration);
 
-            // --- Lógica de PWA (Service Worker) ---
+            // Lógica de PWA (Service Worker)
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('sw.js')
                     .then((registration) => {
@@ -338,7 +334,7 @@
         const googleLoginBtn = document.getElementById('google-login');
         const facebookLoginBtn = document.getElementById('facebook-login');
         const logoutBtn = document.getElementById('logout-button');
-        const installButton = document.getElementById('install-pwa-button'); // Botón de PWA
+        const installButton = document.getElementById('install-pwa-button'); 
 
         // --- 4. Lógica de Autenticación Firebase ---
         const googleProvider = new GoogleAuthProvider();
