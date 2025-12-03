@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
@@ -15,6 +16,7 @@
                     fontFamily: {
                         'serif': ['Cinzel', 'serif'],
                         'sans': ['Lato', 'sans-serif'],
+                        'mono': ['"Share Tech Mono"', 'monospace'],
                     },
                     colors: {
                         lumenGold: '#D4AF37',
@@ -33,7 +35,7 @@
             font-family: 'Lato', sans-serif;
             -webkit-tap-highlight-color: transparent;
             overflow: hidden; 
-            font-size: 18px;
+            font-size: 20px;
         }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -58,7 +60,7 @@
             background-color: #0f0f0f;
             border-radius: 1.5rem;
             position: relative;
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.15);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -67,8 +69,8 @@
 
         @media (min-width: 768px) {
             .product-card {
-                flex: 0 0 400px;
-                height: 600px;
+                flex: 0 0 450px;
+                height: 650px;
                 scroll-snap-align: start;
             }
         }
@@ -97,8 +99,10 @@
             pointer-events: auto;
         }
 
+        #delivery-modal { z-index: 200 !important; }
+
         .side-menu {
-            z-index: 200;
+            z-index: 300;
             background-color: rgba(0,0,0,0.8);
             transform: translateX(-100%);
             opacity: 0;
@@ -108,20 +112,21 @@
             opacity: 1;
             pointer-events: auto;
         }
+        
         .side-menu-content {
-            width: 90%;
-            max-width: 350px;
+            width: 95%;
+            max-width: 500px;
             height: 100%;
             background: #0a0a0a;
             border-right: 2px solid rgba(255,255,255,0.15);
             display: flex;
             flex-direction: column;
-            padding: 2rem;
+            padding: 2.5rem;
             box-shadow: 10px 0 30px rgba(0,0,0,0.8);
         }
 
         .modal-image-area {
-            height: 45%;
+            height: 40%;
             background: linear-gradient(to bottom, #1a1a1a, #000);
             display: flex;
             align-items: center;
@@ -134,22 +139,22 @@
             overflow-y: auto;
             background-color: #000;
             padding: 2rem;
-            padding-bottom: 9rem;
+            padding-bottom: 12rem;
         }
 
         /* BOTÓN WHATSAPP B&W */
         .whatsapp-float {
             position: fixed;
-            width: 70px;
-            height: 70px;
-            bottom: 30px;
-            right: 30px;
+            width: 75px;
+            height: 75px;
+            bottom: 35px;
+            right: 35px;
             background-color: #000;
             color: #FFF;
             border: 2px solid #333;
             border-radius: 50%;
             text-align: center;
-            font-size: 36px;
+            font-size: 40px;
             box-shadow: 0px 0px 20px rgba(255, 255, 255, 0.15);
             z-index: 90;
             display: flex;
@@ -167,11 +172,11 @@
         /* Selectores */
         .size-btn {
             border: 2px solid #333;
-            color: #888;
-            padding: 12px 0;
+            color: #999;
+            padding: 15px 0;
             text-align: center;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 10px;
+            font-size: 16px;
             font-weight: 900;
             transition: all 0.2s;
         }
@@ -179,10 +184,11 @@
             border-color: #D4AF37;
             background-color: #D4AF37;
             color: #000;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
         }
         .color-btn {
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             border: 3px solid #333;
             position: relative;
@@ -199,33 +205,52 @@
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 18px;
+            font-size: 20px;
             color: #D4AF37;
         }
         .color-btn.white.selected::after { color: #000; }
         .color-btn.black.selected::after { color: #fff; }
+
+        /* Animación Carrito */
+        @keyframes bump {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .bump-anim { animation: bump 0.3s ease-out; }
+
+        /* Animación de Error (Sacudida) */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .shake-error {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            border: 2px solid #ef4444 !important; /* Rojo Error */
+        }
     </style>
 </head>
 <body class="flex flex-col h-[100dvh] relative bg-[#050505]">
 
     <!-- HEADER -->
     <header class="fixed top-0 w-full z-40 px-6 py-6 flex justify-between items-center bg-gradient-to-b from-black/95 to-transparent pointer-events-none">
-        <!-- Menú -->
-        <button onclick="toggleMenu()" class="pointer-events-auto text-white w-12 h-12 flex items-center justify-center rounded-full bg-white/10 backdrop-blur border border-white/20 hover:bg-white/30 transition">
-            <i class="fa-solid fa-bars text-2xl"></i>
+        <button onclick="toggleMenu()" class="pointer-events-auto text-white w-14 h-14 flex items-center justify-center rounded-full bg-white/10 backdrop-blur border border-white/20 hover:bg-white/30 transition">
+            <i class="fa-solid fa-bars text-3xl"></i>
         </button>
 
         <h1 class="title-font text-2xl text-lumenGold tracking-[0.2em] font-bold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">LA ARMERÍA</h1>
 
-        <!-- BOTÓN CARRITO (Bien Visible) -->
-        <button onclick="toggleCart()" class="pointer-events-auto relative text-white w-12 h-12 flex items-center justify-center rounded-full bg-white/10 backdrop-blur border-2 border-white/30 hover:bg-white/20 transition hover:border-lumenGold shadow-lg">
-            <i class="fa-solid fa-bag-shopping text-2xl"></i>
-            <span id="cart-count" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center opacity-0 border-2 border-black transition-opacity">0</span>
+        <!-- BOTÓN CARRITO -->
+        <button onclick="toggleCart()" id="cart-btn" class="pointer-events-auto relative text-white w-14 h-14 flex items-center justify-center rounded-full bg-white/10 backdrop-blur border-2 border-white/30 hover:bg-white/20 transition hover:border-lumenGold shadow-lg">
+            <i class="fa-solid fa-bag-shopping text-3xl"></i>
+            <!-- BADGE CONTADOR (MODIFICADO: Blanco y Negro con Sombra Suave) -->
+            <span id="cart-count" class="absolute -top-1 -right-1 bg-white text-black text-sm font-bold w-7 h-7 rounded-full flex items-center justify-center border-2 border-black transition-opacity opacity-0 transform scale-0 transition-transform duration-300 shadow-[0_0_8px_rgba(255,255,255,0.4)]">0</span>
         </button>
     </header>
 
-    <!-- SOLO WHATSAPP (Sin Nayla en pantalla) -->
-    <a href="https://wa.me/593996480843?text=Hola%20Lumenfall%2C%20quisiera%20m%C3%A1s%20informaci%C3%B3n." target="_blank" class="whatsapp-float pointer-events-auto" aria-label="Chat on WhatsApp">
+    <!-- WHATSAPP -->
+    <a href="https://wa.me/593996480843" target="_blank" class="whatsapp-float pointer-events-auto" aria-label="Chat on WhatsApp">
         <i class="fa-brands fa-whatsapp"></i>
     </a>
 
@@ -233,143 +258,167 @@
     <div id="side-menu" class="side-menu">
         <div class="absolute inset-0" onclick="toggleMenu()"></div>
         <div class="side-menu-content relative">
-            
-            <!-- LOGO -->
             <div class="mb-10 flex justify-center border-b border-white/10 pb-8">
-                <img src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/ce78cc389fae79764d3d599e7240160118a5262e/Armeria/assets/Imagenes/Icono_lumenfall.png" 
-                     alt="LUMENFALL LOGO" 
-                     class="w-56 h-auto object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+                <!-- Placeholder Logo -->
+                <div class="text-4xl text-lumenGold font-serif font-bold tracking-widest border-2 border-lumenGold p-4">LUMENFALL</div>
             </div>
-
             <div class="mb-10">
-                <h3 class="text-sm font-bold text-white uppercase mb-4 tracking-widest flex items-center gap-3">
-                    <i class="fa-solid fa-earth-americas text-lumenGold text-lg"></i> 
-                    <span data-i18n="langTitle">IDIOMA</span>
-                </h3>
-                <div class="flex bg-black rounded-lg p-1.5 border border-white/20">
-                    <button onclick="setLanguage('es')" id="btn-es" class="flex-1 py-3 text-sm font-bold rounded bg-lumenGold text-black transition-colors">ESPAÑOL</button>
-                    <button onclick="setLanguage('en')" id="btn-en" class="flex-1 py-3 text-sm font-bold rounded text-gray-500 hover:text-white transition-colors">ENGLISH</button>
+                <h3 class="text-base font-bold text-white uppercase mb-4 tracking-widest flex items-center gap-3"><i class="fa-solid fa-earth-americas text-lumenGold text-xl"></i> <span data-i18n="langTitle">IDIOMA</span></h3>
+                <div class="flex bg-black rounded-xl p-2 border border-white/20">
+                    <button onclick="setLanguage('es')" id="btn-es" class="flex-1 py-4 text-base font-bold rounded-lg bg-lumenGold text-black transition-colors">ESPAÑOL</button>
+                    <button onclick="setLanguage('en')" id="btn-en" class="flex-1 py-4 text-base font-bold rounded-lg text-gray-500 hover:text-white transition-colors">ENGLISH</button>
                 </div>
             </div>
             <div class="flex-1">
-                <h3 class="text-sm font-bold text-white uppercase mb-4 tracking-widest flex items-center gap-3">
-                    <i class="fa-solid fa-circle-info text-lumenGold text-lg"></i>
-                    <span data-i18n="dataTitle">DATOS</span>
-                </h3>
-                <ul class="space-y-6 text-base text-gray-300">
-                    <li class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded bg-white/10 flex items-center justify-center text-lg"><i class="fa-brands fa-whatsapp"></i></div>
-                        <a href="https://wa.me/593996480843" class="hover:text-white transition-colors font-bold">+593 99 648 0843</a>
-                    </li>
-                    <li class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded bg-white/10 flex items-center justify-center text-lg"><i class="fa-solid fa-envelope"></i></div>
-                        <a href="mailto:jusn38store@gmail.com" class="hover:text-white text-sm break-all transition-colors font-bold">jusn38store@gmail.com</a>
-                    </li>
+                <h3 class="text-base font-bold text-white uppercase mb-4 tracking-widest flex items-center gap-3"><i class="fa-solid fa-circle-info text-lumenGold text-xl"></i> <span data-i18n="dataTitle">DATOS</span></h3>
+                <ul class="space-y-8 text-lg text-gray-300">
+                    <li class="flex items-center gap-5"><div class="w-12 h-12 rounded bg-white/10 flex items-center justify-center text-xl"><i class="fa-brands fa-whatsapp"></i></div><a href="https://wa.me/593996480843" class="hover:text-white transition-colors font-bold">+593 99 648 0843</a></li>
+                    <li class="flex items-center gap-5"><div class="w-12 h-12 rounded bg-white/10 flex items-center justify-center text-xl"><i class="fa-solid fa-envelope"></i></div><a href="mailto:jusn38store@gmail.com" class="hover:text-white text-base break-all transition-colors font-bold">jusn38store@gmail.com</a></li>
                 </ul>
             </div>
-            <div class="text-xs text-gray-500 text-center border-t border-white/10 pt-6 font-bold">
-                &copy; 2025 LUMENFALL CORP
-            </div>
+            <div class="text-sm text-gray-500 text-center border-t border-white/10 pt-6 font-bold">&copy; 2025 LUMENFALL CORP</div>
         </div>
     </div>
 
     <!-- MAIN -->
-    <main class="flex-grow pt-28 pb-24 overflow-y-auto">
-        <section class="mb-10">
+    <main class="flex-grow pt-32 pb-24 overflow-y-auto">
+        <section class="mb-12">
             <div class="px-6 mb-6 flex items-baseline justify-between">
-                <div>
-                    <h2 class="title-font text-3xl text-white font-bold tracking-wider" data-i18n="equipTitle">EQUIPAMIENTO</h2>
-                    <p class="text-xs text-lumenGold uppercase tracking-widest font-bold mt-1" data-i18n="equipSub">Desliza para explorar</p>
-                </div>
-                <i class="fa-solid fa-arrow-right-long text-white/40 animate-pulse text-2xl"></i>
+                <div><h2 class="title-font text-3xl text-white font-bold tracking-wider" data-i18n="equipTitle">EQUIPAMIENTO</h2><p class="text-sm text-lumenGold uppercase tracking-widest font-bold mt-1" data-i18n="equipSub">Desliza para explorar</p></div>
+                <i class="fa-solid fa-arrow-right-long text-white/40 animate-pulse text-3xl"></i>
             </div>
             <div class="native-carousel px-6 no-scrollbar" id="carousel-equipamiento"></div>
         </section>
-
-        <section class="mb-10">
+        <section class="mb-12">
             <div class="px-6 mb-6">
-                <h2 class="title-font text-3xl text-white font-bold tracking-wider" data-i18n="artTitle">ARTEFACTOS</h2>
-                <p class="text-xs text-lumenGold uppercase tracking-widest font-bold mt-1" data-i18n="artSub">Lore & Accesorios</p>
+                <h2 class="title-font text-3xl text-white font-bold tracking-wider" data-i18n="artTitle">ARTEFACTOS</h2><p class="text-sm text-lumenGold uppercase tracking-widest font-bold mt-1" data-i18n="artSub">Lore & Accesorios</p>
             </div>
             <div class="native-carousel px-6 no-scrollbar" id="carousel-artefactos"></div>
         </section>
-
-        <footer class="px-6 py-10 bg-[#0a0a0a] border-t border-white/10 mb-10">
-            <div class="flex justify-center gap-10 mb-8 opacity-70">
-                <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-brands fa-bitcoin text-3xl"></i></button>
-                <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-brands fa-paypal text-3xl"></i></button>
-                <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-solid fa-building-columns text-3xl"></i></button>
+        <footer class="px-6 py-12 bg-[#0a0a0a] border-t border-white/10 mb-10">
+            <div class="flex justify-center gap-12 mb-10 opacity-70">
+                <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-brands fa-bitcoin text-4xl"></i></button>
+                <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-brands fa-paypal text-4xl"></i></button>
+                <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-solid fa-building-columns text-4xl"></i></button>
             </div>
             <div class="text-center">
-                <button onclick="openInfoModal()" class="text-xs text-gray-400 font-bold uppercase tracking-widest border-b border-gray-600 pb-1 hover:text-white transition" data-i18n="termsFooter">Términos y Condiciones</button>
-                <p class="text-[10px] text-gray-600 mt-6 font-bold">© 2025 LUMENFALL SYSTEM</p>
+                <button onclick="openInfoModal()" class="text-sm text-gray-400 font-bold uppercase tracking-widest border-b border-gray-600 pb-1 hover:text-white transition" data-i18n="termsFooter">Términos y Condiciones</button>
+                <p class="text-xs text-gray-600 mt-6 font-bold">© 2025 LUMENFALL SYSTEM</p>
             </div>
         </footer>
     </main>
 
     <!-- PRODUCTO MODAL -->
     <div id="product-modal" class="full-screen-modal">
-        <button onclick="closeProduct()" class="absolute top-6 left-6 z-50 w-12 h-12 bg-black/60 backdrop-blur rounded-full text-white border border-white/30 flex items-center justify-center shadow-2xl hover:bg-lumenGold hover:text-black transition">
-            <i class="fa-solid fa-arrow-left text-xl"></i>
-        </button>
+        <button onclick="closeProduct()" class="absolute top-6 left-6 z-50 w-14 h-14 bg-black/60 backdrop-blur rounded-full text-white border border-white/30 flex items-center justify-center shadow-2xl hover:bg-lumenGold hover:text-black transition"><i class="fa-solid fa-arrow-left text-2xl"></i></button>
 
         <div class="modal-image-area">
             <i id="m-icon" class="fa-solid fa-shirt text-[180px] text-white/10 drop-shadow-2xl"></i>
-            <div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-6 py-3 rounded-full border-2 border-lumenGold/50">
-                <span id="m-price-display" class="text-3xl font-bold text-white font-sans">$00.00</span>
+            <div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50">
+                <span id="m-price-display" class="text-4xl font-bold text-white font-sans">$00.00</span>
             </div>
         </div>
 
         <div class="modal-scroll-content">
-            <span id="m-tag" class="inline-block px-4 py-1.5 bg-white/10 text-lumenGold text-xs font-bold uppercase tracking-widest rounded border border-lumenGold/30 mb-4">TAG</span>
-            <h1 id="m-title" class="title-font text-4xl text-white leading-tight mb-8 font-bold">Nombre</h1>
+            <span id="m-tag" class="inline-block px-5 py-2 bg-white/10 text-lumenGold text-sm font-bold uppercase tracking-widest rounded border border-lumenGold/30 mb-4">TAG</span>
+            <h1 id="m-title" class="title-font text-5xl text-white leading-tight mb-8 font-bold">Nombre</h1>
             
             <div class="space-y-8">
-                <!-- Selectores -->
-                <div id="selectors-container" class="hidden bg-[#111] p-6 rounded-2xl border border-white/15 space-y-6">
-                    <div>
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-xs text-gray-400 font-extrabold uppercase tracking-widest">TALLA / SIZE</h3>
-                        </div>
+                <!-- Selectores (Se validarán al agregar) -->
+                <div id="selectors-container" class="hidden bg-[#111] p-6 rounded-2xl border border-white/15 space-y-6 transition-all duration-300">
+                    <div id="size-block">
+                        <div class="flex justify-between items-center mb-4"><h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest">TALLA / SIZE <span class="text-red-500 hidden" id="size-error">*</span></h3></div>
                         <div id="size-options" class="grid grid-cols-5 gap-3"></div>
-                        <p id="size-warning" class="text-xs text-lumenGold mt-3 hidden italic font-bold">⚠️ Horma Oversized (Grande)</p>
+                        <p id="size-warning" class="text-sm text-lumenGold mt-3 hidden italic font-bold">⚠️ Horma Oversized (Grande)</p>
                     </div>
-                    <div>
-                        <h3 class="text-xs text-gray-400 font-extrabold uppercase tracking-widest mb-3">COLOR</h3>
-                        <div id="color-options" class="flex gap-5"></div>
+                    <div id="color-block">
+                        <h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest mb-4">COLOR <span class="text-red-500 hidden" id="color-error">*</span></h3>
+                        <div id="color-options" class="flex gap-6"></div>
+                    </div>
+                    <!-- Mensaje de Error Visual -->
+                    <div id="validation-msg" class="hidden bg-red-900/30 border border-red-500/50 p-3 rounded text-red-200 text-sm font-bold text-center">
+                        <i class="fa-solid fa-triangle-exclamation mr-2"></i> SELECCIONA TALLA Y COLOR
                     </div>
                 </div>
 
+                <!-- CONTROLES DE CANTIDAD -->
+                <div class="bg-[#111] p-6 rounded-2xl border border-white/15 flex items-center justify-between">
+                    <h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest">CANTIDAD</h3>
+                    <div class="flex items-center gap-6">
+                        <button onclick="adjustQty(-1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 active:scale-95 transition border border-white/10">-</button>
+                        <span id="modal-qty" class="text-3xl font-bold text-white w-10 text-center">1</span>
+                        <button onclick="adjustQty(1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 active:scale-95 transition border border-white/10">+</button>
+                    </div>
+                </div>
+
+                <!-- Botón Protocolo -->
+                <div onclick="openDeliveryModal()" class="group cursor-pointer bg-[#1a1a1a] border-l-4 border-lumenGold p-5 rounded-r-xl flex items-center justify-between hover:bg-white/5 transition-colors shadow-lg active:scale-95 transform duration-150">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-full bg-lumenGold/10 flex items-center justify-center border border-lumenGold/20"><i class="fa-solid fa-truck-fast text-lumenGold text-2xl"></i></div>
+                        <div><h4 class="text-white font-bold text-sm uppercase tracking-wider mb-1">TIEMPO DE FORJADO</h4><p class="text-lumenGold text-xs font-bold">8 - 12 DÍAS (VER DETALLES)</p></div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-gray-500 group-hover:text-white transition text-xl animate-pulse"></i>
+                </div>
+
                 <div>
-                    <h3 class="text-sm text-gray-400 font-extrabold uppercase mb-3 border-b border-white/20 pb-2" data-i18n="descTitle">Descripción</h3>
-                    <p id="m-desc" class="text-gray-200 text-lg font-normal leading-relaxed">...</p>
+                    <h3 class="text-base text-gray-400 font-extrabold uppercase mb-3 border-b border-white/20 pb-2" data-i18n="descTitle">Descripción</h3>
+                    <p id="m-desc" class="text-gray-200 text-xl font-normal leading-relaxed">...</p>
                 </div>
                 
                 <div class="bg-[#111] p-6 rounded-2xl border border-white/15">
-                    <h3 class="text-xs text-lumenGold font-extrabold uppercase tracking-widest mb-4" data-i18n="specsTitle">Especificaciones</h3>
-                    <ul id="m-specs" class="space-y-4 text-sm text-gray-300"></ul>
+                    <h3 class="text-sm text-lumenGold font-extrabold uppercase tracking-widest mb-4" data-i18n="specsTitle">Especificaciones</h3>
+                    <ul id="m-specs" class="space-y-4 text-base text-gray-300"></ul>
                 </div>
             </div>
         </div>
 
         <div class="absolute bottom-0 w-full p-6 bg-gradient-to-t from-black via-black to-transparent z-50">
-            <button onclick="addToCartCurrent()" class="w-full h-16 bg-white text-black font-extrabold text-lg rounded-full uppercase tracking-[0.2em] shadow-[0_0_25px_rgba(255,255,255,0.3)] hover:bg-lumenGold transition-all flex items-center justify-center gap-3">
+            <button onclick="addToCartCurrent()" id="add-btn" class="w-full h-20 bg-white text-black font-extrabold text-xl rounded-full uppercase tracking-[0.2em] shadow-[0_0_25px_rgba(255,255,255,0.3)] hover:bg-lumenGold transition-all flex items-center justify-center gap-3 active:scale-95">
                 <span data-i18n="addCart">AGREGAR</span>
             </button>
+        </div>
+    </div>
+
+    <!-- MODAL PROTOCOLO DE ENTREGA -->
+    <div id="delivery-modal" class="full-screen-modal">
+        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10">
+            <h2 class="text-lumenGold font-bold tracking-widest text-lg">PROTOCOLO DE ENTREGA</h2>
+            <button onclick="closeDeliveryModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto bg-black p-8 pt-32 pb-12">
+            <div class="max-w-lg mx-auto space-y-8">
+                <div class="text-center">
+                    <i class="fa-solid fa-shield-halved text-7xl text-lumenGold mb-6 animate-pulse"></i>
+                    <h2 class="title-font text-3xl text-white mb-2">FORJADO A MEDIDA</h2>
+                    <div class="w-24 h-1 bg-lumenGold mx-auto"></div>
+                </div>
+                <div class="bg-[#111] p-8 rounded-2xl border border-white/10">
+                    <p class="text-gray-300 text-xl leading-relaxed mb-8 font-medium">"En La Armería no almacenamos polvo. Cada prenda se confecciona y estampa bajo pedido <strong class="text-white">exclusivamente para ti</strong>."</p>
+                    <div class="space-y-8">
+                        <div class="flex gap-5"><div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-lumenGold font-bold text-xl">1</div><div><h4 class="text-white font-bold text-lg uppercase mb-1">Fase de Forjado (Producción)</h4><p class="text-gray-400 text-base">5 - 8 días hábiles.</p></div></div>
+                        <div class="flex gap-5"><div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-lumenGold font-bold text-xl">2</div><div><h4 class="text-white font-bold text-lg uppercase mb-1">Fase de Despliegue (Envío)</h4><p class="text-gray-400 text-base">2 - 4 días (según ubicación).</p></div></div>
+                    </div>
+                    <div class="mt-10 pt-8 border-t border-white/10"><p class="text-lumenGold text-xl font-bold text-center mb-2">TIEMPO TOTAL ESTIMADO</p><p class="text-white text-4xl font-serif text-center">8 a 12 Días</p><p class="text-center text-gray-500 text-sm mt-3 uppercase tracking-wider font-bold">Para tener el poder en tus manos</p></div>
+                </div>
+                <div class="bg-lumenGold/10 p-6 rounded-xl border border-lumenGold/20"><p class="text-base text-lumenGold italic text-center font-bold">"La calidad requiere paciencia. Tu espera garantiza que recibirás una pieza recién creada, no una prenda almacenada por meses."</p></div>
+            </div>
         </div>
     </div>
 
     <!-- INFO MODAL -->
     <div id="info-modal" class="full-screen-modal z-[110]">
         <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10">
-            <h2 class="text-lumenGold font-bold tracking-widest text-lg" data-i18n="termsHeader">TÉRMINOS & ENVÍOS</h2>
-            <button onclick="closeInfoModal()" class="w-10 h-10 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-3xl"></i></button>
+            <h2 class="text-lumenGold font-bold tracking-widest text-xl" data-i18n="termsHeader">TÉRMINOS & ENVÍOS</h2>
+            <button onclick="closeInfoModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button>
         </div>
         <div class="flex-1 overflow-y-auto bg-black p-8 pt-28 pb-12">
             <div class="bg-[#111] p-8 rounded-2xl border border-white/10 mb-8">
-                <h3 class="font-bold text-white uppercase tracking-wider mb-4 text-xl" data-i18n="shippingTitle">Logística</h3>
-                <p class="text-4xl text-white font-serif mb-2" data-i18n="processDays">5 - 8 Días</p>
-                <p class="text-sm text-gray-400 uppercase font-bold" data-i18n="workingDays">Laborables</p>
+                <h3 class="font-bold text-white uppercase tracking-wider mb-4 text-xl" data-i18n="payTitle">Métodos de Pago</h3>
+                <ul class="space-y-4">
+                    <li class="flex items-center justify-between text-base text-gray-400 border-b border-white/5 pb-2"><span><i class="fa-solid fa-building-columns mr-2"></i> Transferencia Bancaria</span></li>
+                    <li class="flex items-center justify-between text-base text-gray-400 border-b border-white/5 pb-2"><span><i class="fa-brands fa-paypal mr-2"></i> PayPal</span></li>
+                    <li class="flex items-center justify-between text-base text-gray-400"><span><i class="fa-brands fa-bitcoin mr-2"></i> Cripto (USDT)</span></li>
+                </ul>
             </div>
         </div>
     </div>
@@ -377,18 +426,22 @@
     <!-- CARRITO MODAL -->
     <div id="cart-modal" class="full-screen-modal z-[105]">
         <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black border-b border-white/10">
-            <h2 class="title-font text-2xl text-white font-bold" data-i18n="cartTitle">TU ARSENAL</h2>
-            <button onclick="toggleCart()" class="text-white hover:text-red-500"><i class="fa-solid fa-xmark text-3xl"></i></button>
+            <h2 class="title-font text-3xl text-white font-bold" data-i18n="cartTitle">TU ARSENAL</h2>
+            <button onclick="toggleCart()" class="text-white hover:text-red-500"><i class="fa-solid fa-xmark text-4xl"></i></button>
         </div>
         <div id="cart-list" class="flex-1 overflow-y-auto pt-24 pb-6 px-6 space-y-6 bg-black"></div>
-        <div class="p-8 bg-[#111] border-t border-white/20">
-            <div class="flex justify-between text-white mb-6 text-2xl font-bold">
-                <span data-i18n="total">TOTAL</span>
-                <span id="cart-total">$0.00</span>
+        <div class="px-6 pb-4 bg-black">
+            <div class="bg-[#1a1a1a] border border-lumenGold/30 p-5 rounded-2xl flex gap-4 items-start">
+                <i class="fa-solid fa-truck-fast text-lumenGold text-3xl mt-1"></i>
+                <div>
+                    <h4 class="text-lumenGold font-bold text-base uppercase mb-1">LOGÍSTICA DE GUERRA</h4>
+                    <p class="text-gray-300 text-sm leading-relaxed font-bold">TIEMPO TOTAL ESTIMADO: <span class="text-white">8 - 12 DÍAS</span>.<br><span class="text-gray-500 font-normal">Incluye fase de forjado y envío.</span></p>
+                </div>
             </div>
-            <button onclick="startCheckout()" class="w-full h-16 bg-lumenGold text-black font-extrabold text-lg rounded-lg uppercase tracking-widest shadow-lg hover:bg-white transition-colors flex items-center justify-center gap-3">
-                <span data-i18n="checkout">FINALIZAR PEDIDO</span> <i class="fa-brands fa-whatsapp text-2xl"></i>
-            </button>
+        </div>
+        <div class="p-8 bg-[#111] border-t border-white/20">
+            <div class="flex justify-between text-white mb-6 text-2xl font-bold"><span data-i18n="total">TOTAL</span><span id="cart-total">$0.00</span></div>
+            <button onclick="startCheckout()" class="w-full h-16 bg-lumenGold text-black font-extrabold text-lg rounded-lg uppercase tracking-widest shadow-lg hover:bg-white transition-colors flex items-center justify-center gap-3"><span data-i18n="checkout">FINALIZAR PEDIDO</span> <i class="fa-brands fa-whatsapp text-2xl"></i></button>
         </div>
     </div>
 
@@ -400,7 +453,8 @@
                 descTitle: "Descripción", specsTitle: "Especificaciones Técnicas",
                 addCart: "AGREGAR", termsHeader: "TÉRMINOS & ENVÍOS", shippingTitle: "Logística y Tiempos",
                 processDays: "5 - 8 Días", workingDays: "Laborables", cartTitle: "TU ARSENAL",
-                total: "TOTAL", checkout: "ENVIAR PEDIDO", emptyCart: "Tu arsenal está vacío."
+                total: "TOTAL", checkout: "ENVIAR PEDIDO", emptyCart: "Tu arsenal está vacío.",
+                payTitle: "Métodos de Pago"
             },
             en: {
                 langTitle: "LANGUAGE", dataTitle: "CONTACT INFO", equipTitle: "EQUIPMENT", equipSub: "Swipe to explore",
@@ -408,65 +462,19 @@
                 descTitle: "Description", specsTitle: "Technical Specs",
                 addCart: "ADD TO ARSENAL", termsHeader: "TERMS & SHIPPING", shippingTitle: "Logistics & Timing",
                 processDays: "5 - 8 Days", workingDays: "Business Days", cartTitle: "YOUR ARSENAL",
-                total: "TOTAL", checkout: "SEND ORDER", emptyCart: "Your arsenal is empty."
+                total: "TOTAL", checkout: "SEND ORDER", emptyCart: "Your arsenal is empty.",
+                payTitle: "Payment Methods"
             }
         };
 
         const products = [
-            {
-                id: 1, type: 'equip', isClothing: true,
-                name: { es: "THE INITIATE TEE", en: "THE INITIATE TEE" },
-                price: 35.00, tag: { es: "NIVEL 1", en: "LEVEL 1" }, icon: "fa-shirt",
-                options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] },
-                desc: { es: "Tu entrada a la Legión. Diseñada para el uso diario.", en: "Your entry into the Legion. Designed for daily use." },
-                specs: { es: ["100% Algodón Peinado", "Corte Regular Fit"], en: ["100% Combed Cotton", "Regular Fit"] }
-            },
-            {
-                id: 2, type: 'equip', isClothing: true,
-                name: { es: "SHADOW WALKER", en: "SHADOW WALKER" },
-                price: 50.00, tag: { es: "NIVEL 2", en: "LEVEL 2" }, icon: "fa-user-secret",
-                options: { sizes: ['S','M','L','XL'], colors: ['black','white'], warning: true },
-                desc: { es: "Para caminar entre las sombras con estilo.", en: "To walk among shadows with style." },
-                specs: { es: ["Algodón Heavyweight 220g", "Corte OVERSIZED"], en: ["Heavyweight Cotton 220g", "OVERSIZED Cut"] }
-            },
-            {
-                id: 3, type: 'equip', isClothing: true,
-                name: { es: "THE MASTER EDITION", en: "THE MASTER EDITION" },
-                price: 85.00, tag: { es: "NIVEL 3", en: "LEVEL 3" }, icon: "fa-box-open",
-                options: { sizes: ['S','M','L','XL','XXL'], colors: ['black'] },
-                desc: { es: "La máxima expresión del universo. Box Set de Colección.", en: "The ultimate expression. Collector's Box Set." },
-                specs: { es: ["Camiseta Ultra-Pesada 240g", "Vintage Wash"], en: ["Ultra-Heavy Tee 240g", "Vintage Wash"] }
-            },
-            {
-                id: 4, type: 'equip', isClothing: true,
-                name: { es: "LUMENFALL HOODIE", en: "LUMENFALL HOODIE" },
-                price: 85.00, tag: { es: "WINTER", en: "WINTER" }, icon: "fa-user-ninja",
-                options: { sizes: ['S','M','L','XL','XXL'], colors: ['black'] },
-                desc: { es: "Tu escudo contra el frío.", en: "Your shield against the cold." },
-                specs: { es: ["Burda Pesada Perchada", "Interior Térmico"], en: ["Heavy Brushed Fleece", "Thermal Interior"] }
-            },
-            {
-                id: 7, type: 'equip', isClothing: true,
-                name: { es: "MY TEMPO SIGNATURE TEE", en: "MY TEMPO SIGNATURE TEE" },
-                price: 45.00, tag: { es: "MUSIC", en: "MUSIC" }, icon: "fa-music",
-                options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] },
-                desc: { es: "La frecuencia visual del sonido.", en: "The visual frequency of sound." },
-                specs: { es: ["Algodón Premium 210g", "Boxy Fit"], en: ["Premium Cotton 210g", "Boxy Fit"] }
-            },
-            {
-                id: 5, type: 'art', isClothing: false,
-                name: { es: "Llavero Rúnico", en: "Runic Keychain" },
-                price: 10.00, tag: { es: "ACCESORIO", en: "ACCESSORY" }, icon: "fa-key",
-                desc: { es: "Lleva la marca de la Sombra siempre contigo.", en: "Carry the Shadow mark with you always." },
-                specs: { es: ["Aleación Zinc"], en: ["Zinc Alloy"] }
-            },
-            {
-                id: 6, type: 'art', isClothing: false,
-                name: { es: "BITÁCORA DEL CAOS", en: "CHAOS LOGBOOK" },
-                price: 30.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-journal-whills",
-                desc: { es: "Donde la estrategia se escribe.", en: "Where strategy is written." },
-                specs: { es: ["Tapa Dura Soft Touch"], en: ["Soft Touch Hardcover"] }
-            }
+            { id: 1, type: 'equip', isClothing: true, name: { es: "THE INITIATE TEE", en: "THE INITIATE TEE" }, price: 35.00, tag: { es: "NIVEL 1", en: "LEVEL 1" }, icon: "fa-shirt", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] }, desc: { es: "Tu entrada a la Legión. Diseñada para el uso diario.", en: "Your entry into the Legion. Designed for daily use." }, specs: { es: ["100% Algodón Peinado", "Corte Regular Fit"], en: ["100% Combed Cotton", "Regular Fit"] } },
+            { id: 2, type: 'equip', isClothing: true, name: { es: "SHADOW WALKER", en: "SHADOW WALKER" }, price: 50.00, tag: { es: "NIVEL 2", en: "LEVEL 2" }, icon: "fa-user-secret", options: { sizes: ['S','M','L','XL'], colors: ['black','white'], warning: true }, desc: { es: "Para caminar entre las sombras con estilo.", en: "To walk among shadows with style." }, specs: { es: ["Algodón Heavyweight 220g", "Corte OVERSIZED"], en: ["Heavyweight Cotton 220g", "OVERSIZED Cut"] } },
+            { id: 3, type: 'equip', isClothing: true, name: { es: "THE MASTER EDITION", en: "THE MASTER EDITION" }, price: 85.00, tag: { es: "NIVEL 3", en: "LEVEL 3" }, icon: "fa-box-open", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black'] }, desc: { es: "La máxima expresión del universo. Box Set de Colección.", en: "The ultimate expression. Collector's Box Set." }, specs: { es: ["Camiseta Ultra-Pesada 240g", "Vintage Wash"], en: ["Ultra-Heavy Tee 240g", "Vintage Wash"] } },
+            { id: 4, type: 'equip', isClothing: true, name: { es: "LUMENFALL HOODIE", en: "LUMENFALL HOODIE" }, price: 85.00, tag: { es: "WINTER", en: "WINTER" }, icon: "fa-user-ninja", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black'] }, desc: { es: "Tu escudo contra el frío.", en: "Your shield against the cold." }, specs: { es: ["Burda Pesada Perchada", "Interior Térmico"], en: ["Heavy Brushed Fleece", "Thermal Interior"] } },
+            { id: 7, type: 'equip', isClothing: true, name: { es: "MY TEMPO SIGNATURE TEE", en: "MY TEMPO SIGNATURE TEE" }, price: 45.00, tag: { es: "MUSIC", en: "MUSIC" }, icon: "fa-music", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] }, desc: { es: "La frecuencia visual del sonido.", en: "The visual frequency of sound." }, specs: { es: ["Algodón Premium 210g", "Boxy Fit"], en: ["Premium Cotton 210g", "Boxy Fit"] } },
+            { id: 5, type: 'art', isClothing: false, name: { es: "Llavero Rúnico", en: "Runic Keychain" }, price: 10.00, tag: { es: "ACCESORIO", en: "ACCESSORY" }, icon: "fa-key", desc: { es: "Lleva la marca de la Sombra siempre contigo.", en: "Carry the Shadow mark with you always." }, specs: { es: ["Aleación Zinc"], en: ["Zinc Alloy"] } },
+            { id: 6, type: 'art', isClothing: false, name: { es: "BITÁCORA DEL CAOS", en: "CHAOS LOGBOOK" }, price: 30.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-journal-whills", desc: { es: "Donde la estrategia se escribe.", en: "Where strategy is written." }, specs: { es: ["Tapa Dura Soft Touch"], en: ["Soft Touch Hardcover"] } }
         ];
 
         let currentLang = 'es';
@@ -474,6 +482,7 @@
         let currentProdId = null;
         let selectedSize = null;
         let selectedColor = null;
+        let modalQty = 1;
 
         function setLanguage(lang) {
             currentLang = lang;
@@ -511,7 +520,19 @@
         function openProduct(id) {
             const p = products.find(x => x.id === id);
             if(!p) return;
-            currentProdId = id; selectedSize = null; selectedColor = null; 
+            
+            // REINICIO DE VARIABLES Y ESTILOS
+            currentProdId = id; 
+            selectedSize = null; 
+            selectedColor = null; 
+            modalQty = 1;
+
+            // Limpiar UI
+            document.querySelectorAll('.size-btn, .color-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('selectors-container').classList.remove('shake-error');
+            document.getElementById('validation-msg').classList.add('hidden');
+            
+            document.getElementById('modal-qty').innerText = modalQty;
             document.getElementById('m-title').innerText = p.name[currentLang];
             document.getElementById('m-tag').innerText = p.tag[currentLang];
             document.getElementById('m-price-display').innerText = `$${p.price.toFixed(2)}`;
@@ -531,24 +552,108 @@
             document.getElementById('product-modal').classList.add('active');
         }
 
-        function selectSize(size, btn) { selectedSize = size; document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }
-        function selectColor(color, btn) { selectedColor = color; document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }
+        function selectSize(size, btn) { 
+            selectedSize = size; 
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected')); 
+            btn.classList.add('selected'); 
+            clearError();
+        }
+        function selectColor(color, btn) { 
+            selectedColor = color; 
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected')); 
+            btn.classList.add('selected'); 
+            clearError();
+        }
+        function adjustQty(change) { modalQty += change; if(modalQty < 1) modalQty = 1; document.getElementById('modal-qty').innerText = modalQty; }
+
+        function clearError() {
+            document.getElementById('selectors-container').classList.remove('shake-error');
+            document.getElementById('validation-msg').classList.add('hidden');
+        }
 
         function addToCartCurrent() {
             const p = products.find(x => x.id === currentProdId);
-            if(p.isClothing && (!selectedSize || !selectedColor)) { alert("⚠️ Por favor selecciona TALLA y COLOR para continuar."); return; }
-            cart.push({ ...p, selSize: selectedSize, selColor: selectedColor });
-            updateCartBadge(); closeProduct(); alert("✅ Agregado al Arsenal");
+            
+            // VALIDACIÓN ESTRICTA
+            if(p.isClothing && (!selectedSize || !selectedColor)) { 
+                // Efecto visual de error
+                const container = document.getElementById('selectors-container');
+                container.classList.remove('shake-error'); // reset animation
+                void container.offsetWidth; // trigger reflow
+                container.classList.add('shake-error');
+                document.getElementById('validation-msg').classList.remove('hidden');
+                
+                // Vibración en móviles
+                if(navigator.vibrate) navigator.vibrate(200);
+                return; 
+            }
+            
+            // BUSCAR SI YA EXISTE EN EL CARRITO (MISMO ID, TALLA Y COLOR)
+            const existingIdx = cart.findIndex(item => 
+                item.id === p.id && 
+                item.selSize === selectedSize && 
+                item.selColor === selectedColor
+            );
+
+            if(existingIdx > -1) {
+                // Si existe, sumar cantidad
+                cart[existingIdx].qty += modalQty;
+            } else {
+                // Si no, agregar nuevo
+                cart.push({ ...p, selSize: selectedSize, selColor: selectedColor, qty: modalQty });
+            }
+            
+            updateCartBadge(); 
+            closeProduct(); 
+            
+            // Feedback de éxito (Alert simple y rápido)
+            alert(`✅ AGREGADO: ${modalQty} ${p.name[currentLang]}`);
+            
+            // Animación visual en botón del carrito (Header)
+            const cartBtn = document.getElementById('cart-btn');
+            cartBtn.classList.add('bump-anim');
+            setTimeout(() => cartBtn.classList.remove('bump-anim'), 300);
+        }
+
+        function updateCartItemQty(index, change) {
+            cart[index].qty += change;
+            if(cart[index].qty < 1) cart[index].qty = 1; 
+            renderCartList();
+            updateCartBadge();
         }
 
         function renderCartList() {
             const list = document.getElementById('cart-list'); const totalEl = document.getElementById('cart-total');
             if(cart.length === 0) { list.innerHTML = `<div class="text-center text-gray-500 mt-20 text-lg"><p>${translations[currentLang].emptyCart}</p></div>`; totalEl.innerText = "$0.00"; return; }
+            
             let total = 0; list.innerHTML = '';
+            
             cart.forEach((item, idx) => {
-                total += item.price;
-                let variantsHTML = item.isClothing ? `<div class="text-xs text-gray-400 mt-2">Talla: <strong class="text-lumenGold text-sm">${item.selSize}</strong> | Color: <strong class="text-white text-sm">${item.selColor === 'black' ? 'Negro' : 'Blanco'}</strong></div>` : '';
-                list.innerHTML += `<div class="flex justify-between items-center bg-[#111] p-6 rounded-2xl border border-white/10"><div class="flex items-center gap-6"><div class="w-16 h-16 bg-black rounded-xl flex items-center justify-center text-gray-600 border border-white/5"><i class="fa-solid ${item.icon} text-2xl"></i></div><div><div class="text-white font-bold font-serif text-lg">${item.name[currentLang]}</div>${variantsHTML}<div class="text-lumenGold text-lg font-bold mt-1">$${item.price.toFixed(2)}</div></div></div><button onclick="removeFromCart(${idx})" class="text-gray-500 hover:text-red-500 p-4"><i class="fa-solid fa-trash text-xl"></i></button></div>`;
+                const itemTotal = item.price * item.qty;
+                total += itemTotal;
+                // Mostrar Talla y Color solo si es ropa
+                let variantsHTML = item.isClothing ? `<div class="text-xs text-gray-400 mt-2">Talla: <strong class="text-lumenGold text-sm">${item.selSize}</strong> | Color: <strong class="text-white text-sm uppercase">${item.selColor}</strong></div>` : '';
+                
+                list.innerHTML += `
+                    <div class="flex flex-col bg-[#111] p-6 rounded-2xl border border-white/10 mb-4">
+                        <div class="flex items-center gap-6 mb-4">
+                            <div class="w-16 h-16 bg-black rounded-xl flex items-center justify-center text-gray-600 border border-white/5"><i class="fa-solid ${item.icon} text-2xl"></i></div>
+                            <div class="flex-1">
+                                <div class="text-white font-bold font-serif text-lg">${item.name[currentLang]}</div>
+                                ${variantsHTML}
+                                <div class="text-lumenGold text-lg font-bold mt-1">$${item.price.toFixed(2)} c/u</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between border-t border-white/5 pt-4">
+                            <div class="flex items-center gap-4 bg-black rounded-lg p-1">
+                                <button onclick="updateCartItemQty(${idx}, -1)" class="w-10 h-10 text-white font-bold hover:bg-white/10 rounded">-</button>
+                                <span class="text-white font-bold w-6 text-center">${item.qty}</span>
+                                <button onclick="updateCartItemQty(${idx}, 1)" class="w-10 h-10 text-white font-bold hover:bg-white/10 rounded">+</button>
+                            </div>
+                            <div class="text-white font-bold text-xl">$${itemTotal.toFixed(2)}</div>
+                            <button onclick="removeFromCart(${idx})" class="text-gray-500 hover:text-red-500 p-2 ml-2"><i class="fa-solid fa-trash text-lg"></i></button>
+                        </div>
+                    </div>`;
             });
             totalEl.innerText = "$" + total.toFixed(2);
         }
@@ -556,19 +661,52 @@
         function startCheckout() {
             if(cart.length === 0) return;
             const name = prompt("Por favor, ingresa tu NOMBRE para el pedido:"); if(!name) return;
-            let message = `NUEVO PEDIDO LA ARMERÍA:\nCliente: ${name}\n\nPedido:\n`; let total = 0;
-            cart.forEach(item => { total += item.price; message += `1x ${item.name.es}`; if(item.isClothing) message += ` | Talla: ${item.selSize} | Color: ${item.selColor === 'black' ? 'Negro' : 'Blanco'}`; message += `\n`; });
-            message += `\nTotal Estimado: $${total.toFixed(2)}\nMétodo de Envío: [Ecuador / Internacional]\nPor favor confirmar datos de pago y envío.`;
+            
+            let message = `*NUEVO PEDIDO LA ARMERÍA*\n`;
+            message += `👤 Cliente: ${name}\n`;
+            message += `📅 Fecha: ${new Date().toLocaleDateString()}\n`;
+            message += `--------------------------------\n`;
+            
+            let total = 0;
+            cart.forEach(item => { 
+                const itemTotal = item.price * item.qty;
+                total += itemTotal; 
+                message += `▪️ ${item.qty}x *${item.name.es}*\n`; 
+                if(item.isClothing) message += `   └ Talla: ${item.selSize} | Color: ${item.selColor.toUpperCase()}\n`; 
+                message += `   └ Subtotal: $${itemTotal.toFixed(2)}\n`; 
+            });
+            
+            message += `--------------------------------\n`;
+            message += `💰 *TOTAL A PAGAR: $${total.toFixed(2)}*\n\n`;
+            message += `📍 Método de Envío: [Por definir en chat]\n`;
+            message += `⚠️ (Entiendo el tiempo de forjado: 8-12 días)`;
+
             window.open(`https://wa.me/593996480843?text=${encodeURIComponent(message)}`, '_blank');
         }
 
         function toggleMenu() { document.getElementById('side-menu').classList.toggle('active'); }
         function closeProduct() { document.getElementById('product-modal').classList.remove('active'); }
+        function openDeliveryModal() { document.getElementById('delivery-modal').classList.add('active'); }
+        function closeDeliveryModal() { document.getElementById('delivery-modal').classList.remove('active'); }
         function openInfoModal() { document.getElementById('info-modal').classList.add('active'); }
         function closeInfoModal() { document.getElementById('info-modal').classList.remove('active'); }
         function toggleCart() { const m = document.getElementById('cart-modal'); m.classList.toggle('active'); if(m.classList.contains('active')) renderCartList(); }
         function removeFromCart(i) { cart.splice(i, 1); renderCartList(); updateCartBadge(); }
-        function updateCartBadge() { const b = document.getElementById('cart-count'); b.innerText = cart.length; b.style.opacity = cart.length > 0 ? '1' : '0'; }
+        
+        function updateCartBadge() { 
+            // Sumar la CANTIDAD total de items, no solo el largo del array
+            const count = cart.reduce((acc, item) => acc + item.qty, 0); 
+            const b = document.getElementById('cart-count'); 
+            b.innerText = count; 
+            
+            if (count > 0) {
+                b.classList.remove('opacity-0', 'scale-0');
+                b.classList.add('opacity-100', 'scale-100');
+            } else {
+                b.classList.add('opacity-0', 'scale-0');
+                b.classList.remove('opacity-100', 'scale-100');
+            }
+        }
         
         renderStore();
     </script>
