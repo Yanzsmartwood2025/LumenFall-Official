@@ -32,7 +32,7 @@
             color: #e5e5e5; 
             font-family: 'Lato', sans-serif;
             -webkit-tap-highlight-color: transparent;
-            overflow-x: hidden;
+            overflow: hidden; /* Controlamos el scroll por secciones */
         }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -72,63 +72,52 @@
             }
         }
 
-        /* Animaciones Modales */
-        .modal-overlay {
+        /* --- MODALES FULL SCREEN (ESTILO PÁGINA) --- */
+        .full-screen-modal {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(5px);
-            z-index: 100;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 100; /* Encima de todo */
+            transform: translateY(100%); /* Oculto abajo */
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); /* Animación suave */
+            display: flex;
+            flex-direction: column;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s ease;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
         }
 
-        .modal-overlay.active {
+        .full-screen-modal.active {
+            transform: translateY(0);
             opacity: 1;
             pointer-events: auto;
         }
 
-        .modal-content {
-            background: #111;
-            width: 100%;
-            max-width: 500px;
-            max-height: 90vh;
-            border-top-left-radius: 2rem;
-            border-top-right-radius: 2rem;
-            transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        /* Area de imagen en el modal */
+        .modal-image-area {
+            height: 45%; /* Ocupa casi la mitad de la pantalla */
+            background: linear-gradient(to bottom, #1a1a1a, #000);
             display: flex;
-            flex-direction: column;
-            border-top: 1px solid rgba(212, 175, 55, 0.2);
+            align-items: center;
+            justify-content: center;
+            position: relative;
         }
 
-        .modal-overlay.active .modal-content {
-            transform: translateY(0);
-        }
-        
-        .modal-info-content {
-            background: #000;
-            width: 100%;
-            height: 100%;
-            transform: scale(0.95);
-            opacity: 0;
-            transition: all 0.3s ease;
+        /* Area de contenido scrollable */
+        .modal-scroll-content {
+            flex: 1;
             overflow-y: auto;
-        }
-        .modal-overlay.active .modal-info-content {
-            transform: scale(1);
-            opacity: 1;
+            background-color: #000;
+            padding: 1.5rem;
+            padding-bottom: 6rem; /* Espacio para botón flotante */
         }
 
     </style>
 </head>
 <body class="flex flex-col h-[100dvh] relative bg-[#050505]">
 
-    <!-- HEADER -->
+    <!-- HEADER PRINCIPAL (Se oculta al abrir modales por z-index) -->
     <header class="fixed top-0 w-full z-40 px-6 py-4 flex justify-between items-center bg-gradient-to-b from-black/95 to-transparent">
         <button class="text-white/80 w-10 h-10 flex items-center justify-center rounded-full bg-white/5 backdrop-blur border border-white/10">
             <i class="fa-solid fa-bars"></i>
@@ -142,8 +131,8 @@
         </button>
     </header>
 
-    <!-- MAIN -->
-    <main class="flex-grow pt-24 pb-20">
+    <!-- MAIN (Scrollable) -->
+    <main class="flex-grow pt-24 pb-20 overflow-y-auto">
         
         <!-- SECCIÓN 1: EQUIPAMIENTO -->
         <section class="mb-8">
@@ -172,138 +161,171 @@
             </div>
         </section>
 
+        <!-- FOOTER -->
+        <footer class="px-6 py-8 bg-[#0a0a0a] border-t border-white/5 mb-8">
+            <div class="flex justify-center gap-8 mb-6 opacity-60">
+                <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-brands fa-bitcoin text-2xl"></i></button>
+                <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-brands fa-paypal text-2xl"></i></button>
+                <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-solid fa-building-columns text-2xl"></i></button>
+                <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-solid fa-truck-fast text-2xl"></i></button>
+            </div>
+            <div class="text-center">
+                <button onclick="openInfoModal()" class="text-[10px] text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-1">Términos y Condiciones</button>
+                <p class="text-[9px] text-gray-700 mt-4">© 2025 LUMENFALL SYSTEM</p>
+            </div>
+        </footer>
     </main>
 
-    <!-- FOOTER -->
-    <footer class="px-6 py-8 bg-[#0a0a0a] border-t border-white/5 mb-8">
-        <div class="flex justify-center gap-8 mb-6 opacity-60">
-            <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-brands fa-bitcoin text-2xl"></i></button>
-            <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-brands fa-paypal text-2xl"></i></button>
-            <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-solid fa-building-columns text-2xl"></i></button>
-            <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-solid fa-truck-fast text-2xl"></i></button>
-        </div>
-        <div class="text-center">
-            <button onclick="openInfoModal()" class="text-[10px] text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-1">Términos y Condiciones</button>
-            <p class="text-[9px] text-gray-700 mt-4">© 2025 LUMENFALL SYSTEM</p>
-        </div>
-    </footer>
+    <!-- ================== MODALES FULL SCREEN ================== -->
 
-    <!-- ================== MODALES ================== -->
+    <!-- 1. PÁGINA DE PRODUCTO (FULL SCREEN) -->
+    <div id="product-modal" class="full-screen-modal">
+        
+        <!-- Botón de Cerrar Flotante (Siempre visible) -->
+        <button onclick="closeProduct()" class="absolute top-4 left-4 z-50 w-10 h-10 bg-black/50 backdrop-blur rounded-full text-white border border-white/20 flex items-center justify-center shadow-lg hover:bg-lumenGold hover:text-black transition">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
 
-    <!-- 1. MODAL PRODUCTO -->
-    <div id="product-modal" class="modal-overlay">
-        <div class="absolute inset-0" onclick="closeProduct()"></div>
-        <div class="modal-content shadow-2xl shadow-lumenGold/10">
-            <div class="w-full flex justify-center pt-3 pb-1" onclick="closeProduct()">
-                <div class="w-12 h-1 bg-white/20 rounded-full"></div>
+        <!-- Area de Imagen (Para que pongas la foto de la camiseta) -->
+        <div class="modal-image-area">
+            <!-- AQUÍ IRÁ TU FOTO REAL (Ahora es un icono gigante) -->
+            <i id="m-icon" class="fa-solid fa-shirt text-[150px] text-white/10 drop-shadow-2xl"></i>
+            
+            <div class="absolute bottom-4 right-4 bg-black/80 backdrop-blur px-4 py-2 rounded-full border border-lumenGold/50">
+                <span id="m-price-display" class="text-xl font-bold text-white font-sans">$00.00</span>
             </div>
-            <div class="overflow-y-auto p-6 flex-1 custom-scroll">
-                <div class="flex gap-4 mb-6">
-                    <div class="flex-1">
-                        <span id="m-tag" class="text-[9px] text-lumenGold border border-lumenGold/30 px-2 py-0.5 rounded uppercase font-bold tracking-wider">TAG</span>
-                        <h2 id="m-title" class="title-font text-2xl text-white mt-2 leading-none">Nombre</h2>
-                        <div class="mt-2 text-2xl font-bold text-white font-sans">$<span id="m-price">00.00</span></div>
-                    </div>
-                    <div class="w-20 h-20 bg-gray-900 rounded-full border border-white/10 flex items-center justify-center shrink-0">
-                        <i id="m-icon" class="fa-solid fa-ghost text-3xl text-white/50"></i>
-                    </div>
-                </div>
-                <div class="mb-6">
-                    <h3 class="text-xs text-gray-500 font-bold uppercase mb-2">Descripción</h3>
+        </div>
+
+        <!-- Contenido Deslizable -->
+        <div class="modal-scroll-content">
+            <span id="m-tag" class="inline-block px-3 py-1 bg-white/5 text-lumenGold text-[10px] font-bold uppercase tracking-widest rounded border border-lumenGold/20 mb-3">TAG</span>
+            
+            <h1 id="m-title" class="title-font text-3xl md:text-4xl text-white leading-none mb-6">Nombre del Producto</h1>
+
+            <div class="space-y-6">
+                <!-- Descripción -->
+                <div>
+                    <h3 class="text-xs text-gray-500 font-bold uppercase mb-2 border-b border-white/10 pb-1">Descripción</h3>
                     <p id="m-desc" class="text-gray-300 text-sm font-light leading-relaxed">...</p>
                 </div>
-                <div class="bg-white/5 p-4 rounded-xl border border-white/5">
-                    <h3 class="text-[10px] text-lumenGold font-bold uppercase tracking-widest mb-3 border-b border-white/10 pb-2">Especificaciones</h3>
-                    <ul id="m-specs" class="space-y-2 text-xs text-gray-400"></ul>
+
+                <!-- Ficha Técnica -->
+                <div class="bg-[#111] p-5 rounded-xl border border-white/10">
+                    <h3 class="text-[10px] text-lumenGold font-bold uppercase tracking-widest mb-4">Especificaciones Técnicas</h3>
+                    <ul id="m-specs" class="space-y-3 text-xs text-gray-400"></ul>
                 </div>
-                <div class="h-20"></div>
+
+                <!-- Nota de Disponibilidad (Estrategia) -->
+                <div class="flex gap-3 items-start bg-blue-900/20 p-4 rounded-lg border border-blue-500/30">
+                    <i class="fa-solid fa-circle-info text-blue-400 mt-1"></i>
+                    <div>
+                        <h4 class="text-blue-400 font-bold text-xs uppercase mb-1">Disponibilidad Limitada</h4>
+                        <p class="text-gray-400 text-[10px]">Este ítem se confecciona bajo demanda en lotes exclusivos.</p>
+                    </div>
+                </div>
             </div>
-            <div class="p-4 bg-black border-t border-white/10 absolute bottom-0 w-full rounded-t-2xl">
-                <button onclick="addToCartCurrent()" class="w-full bg-white hover:bg-lumenGold hover:text-black text-black transition-colors font-bold h-12 rounded-lg uppercase tracking-widest text-sm flex items-center justify-center gap-2 shadow-lg">
-                    <span>Agregar - $</span><span id="m-btn-price">00.00</span>
-                </button>
-            </div>
+        </div>
+
+        <!-- Botón de Acción Fijo -->
+        <div class="absolute bottom-0 w-full p-4 bg-gradient-to-t from-black via-black to-transparent z-50">
+            <button onclick="addToCartCurrent()" class="w-full h-14 bg-white text-black font-bold rounded-full uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:bg-lumenGold transition-all flex items-center justify-center gap-2">
+                <span>Agregar al Arsenal</span>
+            </button>
         </div>
     </div>
 
-    <!-- 2. MODAL INFORMACIÓN (ACTUALIZADO CON LA ESTRATEGIA DE ENVÍO) -->
-    <div id="info-modal" class="modal-overlay z-[110]">
-        <div class="modal-info-content flex flex-col relative bg-black">
-            <button onclick="closeInfoModal()" class="absolute top-6 right-6 w-10 h-10 bg-white/10 rounded-full text-white flex items-center justify-center z-50">
-                <i class="fa-solid fa-xmark"></i>
+    <!-- 2. PÁGINA DE INFORMACIÓN (FULL SCREEN) -->
+    <div id="info-modal" class="full-screen-modal z-[110]">
+        <!-- Header Modal Info -->
+        <div class="absolute top-0 w-full p-4 flex justify-between items-center z-50 bg-black/80 backdrop-blur border-b border-white/10">
+            <h2 class="text-lumenGold font-bold tracking-widest text-sm">TÉRMINOS & ENVÍOS</h2>
+            <button onclick="closeInfoModal()" class="w-8 h-8 flex items-center justify-center text-white hover:text-red-500 transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
             </button>
+        </div>
 
-            <div class="p-8 pt-20 flex flex-col items-center max-w-lg mx-auto w-full">
-                <i class="fa-solid fa-shield-halved text-4xl text-lumenGold mb-4"></i>
-                <h2 class="title-font text-2xl text-white mb-8 text-center">TÉRMINOS DE SERVICIO</h2>
+        <div class="flex-1 overflow-y-auto bg-black p-6 pt-24 pb-10">
+            <div class="max-w-lg mx-auto space-y-8">
+                
+                <div class="text-center mb-8">
+                    <i class="fa-solid fa-scale-balanced text-5xl text-lumenGold mb-4"></i>
+                    <h2 class="title-font text-3xl text-white">POLÍTICAS</h2>
+                </div>
 
-                <!-- Tarjeta de Envíos (ESTRATEGIA TÉCNICA) -->
-                <div class="w-full bg-[#111] p-6 rounded-xl border border-white/10 mb-6">
-                    <div class="flex items-center gap-3 mb-4 text-white">
-                        <i class="fa-solid fa-truck-ramp-box text-lumenGold"></i>
-                        <h3 class="font-bold uppercase tracking-wider text-sm">Logística y Despacho</h3>
+                <!-- Tarjeta Envíos (Estrategia 5-8 días) -->
+                <div class="bg-[#111] p-6 rounded-2xl border border-white/10">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 rounded-full bg-lumenGold/10 flex items-center justify-center text-lumenGold">
+                            <i class="fa-solid fa-truck-ramp-box"></i>
+                        </div>
+                        <h3 class="font-bold text-white uppercase tracking-wider">Logística y Tiempos</h3>
                     </div>
                     
-                    <div class="mb-4">
-                        <p class="text-xs text-gray-500 uppercase font-bold mb-1">Tiempo de Procesamiento:</p>
-                        <p class="text-white text-lg font-bold">5 a 8 Días Laborables</p>
+                    <div class="mb-6 relative pl-4 border-l-2 border-lumenGold">
+                        <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Tiempo de Procesamiento</p>
+                        <p class="text-2xl text-white font-serif">5 - 8 Días</p>
+                        <p class="text-[10px] text-gray-500 uppercase font-bold">Laborables</p>
                     </div>
 
-                    <div class="bg-black/40 p-3 rounded border border-white/5 mb-2">
-                        <p class="text-gray-400 text-xs leading-relaxed italic">
-                            "Operamos bajo un modelo de <strong>Asignación de Lote</strong>. Su pedido inicia el proceso de preparación de materia prima y control de calidad unitario. No mantenemos stock masivo para garantizar la exclusividad de cada pieza."
-                        </p>
-                    </div>
-                    
-                    <p class="text-gray-500 text-xs mt-3 border-t border-white/5 pt-2">
-                        *Una vez verificado el lote, el envío se realiza vía <strong>Servientrega</strong> (Ecuador) o <strong>DHL</strong> (Internacional).
+                    <p class="text-gray-400 text-sm leading-relaxed mb-4">
+                        Operamos bajo un sistema de <strong>"Asignación de Lote"</strong>. Al confirmar tu compra, iniciamos el proceso de preparación de materia prima y control de calidad unitario.
                     </p>
+                    
+                    <div class="bg-black p-3 rounded border border-white/5 flex items-center gap-3">
+                        <i class="fa-solid fa-earth-americas text-gray-500"></i>
+                        <p class="text-[10px] text-gray-400">Envíos nacionales vía <strong>Servientrega</strong> e internacionales vía <strong>DHL Express</strong>.</p>
+                    </div>
                 </div>
 
                 <!-- Tarjeta Pagos -->
-                <div class="w-full bg-[#111] p-6 rounded-xl border border-white/10">
-                    <div class="flex items-center gap-3 mb-3 text-white">
-                        <i class="fa-solid fa-wallet text-lumenGold"></i>
-                        <h3 class="font-bold uppercase tracking-wider text-sm">Métodos de Pago</h3>
+                <div class="bg-[#111] p-6 rounded-2xl border border-white/10">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 rounded-full bg-lumenGold/10 flex items-center justify-center text-lumenGold">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                        <h3 class="font-bold text-white uppercase tracking-wider">Métodos de Pago</h3>
                     </div>
-                    <ul class="text-gray-400 text-sm space-y-2">
-                        <li>• Transferencia Bancaria Directa</li>
-                        <li>• PayPal (Tarjetas Internacionales)</li>
-                        <li>• Criptomonedas (USDT / Bitcoin)</li>
+                    <ul class="space-y-4">
+                        <li class="flex items-center justify-between text-sm text-gray-400 border-b border-white/5 pb-2">
+                            <span><i class="fa-solid fa-building-columns mr-2"></i> Transferencia Bancaria</span>
+                            <span class="text-xs bg-green-900/30 text-green-500 px-2 py-0.5 rounded">Directo</span>
+                        </li>
+                        <li class="flex items-center justify-between text-sm text-gray-400 border-b border-white/5 pb-2">
+                            <span><i class="fa-brands fa-paypal mr-2"></i> PayPal</span>
+                            <span class="text-xs bg-blue-900/30 text-blue-500 px-2 py-0.5 rounded">Global</span>
+                        </li>
+                        <li class="flex items-center justify-between text-sm text-gray-400">
+                            <span><i class="fa-brands fa-bitcoin mr-2"></i> Cripto (USDT)</span>
+                            <span class="text-xs bg-yellow-900/30 text-yellow-500 px-2 py-0.5 rounded">Anon</span>
+                        </li>
                     </ul>
-                </div>
-
-                <div class="mt-8 text-center">
-                    <button onclick="closeInfoModal()" class="text-white text-sm border-b border-white">Volver a la tienda</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 3. MODAL CARRITO -->
-    <div id="cart-modal" class="modal-overlay z-[105]">
-        <div class="absolute inset-0" onclick="toggleCart()"></div>
-        <div class="modal-content h-[80vh]">
-            <div class="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-[#111]">
-                <h2 class="title-font text-xl text-white">TU ARSENAL</h2>
-                <button onclick="toggleCart()" class="text-white/50"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            
-            <div id="cart-list" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+    <!-- 3. MODAL CARRITO (FULL SCREEN) -->
+    <div id="cart-modal" class="full-screen-modal z-[105]">
+        <div class="absolute top-0 w-full p-4 flex justify-between items-center z-50 bg-black border-b border-white/10">
+            <h2 class="title-font text-xl text-white">TU ARSENAL</h2>
+            <button onclick="toggleCart()" class="text-white hover:text-red-500"><i class="fa-solid fa-xmark text-2xl"></i></button>
+        </div>
+        
+        <div id="cart-list" class="flex-1 overflow-y-auto pt-20 pb-4 px-6 space-y-4 bg-black"></div>
 
-            <div class="p-6 bg-black border-t border-white/10">
-                <div class="flex justify-between text-white mb-4 text-xl font-bold">
-                    <span>TOTAL</span>
-                    <span id="cart-total">$0.00</span>
-                </div>
-                <button onclick="openInfoModal(); toggleCart();" class="w-full bg-lumenGold text-black font-bold h-12 rounded-lg uppercase tracking-widest shadow-lg hover:bg-white transition-colors">
-                    Proceder al Pago
-                </button>
+        <div class="p-6 bg-[#111] border-t border-white/10">
+            <div class="flex justify-between text-white mb-4 text-xl font-bold">
+                <span>TOTAL</span>
+                <span id="cart-total">$0.00</span>
             </div>
+            <button onclick="alert('Iniciando proceso de pago seguro...')" class="w-full h-12 bg-lumenGold text-black font-bold rounded-lg uppercase tracking-widest shadow-lg hover:bg-white transition-colors">
+                Finalizar Compra
+            </button>
         </div>
     </div>
 
     <script>
+        // --- DATOS ---
         const products = [
             {
                 id: 1, type: 'equip',
@@ -370,7 +392,7 @@
 
             products.forEach(p => {
                 const cardHTML = `
-                    <div class="product-card group" onclick="openProduct(${p.id})">
+                    <div class="product-card group cursor-pointer" onclick="openProduct(${p.id})">
                         <div class="h-3/4 bg-gray-900 flex items-center justify-center relative border-b border-white/5">
                             <i class="fa-solid ${p.icon} text-7xl text-white/20 group-hover:text-white/40 transition-transform duration-500 group-hover:scale-110"></i>
                             <div class="absolute top-4 left-4 bg-lumenGold text-black text-[9px] font-bold px-2 py-1 uppercase rounded-sm">${p.tag}</div>
@@ -388,22 +410,24 @@
             });
         }
 
+        // --- LÓGICA FULL SCREEN ---
         function openProduct(id) {
             const p = products.find(x => x.id === id);
             if(!p) return;
             currentProdId = id;
+            
             document.getElementById('m-title').innerText = p.name;
             document.getElementById('m-tag').innerText = p.tag;
-            document.getElementById('m-price').innerText = p.price.toFixed(2);
-            document.getElementById('m-btn-price').innerText = p.price.toFixed(2);
+            document.getElementById('m-price-display').innerText = `$${p.price.toFixed(2)}`;
             document.getElementById('m-desc').innerText = p.desc;
-            document.getElementById('m-icon').className = `fa-solid ${p.icon} text-3xl text-white/50`;
+            document.getElementById('m-icon').className = `fa-solid ${p.icon} text-[150px] text-white/10 drop-shadow-2xl`;
             
             const specsList = document.getElementById('m-specs');
             specsList.innerHTML = '';
             p.specs.forEach(s => {
-                specsList.innerHTML += `<li class="flex items-start"><i class="fa-solid fa-caret-right text-lumenGold mt-0.5 mr-2"></i>${s}</li>`;
+                specsList.innerHTML += `<li class="flex items-start border-b border-white/5 pb-2 last:border-0"><i class="fa-solid fa-angle-right text-lumenGold mt-0.5 mr-2"></i>${s}</li>`;
             });
+
             document.getElementById('product-modal').classList.add('active');
         }
 
@@ -448,7 +472,7 @@
             const totalEl = document.getElementById('cart-total');
             
             if(cart.length === 0) {
-                list.innerHTML = `<div class="text-center text-gray-500 mt-20"><i class="fa-solid fa-ghost text-4xl mb-4 opacity-20"></i><p>Vacío</p></div>`;
+                list.innerHTML = `<div class="text-center text-gray-500 mt-20"><i class="fa-solid fa-ghost text-6xl mb-4 opacity-10"></i><p>Tu arsenal está vacío.</p></div>`;
                 totalEl.innerText = "$0.00";
                 return;
             }
@@ -459,15 +483,15 @@
             cart.forEach((item, idx) => {
                 total += item.price;
                 list.innerHTML += `
-                    <div class="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/5">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-black rounded flex items-center justify-center text-gray-600"><i class="fa-solid ${item.icon}"></i></div>
+                    <div class="flex justify-between items-center bg-[#111] p-4 rounded-xl border border-white/5">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-black rounded-lg flex items-center justify-center text-gray-600 border border-white/5"><i class="fa-solid ${item.icon}"></i></div>
                             <div>
-                                <div class="text-white text-sm font-bold">${item.name}</div>
-                                <div class="text-lumenGold text-xs">$${item.price.toFixed(2)}</div>
+                                <div class="text-white font-bold font-serif">${item.name}</div>
+                                <div class="text-lumenGold text-sm">$${item.price.toFixed(2)}</div>
                             </div>
                         </div>
-                        <button onclick="removeFromCart(${idx})" class="text-gray-500 hover:text-red-500 p-2"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="removeFromCart(${idx})" class="text-gray-600 hover:text-red-500 p-2"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 `;
             });
