@@ -445,6 +445,12 @@
                 <input type="text" id="client-name" placeholder="INGRESA TU NOMBRE AQUÍ" class="w-full bg-[#222] text-white border-2 border-[#333] rounded-lg p-4 font-bold outline-none focus:border-lumenGold transition-colors placeholder-gray-600">
             </div>
 
+            <!-- DESGLOSE DE PRECIOS CON IVA -->
+            <div class="space-y-2 mb-6 border-b border-white/10 pb-4">
+                <div class="flex justify-between text-gray-400 text-sm font-bold"><span>SUBTOTAL</span><span id="cart-subtotal">$0.00</span></div>
+                <div class="flex justify-between text-gray-400 text-sm font-bold"><span>IVA (15%)</span><span id="cart-iva">$0.00</span></div>
+            </div>
+
             <div class="flex justify-between text-white mb-6 text-2xl font-bold"><span data-i18n="total">TOTAL</span><span id="cart-total">$0.00</span></div>
             <button onclick="startCheckout()" class="w-full h-16 bg-lumenGold text-black font-extrabold text-lg rounded-lg uppercase tracking-widest shadow-lg hover:bg-white transition-colors flex items-center justify-center gap-3"><span data-i18n="checkout">FINALIZAR PEDIDO</span> <i class="fa-brands fa-whatsapp text-2xl"></i></button>
         </div>
@@ -628,14 +634,25 @@
         }
 
         function renderCartList() {
-            const list = document.getElementById('cart-list'); const totalEl = document.getElementById('cart-total');
-            if(cart.length === 0) { list.innerHTML = `<div class="text-center text-gray-500 mt-20 text-lg"><p>${translations[currentLang].emptyCart}</p></div>`; totalEl.innerText = "$0.00"; return; }
+            const list = document.getElementById('cart-list'); 
+            const totalEl = document.getElementById('cart-total');
+            const subtotalEl = document.getElementById('cart-subtotal');
+            const ivaEl = document.getElementById('cart-iva');
+
+            if(cart.length === 0) { 
+                list.innerHTML = `<div class="text-center text-gray-500 mt-20 text-lg"><p>${translations[currentLang].emptyCart}</p></div>`; 
+                totalEl.innerText = "$0.00"; 
+                subtotalEl.innerText = "$0.00";
+                ivaEl.innerText = "$0.00";
+                return; 
+            }
             
-            let total = 0; list.innerHTML = '';
+            let subtotal = 0; 
+            list.innerHTML = '';
             
             cart.forEach((item, idx) => {
                 const itemTotal = item.price * item.qty;
-                total += itemTotal;
+                subtotal += itemTotal;
                 // Mostrar Talla y Color solo si es ropa
                 let variantsHTML = item.isClothing ? `<div class="text-xs text-gray-400 mt-2">Talla: <strong class="text-lumenGold text-sm">${item.selSize}</strong> | Color: <strong class="text-white text-sm uppercase">${item.selColor}</strong></div>` : '';
                 
@@ -660,6 +677,13 @@
                         </div>
                     </div>`;
             });
+
+            // CÁLCULOS DE IVA
+            let iva = subtotal * 0.15;
+            let total = subtotal + iva;
+
+            subtotalEl.innerText = "$" + subtotal.toFixed(2);
+            ivaEl.innerText = "$" + iva.toFixed(2);
             totalEl.innerText = "$" + total.toFixed(2);
         }
 
@@ -686,21 +710,26 @@
             message += `📅 Fecha: ${new Date().toLocaleDateString()}\n`;
             message += `--------------------------------\n`;
             
-            let total = 0;
+            let subtotal = 0;
             cart.forEach(item => { 
                 const itemTotal = item.price * item.qty;
-                total += itemTotal; 
+                subtotal += itemTotal; 
                 message += `▪️ ${item.qty}x *${item.name.es}*\n`; 
                 if(item.isClothing) message += `   └ Talla: ${item.selSize} | Color: ${item.selColor.toUpperCase()}\n`; 
-                message += `   └ Subtotal: $${itemTotal.toFixed(2)}\n`; 
+                message += `   └ Precio: $${itemTotal.toFixed(2)}\n`; 
             });
+
+            let iva = subtotal * 0.15;
+            let finalTotal = subtotal + iva;
             
             message += `--------------------------------\n`;
-            message += `💰 *TOTAL A PAGAR: $${total.toFixed(2)}*\n\n`;
+            message += `SUBTOTAL: $${subtotal.toFixed(2)}\n`;
+            message += `IVA (15%): $${iva.toFixed(2)}\n`;
+            message += `💰 *TOTAL FINAL: $${finalTotal.toFixed(2)}*\n\n`;
             message += `📍 Método de Envío: [Por definir en chat]\n`;
             message += `⚠️ (Entiendo el tiempo de forjado: 8-12 días)`;
 
-            // 4. ABRIR DIRECTAMENTE (Esto evita el bloqueo de popup)
+            // 4. ABRIR DIRECTAMENTE
             const url = `https://wa.me/593996480843?text=${encodeURIComponent(message)}`;
             
             // En móviles, window.open funciona mejor si es por click directo
