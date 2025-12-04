@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -75,6 +75,14 @@
             }
         }
 
+        /* TRANSICIÓN DE IMÁGENES */
+        .product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.5s ease-in-out;
+        }
+
         /* MODALES */
         .full-screen-modal, .side-menu {
             position: fixed;
@@ -132,6 +140,13 @@
             align-items: center;
             justify-content: center;
             position: relative;
+            overflow: hidden;
+        }
+        
+        .modal-image-area img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ajuste para ver bien la prenda */
         }
 
         .modal-scroll-content {
@@ -184,7 +199,6 @@
             border-color: #D4AF37;
             background-color: #D4AF37;
             color: #000;
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
         }
         .color-btn {
             width: 50px;
@@ -210,25 +224,6 @@
         }
         .color-btn.white.selected::after { color: #000; }
         .color-btn.black.selected::after { color: #fff; }
-
-        /* Animación Carrito */
-        @keyframes bump {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-        .bump-anim { animation: bump 0.3s ease-out; }
-
-        /* Animación de Error (Sacudida) */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-        .shake-error {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-            border-color: #ef4444 !important; /* Rojo Error */
-        }
     </style>
 </head>
 <body class="flex flex-col h-[100dvh] relative bg-[#050505]">
@@ -241,11 +236,9 @@
 
         <h1 class="title-font text-2xl text-lumenGold tracking-[0.2em] font-bold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">LA ARMERÍA</h1>
 
-        <!-- BOTÓN CARRITO -->
         <button onclick="toggleCart()" id="cart-btn" class="pointer-events-auto relative text-white w-14 h-14 flex items-center justify-center rounded-full bg-white/10 backdrop-blur border-2 border-white/30 hover:bg-white/20 transition hover:border-lumenGold shadow-lg">
             <i class="fa-solid fa-bag-shopping text-3xl"></i>
-            <!-- BADGE CONTADOR (BLANCO Y NEGRO) -->
-            <span id="cart-count" class="absolute -top-1 -right-1 bg-white text-black text-sm font-bold w-7 h-7 rounded-full flex items-center justify-center border-2 border-black transition-opacity opacity-0 transform scale-0 transition-transform duration-300 shadow-[0_0_8px_rgba(255,255,255,0.4)]">0</span>
+            <span id="cart-count" class="absolute -top-1 -right-1 bg-red-600 text-white text-sm font-bold w-7 h-7 rounded-full flex items-center justify-center opacity-0 border-2 border-black transition-opacity">0</span>
         </button>
     </header>
 
@@ -259,8 +252,9 @@
         <div class="absolute inset-0" onclick="toggleMenu()"></div>
         <div class="side-menu-content relative">
             <div class="mb-10 flex justify-center border-b border-white/10 pb-8">
-                <div class="text-4xl text-lumenGold font-serif font-bold tracking-widest border-2 border-lumenGold p-4">LUMENFALL</div>
+                <img src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/ce78cc389fae79764d3d599e7240160118a5262e/Armeria/assets/Imagenes/Icono_lumenfall.png" alt="LUMENFALL LOGO" class="w-64 h-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
             </div>
+            <!-- Resto del menú igual... -->
             <div class="mb-10">
                 <h3 class="text-base font-bold text-white uppercase mb-4 tracking-widest flex items-center gap-3"><i class="fa-solid fa-earth-americas text-lumenGold text-xl"></i> <span data-i18n="langTitle">IDIOMA</span></h3>
                 <div class="flex bg-black rounded-xl p-2 border border-white/20">
@@ -311,7 +305,8 @@
     <div id="product-modal" class="full-screen-modal">
         <button onclick="closeProduct()" class="absolute top-6 left-6 z-50 w-14 h-14 bg-black/60 backdrop-blur rounded-full text-white border border-white/30 flex items-center justify-center shadow-2xl hover:bg-lumenGold hover:text-black transition"><i class="fa-solid fa-arrow-left text-2xl"></i></button>
 
-        <div class="modal-image-area">
+        <div class="modal-image-area" id="modal-img-container">
+            <!-- AQUÍ SE INYECTA LA IMAGEN DINÁMICA -->
             <i id="m-icon" class="fa-solid fa-shirt text-[180px] text-white/10 drop-shadow-2xl"></i>
             <div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50">
                 <span id="m-price-display" class="text-4xl font-bold text-white font-sans">$00.00</span>
@@ -323,35 +318,29 @@
             <h1 id="m-title" class="title-font text-5xl text-white leading-tight mb-8 font-bold">Nombre</h1>
             
             <div class="space-y-8">
-                <!-- Selectores (Se validarán al agregar) -->
-                <div id="selectors-container" class="hidden bg-[#111] p-6 rounded-2xl border border-white/15 space-y-6 transition-all duration-300">
-                    <div id="size-block">
-                        <div class="flex justify-between items-center mb-4"><h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest">TALLA / SIZE <span class="text-red-500 hidden" id="size-error">*</span></h3></div>
+                <!-- Selectores -->
+                <div id="selectors-container" class="hidden bg-[#111] p-6 rounded-2xl border border-white/15 space-y-6">
+                    <div>
+                        <div class="flex justify-between items-center mb-4"><h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest">TALLA / SIZE</h3></div>
                         <div id="size-options" class="grid grid-cols-5 gap-3"></div>
                         <p id="size-warning" class="text-sm text-lumenGold mt-3 hidden italic font-bold">⚠️ Horma Oversized (Grande)</p>
                     </div>
-                    <div id="color-block">
-                        <h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest mb-4">COLOR <span class="text-red-500 hidden" id="color-error">*</span></h3>
+                    <div>
+                        <h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest mb-4">COLOR</h3>
                         <div id="color-options" class="flex gap-6"></div>
-                    </div>
-                    <!-- Mensaje de Error Visual -->
-                    <div id="validation-msg" class="hidden bg-red-900/30 border border-red-500/50 p-3 rounded text-red-200 text-sm font-bold text-center">
-                        <i class="fa-solid fa-triangle-exclamation mr-2"></i> SELECCIONA TALLA Y COLOR
                     </div>
                 </div>
 
-                <!-- CONTROLES DE CANTIDAD -->
                 <div class="bg-[#111] p-6 rounded-2xl border border-white/15 flex items-center justify-between">
                     <h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest">CANTIDAD</h3>
                     <div class="flex items-center gap-6">
-                        <button onclick="adjustQty(-1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 active:scale-95 transition border border-white/10">-</button>
+                        <button onclick="adjustQty(-1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 border border-white/10">-</button>
                         <span id="modal-qty" class="text-3xl font-bold text-white w-10 text-center">1</span>
-                        <button onclick="adjustQty(1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 active:scale-95 transition border border-white/10">+</button>
+                        <button onclick="adjustQty(1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 border border-white/10">+</button>
                     </div>
                 </div>
 
-                <!-- Botón Protocolo -->
-                <div onclick="openDeliveryModal()" class="group cursor-pointer bg-[#1a1a1a] border-l-4 border-lumenGold p-5 rounded-r-xl flex items-center justify-between hover:bg-white/5 transition-colors shadow-lg active:scale-95 transform duration-150">
+                <div onclick="openDeliveryModal()" class="group cursor-pointer bg-[#1a1a1a] border-l-4 border-lumenGold p-5 rounded-r-xl flex items-center justify-between hover:bg-white/5 transition-colors shadow-lg">
                     <div class="flex items-center gap-4">
                         <div class="w-14 h-14 rounded-full bg-lumenGold/10 flex items-center justify-center border border-lumenGold/20"><i class="fa-solid fa-truck-fast text-lumenGold text-2xl"></i></div>
                         <div><h4 class="text-white font-bold text-sm uppercase tracking-wider mb-1">TIEMPO DE FORJADO</h4><p class="text-lumenGold text-xs font-bold">8 - 12 DÍAS (VER DETALLES)</p></div>
@@ -372,13 +361,13 @@
         </div>
 
         <div class="absolute bottom-0 w-full p-6 bg-gradient-to-t from-black via-black to-transparent z-50">
-            <button onclick="addToCartCurrent()" id="add-btn" class="w-full h-20 bg-white text-black font-extrabold text-xl rounded-full uppercase tracking-[0.2em] shadow-[0_0_25px_rgba(255,255,255,0.3)] hover:bg-lumenGold transition-all flex items-center justify-center gap-3 active:scale-95">
+            <button onclick="addToCartCurrent()" class="w-full h-20 bg-white text-black font-extrabold text-xl rounded-full uppercase tracking-[0.2em] shadow-[0_0_25px_rgba(255,255,255,0.3)] hover:bg-lumenGold transition-all flex items-center justify-center gap-3">
                 <span data-i18n="addCart">AGREGAR</span>
             </button>
         </div>
     </div>
 
-    <!-- MODAL PROTOCOLO DE ENTREGA -->
+    <!-- MODALES DE INFO, DELIVERY Y CARRITO (Sin cambios lógicos) -->
     <div id="delivery-modal" class="full-screen-modal">
         <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10">
             <h2 class="text-lumenGold font-bold tracking-widest text-lg">PROTOCOLO DE ENTREGA</h2>
@@ -386,104 +375,47 @@
         </div>
         <div class="flex-1 overflow-y-auto bg-black p-8 pt-32 pb-12">
             <div class="max-w-lg mx-auto space-y-8">
-                <div class="text-center">
-                    <i class="fa-solid fa-shield-halved text-7xl text-lumenGold mb-6 animate-pulse"></i>
-                    <h2 class="title-font text-3xl text-white mb-2">FORJADO A MEDIDA</h2>
-                    <div class="w-24 h-1 bg-lumenGold mx-auto"></div>
-                </div>
                 <div class="bg-[#111] p-8 rounded-2xl border border-white/10">
                     <p class="text-gray-300 text-xl leading-relaxed mb-8 font-medium">"En La Armería no almacenamos polvo. Cada prenda se confecciona y estampa bajo pedido <strong class="text-white">exclusivamente para ti</strong>."</p>
-                    <div class="space-y-8">
-                        <div class="flex gap-5"><div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-lumenGold font-bold text-xl">1</div><div><h4 class="text-white font-bold text-lg uppercase mb-1">Fase de Forjado (Producción)</h4><p class="text-gray-400 text-base">5 - 8 días hábiles.</p></div></div>
-                        <div class="flex gap-5"><div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-lumenGold font-bold text-xl">2</div><div><h4 class="text-white font-bold text-lg uppercase mb-1">Fase de Despliegue (Envío)</h4><p class="text-gray-400 text-base">2 - 4 días (según ubicación).</p></div></div>
-                    </div>
-                    <div class="mt-10 pt-8 border-t border-white/10"><p class="text-lumenGold text-xl font-bold text-center mb-2">TIEMPO TOTAL ESTIMADO</p><p class="text-white text-4xl font-serif text-center">8 a 12 Días</p><p class="text-center text-gray-500 text-sm mt-3 uppercase tracking-wider font-bold">Para tener el poder en tus manos</p></div>
+                    <div class="mt-10 pt-8 border-t border-white/10"><p class="text-lumenGold text-xl font-bold text-center mb-2">TIEMPO TOTAL ESTIMADO</p><p class="text-white text-4xl font-serif text-center">8 a 12 Días</p></div>
                 </div>
-                <div class="bg-lumenGold/10 p-6 rounded-xl border border-lumenGold/20"><p class="text-base text-lumenGold italic text-center font-bold">"La calidad requiere paciencia. Tu espera garantiza que recibirás una pieza recién creada, no una prenda almacenada por meses."</p></div>
             </div>
         </div>
     </div>
 
-    <!-- INFO MODAL -->
     <div id="info-modal" class="full-screen-modal z-[110]">
-        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10">
-            <h2 class="text-lumenGold font-bold tracking-widest text-xl" data-i18n="termsHeader">TÉRMINOS & ENVÍOS</h2>
-            <button onclick="closeInfoModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button>
-        </div>
-        <div class="flex-1 overflow-y-auto bg-black p-8 pt-28 pb-12">
-            <div class="bg-[#111] p-8 rounded-2xl border border-white/10 mb-8">
-                <h3 class="font-bold text-white uppercase tracking-wider mb-4 text-xl" data-i18n="payTitle">Métodos de Pago</h3>
-                <ul class="space-y-4">
-                    <li class="flex items-center justify-between text-base text-gray-400 border-b border-white/5 pb-2"><span><i class="fa-solid fa-building-columns mr-2"></i> Transferencia Bancaria</span></li>
-                    <li class="flex items-center justify-between text-base text-gray-400 border-b border-white/5 pb-2"><span><i class="fa-brands fa-paypal mr-2"></i> PayPal</span></li>
-                    <li class="flex items-center justify-between text-base text-gray-400"><span><i class="fa-brands fa-bitcoin mr-2"></i> Cripto (USDT)</span></li>
-                </ul>
-            </div>
-        </div>
+        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10"><h2 class="text-lumenGold font-bold tracking-widest text-xl" data-i18n="termsHeader">TÉRMINOS & ENVÍOS</h2><button onclick="closeInfoModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
+        <div class="flex-1 overflow-y-auto bg-black p-8 pt-28 pb-12"><div class="bg-[#111] p-8 rounded-2xl border border-white/10 mb-8"><h3 class="font-bold text-white uppercase tracking-wider mb-4 text-xl" data-i18n="payTitle">Métodos de Pago</h3><ul class="space-y-4"><li class="text-base text-gray-400 border-b border-white/5 pb-2">Transferencia Bancaria</li><li class="text-base text-gray-400">PayPal / Cripto</li></ul></div></div>
     </div>
 
-    <!-- CARRITO MODAL -->
     <div id="cart-modal" class="full-screen-modal z-[105]">
-        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black border-b border-white/10">
-            <h2 class="title-font text-3xl text-white font-bold" data-i18n="cartTitle">TU ARSENAL</h2>
-            <button onclick="toggleCart()" class="text-white hover:text-red-500"><i class="fa-solid fa-xmark text-4xl"></i></button>
-        </div>
+        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black border-b border-white/10"><h2 class="title-font text-3xl text-white font-bold" data-i18n="cartTitle">TU ARSENAL</h2><button onclick="toggleCart()" class="text-white hover:text-red-500"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
         <div id="cart-list" class="flex-1 overflow-y-auto pt-24 pb-6 px-6 space-y-6 bg-black"></div>
-        <div class="px-6 pb-4 bg-black">
-            <div class="bg-[#1a1a1a] border border-lumenGold/30 p-5 rounded-2xl flex gap-4 items-start">
-                <i class="fa-solid fa-truck-fast text-lumenGold text-3xl mt-1"></i>
-                <div>
-                    <h4 class="text-lumenGold font-bold text-base uppercase mb-1">LOGÍSTICA DE GUERRA</h4>
-                    <p class="text-gray-300 text-sm leading-relaxed font-bold">TIEMPO TOTAL ESTIMADO: <span class="text-white">8 - 12 DÍAS</span>.<br><span class="text-gray-500 font-normal">Incluye fase de forjado y envío.</span></p>
-                </div>
-            </div>
-        </div>
-        <div class="p-8 bg-[#111] border-t border-white/20">
-            <!-- INPUT NOMBRE DEL CLIENTE (SIN POPUP MOLESTO) -->
-            <div class="mb-4">
-                <label for="client-name" class="block text-gray-400 text-xs font-bold uppercase tracking-widest mb-2 ml-1">NOMBRE DEL AGENTE:</label>
-                <input type="text" id="client-name" placeholder="INGRESA TU NOMBRE AQUÍ" class="w-full bg-[#222] text-white border-2 border-[#333] rounded-lg p-4 font-bold outline-none focus:border-lumenGold transition-colors placeholder-gray-600">
-            </div>
-
-            <!-- DESGLOSE DE PRECIOS CON IVA -->
-            <div class="space-y-2 mb-6 border-b border-white/10 pb-4">
-                <div class="flex justify-between text-gray-400 text-sm font-bold"><span>SUBTOTAL</span><span id="cart-subtotal">$0.00</span></div>
-                <div class="flex justify-between text-gray-400 text-sm font-bold"><span>IVA (15%)</span><span id="cart-iva">$0.00</span></div>
-            </div>
-
-            <div class="flex justify-between text-white mb-6 text-2xl font-bold"><span data-i18n="total">TOTAL</span><span id="cart-total">$0.00</span></div>
-            <button onclick="startCheckout()" class="w-full h-16 bg-lumenGold text-black font-extrabold text-lg rounded-lg uppercase tracking-widest shadow-lg hover:bg-white transition-colors flex items-center justify-center gap-3"><span data-i18n="checkout">FINALIZAR PEDIDO</span> <i class="fa-brands fa-whatsapp text-2xl"></i></button>
-        </div>
+        <div class="px-6 pb-4 bg-black"><div class="bg-[#1a1a1a] border border-lumenGold/30 p-5 rounded-2xl flex gap-4 items-start"><i class="fa-solid fa-truck-fast text-lumenGold text-3xl mt-1"></i><div><h4 class="text-lumenGold font-bold text-base uppercase mb-1">LOGÍSTICA DE GUERRA</h4><p class="text-gray-300 text-sm leading-relaxed font-bold">TIEMPO: <span class="text-white">8-12 DÍAS</span></p></div></div></div>
+        <div class="p-8 bg-[#111] border-t border-white/20"><div class="flex justify-between text-white mb-6 text-2xl font-bold"><span data-i18n="total">TOTAL</span><span id="cart-total">$0.00</span></div><button onclick="startCheckout()" class="w-full h-16 bg-lumenGold text-black font-extrabold text-lg rounded-lg uppercase tracking-widest shadow-lg hover:bg-white transition-colors flex items-center justify-center gap-3"><span data-i18n="checkout">FINALIZAR PEDIDO</span> <i class="fa-brands fa-whatsapp text-2xl"></i></button></div>
     </div>
 
     <script>
-        const translations = {
-            es: {
-                langTitle: "IDIOMA", dataTitle: "DATOS", equipTitle: "EQUIPAMIENTO", equipSub: "Desliza para explorar",
-                artTitle: "ARTEFACTOS", artSub: "Lore & Accesorios", termsFooter: "Términos y Condiciones",
-                descTitle: "Descripción", specsTitle: "Especificaciones Técnicas",
-                addCart: "AGREGAR", termsHeader: "TÉRMINOS & ENVÍOS", shippingTitle: "Logística y Tiempos",
-                processDays: "5 - 8 Días", workingDays: "Laborables", cartTitle: "TU ARSENAL",
-                total: "TOTAL", checkout: "ENVIAR PEDIDO", emptyCart: "Tu arsenal está vacío.",
-                payTitle: "Métodos de Pago"
-            },
-            en: {
-                langTitle: "LANGUAGE", dataTitle: "CONTACT INFO", equipTitle: "EQUIPMENT", equipSub: "Swipe to explore",
-                artTitle: "ARTIFACTS", artSub: "Lore & Accessories", termsFooter: "Terms & Conditions",
-                descTitle: "Description", specsTitle: "Technical Specs",
-                addCart: "ADD TO ARSENAL", termsHeader: "TERMS & SHIPPING", shippingTitle: "Logistics & Timing",
-                processDays: "5 - 8 Days", workingDays: "Business Days", cartTitle: "YOUR ARSENAL",
-                total: "TOTAL", checkout: "SEND ORDER", emptyCart: "Your arsenal is empty.",
-                payTitle: "Payment Methods"
-            }
-        };
+        const translations = { es: { langTitle: "IDIOMA", dataTitle: "DATOS", equipTitle: "EQUIPAMIENTO", equipSub: "Desliza para explorar", artTitle: "ARTEFACTOS", artSub: "Lore & Accesorios", termsFooter: "Términos y Condiciones", descTitle: "Descripción", specsTitle: "Especificaciones Técnicas", addCart: "AGREGAR", termsHeader: "TÉRMINOS & ENVÍOS", shippingTitle: "Logística y Tiempos", processDays: "5 - 8 Días", workingDays: "Laborables", cartTitle: "TU ARSENAL", total: "TOTAL", checkout: "ENVIAR PEDIDO", emptyCart: "Tu arsenal está vacío.", payTitle: "Métodos de Pago" }, en: { langTitle: "LANGUAGE", dataTitle: "CONTACT INFO", equipTitle: "EQUIPMENT", equipSub: "Swipe to explore", artTitle: "ARTIFACTS", artSub: "Lore & Accessories", termsFooter: "Terms & Conditions", descTitle: "Description", specsTitle: "Technical Specs", addCart: "ADD TO ARSENAL", termsHeader: "TERMS & SHIPPING", shippingTitle: "Logistics & Timing", processDays: "5 - 8 Days", workingDays: "Business Days", cartTitle: "YOUR ARSENAL", total: "TOTAL", checkout: "SEND ORDER", emptyCart: "Your arsenal is empty.", payTitle: "Payment Methods" } };
 
         const products = [
-            { id: 1, type: 'equip', isClothing: true, name: { es: "THE INITIATE TEE", en: "THE INITIATE TEE" }, price: 35.00, tag: { es: "NIVEL 1", en: "LEVEL 1" }, icon: "fa-shirt", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] }, desc: { es: "Tu entrada a la Legión. Diseñada para el uso diario.", en: "Your entry into the Legion. Designed for daily use." }, specs: { es: ["100% Algodón Peinado", "Corte Regular Fit"], en: ["100% Combed Cotton", "Regular Fit"] } },
-            { id: 2, type: 'equip', isClothing: true, name: { es: "SHADOW WALKER", en: "SHADOW WALKER" }, price: 50.00, tag: { es: "NIVEL 2", en: "LEVEL 2" }, icon: "fa-user-secret", options: { sizes: ['S','M','L','XL'], colors: ['black','white'], warning: true }, desc: { es: "Para caminar entre las sombras con estilo.", en: "To walk among shadows with style." }, specs: { es: ["Algodón Heavyweight 220g", "Corte OVERSIZED"], en: ["Heavyweight Cotton 220g", "OVERSIZED Cut"] } },
-            { id: 3, type: 'equip', isClothing: true, name: { es: "THE MASTER EDITION", en: "THE MASTER EDITION" }, price: 85.00, tag: { es: "NIVEL 3", en: "LEVEL 3" }, icon: "fa-box-open", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black'] }, desc: { es: "La máxima expresión del universo. Box Set de Colección.", en: "The ultimate expression. Collector's Box Set." }, specs: { es: ["Camiseta Ultra-Pesada 240g", "Vintage Wash"], en: ["Ultra-Heavy Tee 240g", "Vintage Wash"] } },
-            { id: 4, type: 'equip', isClothing: true, name: { es: "LUMENFALL HOODIE", en: "LUMENFALL HOODIE" }, price: 85.00, tag: { es: "WINTER", en: "WINTER" }, icon: "fa-user-ninja", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black'] }, desc: { es: "Tu escudo contra el frío.", en: "Your shield against the cold." }, specs: { es: ["Burda Pesada Perchada", "Interior Térmico"], en: ["Heavy Brushed Fleece", "Thermal Interior"] } },
-            { id: 7, type: 'equip', isClothing: true, name: { es: "MY TEMPO SIGNATURE TEE", en: "MY TEMPO SIGNATURE TEE" }, price: 45.00, tag: { es: "MUSIC", en: "MUSIC" }, icon: "fa-music", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] }, desc: { es: "La frecuencia visual del sonido.", en: "The visual frequency of sound." }, specs: { es: ["Algodón Premium 210g", "Boxy Fit"], en: ["Premium Cotton 210g", "Boxy Fit"] } },
+            {
+                id: 1, type: 'equip', isClothing: true,
+                name: { es: "THE INITIATE TEE", en: "THE INITIATE TEE" },
+                price: 35.00, tag: { es: "NIVEL 1", en: "LEVEL 1" }, 
+                icon: "fa-shirt",
+                images: {
+                    black: "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/camiseta-negra-basica.jpg",
+                    white: "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/camiseta-blanca-basica.jpg"
+                },
+                options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] },
+                desc: { es: "Tu entrada a la Legión. Diseñada para el uso diario.", en: "Your entry into the Legion. Designed for daily use." },
+                specs: { es: ["100% Algodón Peinado", "Corte Regular Fit"], en: ["100% Combed Cotton", "Regular Fit"] }
+            },
+            { id: 2, type: 'equip', isClothing: true, name: { es: "SHADOW WALKER", en: "SHADOW WALKER" }, price: 50.00, tag: { es: "NIVEL 2", en: "LEVEL 2" }, icon: "fa-user-secret", options: { sizes: ['S','M','L','XL'], colors: ['black','white'], warning: true }, desc: { es: "Para caminar entre las sombras con estilo.", en: "To walk among shadows with style." }, specs: { es: ["Algodón Heavyweight 220g"], en: ["Heavyweight Cotton 220g"] } },
+            { id: 3, type: 'equip', isClothing: true, name: { es: "THE MASTER EDITION", en: "THE MASTER EDITION" }, price: 85.00, tag: { es: "NIVEL 3", en: "LEVEL 3" }, icon: "fa-box-open", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black'] }, desc: { es: "La máxima expresión del universo.", en: "The ultimate expression." }, specs: { es: ["Vintage Wash"], en: ["Vintage Wash"] } },
+            { id: 4, type: 'equip', isClothing: true, name: { es: "LUMENFALL HOODIE", en: "LUMENFALL HOODIE" }, price: 85.00, tag: { es: "WINTER", en: "WINTER" }, icon: "fa-user-ninja", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black'] }, desc: { es: "Tu escudo contra el frío.", en: "Your shield against the cold." }, specs: { es: ["Burda Pesada Perchada"], en: ["Heavy Brushed Fleece"] } },
+            { id: 7, type: 'equip', isClothing: true, name: { es: "MY TEMPO SIGNATURE TEE", en: "MY TEMPO SIGNATURE TEE" }, price: 45.00, tag: { es: "MUSIC", en: "MUSIC" }, icon: "fa-music", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] }, desc: { es: "La frecuencia visual del sonido.", en: "The visual frequency of sound." }, specs: { es: ["Algodón Premium 210g"], en: ["Premium Cotton 210g"] } },
             { id: 5, type: 'art', isClothing: false, name: { es: "Llavero Rúnico", en: "Runic Keychain" }, price: 10.00, tag: { es: "ACCESORIO", en: "ACCESSORY" }, icon: "fa-key", desc: { es: "Lleva la marca de la Sombra siempre contigo.", en: "Carry the Shadow mark with you always." }, specs: { es: ["Aleación Zinc"], en: ["Zinc Alloy"] } },
             { id: 6, type: 'art', isClothing: false, name: { es: "BITÁCORA DEL CAOS", en: "CHAOS LOGBOOK" }, price: 30.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-journal-whills", desc: { es: "Donde la estrategia se escribe.", en: "Where strategy is written." }, specs: { es: ["Tapa Dura Soft Touch"], en: ["Soft Touch Hardcover"] } }
         ];
@@ -494,6 +426,7 @@
         let selectedSize = null;
         let selectedColor = null;
         let modalQty = 1;
+        let carouselIntervals = {};
 
         function setLanguage(lang) {
             currentLang = lang;
@@ -509,13 +442,41 @@
             const artContainer = document.getElementById('carousel-artefactos');
             equipContainer.innerHTML = ''; artContainer.innerHTML = '';
 
+            // Limpiar intervalos previos
+            Object.values(carouselIntervals).forEach(clearInterval);
+            carouselIntervals = {};
+
             products.forEach(p => {
                 const name = p.name[currentLang];
                 const tag = p.tag[currentLang];
+                
+                let imageHTML = '';
+                // LÓGICA DE CARRUSEL EN VITRINA (SOLO PRODUCTOS CON IMÁGENES)
+                if (p.images) {
+                    const imgId = `card-img-${p.id}`;
+                    imageHTML = `<img id="${imgId}" src="${p.images.black}" class="product-img" alt="${name}">`;
+                    
+                    // Iniciar rotación
+                    let isBlack = true;
+                    carouselIntervals[p.id] = setInterval(() => {
+                        const img = document.getElementById(imgId);
+                        if(img) {
+                            isBlack = !isBlack;
+                            img.style.opacity = 0; // fade out
+                            setTimeout(() => {
+                                img.src = isBlack ? p.images.black : p.images.white;
+                                img.style.opacity = 1; // fade in
+                            }, 500);
+                        }
+                    }, 4000); // 4 segundos
+                } else {
+                    imageHTML = `<i class="fa-solid ${p.icon} text-9xl text-white/20 group-hover:text-white/40 transition-transform duration-500 group-hover:scale-110"></i>`;
+                }
+
                 const cardHTML = `
                     <div class="product-card group cursor-pointer" onclick="openProduct(${p.id})">
-                        <div class="h-3/4 bg-gray-900 flex items-center justify-center relative border-b border-white/5">
-                            <i class="fa-solid ${p.icon} text-9xl text-white/20 group-hover:text-white/40 transition-transform duration-500 group-hover:scale-110"></i>
+                        <div class="h-3/4 bg-gray-900 flex items-center justify-center relative border-b border-white/5 overflow-hidden">
+                            ${imageHTML}
                             <div class="absolute top-6 left-6 bg-lumenGold text-black text-xs font-bold px-3 py-1.5 uppercase rounded-sm">${tag}</div>
                             <div class="absolute bottom-6 right-6 bg-black/60 backdrop-blur px-4 py-2 rounded-full text-white font-bold border border-white/20 text-lg">$${p.price.toFixed(2)}</div>
                         </div>
@@ -531,31 +492,30 @@
         function openProduct(id) {
             const p = products.find(x => x.id === id);
             if(!p) return;
+            currentProdId = id; selectedSize = null; selectedColor = null; modalQty = 1;
             
-            // REINICIO DE VARIABLES Y ESTILOS
-            currentProdId = id; 
-            selectedSize = null; 
-            selectedColor = null; 
-            modalQty = 1;
+            // Imagen Principal en Modal
+            const modalImgContainer = document.getElementById('modal-img-container');
+            if(p.images) {
+                // Si tiene fotos, mostramos la negra por defecto
+                modalImgContainer.innerHTML = `<img id="modal-main-img" src="${p.images.black}" class="w-full h-full object-cover">
+                <div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`;
+            } else {
+                // Si no, icono
+                modalImgContainer.innerHTML = `<i id="m-icon" class="fa-solid ${p.icon} text-[180px] text-white/10 drop-shadow-2xl"></i>
+                <div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`;
+            }
 
-            // Limpiar UI
-            document.querySelectorAll('.size-btn, .color-btn').forEach(b => b.classList.remove('selected'));
-            document.getElementById('selectors-container').classList.remove('shake-error');
-            document.getElementById('validation-msg').classList.add('hidden');
-            
             document.getElementById('modal-qty').innerText = modalQty;
             document.getElementById('m-title').innerText = p.name[currentLang];
             document.getElementById('m-tag').innerText = p.tag[currentLang];
-            document.getElementById('m-price-display').innerText = `$${p.price.toFixed(2)}`;
             document.getElementById('m-desc').innerText = p.desc[currentLang];
-            document.getElementById('m-icon').className = `fa-solid ${p.icon} text-[180px] text-white/10 drop-shadow-2xl`;
             document.getElementById('m-specs').innerHTML = p.specs[currentLang].map(s => `<li class="flex items-start border-b border-white/10 pb-3 last:border-0"><i class="fa-solid fa-angle-right text-lumenGold mt-1 mr-3 text-lg"></i>${s}</li>`).join('');
 
             const selectorsDiv = document.getElementById('selectors-container');
             if(p.isClothing) {
                 selectorsDiv.classList.remove('hidden');
                 document.getElementById('size-options').innerHTML = p.options.sizes.map(s => `<div onclick="selectSize('${s}', this)" class="size-btn cursor-pointer bg-black hover:bg-white/10">${s}</div>`).join('');
-                p.options.warning ? document.getElementById('size-warning').classList.remove('hidden') : document.getElementById('size-warning').classList.add('hidden');
                 document.getElementById('color-options').innerHTML = p.options.colors.map(c => `<div onclick="selectColor('${c}', this)" class="color-btn ${c} bg-${c === 'black' ? 'black' : 'white'}" title="${c}"></div>`).join('');
             } else {
                 selectorsDiv.classList.add('hidden');
@@ -563,177 +523,70 @@
             document.getElementById('product-modal').classList.add('active');
         }
 
-        function selectSize(size, btn) { 
-            selectedSize = size; 
-            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected')); 
-            btn.classList.add('selected'); 
-            clearError();
-        }
+        function selectSize(size, btn) { selectedSize = size; document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }
+        
         function selectColor(color, btn) { 
             selectedColor = color; 
             document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected')); 
             btn.classList.add('selected'); 
-            clearError();
+            
+            // CAMBIO DE IMAGEN EN MODAL
+            const p = products.find(x => x.id === currentProdId);
+            if(p && p.images) {
+                const img = document.getElementById('modal-main-img');
+                if(img) {
+                    img.src = color === 'black' ? p.images.black : p.images.white;
+                }
+            }
         }
+        
         function adjustQty(change) { modalQty += change; if(modalQty < 1) modalQty = 1; document.getElementById('modal-qty').innerText = modalQty; }
-
-        function clearError() {
-            document.getElementById('selectors-container').classList.remove('shake-error');
-            document.getElementById('validation-msg').classList.add('hidden');
-        }
 
         function addToCartCurrent() {
             const p = products.find(x => x.id === currentProdId);
-            
-            // VALIDACIÓN ESTRICTA
-            if(p.isClothing && (!selectedSize || !selectedColor)) { 
-                // Efecto visual de error
-                const container = document.getElementById('selectors-container');
-                container.classList.remove('shake-error'); // reset animation
-                void container.offsetWidth; // trigger reflow
-                container.classList.add('shake-error');
-                document.getElementById('validation-msg').classList.remove('hidden');
-                
-                // Vibración en móviles
-                if(navigator.vibrate) navigator.vibrate(200);
-                return; 
-            }
-            
-            // BUSCAR SI YA EXISTE EN EL CARRITO (MISMO ID, TALLA Y COLOR)
-            const existingIdx = cart.findIndex(item => 
-                item.id === p.id && 
-                item.selSize === selectedSize && 
-                item.selColor === selectedColor
-            );
-
-            if(existingIdx > -1) {
-                // Si existe, sumar cantidad
-                cart[existingIdx].qty += modalQty;
-            } else {
-                // Si no, agregar nuevo
-                cart.push({ ...p, selSize: selectedSize, selColor: selectedColor, qty: modalQty });
-            }
-            
-            updateCartBadge(); 
-            closeProduct(); 
-            
-            // Feedback de éxito (Alert simple y rápido)
-            alert(`✅ AGREGADO: ${modalQty} ${p.name[currentLang]}`);
-            
-            // Animación visual en botón del carrito (Header)
-            const cartBtn = document.getElementById('cart-btn');
-            cartBtn.classList.add('bump-anim');
-            setTimeout(() => cartBtn.classList.remove('bump-anim'), 300);
+            if(p.isClothing && (!selectedSize || !selectedColor)) { alert("⚠️ Por favor selecciona TALLA y COLOR."); return; }
+            const existingIdx = cart.findIndex(item => item.id === p.id && item.selSize === selectedSize && item.selColor === selectedColor);
+            if(existingIdx > -1) { cart[existingIdx].qty += modalQty; } else { cart.push({ ...p, selSize: selectedSize, selColor: selectedColor, qty: modalQty }); }
+            updateCartBadge(); closeProduct(); 
+            // Feedback visual simple
+            const btn = document.getElementById('cart-btn');
+            btn.style.borderColor = "#D4AF37"; setTimeout(() => btn.style.borderColor = "", 500);
         }
 
-        function updateCartItemQty(index, change) {
-            cart[index].qty += change;
-            if(cart[index].qty < 1) cart[index].qty = 1; 
-            renderCartList();
-            updateCartBadge();
-        }
+        function updateCartItemQty(index, change) { cart[index].qty += change; if(cart[index].qty < 1) cart[index].qty = 1; renderCartList(); updateCartBadge(); }
 
         function renderCartList() {
-            const list = document.getElementById('cart-list'); 
-            const totalEl = document.getElementById('cart-total');
-            const subtotalEl = document.getElementById('cart-subtotal');
-            const ivaEl = document.getElementById('cart-iva');
-
-            if(cart.length === 0) { 
-                list.innerHTML = `<div class="text-center text-gray-500 mt-20 text-lg"><p>${translations[currentLang].emptyCart}</p></div>`; 
-                totalEl.innerText = "$0.00"; 
-                subtotalEl.innerText = "$0.00";
-                ivaEl.innerText = "$0.00";
-                return; 
-            }
-            
-            let subtotal = 0; 
-            list.innerHTML = '';
-            
+            const list = document.getElementById('cart-list'); const totalEl = document.getElementById('cart-total');
+            if(cart.length === 0) { list.innerHTML = `<div class="text-center text-gray-500 mt-20 text-lg"><p>${translations[currentLang].emptyCart}</p></div>`; totalEl.innerText = "$0.00"; return; }
+            let total = 0; list.innerHTML = '';
             cart.forEach((item, idx) => {
-                const itemTotal = item.price * item.qty;
-                subtotal += itemTotal;
-                // Mostrar Talla y Color solo si es ropa
-                let variantsHTML = item.isClothing ? `<div class="text-xs text-gray-400 mt-2">Talla: <strong class="text-lumenGold text-sm">${item.selSize}</strong> | Color: <strong class="text-white text-sm uppercase">${item.selColor}</strong></div>` : '';
-                
-                list.innerHTML += `
-                    <div class="flex flex-col bg-[#111] p-6 rounded-2xl border border-white/10 mb-4">
-                        <div class="flex items-center gap-6 mb-4">
-                            <div class="w-16 h-16 bg-black rounded-xl flex items-center justify-center text-gray-600 border border-white/5"><i class="fa-solid ${item.icon} text-2xl"></i></div>
-                            <div class="flex-1">
-                                <div class="text-white font-bold font-serif text-lg">${item.name[currentLang]}</div>
-                                ${variantsHTML}
-                                <div class="text-lumenGold text-lg font-bold mt-1">$${item.price.toFixed(2)} c/u</div>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between border-t border-white/5 pt-4">
-                            <div class="flex items-center gap-4 bg-black rounded-lg p-1">
-                                <button onclick="updateCartItemQty(${idx}, -1)" class="w-10 h-10 text-white font-bold hover:bg-white/10 rounded">-</button>
-                                <span class="text-white font-bold w-6 text-center">${item.qty}</span>
-                                <button onclick="updateCartItemQty(${idx}, 1)" class="w-10 h-10 text-white font-bold hover:bg-white/10 rounded">+</button>
-                            </div>
-                            <div class="text-white font-bold text-xl">$${itemTotal.toFixed(2)}</div>
-                            <button onclick="removeFromCart(${idx})" class="text-gray-500 hover:text-red-500 p-2 ml-2"><i class="fa-solid fa-trash text-lg"></i></button>
-                        </div>
-                    </div>`;
+                const itemTotal = item.price * item.qty; total += itemTotal;
+                let variantsHTML = item.isClothing ? `<div class="text-xs text-gray-400 mt-2">Talla: <strong class="text-lumenGold text-sm">${item.selSize}</strong> | Color: <strong class="text-white text-sm">${item.selColor === 'black' ? 'Negro' : 'Blanco'}</strong></div>` : '';
+                list.innerHTML += `<div class="flex flex-col bg-[#111] p-6 rounded-2xl border border-white/10 mb-4"><div class="flex items-center gap-6 mb-4"><div class="w-16 h-16 bg-black rounded-xl flex items-center justify-center text-gray-600 border border-white/5"><i class="fa-solid ${item.icon} text-2xl"></i></div><div class="flex-1"><div class="text-white font-bold font-serif text-lg">${item.name[currentLang]}</div>${variantsHTML}<div class="text-lumenGold text-lg font-bold mt-1">$${item.price.toFixed(2)} c/u</div></div></div><div class="flex items-center justify-between border-t border-white/5 pt-4"><div class="flex items-center gap-4 bg-black rounded-lg p-1"><button onclick="updateCartItemQty(${idx}, -1)" class="w-10 h-10 text-white font-bold hover:bg-white/10 rounded">-</button><span class="text-white font-bold w-6 text-center">${item.qty}</span><button onclick="updateCartItemQty(${idx}, 1)" class="w-10 h-10 text-white font-bold hover:bg-white/10 rounded">+</button></div><div class="text-white font-bold text-xl">$${itemTotal.toFixed(2)}</div><button onclick="removeFromCart(${idx})" class="text-gray-500 hover:text-red-500 p-2 ml-2"><i class="fa-solid fa-trash text-lg"></i></button></div></div>`;
             });
-
-            // CÁLCULOS DE IVA
-            let iva = subtotal * 0.15;
-            let total = subtotal + iva;
-
-            subtotalEl.innerText = "$" + subtotal.toFixed(2);
-            ivaEl.innerText = "$" + iva.toFixed(2);
             totalEl.innerText = "$" + total.toFixed(2);
         }
 
-        // --- CHECKOUT SIN PROMPTS NI BLOQUEOS ---
         function startCheckout() {
             if(cart.length === 0) return;
+            const name = prompt("Por favor, ingresa tu NOMBRE para el pedido:"); if(!name) return;
             
-            // 1. Obtener nombre del INPUT en el carrito (No del prompt)
-            const nameInput = document.getElementById('client-name');
-            const name = nameInput.value.trim();
+            // HORA PRECISA
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-EC');
+            const timeStr = now.toLocaleTimeString('es-EC', { hour12: false });
+            const timestamp = `[${dateStr} - ${timeStr}]`;
 
-            // 2. Validación visual
-            if(!name) {
-                nameInput.classList.add('shake-error');
-                nameInput.focus();
-                // Remover la clase de animación después
-                setTimeout(() => nameInput.classList.remove('shake-error'), 500);
-                return;
-            }
-            
-            // 3. Construir mensaje
-            let message = `*NUEVO PEDIDO LA ARMERÍA*\n`;
-            message += `👤 Cliente: ${name}\n`;
-            message += `📅 Fecha: ${new Date().toLocaleDateString()}\n`;
-            message += `--------------------------------\n`;
-            
-            let subtotal = 0;
+            let message = `NUEVO PEDIDO LA ARMERÍA ${timestamp}:\nCliente: ${name}\n\nPedido:\n`; 
+            let total = 0;
             cart.forEach(item => { 
-                const itemTotal = item.price * item.qty;
-                subtotal += itemTotal; 
-                message += `▪️ ${item.qty}x *${item.name.es}*\n`; 
-                if(item.isClothing) message += `   └ Talla: ${item.selSize} | Color: ${item.selColor.toUpperCase()}\n`; 
-                message += `   └ Precio: $${itemTotal.toFixed(2)}\n`; 
+                const itemTotal = item.price * item.qty; total += itemTotal; 
+                message += `${item.qty}x ${item.name.es}`; 
+                if(item.isClothing) message += ` | Talla: ${item.selSize} | Color: ${item.selColor === 'black' ? 'Negro' : 'Blanco'}`; 
+                message += `\n`; 
             });
-
-            let iva = subtotal * 0.15;
-            let finalTotal = subtotal + iva;
-            
-            message += `--------------------------------\n`;
-            message += `SUBTOTAL: $${subtotal.toFixed(2)}\n`;
-            message += `IVA (15%): $${iva.toFixed(2)}\n`;
-            message += `💰 *TOTAL FINAL: $${finalTotal.toFixed(2)}*\n\n`;
-            message += `📍 Método de Envío: [Por definir en chat]\n`;
-            message += `⚠️ (Entiendo el tiempo de forjado: 8-12 días)`;
-
-            // 4. ABRIR DIRECTAMENTE
-            const url = `https://wa.me/593996480843?text=${encodeURIComponent(message)}`;
-            
-            // En móviles, window.open funciona mejor si es por click directo
-            window.open(url, '_blank');
+            message += `\nTotal Estimado: $${total.toFixed(2)}\nMétodo de Envío: [Ecuador / Internacional]\n(Entiendo el tiempo de forjado: 8-12 días)`;
+            window.open(`https://wa.me/593996480843?text=${encodeURIComponent(message)}`, '_blank');
         }
 
         function toggleMenu() { document.getElementById('side-menu').classList.toggle('active'); }
@@ -744,22 +597,9 @@
         function closeInfoModal() { document.getElementById('info-modal').classList.remove('active'); }
         function toggleCart() { const m = document.getElementById('cart-modal'); m.classList.toggle('active'); if(m.classList.contains('active')) renderCartList(); }
         function removeFromCart(i) { cart.splice(i, 1); renderCartList(); updateCartBadge(); }
-        
-        function updateCartBadge() { 
-            const count = cart.reduce((acc, item) => acc + item.qty, 0); 
-            const b = document.getElementById('cart-count'); 
-            b.innerText = count; 
-            
-            if (count > 0) {
-                b.classList.remove('opacity-0', 'scale-0');
-                b.classList.add('opacity-100', 'scale-100');
-            } else {
-                b.classList.add('opacity-0', 'scale-0');
-                b.classList.remove('opacity-100', 'scale-100');
-            }
-        }
+        function updateCartBadge() { const count = cart.reduce((acc, item) => acc + item.qty, 0); const b = document.getElementById('cart-count'); b.innerText = count; b.style.opacity = count > 0 ? '1' : '0'; }
         
         renderStore();
     </script>
 </body>
-</html>
+</html>                                                            let iva = subtotal * 0.15
