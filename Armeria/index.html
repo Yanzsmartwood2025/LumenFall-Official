@@ -34,7 +34,7 @@
             color: #e5e5e5; 
             font-family: 'Lato', sans-serif;
             -webkit-tap-highlight-color: transparent;
-            overflow: hidden; 
+            overflow-x: hidden; 
             font-size: 20px;
         }
 
@@ -67,20 +67,33 @@
             transition: transform 0.2s;
         }
 
-        @media (min-width: 768px) {
-            .product-card {
-                flex: 0 0 450px;
-                height: 650px;
-                scroll-snap-align: start;
-            }
-        }
-
-        /* TRANSICIÓN DE IMÁGENES */
-        .product-img {
+        /* HERO LOOKBOOK */
+        .hero-section {
+            position: relative;
             width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: opacity 0.5s ease-in-out;
+            height: 85vh;
+            overflow: hidden;
+        }
+        .hero-slide {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+        }
+        .hero-slide.active { opacity: 1; }
+        
+        /* Degradado Táctico Inferior (Para el texto) */
+        .hero-gradient {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40%; /* Cubre la parte inferior */
+            background: linear-gradient(to top, #050505 10%, rgba(5,5,5,0.8) 40%, transparent 100%);
+            z-index: 10;
+            pointer-events: none;
         }
 
         /* MODALES */
@@ -107,11 +120,11 @@
             pointer-events: auto;
         }
 
-        #delivery-modal { z-index: 200 !important; }
+        #delivery-modal, #terms-modal { z-index: 200 !important; }
 
         .side-menu {
             z-index: 300;
-            background-color: rgba(0,0,0,0.8);
+            background-color: rgba(0,0,0,0.9);
             transform: translateX(-100%);
             opacity: 0;
         }
@@ -228,17 +241,21 @@
 </head>
 <body class="flex flex-col h-[100dvh] relative bg-[#050505]">
 
+    <!-- AVISO DE TERRITORIO (TOP BANNER) -->
+    <div class="fixed top-0 w-full z-[60] bg-lumenGold text-black text-[10px] md:text-xs font-bold text-center py-2 tracking-widest uppercase shadow-lg">
+        🇪🇨 LANZAMIENTO EXCLUSIVO ECUADOR. Envíos nacionales activos.
+    </div>
+
     <!-- HEADER -->
-    <header class="fixed top-0 w-full z-40 px-6 py-6 flex justify-between items-center bg-gradient-to-b from-black/95 to-transparent pointer-events-none">
-        <button onclick="toggleMenu()" class="pointer-events-auto text-white w-14 h-14 flex items-center justify-center rounded-full bg-white/10 backdrop-blur border border-white/20 hover:bg-white/30 transition">
+    <header class="fixed top-8 w-full z-40 px-6 py-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent pointer-events-none transition-all duration-300">
+        <button onclick="toggleMenu()" class="pointer-events-auto text-white w-14 h-14 flex items-center justify-center rounded-full bg-black/40 backdrop-blur border border-white/20 hover:bg-white/30 transition">
             <i class="fa-solid fa-bars text-3xl"></i>
         </button>
 
-        <h1 class="title-font text-2xl text-lumenGold tracking-[0.2em] font-bold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">LA ARMERÍA</h1>
+        <h1 class="title-font text-2xl text-lumenGold tracking-[0.2em] font-bold drop-shadow-md opacity-0 md:opacity-100">LA ARMERÍA</h1>
 
-        <button onclick="toggleCart()" id="cart-btn" class="pointer-events-auto relative text-white w-14 h-14 flex items-center justify-center rounded-full bg-white/10 backdrop-blur border-2 border-white/30 hover:bg-white/20 transition hover:border-lumenGold shadow-lg">
+        <button onclick="toggleCart()" id="cart-btn" class="pointer-events-auto relative text-white w-14 h-14 flex items-center justify-center rounded-full bg-black/40 backdrop-blur border-2 border-white/30 hover:bg-white/20 transition hover:border-lumenGold shadow-lg">
             <i class="fa-solid fa-bag-shopping text-3xl"></i>
-            <!-- BADGE CORREGIDO: Transparencia y Desenfoque -->
             <span id="cart-count" class="absolute -top-1 -right-1 bg-red-600/80 backdrop-blur-sm text-white text-sm font-bold w-7 h-7 rounded-full flex items-center justify-center opacity-0 border-2 border-black transition-opacity">0</span>
         </button>
     </header>
@@ -255,6 +272,7 @@
             <div class="mb-10 flex justify-center border-b border-white/10 pb-8">
                 <img src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/ce78cc389fae79764d3d599e7240160118a5262e/Armeria/assets/Imagenes/Icono_lumenfall.png" alt="LUMENFALL LOGO" class="w-64 h-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
             </div>
+            
             <div class="mb-10">
                 <h3 class="text-base font-bold text-white uppercase mb-4 tracking-widest flex items-center gap-3"><i class="fa-solid fa-earth-americas text-lumenGold text-xl"></i> <span data-i18n="langTitle">IDIOMA</span></h3>
                 <div class="flex bg-black rounded-xl p-2 border border-white/20">
@@ -262,6 +280,7 @@
                     <button onclick="setLanguage('en')" id="btn-en" class="flex-1 py-4 text-base font-bold rounded-lg text-gray-500 hover:text-white transition-colors">ENGLISH</button>
                 </div>
             </div>
+
             <div class="flex-1">
                 <h3 class="text-base font-bold text-white uppercase mb-4 tracking-widest flex items-center gap-3"><i class="fa-solid fa-circle-info text-lumenGold text-xl"></i> <span data-i18n="dataTitle">DATOS</span></h3>
                 <ul class="space-y-8 text-lg text-gray-300">
@@ -273,29 +292,66 @@
         </div>
     </div>
 
-    <!-- MAIN -->
-    <main class="flex-grow pt-32 pb-24 overflow-y-auto">
-        <section class="mb-12">
+    <!-- MAIN SCROLLABLE -->
+    <main class="flex-grow h-full overflow-y-auto no-scrollbar">
+        
+        <!-- SECCIÓN 1: HERO LOOKBOOK (FOTOS REALES) -->
+        <section id="hero-lookbook" class="relative w-full h-[85vh] overflow-hidden">
+            <div id="hero-slides" class="w-full h-full relative">
+                <!-- Slide 1: Pantalla-1.jpg -->
+                <div class="hero-slide active" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-1.jpg');"></div>
+                <!-- Slide 2: Pantalla-2.jpg -->
+                <div class="hero-slide" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-2.jpg');"></div>
+                <!-- Slide 3: Pantalla-3.jpg -->
+                <div class="hero-slide" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-3.jpg');"></div>
+                
+                <div class="absolute inset-0 bg-black/10"></div> <!-- Overlay muy sutil para brillo -->
+            </div>
+
+            <!-- Degradado Inferior (Soporte para texto) -->
+            <div class="hero-gradient"></div>
+
+            <!-- TEXTO REUBICADO EN LA PARTE INFERIOR -->
+            <div class="absolute bottom-0 left-0 w-full z-20 pointer-events-none px-6 pb-24 flex flex-col items-center justify-end h-full">
+                <h2 class="title-font text-4xl md:text-5xl text-white font-bold drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] tracking-widest mb-2">EL CAOS TANGIBLE</h2>
+                <div class="flex items-center gap-3">
+                    <div class="h-[1px] w-8 bg-lumenGold"></div>
+                    <p class="text-lumenGold text-xs md:text-sm tracking-[0.3em] font-bold uppercase">EQUIPAMIENTO & LORE</p>
+                    <div class="h-[1px] w-8 bg-lumenGold"></div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-8 w-full text-center z-20 animate-bounce pointer-events-none">
+                <i class="fa-solid fa-chevron-down text-white/50 text-2xl"></i>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: EQUIPAMIENTO -->
+        <section class="mb-12 mt-8">
             <div class="px-6 mb-6 flex items-baseline justify-between">
                 <div><h2 class="title-font text-3xl text-white font-bold tracking-wider" data-i18n="equipTitle">EQUIPAMIENTO</h2><p class="text-sm text-lumenGold uppercase tracking-widest font-bold mt-1" data-i18n="equipSub">Desliza para explorar</p></div>
                 <i class="fa-solid fa-arrow-right-long text-white/40 animate-pulse text-3xl"></i>
             </div>
             <div class="native-carousel px-6 no-scrollbar" id="carousel-equipamiento"></div>
         </section>
+
+        <!-- SECCIÓN 3: ARTEFACTOS -->
         <section class="mb-12">
             <div class="px-6 mb-6">
                 <h2 class="title-font text-3xl text-white font-bold tracking-wider" data-i18n="artTitle">ARTEFACTOS</h2><p class="text-sm text-lumenGold uppercase tracking-widest font-bold mt-1" data-i18n="artSub">Lore & Accesorios</p>
             </div>
             <div class="native-carousel px-6 no-scrollbar" id="carousel-artefactos"></div>
         </section>
-        <footer class="px-6 py-12 bg-[#0a0a0a] border-t border-white/10 mb-10">
+
+        <!-- FOOTER -->
+        <footer class="px-6 py-12 bg-[#0a0a0a] border-t border-white/10 mb-20">
             <div class="flex justify-center gap-12 mb-10 opacity-70">
                 <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-brands fa-bitcoin text-4xl"></i></button>
                 <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-brands fa-paypal text-4xl"></i></button>
                 <button onclick="openInfoModal()" class="hover:text-lumenGold transition"><i class="fa-solid fa-building-columns text-4xl"></i></button>
             </div>
             <div class="text-center">
-                <button onclick="openInfoModal()" class="text-sm text-gray-400 font-bold uppercase tracking-widest border-b border-gray-600 pb-1 hover:text-white transition" data-i18n="termsFooter">Términos y Condiciones</button>
+                <button onclick="openTermsModal()" class="text-sm text-gray-400 font-bold uppercase tracking-widest border-b border-gray-600 pb-1 hover:text-white transition" data-i18n="termsFooter">Términos y Condiciones</button>
                 <p class="text-xs text-gray-600 mt-6 font-bold">© 2025 LUMENFALL SYSTEM</p>
             </div>
         </footer>
@@ -304,141 +360,52 @@
     <!-- PRODUCTO MODAL -->
     <div id="product-modal" class="full-screen-modal">
         <button onclick="closeProduct()" class="absolute top-6 left-6 z-50 w-14 h-14 bg-black/60 backdrop-blur rounded-full text-white border border-white/30 flex items-center justify-center shadow-2xl hover:bg-lumenGold hover:text-black transition"><i class="fa-solid fa-arrow-left text-2xl"></i></button>
-
-        <div class="modal-image-area" id="modal-img-container">
-            <!-- AQUÍ SE INYECTA LA IMAGEN -->
-            <i id="m-icon" class="fa-solid fa-shirt text-[180px] text-white/10 drop-shadow-2xl"></i>
-            <div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50">
-                <span id="m-price-display" class="text-4xl font-bold text-white font-sans">$00.00</span>
-            </div>
-        </div>
-
+        <div class="modal-image-area" id="modal-img-container"></div>
         <div class="modal-scroll-content">
             <span id="m-tag" class="inline-block px-5 py-2 bg-white/10 text-lumenGold text-sm font-bold uppercase tracking-widest rounded border border-lumenGold/30 mb-4">TAG</span>
             <h1 id="m-title" class="title-font text-5xl text-white leading-tight mb-8 font-bold">Nombre</h1>
-            
             <div class="space-y-8">
-                <!-- Selectores -->
                 <div id="selectors-container" class="hidden bg-[#111] p-6 rounded-2xl border border-white/15 space-y-6">
-                    <div>
-                        <div class="flex justify-between items-center mb-4"><h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest">TALLA / SIZE</h3></div>
-                        <div id="size-options" class="grid grid-cols-5 gap-3"></div>
-                        <p id="size-warning" class="text-sm text-lumenGold mt-3 hidden italic font-bold">⚠️ Horma Oversized (Grande)</p>
-                    </div>
-                    <div>
-                        <h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest mb-4">COLOR</h3>
-                        <div id="color-options" class="flex gap-6"></div>
-                    </div>
+                    <div><div class="flex justify-between items-center mb-4"><h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest">TALLA / SIZE</h3></div><div id="size-options" class="grid grid-cols-5 gap-3"></div><p id="size-warning" class="text-sm text-lumenGold mt-3 hidden italic font-bold">⚠️ Horma Oversized (Grande)</p></div>
+                    <div><h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest mb-4">COLOR</h3><div id="color-options" class="flex gap-6"></div></div>
                 </div>
-
-                <div class="bg-[#111] p-6 rounded-2xl border border-white/15 flex items-center justify-between">
-                    <h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest">CANTIDAD</h3>
-                    <div class="flex items-center gap-6">
-                        <button onclick="adjustQty(-1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 border border-white/10">-</button>
-                        <span id="modal-qty" class="text-3xl font-bold text-white w-10 text-center">1</span>
-                        <button onclick="adjustQty(1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 border border-white/10">+</button>
-                    </div>
-                </div>
-
-                <div onclick="openDeliveryModal()" class="group cursor-pointer bg-[#1a1a1a] border-l-4 border-lumenGold p-5 rounded-r-xl flex items-center justify-between hover:bg-white/5 transition-colors shadow-lg">
-                    <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 rounded-full bg-lumenGold/10 flex items-center justify-center border border-lumenGold/20"><i class="fa-solid fa-truck-fast text-lumenGold text-2xl"></i></div>
-                        <div><h4 class="text-white font-bold text-sm uppercase tracking-wider mb-1">TIEMPO DE FORJADO</h4><p class="text-lumenGold text-xs font-bold">8 - 12 DÍAS (VER DETALLES)</p></div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-gray-500 group-hover:text-white transition text-xl animate-pulse"></i>
-                </div>
-
-                <div>
-                    <h3 class="text-base text-gray-400 font-extrabold uppercase mb-3 border-b border-white/20 pb-2" data-i18n="descTitle">Descripción</h3>
-                    <p id="m-desc" class="text-gray-200 text-xl font-normal leading-relaxed">...</p>
-                </div>
-                
-                <div class="bg-[#111] p-6 rounded-2xl border border-white/15">
-                    <h3 class="text-sm text-lumenGold font-extrabold uppercase tracking-widest mb-4" data-i18n="specsTitle">Especificaciones</h3>
-                    <ul id="m-specs" class="space-y-4 text-base text-gray-300"></ul>
-                </div>
+                <div id="qty-container" class="bg-[#111] p-6 rounded-2xl border border-white/15 flex items-center justify-between"><h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest">CANTIDAD</h3><div class="flex items-center gap-6"><button onclick="adjustQty(-1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 border border-white/10">-</button><span id="modal-qty" class="text-3xl font-bold text-white w-10 text-center">1</span><button onclick="adjustQty(1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 border border-white/10">+</button></div></div>
+                <div id="protocol-btn" onclick="openDeliveryModal()" class="group cursor-pointer bg-[#1a1a1a] border-l-4 border-lumenGold p-5 rounded-r-xl flex items-center justify-between hover:bg-white/5 transition-colors shadow-lg"><div class="flex items-center gap-4"><div class="w-14 h-14 rounded-full bg-lumenGold/10 flex items-center justify-center border border-lumenGold/20"><i class="fa-solid fa-truck-fast text-lumenGold text-2xl"></i></div><div><h4 class="text-white font-bold text-sm uppercase tracking-wider mb-1">TIEMPO DE FORJADO</h4><p class="text-lumenGold text-xs font-bold">8 - 12 DÍAS (VER DETALLES)</p></div></div><i class="fa-solid fa-chevron-right text-gray-500 group-hover:text-white transition text-xl animate-pulse"></i></div>
+                <div><h3 class="text-base text-gray-400 font-extrabold uppercase mb-3 border-b border-white/20 pb-2" data-i18n="descTitle">Descripción</h3><p id="m-desc" class="text-gray-200 text-xl font-normal leading-relaxed">...</p></div>
+                <div class="bg-[#111] p-6 rounded-2xl border border-white/15"><h3 class="text-sm text-lumenGold font-extrabold uppercase tracking-widest mb-4" data-i18n="specsTitle">Especificaciones</h3><ul id="m-specs" class="space-y-4 text-base text-gray-300"></ul></div>
             </div>
         </div>
-
         <div class="absolute bottom-0 w-full p-6 bg-gradient-to-t from-black via-black to-transparent z-50">
-            <button onclick="addToCartCurrent()" class="w-full h-20 bg-white text-black font-extrabold text-xl rounded-full uppercase tracking-[0.2em] shadow-[0_0_25px_rgba(255,255,255,0.3)] hover:bg-lumenGold transition-all flex items-center justify-center gap-3">
-                <span data-i18n="addCart">AGREGAR</span>
-            </button>
+            <button id="add-to-cart-btn" onclick="addToCartCurrent()" class="w-full h-20 bg-white text-black font-extrabold text-xl rounded-full uppercase tracking-[0.2em] shadow-[0_0_25px_rgba(255,255,255,0.3)] hover:bg-lumenGold transition-all flex items-center justify-center gap-3"><span data-i18n="addCart">AGREGAR</span></button>
         </div>
     </div>
 
-    <!-- MODAL PROTOCOLO DE ENTREGA -->
+    <!-- MODAL DELIVERY -->
     <div id="delivery-modal" class="full-screen-modal">
-        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10">
-            <h2 class="text-lumenGold font-bold tracking-widest text-lg">PROTOCOLO DE ENTREGA</h2>
-            <button onclick="closeDeliveryModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button>
-        </div>
-        <div class="flex-1 overflow-y-auto bg-black p-8 pt-32 pb-12">
-            <div class="max-w-lg mx-auto space-y-8">
-                <div class="text-center">
-                    <i class="fa-solid fa-shield-halved text-7xl text-lumenGold mb-6 animate-pulse"></i>
-                    <h2 class="title-font text-3xl text-white mb-2">FORJADO A MEDIDA</h2>
-                    <div class="w-24 h-1 bg-lumenGold mx-auto"></div>
-                </div>
-                <div class="bg-[#111] p-8 rounded-2xl border border-white/10">
-                    <p class="text-gray-300 text-xl leading-relaxed mb-8 font-medium">"En La Armería no almacenamos polvo. Cada prenda se confecciona y estampa bajo pedido <strong class="text-white">exclusivamente para ti</strong>."</p>
-                    <div class="space-y-8">
-                        <div class="flex gap-5"><div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-lumenGold font-bold text-xl">1</div><div><h4 class="text-white font-bold text-lg uppercase mb-1">Fase de Forjado (Producción)</h4><p class="text-gray-400 text-base">5 - 8 días hábiles.</p></div></div>
-                        <div class="flex gap-5"><div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-lumenGold font-bold text-xl">2</div><div><h4 class="text-white font-bold text-lg uppercase mb-1">Fase de Despliegue (Envío)</h4><p class="text-gray-400 text-base">2 - 4 días (según ubicación).</p></div></div>
-                    </div>
-                    <div class="mt-10 pt-8 border-t border-white/10"><p class="text-lumenGold text-xl font-bold text-center mb-2">TIEMPO TOTAL ESTIMADO</p><p class="text-white text-4xl font-serif text-center">8 a 12 Días</p><p class="text-center text-gray-500 text-sm mt-3 uppercase tracking-wider font-bold">Para tener el poder en tus manos</p></div>
-                </div>
-            </div>
-        </div>
+        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10"><h2 class="text-lumenGold font-bold tracking-widest text-lg">PROTOCOLO DE ENTREGA</h2><button onclick="closeDeliveryModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
+        <div class="flex-1 overflow-y-auto bg-black p-8 pt-32 pb-12"><div class="max-w-lg mx-auto space-y-8"><div class="text-center"><i class="fa-solid fa-shield-halved text-7xl text-lumenGold mb-6 animate-pulse"></i><h2 class="title-font text-3xl text-white mb-2">FORJADO A MEDIDA</h2><div class="w-24 h-1 bg-lumenGold mx-auto"></div></div><div class="bg-[#111] p-8 rounded-2xl border border-white/10"><p class="text-gray-300 text-xl leading-relaxed mb-8 font-medium">"En La Armería no almacenamos polvo. Cada prenda se confecciona y estampa bajo pedido <strong class="text-white">exclusivamente para ti</strong>."</p><div class="space-y-8"><div class="flex gap-5"><div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-lumenGold font-bold text-xl">1</div><div><h4 class="text-white font-bold text-lg uppercase mb-1">Fase de Forjado (Producción)</h4><p class="text-gray-400 text-base">5 - 8 días hábiles.</p></div></div><div class="flex gap-5"><div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-lumenGold font-bold text-xl">2</div><div><h4 class="text-white font-bold text-lg uppercase mb-1">Fase de Despliegue (Envío)</h4><p class="text-gray-400 text-base">2 - 4 días (según ubicación).</p></div></div></div><div class="mt-10 pt-8 border-t border-white/10"><p class="text-lumenGold text-xl font-bold text-center mb-2">TIEMPO TOTAL ESTIMADO</p><p class="text-white text-4xl font-serif text-center">8 a 12 Días</p></div></div></div></div>
     </div>
 
-    <!-- INFO MODAL -->
+    <!-- MODAL TERMS -->
+    <div id="terms-modal" class="full-screen-modal">
+        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10"><h2 class="text-lumenGold font-bold tracking-widest text-lg">TÉRMINOS LEGALES</h2><button onclick="closeTermsModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
+        <div class="flex-1 overflow-y-auto bg-black p-8 pt-32 pb-12"><div class="max-w-lg mx-auto space-y-10 text-gray-300"><section><h3 class="text-lumenGold font-bold uppercase mb-3 border-b border-white/10 pb-2">1. MODELO DE PRODUCCIÓN (El Forjado)</h3><p class="text-sm leading-relaxed">En La Armería operamos bajo un modelo "Made to Order". Tiempo de Producción: 5 a 8 días hábiles. Tiempo Total Estimado: 8 a 12 días.</p></section><section><h3 class="text-lumenGold font-bold uppercase mb-3 border-b border-white/10 pb-2">2. POLÍTICA DE ENVÍOS</h3><p class="text-sm leading-relaxed">Envíos directos a todo Ecuador vía Servientrega. Internacional vía DHL.</p></section><section><h3 class="text-lumenGold font-bold uppercase mb-3 border-b border-white/10 pb-2">3. CAMBIOS Y DEVOLUCIONES</h3><p class="text-sm leading-relaxed">No devoluciones por arrepentimiento. Cambios de talla solo 3 días post-recepción.</p></section></div></div>
+    </div>
+
+    <!-- MODAL INFO -->
     <div id="info-modal" class="full-screen-modal z-[110]">
         <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10"><h2 class="text-lumenGold font-bold tracking-widest text-xl" data-i18n="termsHeader">TÉRMINOS & ENVÍOS</h2><button onclick="closeInfoModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
         <div class="flex-1 overflow-y-auto bg-black p-8 pt-28 pb-12"><div class="bg-[#111] p-8 rounded-2xl border border-white/10 mb-8"><h3 class="font-bold text-white uppercase tracking-wider mb-4 text-xl" data-i18n="payTitle">Métodos de Pago</h3><ul class="space-y-4"><li class="text-base text-gray-400 border-b border-white/5 pb-2">Transferencia Bancaria</li><li class="text-base text-gray-400 border-b border-white/5 pb-2">PayPal</li><li class="text-base text-gray-400">Cripto (USDT)</li></ul></div></div>
     </div>
 
-    <!-- CARRITO MODAL -->
+    <!-- CART MODAL -->
     <div id="cart-modal" class="full-screen-modal z-[105]">
-        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black border-b border-white/10">
-            <h2 class="title-font text-3xl text-white font-bold" data-i18n="cartTitle">TU ARSENAL</h2>
-            <button onclick="toggleCart()" class="text-white hover:text-red-500"><i class="fa-solid fa-xmark text-4xl"></i></button>
-        </div>
-        
+        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black border-b border-white/10"><h2 class="title-font text-3xl text-white font-bold" data-i18n="cartTitle">TU ARSENAL</h2><button onclick="toggleCart()" class="text-white hover:text-red-500"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
         <div id="cart-list" class="flex-1 overflow-y-auto pt-24 pb-6 px-6 space-y-6 bg-black"></div>
-        
-        <div class="px-6 pb-4 bg-black">
-            <div class="bg-[#1a1a1a] border border-lumenGold/30 p-5 rounded-2xl flex gap-4 items-start">
-                <i class="fa-solid fa-truck-fast text-lumenGold text-3xl mt-1"></i>
-                <div>
-                    <h4 class="text-lumenGold font-bold text-base uppercase mb-1">LOGÍSTICA DE GUERRA</h4>
-                    <p class="text-gray-300 text-sm leading-relaxed font-bold">TIEMPO TOTAL: <span class="text-white">8 - 12 DÍAS</span>.<br><span class="text-gray-500 font-normal">Incluye fase de forjado y envío.</span></p>
-                </div>
-            </div>
-        </div>
-
+        <div class="px-6 pb-4 bg-black"><div class="bg-[#1a1a1a] border border-lumenGold/30 p-5 rounded-2xl flex gap-4 items-start"><i class="fa-solid fa-truck-fast text-lumenGold text-3xl mt-1"></i><div><h4 class="text-lumenGold font-bold text-base uppercase mb-1">LOGÍSTICA DE GUERRA</h4><p class="text-gray-300 text-sm leading-relaxed font-bold">TIEMPO TOTAL: <span class="text-white">8 - 12 DÍAS</span></p></div></div></div>
         <div class="p-8 bg-[#111] border-t border-white/20">
-            <div class="mb-4">
-                <label class="text-xs text-lumenGold font-bold uppercase tracking-widest mb-2 block">Identificación del Operador</label>
-                <input type="text" id="customer-name" placeholder="Escribe tu Nombre / Apodo" class="w-full bg-[#222] text-white border border-white/20 rounded-lg p-4 font-bold focus:border-lumenGold focus:outline-none transition-colors">
-            </div>
-
-            <!-- DESGLOSE DE PRECIOS -->
-            <div class="space-y-2 mb-6">
-                <div class="flex justify-between text-gray-400 text-sm">
-                    <span>Subtotal</span>
-                    <span id="cart-subtotal">$0.00</span>
-                </div>
-                <div class="flex justify-between text-gray-400 text-sm">
-                    <span>IVA (15%)</span>
-                    <span id="cart-iva">$0.00</span>
-                </div>
-                <div class="flex justify-between text-white text-2xl font-bold border-t border-white/10 pt-2">
-                    <span data-i18n="total">TOTAL</span>
-                    <span id="cart-total">$0.00</span>
-                </div>
-            </div>
-
+            <div class="mb-4"><label class="text-xs text-lumenGold font-bold uppercase tracking-widest mb-2 block">Identificación del Operador</label><input type="text" id="customer-name" placeholder="Escribe tu Nombre / Apodo" class="w-full bg-[#222] text-white border border-white/20 rounded-lg p-4 font-bold focus:border-lumenGold focus:outline-none transition-colors"></div>
+            <div class="space-y-2 mb-6"><div class="flex justify-between text-gray-400 text-sm"><span>Subtotal</span><span id="cart-subtotal">$0.00</span></div><div class="flex justify-between text-gray-400 text-sm"><span>IVA (15%)</span><span id="cart-iva">$0.00</span></div><div class="flex justify-between text-white text-2xl font-bold border-t border-white/10 pt-2"><span data-i18n="total">TOTAL</span><span id="cart-total">$0.00</span></div></div>
             <button onclick="startCheckout()" class="w-full h-16 bg-lumenGold text-black font-extrabold text-lg rounded-lg uppercase tracking-widest shadow-lg hover:bg-white transition-colors flex items-center justify-center gap-3"><span data-i18n="checkout">ENVIAR PEDIDO</span> <i class="fa-brands fa-whatsapp text-2xl"></i></button>
         </div>
     </div>
@@ -464,24 +431,36 @@
             { id: 4, type: 'equip', isClothing: true, name: { es: "LUMENFALL HOODIE", en: "LUMENFALL HOODIE" }, price: 85.00, tag: { es: "WINTER", en: "WINTER" }, icon: "fa-user-ninja", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black'] }, desc: { es: "Tu escudo contra el frío.", en: "Your shield against the cold." }, specs: { es: ["Burda Pesada Perchada", "Interior Térmico"], en: ["Heavy Brushed Fleece", "Thermal Interior"] } },
             { id: 7, type: 'equip', isClothing: true, name: { es: "MY TEMPO SIGNATURE TEE", en: "MY TEMPO SIGNATURE TEE" }, price: 45.00, tag: { es: "MUSIC", en: "MUSIC" }, icon: "fa-music", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] }, desc: { es: "La frecuencia visual del sonido.", en: "The visual frequency of sound." }, specs: { es: ["Algodón Premium 210g", "Boxy Fit"], en: ["Premium Cotton 210g", "Boxy Fit"] } },
             { id: 5, type: 'art', isClothing: false, name: { es: "Llavero Rúnico", en: "Runic Keychain" }, price: 10.00, tag: { es: "ACCESORIO", en: "ACCESSORY" }, icon: "fa-key", desc: { es: "Lleva la marca de la Sombra siempre contigo.", en: "Carry the Shadow mark with you always." }, specs: { es: ["Aleación Zinc"], en: ["Zinc Alloy"] } },
-            { id: 6, type: 'art', isClothing: false, name: { es: "BITÁCORA DEL CAOS", en: "CHAOS LOGBOOK" }, price: 30.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-journal-whills", desc: { es: "Donde la estrategia se escribe.", en: "Where strategy is written." }, specs: { es: ["Tapa Dura Soft Touch"], en: ["Soft Touch Hardcover"] } }
+            { id: 6, type: 'art', isClothing: false, name: { es: "BITÁCORA DEL CAOS", en: "CHAOS LOGBOOK" }, price: 30.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-journal-whills", desc: { es: "Este artefacto está siendo materializado.", en: "This artifact is being materialized." }, specs: { es: ["Tapa Dura Soft Touch"], en: ["Soft Touch Hardcover"] }, comingSoon: true },
+            { id: 8, type: 'art', isClothing: false, name: { es: "EL GRIMORIO", en: "THE GRIMOIRE" }, price: 45.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-skull", desc: { es: "Este artefacto está siendo materializado.", en: "This artifact is being materialized." }, specs: { es: ["Edición Limitada"], en: ["Limited Edition"] }, comingSoon: true }
         ];
 
-        let currentLang = 'es';
-        let cart = [];
-        let currentProdId = null;
-        let selectedSize = null;
-        let selectedColor = null;
-        let modalQty = 1;
-        let carouselIntervals = {};
+        let currentLang = 'es'; let cart = []; let currentProdId = null; let selectedSize = null; let selectedColor = null; let modalQty = 1; let carouselIntervals = {};
+
+        // HERO LOGIC
+        const heroSlides = document.querySelectorAll('.hero-slide');
+        let currentSlide = 0;
+        if(heroSlides.length > 0) {
+            setInterval(() => {
+                heroSlides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + 1) % heroSlides.length;
+                heroSlides[currentSlide].classList.add('active');
+            }, 4000);
+        }
 
         function setLanguage(lang) {
             currentLang = lang;
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                if(translations[lang][el.getAttribute('data-i18n')]) el.innerHTML = translations[lang][el.getAttribute('data-i18n')];
-            });
-            renderStore();
-            if(document.getElementById('cart-modal').classList.contains('active')) renderCartList();
+            const btnEs = document.getElementById('btn-es');
+            const btnEn = document.getElementById('btn-en');
+            if(lang === 'es') {
+                btnEs.classList.remove('text-gray-500', 'hover:text-white'); btnEs.classList.add('bg-lumenGold', 'text-black');
+                btnEn.classList.remove('bg-lumenGold', 'text-black'); btnEn.classList.add('text-gray-500', 'hover:text-white');
+            } else {
+                btnEn.classList.remove('text-gray-500', 'hover:text-white'); btnEn.classList.add('bg-lumenGold', 'text-black');
+                btnEs.classList.remove('bg-lumenGold', 'text-black'); btnEs.classList.add('text-gray-500', 'hover:text-white');
+            }
+            document.querySelectorAll('[data-i18n]').forEach(el => { if(translations[lang][el.getAttribute('data-i18n')]) el.innerHTML = translations[lang][el.getAttribute('data-i18n')]; });
+            renderStore(); if(document.getElementById('cart-modal').classList.contains('active')) renderCartList();
         }
 
         function renderStore() {
@@ -513,52 +492,42 @@
             currentProdId = id; selectedSize = null; selectedColor = null; modalQty = 1;
             
             const modalImgContainer = document.getElementById('modal-img-container');
-            if(p.images) {
-                modalImgContainer.innerHTML = `<img id="modal-main-img" src="${p.images.black}" class="w-full h-full object-cover"><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`;
-            } else {
-                modalImgContainer.innerHTML = `<i id="m-icon" class="fa-solid ${p.icon} text-[180px] text-white/10 drop-shadow-2xl"></i><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`;
-            }
+            if(p.images) { modalImgContainer.innerHTML = `<img id="modal-main-img" src="${p.images.black}" class="w-full h-full object-cover"><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`; } 
+            else { modalImgContainer.innerHTML = `<i id="m-icon" class="fa-solid ${p.icon} text-[180px] text-white/10 drop-shadow-2xl"></i><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`; }
 
-            document.getElementById('modal-qty').innerText = modalQty;
-            document.getElementById('m-title').innerText = p.name[currentLang];
-            document.getElementById('m-tag').innerText = p.tag[currentLang];
-            document.getElementById('m-desc').innerText = p.desc[currentLang];
-            document.getElementById('m-specs').innerHTML = p.specs[currentLang].map(s => `<li class="flex items-start border-b border-white/10 pb-3 last:border-0"><i class="fa-solid fa-angle-right text-lumenGold mt-1 mr-3 text-lg"></i>${s}</li>`).join('');
+            document.getElementById('modal-qty').innerText = modalQty; document.getElementById('m-title').innerText = p.name[currentLang]; document.getElementById('m-tag').innerText = p.tag[currentLang]; document.getElementById('m-desc').innerText = p.desc[currentLang]; document.getElementById('m-specs').innerHTML = p.specs[currentLang].map(s => `<li class="flex items-start border-b border-white/10 pb-3 last:border-0"><i class="fa-solid fa-angle-right text-lumenGold mt-1 mr-3 text-lg"></i>${s}</li>`).join('');
 
-            const selectorsDiv = document.getElementById('selectors-container');
-            if(p.isClothing) {
-                selectorsDiv.classList.remove('hidden');
-                document.getElementById('size-options').innerHTML = p.options.sizes.map(s => `<div onclick="selectSize('${s}', this)" class="size-btn cursor-pointer bg-black hover:bg-white/10">${s}</div>`).join('');
-                p.options.warning ? document.getElementById('size-warning').classList.remove('hidden') : document.getElementById('size-warning').classList.add('hidden');
-                document.getElementById('color-options').innerHTML = p.options.colors.map(c => `<div onclick="selectColor('${c}', this)" class="color-btn ${c} bg-${c === 'black' ? 'black' : 'white'}" title="${c}"></div>`).join('');
+            const btn = document.getElementById('add-to-cart-btn'); const qtyContainer = document.getElementById('qty-container'); const protocolBtn = document.getElementById('protocol-btn'); const selectorsDiv = document.getElementById('selectors-container');
+
+            if(p.comingSoon) {
+                btn.onclick = () => window.open(`https://wa.me/593996480843?text=Hola, quiero unirme a la WAITLIST para: ${p.name.es}`, '_blank');
+                btn.innerHTML = `<span>EN FORJA / WAITLIST</span> <i class="fa-brands fa-whatsapp"></i>`;
+                btn.classList.replace('bg-white', 'bg-gray-800'); btn.classList.replace('text-black', 'text-white');
+                qtyContainer.style.display = 'none'; protocolBtn.style.display = 'none'; selectorsDiv.classList.add('hidden');
             } else {
-                selectorsDiv.classList.add('hidden');
+                btn.onclick = addToCartCurrent; btn.innerHTML = `<span data-i18n="addCart">AGREGAR</span>`;
+                btn.classList.replace('bg-gray-800', 'bg-white'); btn.classList.replace('text-white', 'text-black');
+                qtyContainer.style.display = 'flex'; protocolBtn.style.display = 'flex';
+                if(p.isClothing) {
+                    selectorsDiv.classList.remove('hidden');
+                    document.getElementById('size-options').innerHTML = p.options.sizes.map(s => `<div onclick="selectSize('${s}', this)" class="size-btn cursor-pointer bg-black hover:bg-white/10">${s}</div>`).join('');
+                    document.getElementById('color-options').innerHTML = p.options.colors.map(c => `<div onclick="selectColor('${c}', this)" class="color-btn ${c} bg-${c === 'black' ? 'black' : 'white'}" title="${c}"></div>`).join('');
+                } else { selectorsDiv.classList.add('hidden'); }
             }
             document.getElementById('product-modal').classList.add('active');
         }
 
         function selectSize(size, btn) { selectedSize = size; document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }
-        function selectColor(color, btn) { 
-            selectedColor = color; 
-            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); 
-            const p = products.find(x => x.id === currentProdId);
-            if(p && p.images) { const img = document.getElementById('modal-main-img'); if(img) img.src = color === 'black' ? p.images.black : p.images.white; }
-        }
+        function selectColor(color, btn) { selectedColor = color; document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); const p = products.find(x => x.id === currentProdId); if(p && p.images) { const img = document.getElementById('modal-main-img'); if(img) img.src = color === 'black' ? p.images.black : p.images.white; } }
         function adjustQty(change) { modalQty += change; if(modalQty < 1) modalQty = 1; document.getElementById('modal-qty').innerText = modalQty; }
 
         function addToCartCurrent() {
             const p = products.find(x => x.id === currentProdId);
             if(p.isClothing && (!selectedSize || !selectedColor)) { alert("⚠️ Por favor selecciona TALLA y COLOR."); return; }
-            
-            // Imagen Carrito
-            let cartImage = null;
-            if(p.isClothing && p.images && selectedColor) { cartImage = p.images[selectedColor]; }
-
+            let cartImage = null; if(p.isClothing && p.images && selectedColor) { cartImage = p.images[selectedColor]; }
             const existingIdx = cart.findIndex(item => item.id === p.id && item.selSize === selectedSize && item.selColor === selectedColor);
-            if(existingIdx > -1) { cart[existingIdx].qty += modalQty; } 
-            else { cart.push({ ...p, selSize: selectedSize, selColor: selectedColor, qty: modalQty, cartImage: cartImage }); }
-            
-            updateCartBadge(); closeProduct(); 
+            if(existingIdx > -1) { cart[existingIdx].qty += modalQty; } else { cart.push({ ...p, selSize: selectedSize, selColor: selectedColor, qty: modalQty, cartImage: cartImage }); }
+            updateCartBadge(); closeProduct();
             const btn = document.getElementById('cart-btn'); btn.style.borderColor = "#D4AF37"; setTimeout(() => btn.style.borderColor = "", 500);
         }
 
@@ -567,22 +536,18 @@
         function renderCartList() {
             const list = document.getElementById('cart-list');
             if(cart.length === 0) { list.innerHTML = `<div class="text-center text-gray-500 mt-20 text-lg"><p>${translations[currentLang].emptyCart}</p></div>`; updateTotals(0); return; }
-            
             let subtotal = 0; list.innerHTML = '';
             cart.forEach((item, idx) => {
                 const itemTotal = item.price * item.qty; subtotal += itemTotal;
                 let variantsHTML = item.isClothing ? `<div class="text-xs text-gray-400 mt-2">Talla: <strong class="text-lumenGold text-sm">${item.selSize}</strong> | Color: <strong class="text-white text-sm">${item.selColor === 'black' ? 'Negro' : 'Blanco'}</strong></div>` : '';
-                
                 let visualElement = item.cartImage ? `<img src="${item.cartImage}" class="w-full h-full object-cover rounded-xl border border-white/5">` : `<div class="w-full h-full flex items-center justify-center text-gray-600"><i class="fa-solid ${item.icon} text-2xl"></i></div>`;
-
                 list.innerHTML += `<div class="flex flex-col bg-[#111] p-6 rounded-2xl border border-white/10 mb-4"><div class="flex items-center gap-6 mb-4"><div class="w-20 h-20 bg-black rounded-xl border border-white/5 flex-shrink-0">${visualElement}</div><div class="flex-1"><div class="text-white font-bold font-serif text-lg">${item.name[currentLang]}</div>${variantsHTML}<div class="text-lumenGold text-lg font-bold mt-1">$${item.price.toFixed(2)} c/u</div></div></div><div class="flex items-center justify-between border-t border-white/5 pt-4"><div class="flex items-center gap-4 bg-black rounded-lg p-1"><button onclick="updateCartItemQty(${idx}, -1)" class="w-10 h-10 text-white font-bold hover:bg-white/10 rounded">-</button><span class="text-white font-bold w-6 text-center">${item.qty}</span><button onclick="updateCartItemQty(${idx}, 1)" class="w-10 h-10 text-white font-bold hover:bg-white/10 rounded">+</button></div><div class="text-white font-bold text-xl">$${itemTotal.toFixed(2)}</div><button onclick="removeFromCart(${idx})" class="text-gray-500 hover:text-red-500 p-2 ml-2"><i class="fa-solid fa-trash text-lg"></i></button></div></div>`;
             });
             updateTotals(subtotal);
         }
 
         function updateTotals(subtotal) {
-            const iva = subtotal * 0.15;
-            const total = subtotal + iva;
+            const iva = subtotal * 0.15; const total = subtotal + iva;
             document.getElementById('cart-subtotal').innerText = `$${subtotal.toFixed(2)}`;
             document.getElementById('cart-iva').innerText = `$${iva.toFixed(2)}`;
             document.getElementById('cart-total').innerText = `$${total.toFixed(2)}`;
@@ -592,25 +557,15 @@
             if(cart.length === 0) return;
             const name = document.getElementById('customer-name').value.trim();
             if(!name) { alert("⚠️ Por favor, escribe tu nombre."); return; }
-
-            let subtotal = 0;
-            let message = `NUEVO PEDIDO LA ARMERÍA:\nCliente: ${name}\n\nPedido:\n`; 
-            
+            let subtotal = 0; let message = `NUEVO PEDIDO LA ARMERÍA:\nCliente: ${name}\n\nPedido:\n`;
             cart.forEach(item => { 
                 const itemTotal = item.price * item.qty; subtotal += itemTotal;
                 message += `${item.qty}x ${item.name.es}`; 
                 if(item.isClothing) message += ` | Talla: ${item.selSize} | Color: ${item.selColor === 'black' ? 'Negro' : 'Blanco'}`; 
                 message += ` | Sub: $${itemTotal.toFixed(2)}\n`; 
             });
-
-            const iva = subtotal * 0.15;
-            const total = subtotal + iva;
-
-            message += `\nSubtotal: $${subtotal.toFixed(2)}`;
-            message += `\nIVA (15%): $${iva.toFixed(2)}`;
-            message += `\nTOTAL A PAGAR: $${total.toFixed(2)}`;
-            message += `\n\n(Entiendo el tiempo de forjado: 8-12 días)`;
-            
+            const iva = subtotal * 0.15; const total = subtotal + iva;
+            message += `\nSubtotal: $${subtotal.toFixed(2)}\nIVA (15%): $${iva.toFixed(2)}\nTOTAL A PAGAR: $${total.toFixed(2)}\n\n(Entiendo el tiempo de forjado: 8-12 días)`;
             window.open(`https://wa.me/593996480843?text=${encodeURIComponent(message)}`, '_blank');
         }
 
@@ -618,6 +573,8 @@
         function closeProduct() { document.getElementById('product-modal').classList.remove('active'); }
         function openDeliveryModal() { document.getElementById('delivery-modal').classList.add('active'); }
         function closeDeliveryModal() { document.getElementById('delivery-modal').classList.remove('active'); }
+        function openTermsModal() { document.getElementById('terms-modal').classList.add('active'); }
+        function closeTermsModal() { document.getElementById('terms-modal').classList.remove('active'); }
         function openInfoModal() { document.getElementById('info-modal').classList.add('active'); }
         function closeInfoModal() { document.getElementById('info-modal').classList.remove('active'); }
         function toggleCart() { const m = document.getElementById('cart-modal'); m.classList.toggle('active'); if(m.classList.contains('active')) renderCartList(); }
