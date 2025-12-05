@@ -43,7 +43,7 @@
 
         .title-font { font-family: 'Cinzel', serif; }
 
-        /* CARRUSEL NATIVO */
+        /* CARRUSEL NATIVO (SCROLL) */
         .native-carousel {
             display: flex;
             overflow-x: auto;
@@ -67,6 +67,26 @@
             transition: transform 0.2s;
         }
 
+        /* --- NUEVO EFECTO INFINITO (CROSS-FADE) --- */
+        .fade-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .fade-img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease-in-out; /* Suavidad del cambio */
+            z-index: 1;
+        }
+        .fade-img.active {
+            opacity: 1;
+            z-index: 2;
+        }
+
         /* HERO LOOKBOOK */
         .hero-section {
             position: relative;
@@ -84,7 +104,6 @@
         }
         .hero-slide.active { opacity: 1; }
         
-        /* Degradado Táctico Inferior */
         .hero-gradient {
             position: absolute;
             bottom: 0;
@@ -160,6 +179,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: opacity 0.3s ease;
         }
 
         .modal-scroll-content {
@@ -295,7 +315,7 @@
     <!-- MAIN SCROLLABLE -->
     <main class="flex-grow h-full overflow-y-auto no-scrollbar">
         
-        <!-- SECCIÓN 1: HERO LOOKBOOK (CON 4 IMÁGENES REALES) -->
+        <!-- HERO LOOKBOOK -->
         <section id="hero-lookbook" class="relative w-full h-[85vh] overflow-hidden">
             <div id="hero-slides" class="w-full h-full relative">
                 <!-- Slide 1 -->
@@ -306,12 +326,12 @@
                 <div class="hero-slide" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-3.jpg');"></div>
                 <!-- Slide 4 -->
                 <div class="hero-slide" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-4.jpg');"></div>
+                <!-- Slide 5 -->
+                <div class="hero-slide" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-5.jpg');"></div>
                 
                 <div class="absolute inset-0 bg-black/10"></div> 
             </div>
-
             <div class="hero-gradient"></div>
-
             <div class="absolute bottom-0 left-0 w-full z-20 pointer-events-none px-6 pb-24 flex flex-col items-center justify-end h-full">
                 <h2 class="title-font text-4xl md:text-5xl text-white font-bold drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] tracking-widest mb-2">EL CAOS TANGIBLE</h2>
                 <div class="flex items-center gap-3">
@@ -320,10 +340,7 @@
                     <div class="h-[1px] w-8 bg-lumenGold"></div>
                 </div>
             </div>
-
-            <div class="absolute bottom-8 w-full text-center z-20 animate-bounce pointer-events-none">
-                <i class="fa-solid fa-chevron-down text-white/50 text-2xl"></i>
-            </div>
+            <div class="absolute bottom-8 w-full text-center z-20 animate-bounce pointer-events-none"><i class="fa-solid fa-chevron-down text-white/50 text-2xl"></i></div>
         </section>
 
         <!-- SECCIÓN 2: EQUIPAMIENTO -->
@@ -414,32 +431,58 @@
         const translations = { es: { langTitle: "IDIOMA", dataTitle: "DATOS", equipTitle: "EQUIPAMIENTO", equipSub: "Desliza para explorar", artTitle: "ARTEFACTOS", artSub: "Lore & Accesorios", termsFooter: "Términos y Condiciones", descTitle: "Descripción", specsTitle: "Especificaciones Técnicas", addCart: "AGREGAR", termsHeader: "TÉRMINOS & ENVÍOS", shippingTitle: "Logística y Tiempos", processDays: "5 - 8 Días", workingDays: "Laborables", cartTitle: "TU ARSENAL", total: "TOTAL", checkout: "ENVIAR PEDIDO", emptyCart: "Tu arsenal está vacío.", payTitle: "Métodos de Pago" }, en: { langTitle: "LANGUAGE", dataTitle: "CONTACT INFO", equipTitle: "EQUIPMENT", equipSub: "Swipe to explore", artTitle: "ARTIFACTS", artSub: "Lore & Accessories", termsFooter: "Terms & Conditions", descTitle: "Description", specsTitle: "Technical Specs", addCart: "ADD TO ARSENAL", termsHeader: "TERMS & SHIPPING", shippingTitle: "Logistics & Timing", processDays: "5 - 8 Days", workingDays: "Business Days", cartTitle: "YOUR ARSENAL", total: "TOTAL", checkout: "SEND ORDER", emptyCart: "Your arsenal is empty.", payTitle: "Payment Methods" } };
 
         const products = [
+            // 1. THE INITIATE TEE (4 IMÁGENES EXACTAS)
             {
                 id: 1, type: 'equip', isClothing: true,
                 name: { es: "THE INITIATE TEE", en: "THE INITIATE TEE" },
                 price: 35.00, tag: { es: "NIVEL 1", en: "LEVEL 1" }, icon: "fa-shirt",
-                images: {
-                    black: "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/camiseta-negra-basica.jpg",
-                    white: "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/camiseta-blanca-basica.jpg"
-                },
-                options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] },
+                images: [
+                    "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/camiseta-blanca-basica.jpg",
+                    "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/camiseta-negra-basica.jpg",
+                    "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/Camiseta-blanca-basica-1.jpg",
+                    "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/Camiseta-negra-basica-2.jpg"
+                ],
+                options: { sizes: ['S','M','L','XL','XXL'], colors: ['white', 'black'] },
                 desc: { es: "Tu entrada a la Legión. Diseñada para el uso diario.", en: "Your entry into the Legion. Designed for daily use." },
                 specs: { es: ["100% Algodón Peinado", "Corte Regular Fit"], en: ["100% Combed Cotton", "Regular Fit"] }
             },
+            
+            // 2. SHADOW WALKER
             { id: 2, type: 'equip', isClothing: true, name: { es: "SHADOW WALKER", en: "SHADOW WALKER" }, price: 50.00, tag: { es: "NIVEL 2", en: "LEVEL 2" }, icon: "fa-user-secret", options: { sizes: ['S','M','L','XL'], colors: ['black','white'], warning: true }, desc: { es: "Para caminar entre las sombras con estilo.", en: "To walk among shadows with style." }, specs: { es: ["Algodón Heavyweight 220g", "Corte OVERSIZED"], en: ["Heavyweight Cotton 220g", "OVERSIZED Cut"] } },
-            { id: 3, type: 'equip', isClothing: true, name: { es: "THE MASTER EDITION", en: "THE MASTER EDITION" }, price: 85.00, tag: { es: "NIVEL 3", en: "LEVEL 3" }, icon: "fa-box-open", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black'] }, desc: { es: "La máxima expresión del universo.", en: "The ultimate expression." }, specs: { es: ["Vintage Wash"], en: ["Vintage Wash"] } },
+            
+            // 3. THE MASTER EDITION (4 IMÁGENES EXACTAS)
+            { 
+                id: 3, type: 'equip', isClothing: true, 
+                name: { es: "THE MASTER EDITION", en: "THE MASTER EDITION" }, 
+                price: 50.00, tag: { es: "NIVEL 3", en: "LEVEL 3" }, 
+                icon: "fa-box-open", 
+                images: [
+                    "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-blanca.jpg",
+                    "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-negra.jpg",
+                    "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-1.jpg",
+                    "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-2.jpg"
+                ],
+                options: { sizes: ['S','M','L','XL','XXL'], colors: ['white', 'black'] }, 
+                desc: { es: "La máxima expresión del universo.", en: "The ultimate expression." }, 
+                specs: { es: ["Camiseta Ultra-Pesada 240g", "Vintage Wash"], en: ["Ultra-Heavy Tee 240g", "Vintage Wash"] } 
+            },
+            
+            // 4. LUMENFALL HOODIE (4 IMÁGENES EXACTAS - IMAGEN CORREGIDA)
             { 
                 id: 4, type: 'equip', isClothing: true, 
                 name: { es: "LUMENFALL HOODIE", en: "LUMENFALL HOODIE" }, 
                 price: 85.00, tag: { es: "WINTER", en: "WINTER" }, icon: "fa-user-ninja",
-                images: {
-                    black: "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/Sudadera-negra.jpg",
-                    white: "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/Sudadera-blanca.jpg"
-                },
-                options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] }, 
+                images: [
+                    "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/Sudadera-blanca.jpg",
+                    "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/Sudadera-negra.jpg",
+                    "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/8e1bef99a98bc797f121aa5bd5eaec740b0afc81/Armeria/assets/Imagenes/Ropa/Sudadera-blanca-1.jpg", /* RUTA RAW HASH CORREGIDA */
+                    "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/Sudadera-negra-2.jpg"
+                ],
+                options: { sizes: ['S','M','L','XL','XXL'], colors: ['white', 'black'] }, 
                 desc: { es: "Tu escudo contra el frío.", en: "Your shield against the cold." }, 
                 specs: { es: ["Burda Pesada Perchada", "Interior Térmico"], en: ["Heavy Brushed Fleece", "Thermal Interior"] } 
             },
+            
             { id: 7, type: 'equip', isClothing: true, name: { es: "MY TEMPO SIGNATURE TEE", en: "MY TEMPO SIGNATURE TEE" }, price: 45.00, tag: { es: "MUSIC", en: "MUSIC" }, icon: "fa-music", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] }, desc: { es: "La frecuencia visual del sonido.", en: "The visual frequency of sound." }, specs: { es: ["Algodón Premium 210g", "Boxy Fit"], en: ["Premium Cotton 210g", "Boxy Fit"] } },
             { id: 5, type: 'art', isClothing: false, name: { es: "Llavero Rúnico", en: "Runic Keychain" }, price: 10.00, tag: { es: "ACCESORIO", en: "ACCESSORY" }, icon: "fa-key", desc: { es: "Lleva la marca de la Sombra siempre contigo.", en: "Carry the Shadow mark with you always." }, specs: { es: ["Aleación Zinc"], en: ["Zinc Alloy"] } },
             { id: 6, type: 'art', isClothing: false, name: { es: "BITÁCORA DEL CAOS", en: "CHAOS LOGBOOK" }, price: 30.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-journal-whills", desc: { es: "Este artefacto está siendo materializado.", en: "This artifact is being materialized." }, specs: { es: ["Tapa Dura Soft Touch"], en: ["Soft Touch Hardcover"] }, comingSoon: true },
@@ -447,6 +490,13 @@
         ];
 
         let currentLang = 'es'; let cart = []; let currentProdId = null; let selectedSize = null; let selectedColor = null; let modalQty = 1; let carouselIntervals = {};
+
+        // GLOBAL SYNC TIMER (RELOJ MAESTRO)
+        let globalImageIndex = 0;
+        setInterval(() => {
+            globalImageIndex = (globalImageIndex + 1) % 4; 
+            updateAllCarousels();
+        }, 4000); 
 
         // HERO LOGIC
         const heroSlides = document.querySelectorAll('.hero-slide');
@@ -457,6 +507,24 @@
                 currentSlide = (currentSlide + 1) % heroSlides.length;
                 heroSlides[currentSlide].classList.add('active');
             }, 4000);
+        }
+
+        function updateAllCarousels() {
+            products.forEach(p => {
+                if(p.images && p.images.length > 0) {
+                    // SELECCIONAR TODAS LAS IMÁGENES DENTRO DEL FADE-CONTAINER
+                    const images = document.querySelectorAll(`#fade-${p.id} .fade-img`);
+                    if(images.length > 0) {
+                        // Modulo para asegurar que no se rompa si un producto tiene menos fotos
+                        const activeIndex = globalImageIndex % images.length;
+                        
+                        images.forEach((img, index) => {
+                            if(index === activeIndex) img.classList.add('active');
+                            else img.classList.remove('active');
+                        });
+                    }
+                }
+            });
         }
 
         function setLanguage(lang) {
@@ -478,22 +546,25 @@
             const equipContainer = document.getElementById('carousel-equipamiento');
             const artContainer = document.getElementById('carousel-artefactos');
             equipContainer.innerHTML = ''; artContainer.innerHTML = '';
-            Object.values(carouselIntervals).forEach(clearInterval); carouselIntervals = {};
 
             products.forEach(p => {
                 const name = p.name[currentLang]; const tag = p.tag[currentLang];
                 let imageHTML = '';
+                
+                // IMPLEMENTACIÓN DE CROSS-FADE EN VITRINA
                 if (p.images) {
-                    const imgId = `card-img-${p.id}`;
-                    imageHTML = `<img id="${imgId}" src="${p.images.black}" class="product-img" alt="${name}">`;
-                    let isBlack = true;
-                    carouselIntervals[p.id] = setInterval(() => {
-                        const img = document.getElementById(imgId);
-                        if(img) { isBlack = !isBlack; img.style.opacity = 0; setTimeout(() => { img.src = isBlack ? p.images.black : p.images.white; img.style.opacity = 1; }, 500); }
-                    }, 4000);
-                } else { imageHTML = `<i class="fa-solid ${p.icon} text-9xl text-white/20 group-hover:text-white/40 transition-transform duration-500 group-hover:scale-110"></i>`; }
+                    const imagesMarkup = p.images.map((src, index) => {
+                        // La primera imagen empieza activa si el índice global coincide, o por defecto la 0
+                        const isActive = (globalImageIndex % p.images.length) === index ? 'active' : '';
+                        return `<img src="${src}" class="fade-img ${isActive}" alt="${name}">`;
+                    }).join('');
+                    
+                    imageHTML = `<div id="fade-${p.id}" class="fade-container">${imagesMarkup}</div>`;
+                } else { 
+                    imageHTML = `<div class="w-full h-full flex items-center justify-center"><i class="fa-solid ${p.icon} text-9xl text-white/20 group-hover:text-white/40 transition-transform duration-500 group-hover:scale-110"></i></div>`; 
+                }
 
-                const cardHTML = `<div class="product-card group cursor-pointer" onclick="openProduct(${p.id})"><div class="h-3/4 bg-gray-900 flex items-center justify-center relative border-b border-white/5 overflow-hidden">${imageHTML}<div class="absolute top-6 left-6 bg-lumenGold text-black text-xs font-bold px-3 py-1.5 uppercase rounded-sm">${tag}</div><div class="absolute bottom-6 right-6 bg-black/60 backdrop-blur px-4 py-2 rounded-full text-white font-bold border border-white/20 text-lg">$${p.price.toFixed(2)}</div></div><div class="h-1/4 p-6 flex flex-col justify-center bg-[#111]"><h3 class="text-white font-serif text-xl leading-tight mb-2 truncate font-bold">${name}</h3><p class="text-gray-500 text-sm line-clamp-2">${p.desc[currentLang]}</p></div></div>`;
+                const cardHTML = `<div class="product-card group cursor-pointer" onclick="openProduct(${p.id})"><div class="h-3/4 bg-gray-900 flex items-center justify-center relative border-b border-white/5 overflow-hidden">${imageHTML}<div class="absolute top-6 left-6 bg-lumenGold text-black text-xs font-bold px-3 py-1.5 uppercase rounded-sm z-10">${tag}</div><div class="absolute bottom-6 right-6 bg-black/60 backdrop-blur px-4 py-2 rounded-full text-white font-bold border border-white/20 text-lg z-10">$${p.price.toFixed(2)}</div></div><div class="h-1/4 p-6 flex flex-col justify-center bg-[#111]"><h3 class="text-white font-serif text-xl leading-tight mb-2 truncate font-bold">${name}</h3><p class="text-gray-500 text-sm line-clamp-2">${p.desc[currentLang]}</p></div></div>`;
                 if(p.type === 'equip') equipContainer.innerHTML += cardHTML; else artContainer.innerHTML += cardHTML;
             });
         }
@@ -503,7 +574,7 @@
             currentProdId = id; selectedSize = null; selectedColor = null; modalQty = 1;
             
             const modalImgContainer = document.getElementById('modal-img-container');
-            if(p.images) { modalImgContainer.innerHTML = `<img id="modal-main-img" src="${p.images.black}" class="w-full h-full object-cover"><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`; } 
+            if(p.images) { modalImgContainer.innerHTML = `<img id="modal-main-img" src="${p.images[0]}" class="w-full h-full object-cover"><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`; } 
             else { modalImgContainer.innerHTML = `<i id="m-icon" class="fa-solid ${p.icon} text-[180px] text-white/10 drop-shadow-2xl"></i><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`; }
 
             document.getElementById('modal-qty').innerText = modalQty; document.getElementById('m-title').innerText = p.name[currentLang]; document.getElementById('m-tag').innerText = p.tag[currentLang]; document.getElementById('m-desc').innerText = p.desc[currentLang]; document.getElementById('m-specs').innerHTML = p.specs[currentLang].map(s => `<li class="flex items-start border-b border-white/10 pb-3 last:border-0"><i class="fa-solid fa-angle-right text-lumenGold mt-1 mr-3 text-lg"></i>${s}</li>`).join('');
@@ -529,13 +600,24 @@
         }
 
         function selectSize(size, btn) { selectedSize = size; document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }
-        function selectColor(color, btn) { selectedColor = color; document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); const p = products.find(x => x.id === currentProdId); if(p && p.images) { const img = document.getElementById('modal-main-img'); if(img) img.src = color === 'black' ? p.images.black : p.images.white; } }
+        
+        function selectColor(color, btn) { 
+            selectedColor = color; 
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); 
+            const p = products.find(x => x.id === currentProdId);
+            if(p && p.images) { 
+                const img = document.getElementById('modal-main-img'); 
+                if(img) {
+                    img.src = color === 'white' ? p.images[0] : p.images[1];
+                }
+            } 
+        }
         function adjustQty(change) { modalQty += change; if(modalQty < 1) modalQty = 1; document.getElementById('modal-qty').innerText = modalQty; }
 
         function addToCartCurrent() {
             const p = products.find(x => x.id === currentProdId);
             if(p.isClothing && (!selectedSize || !selectedColor)) { alert("⚠️ Por favor selecciona TALLA y COLOR."); return; }
-            let cartImage = null; if(p.isClothing && p.images && selectedColor) { cartImage = p.images[selectedColor]; }
+            let cartImage = null; if(p.isClothing && p.images && selectedColor) { cartImage = p.images[selectedColor === 'white' ? 0 : 1]; }
             const existingIdx = cart.findIndex(item => item.id === p.id && item.selSize === selectedSize && item.selColor === selectedColor);
             if(existingIdx > -1) { cart[existingIdx].qty += modalQty; } else { cart.push({ ...p, selSize: selectedSize, selColor: selectedColor, qty: modalQty, cartImage: cartImage }); }
             updateCartBadge(); closeProduct();
