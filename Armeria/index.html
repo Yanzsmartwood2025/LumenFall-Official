@@ -84,13 +84,13 @@
         }
         .hero-slide.active { opacity: 1; }
         
-        /* Degradado Táctico Inferior (Para el texto) */
+        /* Degradado Táctico Inferior */
         .hero-gradient {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 40%; /* Cubre la parte inferior */
+            height: 40%;
             background: linear-gradient(to top, #050505 10%, rgba(5,5,5,0.8) 40%, transparent 100%);
             z-index: 10;
             pointer-events: none;
@@ -241,7 +241,7 @@
 </head>
 <body class="flex flex-col h-[100dvh] relative bg-[#050505]">
 
-    <!-- AVISO DE TERRITORIO (TOP BANNER) -->
+    <!-- AVISO DE TERRITORIO -->
     <div class="fixed top-0 w-full z-[60] bg-lumenGold text-black text-[10px] md:text-xs font-bold text-center py-2 tracking-widest uppercase shadow-lg">
         🇪🇨 LANZAMIENTO EXCLUSIVO ECUADOR. Envíos nacionales activos.
     </div>
@@ -295,23 +295,23 @@
     <!-- MAIN SCROLLABLE -->
     <main class="flex-grow h-full overflow-y-auto no-scrollbar">
         
-        <!-- SECCIÓN 1: HERO LOOKBOOK (FOTOS REALES) -->
+        <!-- SECCIÓN 1: HERO LOOKBOOK (CON 4 IMÁGENES REALES) -->
         <section id="hero-lookbook" class="relative w-full h-[85vh] overflow-hidden">
             <div id="hero-slides" class="w-full h-full relative">
-                <!-- Slide 1: Pantalla-1.jpg -->
+                <!-- Slide 1 -->
                 <div class="hero-slide active" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-1.jpg');"></div>
-                <!-- Slide 2: Pantalla-2.jpg -->
+                <!-- Slide 2 -->
                 <div class="hero-slide" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-2.jpg');"></div>
-                <!-- Slide 3: Pantalla-3.jpg -->
+                <!-- Slide 3 -->
                 <div class="hero-slide" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-3.jpg');"></div>
+                <!-- Slide 4 -->
+                <div class="hero-slide" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-4.jpg');"></div>
                 
-                <div class="absolute inset-0 bg-black/10"></div> <!-- Overlay muy sutil para brillo -->
+                <div class="absolute inset-0 bg-black/10"></div> 
             </div>
 
-            <!-- Degradado Inferior (Soporte para texto) -->
             <div class="hero-gradient"></div>
 
-            <!-- TEXTO REUBICADO EN LA PARTE INFERIOR -->
             <div class="absolute bottom-0 left-0 w-full z-20 pointer-events-none px-6 pb-24 flex flex-col items-center justify-end h-full">
                 <h2 class="title-font text-4xl md:text-5xl text-white font-bold drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] tracking-widest mb-2">EL CAOS TANGIBLE</h2>
                 <div class="flex items-center gap-3">
@@ -428,7 +428,18 @@
             },
             { id: 2, type: 'equip', isClothing: true, name: { es: "SHADOW WALKER", en: "SHADOW WALKER" }, price: 50.00, tag: { es: "NIVEL 2", en: "LEVEL 2" }, icon: "fa-user-secret", options: { sizes: ['S','M','L','XL'], colors: ['black','white'], warning: true }, desc: { es: "Para caminar entre las sombras con estilo.", en: "To walk among shadows with style." }, specs: { es: ["Algodón Heavyweight 220g", "Corte OVERSIZED"], en: ["Heavyweight Cotton 220g", "OVERSIZED Cut"] } },
             { id: 3, type: 'equip', isClothing: true, name: { es: "THE MASTER EDITION", en: "THE MASTER EDITION" }, price: 85.00, tag: { es: "NIVEL 3", en: "LEVEL 3" }, icon: "fa-box-open", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black'] }, desc: { es: "La máxima expresión del universo.", en: "The ultimate expression." }, specs: { es: ["Vintage Wash"], en: ["Vintage Wash"] } },
-            { id: 4, type: 'equip', isClothing: true, name: { es: "LUMENFALL HOODIE", en: "LUMENFALL HOODIE" }, price: 85.00, tag: { es: "WINTER", en: "WINTER" }, icon: "fa-user-ninja", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black'] }, desc: { es: "Tu escudo contra el frío.", en: "Your shield against the cold." }, specs: { es: ["Burda Pesada Perchada", "Interior Térmico"], en: ["Heavy Brushed Fleece", "Thermal Interior"] } },
+            { 
+                id: 4, type: 'equip', isClothing: true, 
+                name: { es: "LUMENFALL HOODIE", en: "LUMENFALL HOODIE" }, 
+                price: 85.00, tag: { es: "WINTER", en: "WINTER" }, icon: "fa-user-ninja",
+                images: {
+                    black: "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/Sudadera-negra.jpg",
+                    white: "https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Ropa/Sudadera-blanca.jpg"
+                },
+                options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] }, 
+                desc: { es: "Tu escudo contra el frío.", en: "Your shield against the cold." }, 
+                specs: { es: ["Burda Pesada Perchada", "Interior Térmico"], en: ["Heavy Brushed Fleece", "Thermal Interior"] } 
+            },
             { id: 7, type: 'equip', isClothing: true, name: { es: "MY TEMPO SIGNATURE TEE", en: "MY TEMPO SIGNATURE TEE" }, price: 45.00, tag: { es: "MUSIC", en: "MUSIC" }, icon: "fa-music", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] }, desc: { es: "La frecuencia visual del sonido.", en: "The visual frequency of sound." }, specs: { es: ["Algodón Premium 210g", "Boxy Fit"], en: ["Premium Cotton 210g", "Boxy Fit"] } },
             { id: 5, type: 'art', isClothing: false, name: { es: "Llavero Rúnico", en: "Runic Keychain" }, price: 10.00, tag: { es: "ACCESORIO", en: "ACCESSORY" }, icon: "fa-key", desc: { es: "Lleva la marca de la Sombra siempre contigo.", en: "Carry the Shadow mark with you always." }, specs: { es: ["Aleación Zinc"], en: ["Zinc Alloy"] } },
             { id: 6, type: 'art', isClothing: false, name: { es: "BITÁCORA DEL CAOS", en: "CHAOS LOGBOOK" }, price: 30.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-journal-whills", desc: { es: "Este artefacto está siendo materializado.", en: "This artifact is being materialized." }, specs: { es: ["Tapa Dura Soft Touch"], en: ["Soft Touch Hardcover"] }, comingSoon: true },
