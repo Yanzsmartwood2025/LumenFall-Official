@@ -290,7 +290,7 @@
         <div class="absolute inset-0" onclick="toggleMenu()"></div>
         <div class="side-menu-content relative">
             <div class="mb-10 flex justify-center border-b border-white/10 pb-8">
-                <img src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/ce78cc389fae79764d3d599e7240160118a5262e/Armeria/assets/Imagenes/Icono_lumenfall.png" alt="LUMENFALL LOGO" class="w-64 h-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                <img src="assets/Imagenes/Iconos/Icono_lumenfall.png" alt="LUMENFALL LOGO" class="w-64 h-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
             </div>
             
             <div class="mb-10">
@@ -448,7 +448,23 @@
             },
             
             // 2. SHADOW WALKER
-            { id: 2, type: 'equip', isClothing: true, name: { es: "SHADOW WALKER", en: "SHADOW WALKER" }, price: 50.00, tag: { es: "NIVEL 2", en: "LEVEL 2" }, icon: "fa-user-secret", options: { sizes: ['S','M','L','XL'], colors: ['black','white'], warning: true }, desc: { es: "Para caminar entre las sombras con estilo.", en: "To walk among shadows with style." }, specs: { es: ["Algodón Heavyweight 220g", "Corte OVERSIZED"], en: ["Heavyweight Cotton 220g", "OVERSIZED Cut"] } },
+            {
+                id: 2, type: 'equip', isClothing: true,
+                name: { es: "SHADOW WALKER", en: "SHADOW WALKER" },
+                price: 50.00, tag: { es: "NIVEL 2", en: "LEVEL 2" },
+                icon: "fa-user-secret",
+                images: [
+                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-blanca.jpg",
+                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-negra.jpg",
+                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-1.jpg",
+                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-2.jpg",
+                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-3.jpg",
+                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-4.jpg"
+                ],
+                options: { sizes: ['S','M','L','XL'], colors: ['black','white'], warning: true },
+                desc: { es: "Para caminar entre las sombras con estilo.", en: "To walk among shadows with style." },
+                specs: { es: ["Algodón Heavyweight 220g", "Corte OVERSIZED"], en: ["Heavyweight Cotton 220g", "OVERSIZED Cut"] }
+            },
             
             // 3. THE MASTER EDITION (4 IMÁGENES EXACTAS)
             { 
