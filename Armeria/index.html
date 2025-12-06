@@ -319,15 +319,15 @@
         <section id="hero-lookbook" class="relative w-full h-[85vh] overflow-hidden">
             <div id="hero-slides" class="w-full h-full relative">
                 <!-- Slide 1 -->
-                <div class="hero-slide active" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-1.jpg');"></div>
+                <div class="hero-slide active" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-1.jpg');"></div>
                 <!-- Slide 2 -->
-                <div class="hero-slide" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-2.jpg');"></div>
+                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-2.jpg');"></div>
                 <!-- Slide 3 -->
-                <div class="hero-slide" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-3.jpg');"></div>
+                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-3.jpg');"></div>
                 <!-- Slide 4 -->
-                <div class="hero-slide" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-4.jpg');"></div>
+                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-4.jpg');"></div>
                 <!-- Slide 5 -->
-                <div class="hero-slide" style="background-image: url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/main/Armeria/assets/Imagenes/Pantalla-principal/Pantalla-5.jpg');"></div>
+                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-5.jpg');"></div>
                 
                 <div class="absolute inset-0 bg-black/10"></div> 
             </div>
@@ -499,7 +499,23 @@
                 specs: { es: ["Burda Pesada Perchada", "Interior Térmico"], en: ["Heavy Brushed Fleece", "Thermal Interior"] } 
             },
             
-            { id: 7, type: 'equip', isClothing: true, name: { es: "MY TEMPO SIGNATURE TEE", en: "MY TEMPO SIGNATURE TEE" }, price: 45.00, tag: { es: "MUSIC", en: "MUSIC" }, icon: "fa-music", options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] }, desc: { es: "La frecuencia visual del sonido.", en: "The visual frequency of sound." }, specs: { es: ["Algodón Premium 210g", "Boxy Fit"], en: ["Premium Cotton 210g", "Boxy Fit"] } },
+            {
+                id: 7, type: 'equip', isClothing: true,
+                name: { es: "MY TEMPO SIGNATURE TEE", en: "MY TEMPO SIGNATURE TEE" },
+                price: 45.00, tag: { es: "MUSIC", en: "MUSIC" },
+                icon: "fa-music",
+                images: [
+                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-blanca.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-negra.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-1.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-2.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-3.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-4.jpg"
+                ],
+                options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] },
+                desc: { es: "La frecuencia visual del sonido.", en: "The visual frequency of sound." },
+                specs: { es: ["Algodón Premium 210g", "Boxy Fit"], en: ["Premium Cotton 210g", "Boxy Fit"] }
+            },
             { id: 5, type: 'art', isClothing: false, name: { es: "Llavero Rúnico", en: "Runic Keychain" }, price: 10.00, tag: { es: "ACCESORIO", en: "ACCESSORY" }, icon: "fa-key", desc: { es: "Lleva la marca de la Sombra siempre contigo.", en: "Carry the Shadow mark with you always." }, specs: { es: ["Aleación Zinc"], en: ["Zinc Alloy"] } },
             { id: 6, type: 'art', isClothing: false, name: { es: "BITÁCORA DEL CAOS", en: "CHAOS LOGBOOK" }, price: 30.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-journal-whills", desc: { es: "Este artefacto está siendo materializado.", en: "This artifact is being materialized." }, specs: { es: ["Tapa Dura Soft Touch"], en: ["Soft Touch Hardcover"] }, comingSoon: true },
             { id: 8, type: 'art', isClothing: false, name: { es: "EL GRIMORIO", en: "THE GRIMOIRE" }, price: 45.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-skull", desc: { es: "Este artefacto está siendo materializado.", en: "This artifact is being materialized." }, specs: { es: ["Edición Limitada"], en: ["Limited Edition"] }, comingSoon: true }
