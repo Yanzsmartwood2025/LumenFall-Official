@@ -800,9 +800,25 @@
                     <div class="modal-carousel" id="modal-carousel-scroll">
                         ${itemsHTML}
                     </div>
-                    <div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50 pointer-events-none">
+                    <!-- ARROWS INDICATORS -->
+                    <div id="modal-arrow-left" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-lumenGold text-5xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] z-20 animate-pulse transition-opacity duration-500 pointer-events-none"><i class="fa-solid fa-chevron-left"></i></div>
+                    <div id="modal-arrow-right" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-lumenGold text-5xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] z-20 animate-pulse transition-opacity duration-500 pointer-events-none"><i class="fa-solid fa-chevron-right"></i></div>
+
+                    <div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50 pointer-events-none z-30">
                         <span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span>
                     </div>`;
+
+                 // Hide arrows on scroll
+                 const carousel = document.getElementById('modal-carousel-scroll');
+                 const arL = document.getElementById('modal-arrow-left');
+                 const arR = document.getElementById('modal-arrow-right');
+                 if(carousel) {
+                     carousel.addEventListener('scroll', () => {
+                         if(arL) arL.style.opacity = '0';
+                         if(arR) arR.style.opacity = '0';
+                     }, { once: true });
+                 }
+
             } else {
                  // ARTIFACTS / NO CLOTHING
                  modalImgContainer.innerHTML = `<i id="m-icon" class="fa-solid ${p.icon} text-[180px] text-white/10 drop-shadow-2xl"></i><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`;
@@ -867,19 +883,48 @@
             if (!p || !p.isClothing || !p.showcase) return;
 
             // SCROLL TO APPROPRIATE IMAGE IF POSSIBLE
-            // Logic: White -> Index 0. Black -> Index 1.
             let targetIndex = -1;
+            let targetSuffix = null;
 
-            if (selectedColor === 'white') targetIndex = 0;
-            else if (selectedColor === 'black') targetIndex = 1;
+            // 1. Determine specific file suffix based on Gender + Color combination
+            // Logic:
+            // Man + White -> "-1"
+            // Man + Black -> "-2"
+            // Woman + White -> "-3"
+            // Woman + Black -> "-4"
 
-            // Note: Gender specific images are further down (index 2+), but without clear mapping we just respect color if set.
+            if (selectedGender === 'man') {
+                if (selectedColor === 'white') targetSuffix = '-1.';
+                else if (selectedColor === 'black') targetSuffix = '-2.';
+            } else if (selectedGender === 'woman') {
+                 if (selectedColor === 'white') targetSuffix = '-3.';
+                 else if (selectedColor === 'black') targetSuffix = '-4.';
+            }
 
-            if (targetIndex >= 0) {
+            // 2. Try to find specific index
+            if (targetSuffix) {
+                targetIndex = p.showcase.findIndex(src => src.includes(targetSuffix));
+            }
+
+            // 3. Fallback: If no specific gender combo found (or gender not selected), use Basic Exhibition colors
+            // White -> Index 0, Black -> Index 1 (Usually)
+            if (targetIndex === -1) {
+                if (selectedColor === 'white') targetIndex = 0;
+                else if (selectedColor === 'black') targetIndex = 1;
+            }
+
+            // 4. Execute Scroll
+            if (targetIndex >= 0 && targetIndex < p.showcase.length) {
                 const carousel = document.getElementById('modal-carousel-scroll');
                 if(carousel) {
                     const width = carousel.offsetWidth;
                     carousel.scrollTo({ left: width * targetIndex, behavior: 'smooth' });
+
+                    // Optional: Hide arrows immediately if logic auto-scrolls?
+                    // User said "arrows disappear when *user* slides".
+                    // Auto-scroll is programmatic. Let's keep arrows until user interacts or maybe fade them?
+                    // Use case: User clicks "Man", it auto scrolls. User sees new image.
+                    // Arrows still helpful to know they can see more. Keep them.
                 }
             }
         }
