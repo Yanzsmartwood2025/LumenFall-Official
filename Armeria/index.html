@@ -711,29 +711,29 @@
             // --- ARTEFACTOS ---
             { 
                 id: 6, type: 'art', isClothing: false,
-                name: { es: "Llavero Rúnico", en: "Runic Keychain" }, 
-                price: 10.00, tag: { es: "ACCESORIO", en: "ACCESSORY" }, icon: "fa-key", 
+                name: { es: "JOZIEL OPERATIVE TOKEN (Llavero)", en: "JOZIEL OPERATIVE TOKEN" },
+                price: 18.00, tag: { es: "VENTA NORMAL", en: "REGULAR SALE" }, icon: "fa-key",
                 showcase: ["assets/Imagenes/Accesorios/Accesorios-carrusel/Llavero/Llavero-1.jpg"],
-                desc: { es: "Lleva la marca de la Sombra siempre contigo. Aleación de Zinc.", en: "Carry the Shadow mark with you always. Zinc Alloy." }, 
+                desc: { es: "ACCESO NIVEL 1. Más que un llavero, una credencial. Placa de metal sólido con acabado táctico mate. Diseño: Minimalista con la firma oficial de Joziel grabada en el frente. Material: Aleación de alta resistencia. Uso: Llévalo como símbolo de lealtad a la Legión.", en: "LEVEL 1 ACCESS. More than a keychain, a credential. Solid metal plate with tactical matte finish. Design: Minimalist with official Joziel signature engraved on front. Material: High resistance alloy. Usage: Wear it as a symbol of loyalty to the Legion." },
                 specs: { es: ["Aleación Zinc", "Negro Mate"], en: ["Zinc Alloy", "Matte Black"] } 
             },
             { 
                 id: 7, type: 'art', isClothing: false,
-                name: { es: "BITÁCORA DEL CAOS", en: "CHAOS LOGBOOK" }, 
-                price: 30.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-journal-whills", 
+                name: { es: "THE AGENT NOTEBOOK (Cuaderno Espiral)", en: "THE AGENT NOTEBOOK" },
+                price: 25.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-journal-whills",
                 showcase: ["assets/Imagenes/Accesorios/Accesorios-carrusel/Cuaderno/Cuaderno-1.jpg"],
-                desc: { es: "Este artefacto está siendo materializado. Espacio para tus propias estrategias.", en: "This artifact is being materialized. Space for your own strategies." }, 
+                desc: { es: "⚠️ AVISO: PRE-ORDEN / PRODUCCIÓN EN CURSO. Este artículo se encuentra en fase final de imprenta. Al reservar hoy, aseguras tu copia de la Primera Edición. Los envíos comenzarán en las próximas semanas.\n\nTU CENTRO DE MANDO. Cuaderno de espiral metálico robusto diseñado para la planificación. Incluye páginas introductorias con el arte oficial de los Archivos de la Sombra.", en: "⚠️ NOTICE: PRE-ORDER / PRODUCTION IN PROGRESS. This item is in final printing phase. By reserving today, you secure your First Edition copy. Shipments will begin in the coming weeks.\n\nYOUR COMMAND CENTER. Robust metal spiral notebook designed for planning. Includes introductory pages with official Shadow Archives art." },
                 specs: { es: ["Tapa Dura Soft Touch"], en: ["Soft Touch Hardcover"] }, 
-                comingSoon: true 
+                isPreOrder: true
             },
             { 
                 id: 8, type: 'art', isClothing: false,
-                name: { es: "EL GRIMORIO", en: "THE GRIMOIRE" }, 
-                price: 45.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-skull", 
+                name: { es: "LUMENFALL GRIMOIRE (Libro de Colección)", en: "LUMENFALL GRIMOIRE" },
+                price: 40.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-skull",
                 showcase: ["assets/Imagenes/Accesorios/Accesorios-carrusel/Libro/Libro-1.jpg"],
-                desc: { es: "La historia completa. Este artefacto está siendo materializado.", en: "The full story. This artifact is being materialized." }, 
+                desc: { es: "⚠️ AVISO: PRE-ORDEN / PRODUCCIÓN EN CURSO. Artículo de Colección en imprenta. Tu reserva garantiza el acceso a la Primera Tirada. El envío se realizará tras finalizar la producción.\n\nEL ORIGEN DE LA LUZ Y LA SOMBRA. Edición de lujo con lomo cuadrado (Perfect Bound) que se siente como un libro antiguo en tus manos. Úsalo como tu diario de manifestación o pieza de exhibición.", en: "⚠️ NOTICE: PRE-ORDER / PRODUCTION IN PROGRESS. Collector Item in printing. Your reservation guarantees access to the First Run. Shipping will occur after production ends.\n\nTHE ORIGIN OF LIGHT AND SHADOW. Luxury edition with square spine (Perfect Bound) that feels like an ancient book in your hands. Use it as your manifestation journal or display piece." },
                 specs: { es: ["Edición Limitada"], en: ["Limited Edition"] }, 
-                comingSoon: true 
+                isPreOrder: true
             }
         ];
 
@@ -889,43 +889,49 @@
                 addBtn.innerHTML = `<span>${translations[currentLang].waitlist}</span> <i class="fa-brands fa-whatsapp"></i>`;
                 addBtn.classList.replace('bg-white', 'bg-gray-800'); addBtn.classList.replace('text-black', 'text-white');
                 addBtn.onclick = () => window.open(`https://wa.me/593996480843?text=Hola, quiero unirme a la WAITLIST para: ${p.name.es}`, '_blank');
-            } 
-            else if (p.isClothing) {
-                selectorsDiv.classList.remove('hidden');
-                document.getElementById('gender-help-text').innerText = p.guide[currentLang];
-                
-                document.getElementById('size-options').innerHTML = p.options.sizes.map(s => `<button onclick="selectSize('${s}', this)" class="selector-btn hover:bg-white/10">${s}</button>`).join('');
-                document.getElementById('color-options').innerHTML = p.options.colors.map(c => `<div onclick="selectColor('${c}', this)" class="color-btn ${c} bg-${c === 'black' ? 'black' : 'white'}" title="${c}"></div>`).join('');
-                
-                // Add UNBOXING button for Product 5
-                const genderContainer = document.getElementById('gender-btn-container');
-                // Remove existing unboxing button if any to prevent duplicates on re-open
-                const existingUbBtn = document.getElementById('ub-main-btn');
-                if(existingUbBtn) existingUbBtn.remove();
-
-                if (p.id === 5) {
-                    const ubBtn = document.createElement('button');
-                    ubBtn.id = 'ub-main-btn';
-                    ubBtn.className = 'selector-btn flex-1';
-                    ubBtn.innerText = 'UNBOXING';
-                    ubBtn.onclick = function() { selectUnboxing(this); };
-                    genderContainer.appendChild(ubBtn);
+            } else {
+                let btnLabel = translations[currentLang].addCart;
+                if (p.isPreOrder) {
+                    btnLabel = "RESERVAR / PRE-ORDER";
                 }
 
-                // Reset visibility
-                document.getElementById('unboxing-options').classList.add('hidden');
-                document.getElementById('size-selector-block').classList.remove('hidden');
-                document.getElementById('color-selector-block').classList.remove('hidden');
-                document.getElementById('gender-guide-block').classList.remove('hidden');
+                addBtn.innerHTML = `<span>${btnLabel}</span>`;
+                if(addBtn.classList.contains('bg-gray-800')) {
+                     addBtn.classList.replace('bg-gray-800', 'bg-white');
+                     addBtn.classList.replace('text-white', 'text-black');
+                }
+                addBtn.onclick = addToCartCurrent;
 
-                addBtn.innerHTML = `<span data-i18n="addCart">${translations[currentLang].addCart}</span>`;
-                addBtn.classList.replace('bg-gray-800', 'bg-white'); addBtn.classList.replace('text-white', 'text-black');
-                addBtn.onclick = addToCartCurrent;
-            } else {
-                selectorsDiv.classList.add('hidden');
-                addBtn.innerHTML = `<span data-i18n="addCart">${translations[currentLang].addCart}</span>`;
-                addBtn.classList.replace('bg-gray-800', 'bg-white'); addBtn.classList.replace('text-white', 'text-black');
-                addBtn.onclick = addToCartCurrent;
+                if (p.isClothing) {
+                    selectorsDiv.classList.remove('hidden');
+                    document.getElementById('gender-help-text').innerText = p.guide[currentLang];
+
+                    document.getElementById('size-options').innerHTML = p.options.sizes.map(s => `<button onclick="selectSize('${s}', this)" class="selector-btn hover:bg-white/10">${s}</button>`).join('');
+                    document.getElementById('color-options').innerHTML = p.options.colors.map(c => `<div onclick="selectColor('${c}', this)" class="color-btn ${c} bg-${c === 'black' ? 'black' : 'white'}" title="${c}"></div>`).join('');
+
+                    // Add UNBOXING button for Product 5
+                    const genderContainer = document.getElementById('gender-btn-container');
+                    // Remove existing unboxing button if any to prevent duplicates on re-open
+                    const existingUbBtn = document.getElementById('ub-main-btn');
+                    if(existingUbBtn) existingUbBtn.remove();
+
+                    if (p.id === 5) {
+                        const ubBtn = document.createElement('button');
+                        ubBtn.id = 'ub-main-btn';
+                        ubBtn.className = 'selector-btn flex-1';
+                        ubBtn.innerText = 'UNBOXING';
+                        ubBtn.onclick = function() { selectUnboxing(this); };
+                        genderContainer.appendChild(ubBtn);
+                    }
+
+                    // Reset visibility
+                    document.getElementById('unboxing-options').classList.add('hidden');
+                    document.getElementById('size-selector-block').classList.remove('hidden');
+                    document.getElementById('color-selector-block').classList.remove('hidden');
+                    document.getElementById('gender-guide-block').classList.remove('hidden');
+                } else {
+                    selectorsDiv.classList.add('hidden');
+                }
             }
 
             document.getElementById('product-modal').classList.add('active');
@@ -1180,6 +1186,10 @@
                 const itemTotal = item.price * item.qty; subtotal += itemTotal;
                 
                 message += `▪️ ${item.qty}x ${item.name[currentLang]}`;
+                if (item.isPreOrder) {
+                    message += ` (RESERVA / PRE-ORDER)`;
+                }
+
                 if (item.isClothing) {
                     const genderTxt = item.selGender === 'man' ? t.waMan : t.waWoman;
                     const colorTxt = item.selColor === 'black' ? t.waBlack : t.waWhite;
