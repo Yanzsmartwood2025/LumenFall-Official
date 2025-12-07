@@ -182,6 +182,26 @@
             transition: opacity 0.3s ease;
         }
 
+        /* MODAL CAROUSEL */
+        .modal-carousel {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            width: 100%;
+            height: 100%;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+        .modal-carousel::-webkit-scrollbar { display: none; }
+
+        .modal-carousel-item {
+            flex: 0 0 100%;
+            width: 100%;
+            height: 100%;
+            scroll-snap-align: center;
+            object-fit: cover;
+        }
+
         .modal-scroll-content {
             flex: 1;
             overflow-y: auto;
@@ -338,6 +358,12 @@
                 <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-2.jpg');"></div>
                 <!-- Slide 3 -->
                 <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-3.jpg');"></div>
+                <!-- Slide 4 -->
+                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-4.jpg');"></div>
+                <!-- Slide 5 -->
+                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-5.jpg');"></div>
+                <!-- Slide 6 -->
+                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-6.jpg');"></div>
                 
                 <div class="absolute inset-0 bg-black/10"></div> 
             </div>
@@ -532,7 +558,14 @@
                     woman_white: "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-1.jpg", 
                     woman_black: "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-negra-basica-2.jpg"
                 },
-                showcase: ["assets/Imagenes/Ropa/Camisetas-basicas/camiseta-negra-basica.jpg", "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-1.jpg", "assets/Imagenes/Ropa/Camisetas-basicas/camiseta-blanca-basica.jpg", "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-negra-basica-2.jpg", "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-3.jpg", "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-negra-basica-4.jpg"],
+                showcase: [
+                    "assets/Imagenes/Ropa/Camisetas-basicas/camiseta-blanca-basica.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-basicas/camiseta-negra-basica.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-1.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-negra-basica-2.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-3.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-negra-basica-4.jpg"
+                ],
                 options: { sizes: ['S','M','L','XL'], colors: ['black', 'white'] },
                 desc: { es: "Concepto: Lleva la historia en el pecho. Panel frontal de alta definición (DTG) con el arte narrativo de 'A Light Divided'. Materiales: Algodón peinado 'Soft Cotton'. Fresco, ligero y de tacto suave.", en: "Concept: Wear the story on your chest. High definition front panel (DTG) with 'A Light Divided' narrative art. Materials: Combed 'Soft Cotton'. Fresh, light and soft touch." },
                 guide: { es: "SELECCIONA GÉNERO:\n• Elige MUJER para un corte 'Slim Fit' que se entalla en la cintura y mangas más cortas.\n• Elige HOMBRE para un corte 'Regular Fit' recto y estructurado en hombros.\n• COLOR: Blanco para la luz, Negro para la sombra.", en: "SELECT GENDER:\n• Select WOMAN for a Slim Fit cut. \n• Select MAN for a structured Regular Fit.\n• COLOR: White for light, Black for shadow." }
@@ -547,7 +580,14 @@
                     woman_white: "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-1.jpg",
                     woman_black: "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-2.jpg"
                 },
-                showcase: ["assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-negra.jpg", "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-1.jpg", "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-blanca.jpg", "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-2.jpg", "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-3.jpg", "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-4.jpg"],
+                showcase: [
+                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-blanca.jpg",
+                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-negra.jpg",
+                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-1.jpg",
+                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-2.jpg",
+                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-3.jpg",
+                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-4.jpg"
+                ],
                 options: { sizes: ['S','M','L','XL'], colors: ['black','white'] },
                 desc: { es: "Concepto: Agilidad pura. Hoodie sin mangas diseñado para el combate urbano y entrenamiento. Materiales: French Terry de peso medio (Respirable). Cierre frontal metálico de alta resistencia. Detalle: Logotipo 'Joziel' (Firma) en el pecho.", en: "Concept: Pure agility. Sleeveless hoodie designed for urban combat and training. Materials: Mid-weight French Terry (Breathable). High resistance metal front zipper. Detail: 'Joziel' (Signature) logo on chest." },
                 guide: { es: "SELECCIONA GÉNERO:\n• Elige HOMBRE si tienes espalda ancha y buscas una sisa abierta (estilo Gym).\n• Elige MUJER si buscas un talle más corto y cerrado en el busto (estilo Sport/Crop).", en: "SELECT GENDER:\n• Select MAN for a broad, open fit.\n• Select WOMAN for a shorter, closer fit." }
@@ -562,7 +602,14 @@
                     woman_white: "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-1.jpg",
                     woman_black: "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-2.jpg"
                 },
-                showcase: ["assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-negra.jpg", "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-1.jpg", "assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-blanca.jpg", "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-2.jpg", "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-3.jpg", "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-4.jpg"],
+                showcase: [
+                    "assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-blanca.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-negra.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-1.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-2.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-3.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-4.jpg"
+                ],
                 options: { sizes: ['S','M','L','XL'], colors: ['black', 'white'] }, 
                 desc: { es: "Concepto: Tu piel es el lienzo. Camiseta de manga larga con efecto 'Segunda Piel'. Materiales: Algodón Premium de peso intermedio. Arte: FULL SLEEVE PRINT (Impresión de manga completa) en el brazo izquierdo. Diseño realista de Rosas y Calaveras.", en: "Concept: Your skin is the canvas. Long sleeve tee with 'Second Skin' effect. Materials: Premium mid-weight cotton. Art: FULL SLEEVE PRINT on left arm. Realistic Roses & Skulls design." }, 
                 guide: { es: "SELECCIONA GÉNERO (IMPORTANTE):\n• MUJER: Vital elegir este corte para que la manga quede ajustada a la piel y el tatuaje parezca real.\n• HOMBRE: Manga más holgada y hombros reforzados para comodidad.", en: "SELECT GENDER (IMPORTANT):\n• WOMAN: Vital to choose this cut so the sleeve fits tight to skin and tattoo looks real.\n• MAN: Looser sleeve and reinforced shoulders for comfort." }
@@ -577,7 +624,14 @@
                     woman_white: "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-1.jpg",
                     woman_black: "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra-2.jpg"
                 },
-                showcase: ["assets/Imagenes/Ropa/Sudaderas/Sudadera-negra.jpg", "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-1.jpg", "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca.jpg", "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra-2.jpg", "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-3.jpg", "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra-4.jpg"],
+                showcase: [
+                    "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca.jpg",
+                    "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra.jpg",
+                    "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-1.jpg",
+                    "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra-2.jpg",
+                    "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-3.jpg",
+                    "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra-4.jpg"
+                ],
                 options: { sizes: ['S','M','L','XL','XXL'], colors: ['black', 'white'] }, 
                 desc: { es: "Concepto: Protección total. Tu refugio contra el frío y el ruido exterior. Materiales: HEAVYWEIGHT FLEECE (Algodón Pesado). Interior perchado. Arte: Manga izquierda 'tatuada' completa sobre tela gruesa.", en: "Concept: Total protection. Your shelter against cold and noise. Materials: HEAVYWEIGHT FLEECE. Brushed interior. Art: Full 'tattooed' left sleeve on thick fabric." }, 
                 guide: { es: "SELECCIONA GÉNERO:\n• Elige HOMBRE si buscas el estilo 'Oversized' (Grande, ancho y urbano).\n• Elige MUJER si prefieres que la pretina ajuste correctamente en la cadera (evita el efecto 'bolsa').", en: "SELECT GENDER:\n• Select MAN for an Oversized style.\n• Select WOMAN if you prefer the waistband to fit correctly on the hip." }
@@ -592,7 +646,14 @@
                     woman_white: "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-1.jpg",
                     woman_black: "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-2.jpg"
                 },
-                showcase: ["assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-negra.jpg", "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-1.jpg", "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-blanca.jpg", "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-2.jpg", "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-3.jpg", "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-4.jpg"],
+                showcase: [
+                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-blanca.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-negra.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-1.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-2.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-3.jpg",
+                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-4.jpg"
+                ],
                 options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] },
                 desc: { es: "Concepto: Conéctate a la frecuencia. Edición de Lujo. 📦 QUÉ INCLUYE EL PACK: Camiseta Signature Tee + Caja de Edición Especial + Llavero Oficial + Tarjeta de Acceso (QR Audio WAV + Lore).", en: "Concept: Connect to the frequency. Luxury Edition. 📦 BUNDLE INCLUDES: Signature Tee + Special Edition Box + Official Keychain + Access Card (QR Audio WAV + Lore)." },
                 guide: { es: "SELECCIONA GÉNERO:\n• MUJER: Corte entallado y femenino.\n• HOMBRE: Corte clásico recto.", en: "SELECT GENDER:\n• WOMAN: Slim and feminine cut.\n• MAN: Classic straight cut." }
@@ -731,11 +792,19 @@
             document.querySelectorAll('.selector-btn, .size-btn, .color-btn').forEach(b => b.classList.remove('selected'));
 
             const modalImgContainer = document.getElementById('modal-img-container');
-            let initialImg = "";
-            if(p.isClothing && p.images) {
-                 initialImg = p.images['man_black'] || p.showcase[0];
-                 modalImgContainer.innerHTML = `<img id="modal-main-img" src="${initialImg}" class="w-full h-full object-cover"><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`;
+
+            if(p.isClothing && p.showcase && p.showcase.length > 0) {
+                 // BUILD CAROUSEL
+                 const itemsHTML = p.showcase.map(src => `<img src="${src}" class="modal-carousel-item" alt="View">`).join('');
+                 modalImgContainer.innerHTML = `
+                    <div class="modal-carousel" id="modal-carousel-scroll">
+                        ${itemsHTML}
+                    </div>
+                    <div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50 pointer-events-none">
+                        <span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span>
+                    </div>`;
             } else {
+                 // ARTIFACTS / NO CLOTHING
                  modalImgContainer.innerHTML = `<i id="m-icon" class="fa-solid ${p.icon} text-[180px] text-white/10 drop-shadow-2xl"></i><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`;
             }
 
@@ -795,16 +864,24 @@
 
         function updateModalImage() {
             const p = products.find(x => x.id === currentProdId);
-            if (!p || !p.isClothing) return;
+            if (!p || !p.isClothing || !p.showcase) return;
 
-            let imgKey = 'man_black';
-            if (selectedGender && selectedColor) { imgKey = `${selectedGender}_${selectedColor}`; } 
-            else if (selectedGender) { imgKey = `${selectedGender}_black`; } 
-            else if (selectedColor) { imgKey = `man_${selectedColor}`; }
+            // SCROLL TO APPROPRIATE IMAGE IF POSSIBLE
+            // Logic: White -> Index 0. Black -> Index 1.
+            let targetIndex = -1;
 
-            const newSrc = p.images[imgKey];
-            const imgEl = document.getElementById('modal-main-img');
-            if (imgEl && newSrc) imgEl.src = newSrc;
+            if (selectedColor === 'white') targetIndex = 0;
+            else if (selectedColor === 'black') targetIndex = 1;
+
+            // Note: Gender specific images are further down (index 2+), but without clear mapping we just respect color if set.
+
+            if (targetIndex >= 0) {
+                const carousel = document.getElementById('modal-carousel-scroll');
+                if(carousel) {
+                    const width = carousel.offsetWidth;
+                    carousel.scrollTo({ left: width * targetIndex, behavior: 'smooth' });
+                }
+            }
         }
 
         function adjustQty(change) { modalQty += change; if(modalQty < 1) modalQty = 1; document.getElementById('modal-qty').innerText = modalQty; }
