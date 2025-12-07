@@ -867,13 +867,22 @@
             if (!p || !p.isClothing || !p.showcase) return;
 
             // SCROLL TO APPROPRIATE IMAGE IF POSSIBLE
-            // Logic: White -> Index 0. Black -> Index 1.
+            // Mapping Logic:
+            // - White (Neutral): Index 0
+            // - Black (Neutral): Index 1
+            // - Man + White: Index 2 (File ending in -1)
+            // - Man + Black: Index 3 (File ending in -2)
+            // - Woman + White: Index 4 (File ending in -3)
+            // - Woman + Black: Index 5 (File ending in -4)
+
             let targetIndex = -1;
 
-            if (selectedColor === 'white') targetIndex = 0;
+            if (selectedGender === 'man' && selectedColor === 'white') targetIndex = 2;
+            else if (selectedGender === 'man' && selectedColor === 'black') targetIndex = 3;
+            else if (selectedGender === 'woman' && selectedColor === 'white') targetIndex = 4;
+            else if (selectedGender === 'woman' && selectedColor === 'black') targetIndex = 5;
+            else if (selectedColor === 'white') targetIndex = 0;
             else if (selectedColor === 'black') targetIndex = 1;
-
-            // Note: Gender specific images are further down (index 2+), but without clear mapping we just respect color if set.
 
             if (targetIndex >= 0) {
                 const carousel = document.getElementById('modal-carousel-scroll');
