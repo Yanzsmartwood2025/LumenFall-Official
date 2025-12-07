@@ -352,8 +352,10 @@
         <!-- HERO LOOKBOOK -->
         <section id="hero-lookbook" class="relative w-full h-[85vh] overflow-hidden">
             <div id="hero-slides" class="w-full h-full relative">
+                <!-- Slide 0 -->
+                <div class="hero-slide active" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-0.png');"></div>
                 <!-- Slide 1 -->
-                <div class="hero-slide active" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-1.jpg');"></div>
+                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-1.jpg');"></div>
                 <!-- Slide 2 -->
                 <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-2.jpg');"></div>
                 <!-- Slide 3 -->
@@ -364,6 +366,12 @@
                 <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-5.jpg');"></div>
                 <!-- Slide 6 -->
                 <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-6.jpg');"></div>
+                <!-- Slide 7 -->
+                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-7.png');"></div>
+                <!-- Slide 8 -->
+                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-8.jpg');"></div>
+                <!-- Slide 9 -->
+                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-9.jpg');"></div>
                 
                 <div class="absolute inset-0 bg-black/10"></div> 
             </div>
@@ -420,31 +428,36 @@
             <h1 id="m-title" class="title-font text-4xl text-white leading-tight mb-8 font-bold">Nombre</h1>
             <div class="space-y-8">
                 <div id="selectors-container" class="hidden bg-[#111] p-6 rounded-2xl border border-white/15 space-y-6">
-                    <!-- Selector de Género -->
+                    <!-- Selector de Género / Unboxing -->
                     <div>
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest" data-i18n="genderLabel">GÉNERO / GENDER</h3>
                         </div>
-                        <div class="flex gap-4">
+                        <div id="gender-btn-container" class="flex gap-4">
                             <button onclick="selectGender('man', this)" class="selector-btn flex-1" data-i18n="manBtn">HOMBRE</button>
                             <button onclick="selectGender('woman', this)" class="selector-btn flex-1" data-i18n="womanBtn">MUJER</button>
+                        </div>
+                        <!-- Unboxing Sub-buttons -->
+                        <div id="unboxing-options" class="hidden mt-4 grid grid-cols-2 gap-4">
+                            <button onclick="selectUnboxingItem('box')" class="selector-btn unboxing-sub-btn" id="ub-box">THE BLACK BOX</button>
+                            <button onclick="selectUnboxingItem('items')" class="selector-btn unboxing-sub-btn" id="ub-items">LLAVERO + TARJETA</button>
                         </div>
                     </div>
                     
                     <!-- Selector de Talla -->
-                    <div>
+                    <div id="size-selector-block">
                         <div class="flex justify-between items-center mb-4"><h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest" data-i18n="sizeLabel">TALLA / SIZE</h3></div>
                         <div id="size-options" class="grid grid-cols-4 gap-3"></div>
                     </div>
                     
                     <!-- Selector de Color -->
-                    <div>
+                    <div id="color-selector-block">
                         <h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest mb-4" data-i18n="colorLabel">COLOR</h3>
                         <div id="color-options" class="flex gap-6"></div>
                     </div>
                     
                     <!-- Texto de Ayuda Dinámico -->
-                    <div class="bg-lumenGold/10 border-l-2 border-lumenGold p-4 rounded-r-lg">
+                    <div id="gender-guide-block" class="bg-lumenGold/10 border-l-2 border-lumenGold p-4 rounded-r-lg">
                         <p class="text-lumenGold text-xs font-bold mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> <span data-i18n="equipGuideTitle">GUÍA DE EQUIPAMIENTO</span></p>
                         <p id="gender-help-text" class="text-gray-300 text-sm italic leading-relaxed"></p>
                     </div>
@@ -656,7 +669,23 @@
                 ],
                 options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] },
                 desc: { es: "Concepto: Conéctate a la frecuencia. Edición de Lujo. 📦 QUÉ INCLUYE EL PACK: Camiseta Signature Tee + Caja de Edición Especial + Llavero Oficial + Tarjeta de Acceso (QR Audio WAV + Lore).", en: "Concept: Connect to the frequency. Luxury Edition. 📦 BUNDLE INCLUDES: Signature Tee + Special Edition Box + Official Keychain + Access Card (QR Audio WAV + Lore)." },
-                guide: { es: "SELECCIONA GÉNERO:\n• MUJER: Corte entallado y femenino.\n• HOMBRE: Corte clásico recto.", en: "SELECT GENDER:\n• WOMAN: Slim and feminine cut.\n• MAN: Classic straight cut." }
+                guide: { es: "SELECCIONA GÉNERO:\n• MUJER: Corte entallado y femenino.\n• HOMBRE: Corte clásico recto.", en: "SELECT GENDER:\n• WOMAN: Slim and feminine cut.\n• MAN: Classic straight cut." },
+                unboxingData: {
+                    box: {
+                        img: "assets/Imagenes/Accesorios/Caja-my-tempo.jpg",
+                        desc: {
+                            es: "// CONTENIDO DEL PAQUETE CLASIFICADO:\n\n📦 THE BLACK BOX (Edición Coleccionista): No es una caja común. Es un contenedor táctico negro mate con sello de seguridad holográfico. Diseñada para proteger la frecuencia hasta tus manos.",
+                            en: "// CLASSIFIED PACKAGE CONTENTS:\n\n📦 THE BLACK BOX (Collector's Edition): Tactical matte black container with holographic seal. Designed to protect the frequency."
+                        }
+                    },
+                    items: {
+                        img: "assets/Imagenes/Accesorios/Llavero+tarjeta.jpg",
+                        desc: {
+                            es: "🗝️ LLAVERO OFICIAL JOZIEL: Metal sólido de alta resistencia con la firma grabada. Frente minimalista, reverso con código de serie. Un recordatorio físico de tu lealtad.\n\n💳 TARJETA DE ACCESO (Nivel 7): Tu llave maestra. Tarjeta rígida con Código QR encriptado al reverso. Al escanearlo desbloqueas:\n\n🔊 Audio WAV: La canción original en Calidad Estudio.\n\n📄 Lore Oculto: Documentos secretos del origen.",
+                            en: "🗝️ OFFICIAL JOZIEL KEYRING: Solid high-resistance metal with engraved signature. Minimalist front, serial code on back. A physical token of loyalty.\n\n💳 ACCESS CARD (Level 7): Your master key. Rigid card with encrypted QR Code on the back. Scans to unlock:\n\n🔊 WAV Audio: Original Track in Studio Quality.\n\n📄 Hidden Lore: Secret origin documents."
+                        }
+                    }
+                }
             },
             
             // --- ARTEFACTOS ---
@@ -687,7 +716,7 @@
 
         let currentLang = 'es'; let cart = []; let currentProdId = null; 
         let selectedSize = null; let selectedColor = null; let selectedGender = null;
-        let modalQty = 1;
+        let modalQty = 1; let isUnboxingMode = false;
 
         // GLOBAL SYNC TIMER
         let globalImageIndex = 0;
@@ -787,7 +816,7 @@
 
         function openProduct(id) {
             const p = products.find(x => x.id === id); if(!p) return;
-            currentProdId = id; selectedSize = null; selectedColor = null; selectedGender = null; modalQty = 1;
+            currentProdId = id; selectedSize = null; selectedColor = null; selectedGender = null; modalQty = 1; isUnboxingMode = false;
             
             document.querySelectorAll('.selector-btn, .size-btn, .color-btn').forEach(b => b.classList.remove('selected'));
 
@@ -845,6 +874,27 @@
                 document.getElementById('size-options').innerHTML = p.options.sizes.map(s => `<button onclick="selectSize('${s}', this)" class="selector-btn hover:bg-white/10">${s}</button>`).join('');
                 document.getElementById('color-options').innerHTML = p.options.colors.map(c => `<div onclick="selectColor('${c}', this)" class="color-btn ${c} bg-${c === 'black' ? 'black' : 'white'}" title="${c}"></div>`).join('');
                 
+                // Add UNBOXING button for Product 5
+                const genderContainer = document.getElementById('gender-btn-container');
+                // Remove existing unboxing button if any to prevent duplicates on re-open
+                const existingUbBtn = document.getElementById('ub-main-btn');
+                if(existingUbBtn) existingUbBtn.remove();
+
+                if (p.id === 5) {
+                    const ubBtn = document.createElement('button');
+                    ubBtn.id = 'ub-main-btn';
+                    ubBtn.className = 'selector-btn flex-1';
+                    ubBtn.innerText = 'UNBOXING';
+                    ubBtn.onclick = function() { selectUnboxing(this); };
+                    genderContainer.appendChild(ubBtn);
+                }
+
+                // Reset visibility
+                document.getElementById('unboxing-options').classList.add('hidden');
+                document.getElementById('size-selector-block').classList.remove('hidden');
+                document.getElementById('color-selector-block').classList.remove('hidden');
+                document.getElementById('gender-guide-block').classList.remove('hidden');
+
                 addBtn.innerHTML = `<span data-i18n="addCart">${translations[currentLang].addCart}</span>`;
                 addBtn.classList.replace('bg-gray-800', 'bg-white'); addBtn.classList.replace('text-white', 'text-black');
                 addBtn.onclick = addToCartCurrent;
@@ -860,9 +910,81 @@
 
         function selectGender(gender, btn) {
             selectedGender = gender;
+            isUnboxingMode = false;
+
+            // UI Reset
             btn.parentElement.querySelectorAll('.selector-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
+
+            // Show standard controls
+            document.getElementById('size-selector-block').classList.remove('hidden');
+            document.getElementById('color-selector-block').classList.remove('hidden');
+            document.getElementById('gender-guide-block').classList.remove('hidden');
+            document.getElementById('unboxing-options').classList.add('hidden');
+
+            // Restore Description
+            const p = products.find(x => x.id === currentProdId);
+            if(p) document.getElementById('m-desc').innerText = p.desc[currentLang];
+
+            // Restore Carousel (re-render current product view to get carousel back)
+            // But openProduct resets everything. We just need to ensure image area is carousel.
+            // Simplified: Re-trigger openProduct logic partly or just update image
+            // Actually, updateModalImage logic handles scroll. But if we replaced the content with a single image in Unboxing mode, we need to restore the carousel.
+            const modalImgContainer = document.getElementById('modal-img-container');
+            if(p && p.showcase && !document.getElementById('modal-carousel-scroll')) {
+                 const itemsHTML = p.showcase.map(src => `<img src="${src}" class="modal-carousel-item" alt="View">`).join('');
+                 modalImgContainer.innerHTML = `
+                    <div class="modal-carousel" id="modal-carousel-scroll">
+                        ${itemsHTML}
+                    </div>
+                    <div id="modal-arrow-left" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-lumenGold text-5xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] z-20 animate-pulse transition-opacity duration-500 pointer-events-none"><i class="fa-solid fa-chevron-left"></i></div>
+                    <div id="modal-arrow-right" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-lumenGold text-5xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] z-20 animate-pulse transition-opacity duration-500 pointer-events-none"><i class="fa-solid fa-chevron-right"></i></div>
+                    <div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50 pointer-events-none z-30">
+                        <span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span>
+                    </div>`;
+            }
+
             updateModalImage();
+        }
+
+        function selectUnboxing(btn) {
+            isUnboxingMode = true;
+            // Highlight button
+            btn.parentElement.querySelectorAll('.selector-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+
+            // Hide clothing controls
+            document.getElementById('size-selector-block').classList.add('hidden');
+            document.getElementById('color-selector-block').classList.add('hidden');
+            document.getElementById('gender-guide-block').classList.add('hidden');
+
+            // Show Unboxing controls
+            document.getElementById('unboxing-options').classList.remove('hidden');
+
+            // Default select "Box"
+            selectUnboxingItem('box');
+        }
+
+        function selectUnboxingItem(type) {
+            const p = products.find(x => x.id === currentProdId);
+            if(!p || !p.unboxingData) return;
+
+            // Highlight sub-button
+            document.querySelectorAll('.unboxing-sub-btn').forEach(b => b.classList.remove('selected'));
+            if(type === 'box') document.getElementById('ub-box').classList.add('selected');
+            else document.getElementById('ub-items').classList.add('selected');
+
+            const data = p.unboxingData[type];
+
+            // Update Description
+            document.getElementById('m-desc').innerText = data.desc[currentLang];
+
+            // Update Image Area (Single Image)
+            const modalImgContainer = document.getElementById('modal-img-container');
+            modalImgContainer.innerHTML = `<img src="${data.img}" class="w-full h-full object-cover" alt="Unboxing">
+            <div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50 pointer-events-none z-30">
+                <span class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span>
+            </div>`;
         }
 
         function selectSize(size, btn) { 
