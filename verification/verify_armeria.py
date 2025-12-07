@@ -1,59 +1,93 @@
-from playwright.sync_api import sync_playwright
+import re
+from playwright.sync_api import sync_playwright, expect
+import time
 
-def verify_armeria_modal():
+def run_verification():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        # Emulate a mobile device or just a responsive window, since arrows might be more visible there or just standard desktop.
-        # The site has max-width logic but looks like desktop is fine.
-        context = browser.new_context(viewport={'width': 1280, 'height': 800})
+        # Use a larger viewport to capture desktop-like layout in landscape
+        context = browser.new_context(viewport={'width': 1280, 'height': 720})
         page = context.new_page()
 
-        print("Navigating to Armeria...")
-        page.goto("http://localhost:8000/Armeria/index.html")
+        try:
+            print("Navigating to Armeria...")
+            page.goto("http://localhost:8000/Armeria/index.html")
 
-        # Wait for products to load
-        page.wait_for_selector(".product-card")
+            # Wait for initial load
+            page.wait_for_selector("#hero-slides")
 
-        # Click the first product (ID 1 - Graphic Tee)
-        print("Opening product...")
-        page.locator(".product-card").first.click()
+            # --- HERO VERIFICATION ---
+            print("Verifying Hero slides...")
+            # We want to check slides 3 and 4 (indices 3 and 4, since 0-based)
+            # These correspond to the 4th and 5th .hero-slide divs
 
-        # Wait for modal
-        page.wait_for_selector("#product-modal.active")
-        # Give it a second for animations (arrows animate)
-        page.wait_for_timeout(1000)
+            # Force active class on Slide 3 (New Llavero/Camiseta image)
+            page.evaluate("document.querySelectorAll('.hero-slide').forEach(s => s.classList.remove('active'))")
+            page.evaluate("document.querySelectorAll('.hero-slide')[3].classList.add('active')")
+            time.sleep(1) # Wait for transition
+            page.screenshot(path="verification/hero_slide_3.png")
+            print("Screenshot hero_slide_3.png captured")
 
-        # Screenshot 1: Arrows should be visible
-        print("Taking screenshot 1: Modal open with arrows...")
-        page.screenshot(path="verification/1_modal_open_arrows.png")
+            # Force active class on Slide 4 (New Llavero/Camiseta image)
+            page.evaluate("document.querySelectorAll('.hero-slide').forEach(s => s.classList.remove('active'))")
+            page.evaluate("document.querySelectorAll('.hero-slide')[4].classList.add('active')")
+            time.sleep(1)
+            page.screenshot(path="verification/hero_slide_4.png")
+            print("Screenshot hero_slide_4.png captured")
 
-        # Select Gender: Man
-        print("Selecting Gender: HOMBRE...")
-        page.get_by_role("button", name="HOMBRE").click()
-        page.wait_for_timeout(500)
+            # Force active class on Slide 5 (Should be the Book/Libro - old slide 3)
+            page.evaluate("document.querySelectorAll('.hero-slide').forEach(s => s.classList.remove('active'))")
+            page.evaluate("document.querySelectorAll('.hero-slide')[5].classList.add('active')")
+            time.sleep(1)
+            page.screenshot(path="verification/hero_slide_5.png")
+            print("Screenshot hero_slide_5.png captured")
 
-        # Select Color: White
-        # Color buttons don't have text, but have class 'white'.
-        print("Selecting Color: White...")
-        # Finding the white color button. It has class 'white' and 'color-btn'.
-        page.locator(".color-btn.white").click()
-        page.wait_for_timeout(1000) # Wait for scroll
 
-        # Screenshot 2: Image should have updated (scrolled)
-        print("Taking screenshot 2: After selection...")
-        page.screenshot(path="verification/2_selection_made.png")
+            # --- ACCESSORIES VERIFICATION ---
+            print("Verifying Accessories...")
+            # Scroll down to accessories
+            page.evaluate("document.getElementById('carousel-artefactos').scrollIntoView()")
+            time.sleep(1)
 
-        # Scroll the carousel to trigger arrow fade out
-        print("Scrolling carousel...")
-        carousel = page.locator("#modal-carousel-scroll")
-        carousel.evaluate("el => el.scrollBy(100, 0)")
-        page.wait_for_timeout(1000) # Wait for fade transition (500ms)
+            # There should be 3 items in the artifacts carousel: Llavero(6), Cuaderno(7), Libro(8)
+            # We will click each one and take a screenshot of the modal to verify the image loads
 
-        # Screenshot 3: Arrows should be gone
-        print("Taking screenshot 3: Arrows gone...")
-        page.screenshot(path="verification/3_scrolled_arrows_gone.png")
+            # Product 6: Llavero
+            print("Checking Product 6 (Llavero)...")
+            # Find product card with text "Llavero Rúnico"
+            page.locator(".product-card").filter(has_text="Llavero Rúnico").click()
+            # Wait for modal active
+            expect(page.locator("#product-modal")).to_have_class(re.compile("active"))
+            time.sleep(1)
+            page.screenshot(path="verification/product_6_modal.png")
+            # Close modal
+            page.locator("button[onclick='closeProduct()']").click()
+            time.sleep(0.5)
 
-        browser.close()
+            # Product 7: Cuaderno
+            print("Checking Product 7 (Cuaderno)...")
+            page.locator(".product-card").filter(has_text="BITÁCORA DEL CAOS").click()
+            expect(page.locator("#product-modal")).to_have_class(re.compile("active"))
+            time.sleep(1)
+            page.screenshot(path="verification/product_7_modal.png")
+            page.locator("button[onclick='closeProduct()']").click()
+            time.sleep(0.5)
+
+            # Product 8: Libro
+            print("Checking Product 8 (Libro)...")
+            page.locator(".product-card").filter(has_text="EL GRIMORIO").click()
+            expect(page.locator("#product-modal")).to_have_class(re.compile("active"))
+            time.sleep(1)
+            page.screenshot(path="verification/product_8_modal.png")
+            page.locator("button[onclick='closeProduct()']").click()
+            time.sleep(0.5)
+
+        except Exception as e:
+            print(f"Error: {e}")
+            page.screenshot(path="verification/error.png")
+            raise
+        finally:
+            browser.close()
 
 if __name__ == "__main__":
-    verify_armeria_modal()
+    run_verification()
