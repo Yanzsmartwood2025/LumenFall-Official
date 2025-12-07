@@ -264,7 +264,7 @@
 <body class="flex flex-col h-[100dvh] relative bg-[#050505]">
 
     <!-- AVISO DE TERRITORIO (Franja Amarilla) -->
-    <div class="fixed top-0 w-full z-[60] bg-lumenGold text-black text-[10px] md:text-xs font-bold text-center py-2 tracking-widest uppercase shadow-lg">
+    <div data-i18n="topBar" class="fixed top-0 w-full z-[60] bg-lumenGold text-black text-[10px] md:text-xs font-bold text-center py-2 tracking-widest uppercase shadow-lg">
         🇪🇨 LANZAMIENTO EXCLUSIVO ECUADOR. Envíos nacionales activos.
     </div>
 
@@ -362,7 +362,7 @@
             <div class="native-carousel px-6 no-scrollbar" id="carousel-equipamiento"></div>
         </section>
 
-        <!-- SECCIÓN 3: ARTEFACTOS (RESTAURADA) -->
+        <!-- SECCIÓN 3: ARTEFACTOS -->
         <section class="mb-12">
             <div class="px-6 mb-6">
                 <h2 class="title-font text-3xl text-white font-bold tracking-wider" data-i18n="artTitle">ARTEFACTOS</h2>
@@ -436,30 +436,30 @@
 
     <!-- MODAL DELIVERY -->
     <div id="delivery-modal" class="full-screen-modal">
-        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10"><h2 class="text-lumenGold font-bold tracking-widest text-lg">PROTOCOLO DE ENTREGA</h2><button onclick="closeDeliveryModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
-        <div class="flex-1 overflow-y-auto bg-black p-8 pt-32 pb-12"><div class="max-w-lg mx-auto space-y-8"><div class="text-center"><i class="fa-solid fa-shield-halved text-7xl text-lumenGold mb-6 animate-pulse"></i><h2 class="title-font text-3xl text-white mb-2">FORJADO A MEDIDA</h2><div class="w-24 h-1 bg-lumenGold mx-auto"></div></div><div class="bg-[#111] p-8 rounded-2xl border border-white/10"><p class="text-gray-300 text-xl leading-relaxed mb-8 font-medium">"En La Armería no almacenamos polvo. Cada prenda se confecciona y estampa bajo pedido <strong class="text-white">exclusivamente para ti</strong>."</p><div class="space-y-8"><div class="flex gap-5"><div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-lumenGold font-bold text-xl">1</div><div><h4 class="text-white font-bold text-lg uppercase mb-1">Fase de Forjado (Producción)</h4><p class="text-gray-400 text-base">5 - 8 días hábiles.</p></div></div><div class="flex gap-5"><div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-lumenGold font-bold text-xl">2</div><div><h4 class="text-white font-bold text-lg uppercase mb-1">Fase de Despliegue (Envío)</h4><p class="text-gray-400 text-base">2 - 4 días (según ubicación).</p></div></div></div><div class="mt-10 pt-8 border-t border-white/10"><p class="text-lumenGold text-xl font-bold text-center mb-2">TIEMPO TOTAL ESTIMADO</p><p class="text-white text-4xl font-serif text-center">8 a 12 Días</p></div></div></div></div>
+        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10"><h2 class="text-lumenGold font-bold tracking-widest text-lg" data-i18n="delTitle">PROTOCOLO DE ENTREGA</h2><button onclick="closeDeliveryModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
+        <div class="flex-1 overflow-y-auto bg-black p-8 pt-32 pb-12"><div class="max-w-lg mx-auto space-y-8"><div class="text-center"><i class="fa-solid fa-shield-halved text-7xl text-lumenGold mb-6 animate-pulse"></i><h2 class="title-font text-3xl text-white mb-2" data-i18n="delSubtitle">FORJADO A MEDIDA</h2><div class="w-24 h-1 bg-lumenGold mx-auto"></div></div><div class="bg-[#111] p-8 rounded-2xl border border-white/10"><p class="text-gray-300 text-xl leading-relaxed mb-8 font-medium" data-i18n="delText">"En La Armería no almacenamos polvo. Cada prenda se confecciona y estampa bajo pedido <strong class="text-white">exclusivamente para ti</strong>."</p><div class="space-y-8"><div class="flex gap-5"><div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-lumenGold font-bold text-xl">1</div><div><h4 class="text-white font-bold text-lg uppercase mb-1" data-i18n="step1Title">Fase de Forjado (Producción)</h4><p class="text-gray-400 text-base" data-i18n="step1Desc">5 - 8 días hábiles.</p></div></div><div class="flex gap-5"><div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-lumenGold font-bold text-xl">2</div><div><h4 class="text-white font-bold text-lg uppercase mb-1" data-i18n="step2Title">Fase de Despliegue (Envío)</h4><p class="text-gray-400 text-base" data-i18n="step2Desc">2 - 4 días (según ubicación).</p></div></div></div><div class="mt-10 pt-8 border-t border-white/10"><p class="text-lumenGold text-xl font-bold text-center mb-2" data-i18n="delFooterTitle">TIEMPO TOTAL ESTIMADO</p><p class="text-white text-4xl font-serif text-center" data-i18n="delFooterTime">8 a 12 Días</p></div></div></div></div>
     </div>
 
     <!-- MODAL TERMS -->
     <div id="terms-modal" class="full-screen-modal">
-        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10"><h2 class="text-lumenGold font-bold tracking-widest text-lg">TÉRMINOS LEGALES</h2><button onclick="closeTermsModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
-        <div class="flex-1 overflow-y-auto bg-black p-8 pt-32 pb-12"><div class="max-w-lg mx-auto space-y-10 text-gray-300"><section><h3 class="text-lumenGold font-bold uppercase mb-3 border-b border-white/10 pb-2">1. MODELO DE PRODUCCIÓN (El Forjado)</h3><p class="text-sm leading-relaxed">En La Armería operamos bajo un modelo "Made to Order". Tiempo de Producción: 5 a 8 días hábiles. Tiempo Total Estimado: 8 a 12 días.</p></section><section><h3 class="text-lumenGold font-bold uppercase mb-3 border-b border-white/10 pb-2">2. POLÍTICA DE ENVÍOS</h3><p class="text-sm leading-relaxed">Envíos directos a todo Ecuador vía Servientrega. Internacional vía DHL.</p></section><section><h3 class="text-lumenGold font-bold uppercase mb-3 border-b border-white/10 pb-2">3. CAMBIOS Y DEVOLUCIONES</h3><p class="text-sm leading-relaxed">No devoluciones por arrepentimiento. Cambios de talla solo 3 días post-recepción.</p></section></div></div>
+        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10"><h2 class="text-lumenGold font-bold tracking-widest text-lg" data-i18n="termTitle">TÉRMINOS LEGALES</h2><button onclick="closeTermsModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
+        <div class="flex-1 overflow-y-auto bg-black p-8 pt-32 pb-12"><div class="max-w-lg mx-auto space-y-10 text-gray-300"><section><h3 class="text-lumenGold font-bold uppercase mb-3 border-b border-white/10 pb-2" data-i18n="t1Title">1. MODELO DE PRODUCCIÓN (El Forjado)</h3><p class="text-sm leading-relaxed" data-i18n="t1Desc">En La Armería operamos bajo un modelo "Made to Order". Tiempo de Producción: 5 a 8 días hábiles. Tiempo Total Estimado: 8 a 12 días.</p></section><section><h3 class="text-lumenGold font-bold uppercase mb-3 border-b border-white/10 pb-2" data-i18n="t2Title">2. POLÍTICA DE ENVÍOS</h3><p class="text-sm leading-relaxed" data-i18n="t2Desc">Envíos directos a todo Ecuador vía Servientrega. Internacional vía DHL.</p></section><section><h3 class="text-lumenGold font-bold uppercase mb-3 border-b border-white/10 pb-2" data-i18n="t3Title">3. CAMBIOS Y DEVOLUCIONES</h3><p class="text-sm leading-relaxed" data-i18n="t3Desc">No devoluciones por arrepentimiento. Cambios de talla solo 3 días post-recepción.</p></section></div></div>
     </div>
 
     <!-- MODAL INFO -->
     <div id="info-modal" class="full-screen-modal z-[110]">
         <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10"><h2 class="text-lumenGold font-bold tracking-widest text-xl" data-i18n="termsHeader">TÉRMINOS & ENVÍOS</h2><button onclick="closeInfoModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
-        <div class="flex-1 overflow-y-auto bg-black p-8 pt-28 pb-12"><div class="bg-[#111] p-8 rounded-2xl border border-white/10 mb-8"><h3 class="font-bold text-white uppercase tracking-wider mb-4 text-xl" data-i18n="payTitle">Métodos de Pago</h3><ul class="space-y-4"><li class="text-base text-gray-400 border-b border-white/5 pb-2">Transferencia Bancaria</li><li class="text-base text-gray-400 border-b border-white/5 pb-2">PayPal</li><li class="text-base text-gray-400">Cripto (USDT)</li></ul></div></div>
+        <div class="flex-1 overflow-y-auto bg-black p-8 pt-28 pb-12"><div class="bg-[#111] p-8 rounded-2xl border border-white/10 mb-8"><h3 class="font-bold text-white uppercase tracking-wider mb-4 text-xl" data-i18n="payTitle">Métodos de Pago</h3><ul class="space-y-4"><li class="text-base text-gray-400 border-b border-white/5 pb-2" data-i18n="pay1">Transferencia Bancaria</li><li class="text-base text-gray-400 border-b border-white/5 pb-2" data-i18n="pay2">PayPal</li><li class="text-base text-gray-400" data-i18n="pay3">Cripto (USDT)</li></ul></div></div>
     </div>
 
     <!-- CART MODAL -->
     <div id="cart-modal" class="full-screen-modal z-[105]">
         <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black border-b border-white/10"><h2 class="title-font text-3xl text-white font-bold" data-i18n="cartTitle">TU ARSENAL</h2><button onclick="toggleCart()" class="text-white hover:text-red-500"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
         <div id="cart-list" class="flex-1 overflow-y-auto pt-24 pb-6 px-6 space-y-6 bg-black"></div>
-        <div class="px-6 pb-4 bg-black"><div class="bg-[#1a1a1a] border border-lumenGold/30 p-5 rounded-2xl flex gap-4 items-start"><i class="fa-solid fa-truck-fast text-lumenGold text-3xl mt-1"></i><div><h4 class="text-lumenGold font-bold text-base uppercase mb-1" data-i18n="logisticsTitle">LOGÍSTICA DE GUERRA</h4><p class="text-gray-300 text-sm leading-relaxed font-bold"><span data-i18n="totalTime">TIEMPO TOTAL:</span> <span class="text-white">8 - 12 DÍAS</span></p></div></div></div>
+        <div class="px-6 pb-4 bg-black"><div class="bg-[#1a1a1a] border border-lumenGold/30 p-5 rounded-2xl flex gap-4 items-start"><i class="fa-solid fa-truck-fast text-lumenGold text-3xl mt-1"></i><div><h4 class="text-lumenGold font-bold text-base uppercase mb-1" data-i18n="logisticsTitle">LOGÍSTICA DE GUERRA</h4><p class="text-gray-300 text-sm leading-relaxed font-bold"><span data-i18n="totalTime">TIEMPO TOTAL:</span> <span class="text-white" data-i18n="totalTimeVal">8 - 12 DÍAS</span></p></div></div></div>
         <div class="p-8 bg-[#111] border-t border-white/20">
             <div class="mb-4"><label class="text-xs text-lumenGold font-bold uppercase tracking-widest mb-2 block" data-i18n="operatorId">Identificación del Operador</label><input type="text" id="customer-name" placeholder="Escribe tu Nombre / Apodo" class="w-full bg-[#222] text-white border border-white/20 rounded-lg p-4 font-bold focus:border-lumenGold focus:outline-none transition-colors"></div>
-            <div class="space-y-2 mb-6"><div class="flex justify-between text-gray-400 text-sm"><span>Subtotal</span><span id="cart-subtotal">$0.00</span></div><div class="flex justify-between text-gray-400 text-sm"><span>IVA (15%)</span><span id="cart-iva">$0.00</span></div><div class="flex justify-between text-white text-2xl font-bold border-t border-white/10 pt-2"><span data-i18n="total">TOTAL</span><span id="cart-total">$0.00</span></div></div>
+            <div class="space-y-2 mb-6"><div class="flex justify-between text-gray-400 text-sm"><span data-i18n="subtotal">Subtotal</span><span id="cart-subtotal">$0.00</span></div><div class="flex justify-between text-gray-400 text-sm"><span data-i18n="tax">IVA (15%)</span><span id="cart-iva">$0.00</span></div><div class="flex justify-between text-white text-2xl font-bold border-t border-white/10 pt-2"><span data-i18n="total">TOTAL</span><span id="cart-total">$0.00</span></div></div>
             <button onclick="startCheckout()" class="w-full h-16 bg-lumenGold text-black font-extrabold text-lg rounded-lg uppercase tracking-widest shadow-lg hover:bg-white transition-colors flex items-center justify-center gap-3"><span data-i18n="checkout">ENVIAR PEDIDO</span> <i class="fa-brands fa-whatsapp text-2xl"></i></button>
         </div>
     </div>
@@ -467,12 +467,56 @@
     <script>
         const translations = { 
             es: { 
-                langTitle: "IDIOMA", dataTitle: "DATOS", equipTitle: "EQUIPAMIENTO", equipSub: "Desliza para explorar", artTitle: "ARTEFACTOS", artSub: "Lore & Accesorios", termsFooter: "Términos y Condiciones", descTitle: "Descripción", addCart: "AGREGAR", termsHeader: "TÉRMINOS & ENVÍOS", cartTitle: "TU ARSENAL", total: "TOTAL", checkout: "ENVIAR PEDIDO", emptyCart: "Tu arsenal está vacío.", payTitle: "Métodos de Pago",
-                genderLabel: "GÉNERO / GENDER", sizeLabel: "TALLA / SIZE", colorLabel: "COLOR", qtyLabel: "CANTIDAD", manBtn: "HOMBRE", womanBtn: "MUJER", equipGuideTitle: "GUÍA DE EQUIPAMIENTO", forgeTimeTitle: "TIEMPO DE FORJADO", forgeTimeVal: "8 - 12 DÍAS (VER DETALLES)", logisticsTitle: "LOGÍSTICA DE GUERRA", totalTime: "TIEMPO TOTAL:", operatorId: "Identificación del Operador"
+                // GENERAL
+                langTitle: "IDIOMA", dataTitle: "DATOS", equipTitle: "EQUIPAMIENTO", equipSub: "Desliza para explorar", artTitle: "ARTEFACTOS", artSub: "Lore & Accesorios", 
+                termsFooter: "Términos y Condiciones", descTitle: "Descripción", addCart: "AGREGAR", termsHeader: "TÉRMINOS & ENVÍOS", cartTitle: "TU ARSENAL", 
+                total: "TOTAL", checkout: "ENVIAR PEDIDO", emptyCart: "Tu arsenal está vacío.", payTitle: "Métodos de Pago",
+                genderLabel: "GÉNERO / GENDER", sizeLabel: "TALLA / SIZE", colorLabel: "COLOR", qtyLabel: "CANTIDAD", 
+                manBtn: "HOMBRE", womanBtn: "MUJER", equipGuideTitle: "GUÍA DE EQUIPAMIENTO", forgeTimeTitle: "TIEMPO DE FORJADO", 
+                forgeTimeVal: "8 - 12 DÍAS (VER DETALLES)", logisticsTitle: "LOGÍSTICA DE GUERRA", totalTime: "TIEMPO TOTAL:", 
+                totalTimeVal: "8 - 12 DÍAS", operatorId: "Identificación del Operador", subtotal: "Subtotal", tax: "IVA (15%)",
+                // NUEVOS
+                topBar: "🇪🇨 LANZAMIENTO EXCLUSIVO ECUADOR. Envíos nacionales activos.",
+                delTitle: "PROTOCOLO DE ENTREGA", delSubtitle: "FORJADO A MEDIDA", delText: '"En La Armería no almacenamos polvo. Cada prenda se confecciona y estampa bajo pedido <strong class="text-white">exclusivamente para ti</strong>."',
+                step1Title: "Fase de Forjado (Producción)", step1Desc: "5 - 8 días hábiles.", step2Title: "Fase de Despliegue (Envío)", step2Desc: "2 - 4 días (según ubicación).",
+                delFooterTitle: "TIEMPO TOTAL ESTIMADO", delFooterTime: "8 a 12 Días",
+                termTitle: "TÉRMINOS LEGALES", t1Title: "1. MODELO DE PRODUCCIÓN (El Forjado)", t1Desc: 'En La Armería operamos bajo un modelo "Made to Order". Tiempo de Producción: 5 a 8 días hábiles. Tiempo Total Estimado: 8 a 12 días.',
+                t2Title: "2. POLÍTICA DE ENVÍOS", t2Desc: "Envíos directos a todo Ecuador vía Servientrega. Internacional vía DHL.",
+                t3Title: "3. CAMBIOS Y DEVOLUCIONES", t3Desc: "No devoluciones por arrepentimiento. Cambios de talla solo 3 días post-recepción.",
+                pay1: "Transferencia Bancaria", pay2: "PayPal", pay3: "Cripto (USDT)",
+                waitlist: "EN FORJA / WAITLIST",
+                // ALERTS & JS
+                alertIncomplete: "⚠️ PROTOCOLO INCOMPLETO:\nPor favor selecciona GÉNERO, TALLA y COLOR para continuar.",
+                alertName: "⚠️ Por favor, escribe tu nombre para identificar la orden.",
+                inputPlaceholder: "Escribe tu Nombre / Apodo",
+                // WHATSAPP
+                waIntro: "NUEVO PEDIDO LA ARMERÍA", waClient: "Cliente", waReq: "ARSENAL SOLICITADO", waMan: "Hombre", waWoman: "Mujer", waBlack: "Negro", waWhite: "Blanco", waAccept: "(Acepto el tiempo de forjado: 8-12 días)"
             }, 
             en: { 
-                langTitle: "LANGUAGE", dataTitle: "CONTACT INFO", equipTitle: "EQUIPMENT", equipSub: "Swipe to explore", artTitle: "ARTIFACTS", artSub: "Lore & Accessories", termsFooter: "Terms & Conditions", descTitle: "Description", addCart: "ADD TO ARSENAL", termsHeader: "TERMS & SHIPPING", cartTitle: "YOUR ARSENAL", total: "TOTAL", checkout: "SEND ORDER", emptyCart: "Your arsenal is empty.", payTitle: "Payment Methods",
-                genderLabel: "GENDER", sizeLabel: "SIZE", colorLabel: "COLOR", qtyLabel: "QUANTITY", manBtn: "MAN", womanBtn: "WOMAN", equipGuideTitle: "EQUIPMENT GUIDE", forgeTimeTitle: "FORGING TIME", forgeTimeVal: "8 - 12 DAYS (SEE DETAILS)", logisticsTitle: "WAR LOGISTICS", totalTime: "TOTAL TIME:", operatorId: "Operator ID"
+                // GENERAL
+                langTitle: "LANGUAGE", dataTitle: "CONTACT INFO", equipTitle: "EQUIPMENT", equipSub: "Swipe to explore", artTitle: "ARTIFACTS", artSub: "Lore & Accessories", 
+                termsFooter: "Terms & Conditions", descTitle: "Description", addCart: "ADD TO ARSENAL", termsHeader: "TERMS & SHIPPING", cartTitle: "YOUR ARSENAL", 
+                total: "TOTAL", checkout: "SEND ORDER", emptyCart: "Your arsenal is empty.", payTitle: "Payment Methods",
+                genderLabel: "GENDER", sizeLabel: "SIZE", colorLabel: "COLOR", qtyLabel: "QUANTITY", 
+                manBtn: "MAN", womanBtn: "WOMAN", equipGuideTitle: "EQUIPMENT GUIDE", forgeTimeTitle: "FORGING TIME", 
+                forgeTimeVal: "8 - 12 DAYS (SEE DETAILS)", logisticsTitle: "WAR LOGISTICS", totalTime: "TOTAL TIME:", 
+                totalTimeVal: "8 - 12 DAYS", operatorId: "Operator ID / Callsign", subtotal: "Subtotal", tax: "TAX (15%)",
+                // NEW
+                topBar: "🌎 WORLDWIDE SHIPPING AVAILABLE. Exclusive Launch.",
+                delTitle: "DELIVERY PROTOCOL", delSubtitle: "CUSTOM FORGED", delText: '"At The Armory we do not store dust. Every garment is crafted and printed on demand <strong class="text-white">exclusively for you</strong>."',
+                step1Title: "Forging Phase (Production)", step1Desc: "5 - 8 business days.", step2Title: "Deployment Phase (Shipping)", step2Desc: "2 - 4 days (depending on location).",
+                delFooterTitle: "ESTIMATED TOTAL TIME", delFooterTime: "8 to 12 Days",
+                termTitle: "LEGAL TERMS", t1Title: "1. PRODUCTION MODEL", t1Desc: 'The Armory operates under a "Made to Order" model. Production Time: 5 to 8 business days. Estimated Total Time: 8 to 12 days.',
+                t2Title: "2. SHIPPING POLICY", t2Desc: "Direct shipping to Ecuador via Servientrega. International via DHL.",
+                t3Title: "3. RETURNS & EXCHANGES", t3Desc: "No returns for change of mind. Size exchanges only within 3 days of receipt.",
+                pay1: "Bank Transfer", pay2: "PayPal", pay3: "Crypto (USDT)",
+                waitlist: "IN FORGE / WAITLIST",
+                // ALERTS & JS
+                alertIncomplete: "⚠️ INCOMPLETE PROTOCOL:\nPlease select GENDER, SIZE and COLOR to continue.",
+                alertName: "⚠️ Please enter your name to identify the order.",
+                inputPlaceholder: "Enter Name / Callsign",
+                // WHATSAPP
+                waIntro: "NEW ORDER THE ARMORY", waClient: "Client", waReq: "REQUESTED ARSENAL", waMan: "Man", waWoman: "Woman", waBlack: "Black", waWhite: "White", waAccept: "(I accept the forging time: 8-12 days)"
             } 
         };
 
@@ -488,7 +532,7 @@
                     woman_white: "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-1.jpg", 
                     woman_black: "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-negra-basica-2.jpg"
                 },
-                showcase: ["assets/Imagenes/Ropa/Camisetas-basicas/camiseta-negra-basica.jpg", "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-1.jpg"],
+                showcase: ["assets/Imagenes/Ropa/Camisetas-basicas/camiseta-negra-basica.jpg", "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-1.jpg", "assets/Imagenes/Ropa/Camisetas-basicas/camiseta-blanca-basica.jpg", "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-negra-basica-2.jpg", "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-3.jpg", "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-negra-basica-4.jpg"],
                 options: { sizes: ['S','M','L','XL'], colors: ['black', 'white'] },
                 desc: { es: "Concepto: Lleva la historia en el pecho. Panel frontal de alta definición (DTG) con el arte narrativo de 'A Light Divided'. Materiales: Algodón peinado 'Soft Cotton'. Fresco, ligero y de tacto suave.", en: "Concept: Wear the story on your chest. High definition front panel (DTG) with 'A Light Divided' narrative art. Materials: Combed 'Soft Cotton'. Fresh, light and soft touch." },
                 guide: { es: "SELECCIONA GÉNERO:\n• Elige MUJER para un corte 'Slim Fit' que se entalla en la cintura y mangas más cortas.\n• Elige HOMBRE para un corte 'Regular Fit' recto y estructurado en hombros.\n• COLOR: Blanco para la luz, Negro para la sombra.", en: "SELECT GENDER:\n• Select WOMAN for a Slim Fit cut. \n• Select MAN for a structured Regular Fit.\n• COLOR: White for light, Black for shadow." }
@@ -503,7 +547,7 @@
                     woman_white: "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-1.jpg",
                     woman_black: "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-2.jpg"
                 },
-                showcase: ["assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-negra.jpg", "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-1.jpg"],
+                showcase: ["assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-negra.jpg", "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-1.jpg", "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-blanca.jpg", "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-2.jpg", "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-3.jpg", "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-4.jpg"],
                 options: { sizes: ['S','M','L','XL'], colors: ['black','white'] },
                 desc: { es: "Concepto: Agilidad pura. Hoodie sin mangas diseñado para el combate urbano y entrenamiento. Materiales: French Terry de peso medio (Respirable). Cierre frontal metálico de alta resistencia. Detalle: Logotipo 'Joziel' (Firma) en el pecho.", en: "Concept: Pure agility. Sleeveless hoodie designed for urban combat and training. Materials: Mid-weight French Terry (Breathable). High resistance metal front zipper. Detail: 'Joziel' (Signature) logo on chest." },
                 guide: { es: "SELECCIONA GÉNERO:\n• Elige HOMBRE si tienes espalda ancha y buscas una sisa abierta (estilo Gym).\n• Elige MUJER si buscas un talle más corto y cerrado en el busto (estilo Sport/Crop).", en: "SELECT GENDER:\n• Select MAN for a broad, open fit.\n• Select WOMAN for a shorter, closer fit." }
@@ -518,7 +562,7 @@
                     woman_white: "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-1.jpg",
                     woman_black: "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-2.jpg"
                 },
-                showcase: ["assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-negra.jpg", "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-1.jpg"],
+                showcase: ["assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-negra.jpg", "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-1.jpg", "assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-blanca.jpg", "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-2.jpg", "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-3.jpg", "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-4.jpg"],
                 options: { sizes: ['S','M','L','XL'], colors: ['black', 'white'] }, 
                 desc: { es: "Concepto: Tu piel es el lienzo. Camiseta de manga larga con efecto 'Segunda Piel'. Materiales: Algodón Premium de peso intermedio. Arte: FULL SLEEVE PRINT (Impresión de manga completa) en el brazo izquierdo. Diseño realista de Rosas y Calaveras.", en: "Concept: Your skin is the canvas. Long sleeve tee with 'Second Skin' effect. Materials: Premium mid-weight cotton. Art: FULL SLEEVE PRINT on left arm. Realistic Roses & Skulls design." }, 
                 guide: { es: "SELECCIONA GÉNERO (IMPORTANTE):\n• MUJER: Vital elegir este corte para que la manga quede ajustada a la piel y el tatuaje parezca real.\n• HOMBRE: Manga más holgada y hombros reforzados para comodidad.", en: "SELECT GENDER (IMPORTANT):\n• WOMAN: Vital to choose this cut so the sleeve fits tight to skin and tattoo looks real.\n• MAN: Looser sleeve and reinforced shoulders for comfort." }
@@ -533,7 +577,7 @@
                     woman_white: "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-1.jpg",
                     woman_black: "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra-2.jpg"
                 },
-                showcase: ["assets/Imagenes/Ropa/Sudaderas/Sudadera-negra.jpg", "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-1.jpg"],
+                showcase: ["assets/Imagenes/Ropa/Sudaderas/Sudadera-negra.jpg", "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-1.jpg", "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca.jpg", "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra-2.jpg", "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-3.jpg", "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra-4.jpg"],
                 options: { sizes: ['S','M','L','XL','XXL'], colors: ['black', 'white'] }, 
                 desc: { es: "Concepto: Protección total. Tu refugio contra el frío y el ruido exterior. Materiales: HEAVYWEIGHT FLEECE (Algodón Pesado). Interior perchado. Arte: Manga izquierda 'tatuada' completa sobre tela gruesa.", en: "Concept: Total protection. Your shelter against cold and noise. Materials: HEAVYWEIGHT FLEECE. Brushed interior. Art: Full 'tattooed' left sleeve on thick fabric." }, 
                 guide: { es: "SELECCIONA GÉNERO:\n• Elige HOMBRE si buscas el estilo 'Oversized' (Grande, ancho y urbano).\n• Elige MUJER si prefieres que la pretina ajuste correctamente en la cadera (evita el efecto 'bolsa').", en: "SELECT GENDER:\n• Select MAN for an Oversized style.\n• Select WOMAN if you prefer the waistband to fit correctly on the hip." }
@@ -548,13 +592,13 @@
                     woman_white: "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-1.jpg",
                     woman_black: "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-2.jpg"
                 },
-                showcase: ["assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-negra.jpg", "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-1.jpg"],
+                showcase: ["assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-negra.jpg", "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-1.jpg", "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-blanca.jpg", "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-2.jpg", "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-3.jpg", "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-4.jpg"],
                 options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] },
                 desc: { es: "Concepto: Conéctate a la frecuencia. Edición de Lujo. 📦 QUÉ INCLUYE EL PACK: Camiseta Signature Tee + Caja de Edición Especial + Llavero Oficial + Tarjeta de Acceso (QR Audio WAV + Lore).", en: "Concept: Connect to the frequency. Luxury Edition. 📦 BUNDLE INCLUDES: Signature Tee + Special Edition Box + Official Keychain + Access Card (QR Audio WAV + Lore)." },
                 guide: { es: "SELECCIONA GÉNERO:\n• MUJER: Corte entallado y femenino.\n• HOMBRE: Corte clásico recto.", en: "SELECT GENDER:\n• WOMAN: Slim and feminine cut.\n• MAN: Classic straight cut." }
             },
             
-            // --- ARTEFACTOS (Restaurados) ---
+            // --- ARTEFACTOS ---
             { 
                 id: 6, type: 'art', isClothing: false,
                 name: { es: "Llavero Rúnico", en: "Runic Keychain" }, 
@@ -624,31 +668,27 @@
             const btnEn = document.getElementById('btn-en');
             const flagBtn = document.getElementById('header-lang-btn');
 
-            // Actualizar botones del menú
             if(lang === 'es') {
                 btnEs.classList.remove('text-gray-500', 'hover:text-white'); btnEs.classList.add('bg-lumenGold', 'text-black');
                 btnEn.classList.remove('bg-lumenGold', 'text-black'); btnEn.classList.add('text-gray-500', 'hover:text-white');
-                // Actualizar Bandera Header
                 flagBtn.innerText = '🇪🇸';
+                document.getElementById('customer-name').placeholder = translations.es.inputPlaceholder;
             } else {
                 btnEn.classList.remove('text-gray-500', 'hover:text-white'); btnEn.classList.add('bg-lumenGold', 'text-black');
                 btnEs.classList.remove('bg-lumenGold', 'text-black'); btnEs.classList.add('text-gray-500', 'hover:text-white');
-                // Actualizar Bandera Header
                 flagBtn.innerText = '🇺🇸';
+                document.getElementById('customer-name').placeholder = translations.en.inputPlaceholder;
             }
 
-            // Traducir Textos
             document.querySelectorAll('[data-i18n]').forEach(el => { 
                 const key = el.getAttribute('data-i18n');
                 if(translations[lang][key]) el.innerHTML = translations[lang][key]; 
             });
 
-            // Re-renderizar
             renderStore(); 
             if(document.getElementById('cart-modal').classList.contains('active')) renderCartList();
         }
 
-        // NUEVA FUNCIÓN: Toggle rápido desde el header
         function toggleLanguageQuick() {
             const newLang = currentLang === 'es' ? 'en' : 'es';
             setLanguage(newLang);
@@ -688,12 +728,9 @@
             const p = products.find(x => x.id === id); if(!p) return;
             currentProdId = id; selectedSize = null; selectedColor = null; selectedGender = null; modalQty = 1;
             
-            // Reiniciar botones
             document.querySelectorAll('.selector-btn, .size-btn, .color-btn').forEach(b => b.classList.remove('selected'));
 
             const modalImgContainer = document.getElementById('modal-img-container');
-            
-            // Imagen principal lógica
             let initialImg = "";
             if(p.isClothing && p.images) {
                  initialImg = p.images['man_black'] || p.showcase[0];
@@ -711,27 +748,24 @@
             const addBtn = document.getElementById('add-to-cart-btn');
 
             if (p.comingSoon) {
-                // Producto en Waitlist
                 selectorsDiv.classList.add('hidden');
-                addBtn.innerHTML = `<span>EN FORJA / WAITLIST</span> <i class="fa-brands fa-whatsapp"></i>`;
+                addBtn.innerHTML = `<span>${translations[currentLang].waitlist}</span> <i class="fa-brands fa-whatsapp"></i>`;
                 addBtn.classList.replace('bg-white', 'bg-gray-800'); addBtn.classList.replace('text-black', 'text-white');
                 addBtn.onclick = () => window.open(`https://wa.me/593996480843?text=Hola, quiero unirme a la WAITLIST para: ${p.name.es}`, '_blank');
             } 
             else if (p.isClothing) {
-                // Ropa (Muestra selectores)
                 selectorsDiv.classList.remove('hidden');
                 document.getElementById('gender-help-text').innerText = p.guide[currentLang];
                 
                 document.getElementById('size-options').innerHTML = p.options.sizes.map(s => `<button onclick="selectSize('${s}', this)" class="selector-btn hover:bg-white/10">${s}</button>`).join('');
                 document.getElementById('color-options').innerHTML = p.options.colors.map(c => `<div onclick="selectColor('${c}', this)" class="color-btn ${c} bg-${c === 'black' ? 'black' : 'white'}" title="${c}"></div>`).join('');
                 
-                addBtn.innerHTML = `<span data-i18n="addCart">AGREGAR</span>`;
+                addBtn.innerHTML = `<span data-i18n="addCart">${translations[currentLang].addCart}</span>`;
                 addBtn.classList.replace('bg-gray-800', 'bg-white'); addBtn.classList.replace('text-white', 'text-black');
                 addBtn.onclick = addToCartCurrent;
             } else {
-                // Artefactos
                 selectorsDiv.classList.add('hidden');
-                addBtn.innerHTML = `<span data-i18n="addCart">AGREGAR</span>`;
+                addBtn.innerHTML = `<span data-i18n="addCart">${translations[currentLang].addCart}</span>`;
                 addBtn.classList.replace('bg-gray-800', 'bg-white'); addBtn.classList.replace('text-white', 'text-black');
                 addBtn.onclick = addToCartCurrent;
             }
@@ -777,10 +811,10 @@
 
         function addToCartCurrent() {
             const p = products.find(x => x.id === currentProdId);
-            
-            // VALIDACIÓN: Solo para ropa
+            const t = translations[currentLang];
+
             if(p.isClothing && (!selectedGender || !selectedSize || !selectedColor)) { 
-                alert("⚠️ PROTOCOLO INCOMPLETO:\nPor favor selecciona GÉNERO, TALLA y COLOR para continuar."); 
+                alert(t.alertIncomplete); 
                 return; 
             }
 
@@ -789,7 +823,6 @@
                  cartImage = p.images[`${selectedGender}_${selectedColor}`] || p.images['man_black'];
             }
             
-            // Buscar duplicados
             const existingIdx = cart.findIndex(item => 
                 item.id === p.id && 
                 (!p.isClothing || (item.selSize === selectedSize && item.selColor === selectedColor && item.selGender === selectedGender))
@@ -816,7 +849,9 @@
 
         function renderCartList() {
             const list = document.getElementById('cart-list');
-            if(cart.length === 0) { list.innerHTML = `<div class="text-center text-gray-500 mt-20 text-lg"><p>${translations[currentLang].emptyCart}</p></div>`; updateTotals(0); return; }
+            const t = translations[currentLang];
+
+            if(cart.length === 0) { list.innerHTML = `<div class="text-center text-gray-500 mt-20 text-lg"><p>${t.emptyCart}</p></div>`; updateTotals(0); return; }
             let subtotal = 0; list.innerHTML = '';
             
             cart.forEach((item, idx) => {
@@ -824,9 +859,9 @@
                 
                 let variantsHTML = '';
                 if (item.isClothing) {
-                    let genderText = item.selGender === 'man' ? (currentLang === 'es' ? 'Hombre' : 'Man') : (currentLang === 'es' ? 'Mujer' : 'Woman');
-                    let colorText = item.selColor === 'black' ? (currentLang === 'es' ? 'Negro' : 'Black') : (currentLang === 'es' ? 'Blanco' : 'White');
-                    variantsHTML = `<div class="text-xs text-gray-400 mt-2"><span class="text-lumenGold font-bold">${genderText}</span> | Talla: <span class="text-white font-bold">${item.selSize}</span> | ${colorText}</div>`;
+                    let genderText = item.selGender === 'man' ? t.waMan : t.waWoman;
+                    let colorText = item.selColor === 'black' ? t.waBlack : t.waWhite;
+                    variantsHTML = `<div class="text-xs text-gray-400 mt-2"><span class="text-lumenGold font-bold">${genderText}</span> | ${t.sizeLabel}: <span class="text-white font-bold">${item.selSize}</span> | ${colorText}</div>`;
                 }
 
                 let visualElement = item.cartImage ? `<img src="${item.cartImage}" class="w-full h-full object-cover rounded-xl">` : `<div class="w-full h-full flex items-center justify-center text-gray-600"><i class="fa-solid ${item.icon} text-2xl"></i></div>`;
@@ -866,26 +901,28 @@
 
         function startCheckout() {
             if(cart.length === 0) return;
+            const t = translations[currentLang];
             const name = document.getElementById('customer-name').value.trim();
-            if(!name) { alert("⚠️ Por favor, escribe tu nombre para identificar la orden."); return; }
+            
+            if(!name) { alert(t.alertName); return; }
             
             let subtotal = 0; 
-            let message = `NUEVO PEDIDO LA ARMERÍA:\nCliente: ${name}\n\n⚔️ ARSENAL SOLICITADO:\n`;
+            let message = `${t.waIntro}:\n${t.waClient}: ${name}\n\n⚔️ ${t.waReq}:\n`;
             
             cart.forEach(item => { 
                 const itemTotal = item.price * item.qty; subtotal += itemTotal;
                 
-                message += `▪️ ${item.qty}x ${item.name.es}`;
+                message += `▪️ ${item.qty}x ${item.name[currentLang]}`;
                 if (item.isClothing) {
-                    const genderTxt = item.selGender === 'man' ? 'Hombre' : 'Mujer';
-                    const colorTxt = item.selColor === 'black' ? 'Negro' : 'Blanco';
-                    message += `\n   [${genderTxt} | Talla: ${item.selSize} | Color: ${colorTxt}]`;
+                    const genderTxt = item.selGender === 'man' ? t.waMan : t.waWoman;
+                    const colorTxt = item.selColor === 'black' ? t.waBlack : t.waWhite;
+                    message += `\n   [${genderTxt} | ${item.selSize} | ${colorTxt}]`;
                 }
                 message += `\n`;
             });
             
             const iva = subtotal * 0.15; const total = subtotal + iva;
-            message += `\nSubtotal: $${subtotal.toFixed(2)}\nIVA (15%): $${iva.toFixed(2)}\nTOTAL A PAGAR: $${total.toFixed(2)}\n\n(Acepto el tiempo de forjado: 8-12 días)`;
+            message += `\n${t.subtotal}: $${subtotal.toFixed(2)}\n${t.tax}: $${iva.toFixed(2)}\n${t.total}: $${total.toFixed(2)}\n\n${t.waAccept}`;
             
             window.open(`https://wa.me/593996480843?text=${encodeURIComponent(message)}`, '_blank');
         }
