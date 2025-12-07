@@ -67,7 +67,7 @@
             transition: transform 0.2s;
         }
 
-        /* --- NUEVO EFECTO INFINITO (CROSS-FADE) --- */
+        /* EFECTO INFINITO (CROSS-FADE) */
         .fade-container {
             position: relative;
             width: 100%;
@@ -79,7 +79,7 @@
             width: 100%; height: 100%;
             object-fit: cover;
             opacity: 0;
-            transition: opacity 1s ease-in-out; /* Suavidad del cambio */
+            transition: opacity 1s ease-in-out;
             z-index: 1;
         }
         .fade-img.active {
@@ -218,21 +218,23 @@
         }
 
         /* Selectores */
-        .size-btn {
+        .selector-btn {
             border: 2px solid #333;
             color: #999;
-            padding: 15px 0;
+            padding: 12px 0;
             text-align: center;
-            border-radius: 10px;
-            font-size: 16px;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: 900;
             transition: all 0.2s;
+            background-color: #050505;
         }
-        .size-btn.selected {
+        .selector-btn.selected {
             border-color: #D4AF37;
             background-color: #D4AF37;
             color: #000;
         }
+
         .color-btn {
             width: 50px;
             height: 50px;
@@ -324,12 +326,6 @@
                 <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-2.jpg');"></div>
                 <!-- Slide 3 -->
                 <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-3.jpg');"></div>
-                <!-- Slide 4 -->
-                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-4.jpg');"></div>
-                <!-- Slide 5 -->
-                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-5.jpg');"></div>
-                <!-- Slide 6 -->
-                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-6.jpg');"></div>
                 
                 <div class="absolute inset-0 bg-black/10"></div> 
             </div>
@@ -354,14 +350,6 @@
             <div class="native-carousel px-6 no-scrollbar" id="carousel-equipamiento"></div>
         </section>
 
-        <!-- SECCIÓN 3: ARTEFACTOS -->
-        <section class="mb-12">
-            <div class="px-6 mb-6">
-                <h2 class="title-font text-3xl text-white font-bold tracking-wider" data-i18n="artTitle">ARTEFACTOS</h2><p class="text-sm text-lumenGold uppercase tracking-widest font-bold mt-1" data-i18n="artSub">Lore & Accesorios</p>
-            </div>
-            <div class="native-carousel px-6 no-scrollbar" id="carousel-artefactos"></div>
-        </section>
-
         <!-- FOOTER -->
         <footer class="px-6 py-12 bg-[#0a0a0a] border-t border-white/10 mb-20">
             <div class="flex justify-center gap-12 mb-10 opacity-70">
@@ -382,16 +370,42 @@
         <div class="modal-image-area" id="modal-img-container"></div>
         <div class="modal-scroll-content">
             <span id="m-tag" class="inline-block px-5 py-2 bg-white/10 text-lumenGold text-sm font-bold uppercase tracking-widest rounded border border-lumenGold/30 mb-4">TAG</span>
-            <h1 id="m-title" class="title-font text-5xl text-white leading-tight mb-8 font-bold">Nombre</h1>
+            <h1 id="m-title" class="title-font text-4xl text-white leading-tight mb-8 font-bold">Nombre</h1>
             <div class="space-y-8">
                 <div id="selectors-container" class="hidden bg-[#111] p-6 rounded-2xl border border-white/15 space-y-6">
-                    <div><div class="flex justify-between items-center mb-4"><h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest">TALLA / SIZE</h3></div><div id="size-options" class="grid grid-cols-5 gap-3"></div><p id="size-warning" class="text-sm text-lumenGold mt-3 hidden italic font-bold">⚠️ Horma Oversized (Grande)</p></div>
-                    <div><h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest mb-4">COLOR</h3><div id="color-options" class="flex gap-6"></div></div>
+                    <!-- Selector de Género -->
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest" data-i18n="genderLabel">GÉNERO / GENDER</h3>
+                        </div>
+                        <div class="flex gap-4">
+                            <button onclick="selectGender('man', this)" class="selector-btn flex-1" data-i18n="manBtn">HOMBRE</button>
+                            <button onclick="selectGender('woman', this)" class="selector-btn flex-1" data-i18n="womanBtn">MUJER</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Selector de Talla -->
+                    <div>
+                        <div class="flex justify-between items-center mb-4"><h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest" data-i18n="sizeLabel">TALLA / SIZE</h3></div>
+                        <div id="size-options" class="grid grid-cols-4 gap-3"></div>
+                    </div>
+                    
+                    <!-- Selector de Color -->
+                    <div>
+                        <h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest mb-4" data-i18n="colorLabel">COLOR</h3>
+                        <div id="color-options" class="flex gap-6"></div>
+                    </div>
+                    
+                    <!-- Texto de Ayuda Dinámico -->
+                    <div class="bg-lumenGold/10 border-l-2 border-lumenGold p-4 rounded-r-lg">
+                        <p class="text-lumenGold text-xs font-bold mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> <span data-i18n="equipGuideTitle">GUÍA DE EQUIPAMIENTO</span></p>
+                        <p id="gender-help-text" class="text-gray-300 text-sm italic leading-relaxed"></p>
+                    </div>
                 </div>
-                <div id="qty-container" class="bg-[#111] p-6 rounded-2xl border border-white/15 flex items-center justify-between"><h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest">CANTIDAD</h3><div class="flex items-center gap-6"><button onclick="adjustQty(-1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 border border-white/10">-</button><span id="modal-qty" class="text-3xl font-bold text-white w-10 text-center">1</span><button onclick="adjustQty(1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 border border-white/10">+</button></div></div>
-                <div id="protocol-btn" onclick="openDeliveryModal()" class="group cursor-pointer bg-[#1a1a1a] border-l-4 border-lumenGold p-5 rounded-r-xl flex items-center justify-between hover:bg-white/5 transition-colors shadow-lg"><div class="flex items-center gap-4"><div class="w-14 h-14 rounded-full bg-lumenGold/10 flex items-center justify-center border border-lumenGold/20"><i class="fa-solid fa-truck-fast text-lumenGold text-2xl"></i></div><div><h4 class="text-white font-bold text-sm uppercase tracking-wider mb-1">TIEMPO DE FORJADO</h4><p class="text-lumenGold text-xs font-bold">8 - 12 DÍAS (VER DETALLES)</p></div></div><i class="fa-solid fa-chevron-right text-gray-500 group-hover:text-white transition text-xl animate-pulse"></i></div>
+
+                <div id="qty-container" class="bg-[#111] p-6 rounded-2xl border border-white/15 flex items-center justify-between"><h3 class="text-sm text-gray-400 font-extrabold uppercase tracking-widest" data-i18n="qtyLabel">CANTIDAD</h3><div class="flex items-center gap-6"><button onclick="adjustQty(-1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 border border-white/10">-</button><span id="modal-qty" class="text-3xl font-bold text-white w-10 text-center">1</span><button onclick="adjustQty(1)" class="w-12 h-12 bg-white/10 rounded-lg text-white flex items-center justify-center text-2xl font-bold hover:bg-white/20 border border-white/10">+</button></div></div>
+                <div id="protocol-btn" onclick="openDeliveryModal()" class="group cursor-pointer bg-[#1a1a1a] border-l-4 border-lumenGold p-5 rounded-r-xl flex items-center justify-between hover:bg-white/5 transition-colors shadow-lg"><div class="flex items-center gap-4"><div class="w-14 h-14 rounded-full bg-lumenGold/10 flex items-center justify-center border border-lumenGold/20"><i class="fa-solid fa-truck-fast text-lumenGold text-2xl"></i></div><div><h4 class="text-white font-bold text-sm uppercase tracking-wider mb-1" data-i18n="forgeTimeTitle">TIEMPO DE FORJADO</h4><p class="text-lumenGold text-xs font-bold" data-i18n="forgeTimeVal">8 - 12 DÍAS (VER DETALLES)</p></div></div><i class="fa-solid fa-chevron-right text-gray-500 group-hover:text-white transition text-xl animate-pulse"></i></div>
                 <div><h3 class="text-base text-gray-400 font-extrabold uppercase mb-3 border-b border-white/20 pb-2" data-i18n="descTitle">Descripción</h3><p id="m-desc" class="text-gray-200 text-xl font-normal leading-relaxed">...</p></div>
-                <div class="bg-[#111] p-6 rounded-2xl border border-white/15"><h3 class="text-sm text-lumenGold font-extrabold uppercase tracking-widest mb-4" data-i18n="specsTitle">Especificaciones</h3><ul id="m-specs" class="space-y-4 text-base text-gray-300"></ul></div>
             </div>
         </div>
         <div class="absolute bottom-0 w-full p-6 bg-gradient-to-t from-black via-black to-transparent z-50">
@@ -421,117 +435,160 @@
     <div id="cart-modal" class="full-screen-modal z-[105]">
         <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black border-b border-white/10"><h2 class="title-font text-3xl text-white font-bold" data-i18n="cartTitle">TU ARSENAL</h2><button onclick="toggleCart()" class="text-white hover:text-red-500"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
         <div id="cart-list" class="flex-1 overflow-y-auto pt-24 pb-6 px-6 space-y-6 bg-black"></div>
-        <div class="px-6 pb-4 bg-black"><div class="bg-[#1a1a1a] border border-lumenGold/30 p-5 rounded-2xl flex gap-4 items-start"><i class="fa-solid fa-truck-fast text-lumenGold text-3xl mt-1"></i><div><h4 class="text-lumenGold font-bold text-base uppercase mb-1">LOGÍSTICA DE GUERRA</h4><p class="text-gray-300 text-sm leading-relaxed font-bold">TIEMPO TOTAL: <span class="text-white">8 - 12 DÍAS</span></p></div></div></div>
+        <div class="px-6 pb-4 bg-black"><div class="bg-[#1a1a1a] border border-lumenGold/30 p-5 rounded-2xl flex gap-4 items-start"><i class="fa-solid fa-truck-fast text-lumenGold text-3xl mt-1"></i><div><h4 class="text-lumenGold font-bold text-base uppercase mb-1" data-i18n="logisticsTitle">LOGÍSTICA DE GUERRA</h4><p class="text-gray-300 text-sm leading-relaxed font-bold"><span data-i18n="totalTime">TIEMPO TOTAL:</span> <span class="text-white">8 - 12 DÍAS</span></p></div></div></div>
         <div class="p-8 bg-[#111] border-t border-white/20">
-            <div class="mb-4"><label class="text-xs text-lumenGold font-bold uppercase tracking-widest mb-2 block">Identificación del Operador</label><input type="text" id="customer-name" placeholder="Escribe tu Nombre / Apodo" class="w-full bg-[#222] text-white border border-white/20 rounded-lg p-4 font-bold focus:border-lumenGold focus:outline-none transition-colors"></div>
+            <div class="mb-4"><label class="text-xs text-lumenGold font-bold uppercase tracking-widest mb-2 block" data-i18n="operatorId">Identificación del Operador</label><input type="text" id="customer-name" placeholder="Escribe tu Nombre / Apodo" class="w-full bg-[#222] text-white border border-white/20 rounded-lg p-4 font-bold focus:border-lumenGold focus:outline-none transition-colors"></div>
             <div class="space-y-2 mb-6"><div class="flex justify-between text-gray-400 text-sm"><span>Subtotal</span><span id="cart-subtotal">$0.00</span></div><div class="flex justify-between text-gray-400 text-sm"><span>IVA (15%)</span><span id="cart-iva">$0.00</span></div><div class="flex justify-between text-white text-2xl font-bold border-t border-white/10 pt-2"><span data-i18n="total">TOTAL</span><span id="cart-total">$0.00</span></div></div>
             <button onclick="startCheckout()" class="w-full h-16 bg-lumenGold text-black font-extrabold text-lg rounded-lg uppercase tracking-widest shadow-lg hover:bg-white transition-colors flex items-center justify-center gap-3"><span data-i18n="checkout">ENVIAR PEDIDO</span> <i class="fa-brands fa-whatsapp text-2xl"></i></button>
         </div>
     </div>
 
     <script>
-        const translations = { es: { langTitle: "IDIOMA", dataTitle: "DATOS", equipTitle: "EQUIPAMIENTO", equipSub: "Desliza para explorar", artTitle: "ARTEFACTOS", artSub: "Lore & Accesorios", termsFooter: "Términos y Condiciones", descTitle: "Descripción", specsTitle: "Especificaciones Técnicas", addCart: "AGREGAR", termsHeader: "TÉRMINOS & ENVÍOS", shippingTitle: "Logística y Tiempos", processDays: "5 - 8 Días", workingDays: "Laborables", cartTitle: "TU ARSENAL", total: "TOTAL", checkout: "ENVIAR PEDIDO", emptyCart: "Tu arsenal está vacío.", payTitle: "Métodos de Pago" }, en: { langTitle: "LANGUAGE", dataTitle: "CONTACT INFO", equipTitle: "EQUIPMENT", equipSub: "Swipe to explore", artTitle: "ARTIFACTS", artSub: "Lore & Accessories", termsFooter: "Terms & Conditions", descTitle: "Description", specsTitle: "Technical Specs", addCart: "ADD TO ARSENAL", termsHeader: "TERMS & SHIPPING", shippingTitle: "Logistics & Timing", processDays: "5 - 8 Days", workingDays: "Business Days", cartTitle: "YOUR ARSENAL", total: "TOTAL", checkout: "SEND ORDER", emptyCart: "Your arsenal is empty.", payTitle: "Payment Methods" } };
+        const translations = { 
+            es: { 
+                langTitle: "IDIOMA", dataTitle: "DATOS", equipTitle: "EQUIPAMIENTO", equipSub: "Desliza para explorar", termsFooter: "Términos y Condiciones", descTitle: "Descripción", addCart: "AGREGAR", termsHeader: "TÉRMINOS & ENVÍOS", cartTitle: "TU ARSENAL", total: "TOTAL", checkout: "ENVIAR PEDIDO", emptyCart: "Tu arsenal está vacío.", payTitle: "Métodos de Pago",
+                genderLabel: "GÉNERO / GENDER", sizeLabel: "TALLA / SIZE", colorLabel: "COLOR", qtyLabel: "CANTIDAD", manBtn: "HOMBRE", womanBtn: "MUJER", equipGuideTitle: "GUÍA DE EQUIPAMIENTO", forgeTimeTitle: "TIEMPO DE FORJADO", forgeTimeVal: "8 - 12 DÍAS (VER DETALLES)", logisticsTitle: "LOGÍSTICA DE GUERRA", totalTime: "TIEMPO TOTAL:", operatorId: "Identificación del Operador"
+            }, 
+            en: { 
+                langTitle: "LANGUAGE", dataTitle: "CONTACT INFO", equipTitle: "EQUIPMENT", equipSub: "Swipe to explore", termsFooter: "Terms & Conditions", descTitle: "Description", addCart: "ADD TO ARSENAL", termsHeader: "TERMS & SHIPPING", cartTitle: "YOUR ARSENAL", total: "TOTAL", checkout: "SEND ORDER", emptyCart: "Your arsenal is empty.", payTitle: "Payment Methods",
+                genderLabel: "GENDER", sizeLabel: "SIZE", colorLabel: "COLOR", qtyLabel: "QUANTITY", manBtn: "MAN", womanBtn: "WOMAN", equipGuideTitle: "EQUIPMENT GUIDE", forgeTimeTitle: "FORGING TIME", forgeTimeVal: "8 - 12 DAYS (SEE DETAILS)", logisticsTitle: "WAR LOGISTICS", totalTime: "TOTAL TIME:", operatorId: "Operator ID"
+            } 
+        };
 
         const products = [
-            // 1. THE INITIATE TEE (4 IMÁGENES EXACTAS)
+            // 1. LUMENFALL GRAPHIC TEE
             {
-                id: 1, type: 'equip', isClothing: true,
-                name: { es: "THE INITIATE TEE", en: "THE INITIATE TEE" },
-                price: 35.00, tag: { es: "NIVEL 1", en: "LEVEL 1" }, icon: "fa-shirt",
-                images: [
-                    "assets/Imagenes/Ropa/Camisetas-basicas/camiseta-blanca-basica.jpg",
+                id: 1, 
+                name: { es: "LUMENFALL GRAPHIC TEE", en: "Lumenfall Graphic Tee" },
+                price: 40.00, 
+                tag: { es: "NIVEL 1", en: "LEVEL 1" }, 
+                icon: "fa-shirt",
+                // Mapeo lógico de imágenes (Usa tus rutas reales aquí)
+                images: {
+                    man_white: "assets/Imagenes/Ropa/Camisetas-basicas/camiseta-blanca-basica.jpg",
+                    man_black: "assets/Imagenes/Ropa/Camisetas-basicas/camiseta-negra-basica.jpg",
+                    woman_white: "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-1.jpg", 
+                    woman_black: "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-negra-basica-2.jpg"
+                },
+                // Galería para la vitrina (Fade)
+                showcase: [
                     "assets/Imagenes/Ropa/Camisetas-basicas/camiseta-negra-basica.jpg",
-                    "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-1.jpg",
-                    "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-negra-basica-2.jpg",
-                    "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-3.jpg",
-                    "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-negra-basica-4.jpg"
+                    "assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-1.jpg"
                 ],
-                options: { sizes: ['S','M','L','XL','XXL'], colors: ['white', 'black'] },
-                desc: { es: "Tu entrada a la Legión. Diseñada para el uso diario.", en: "Your entry into the Legion. Designed for daily use." },
-                specs: { es: ["100% Algodón Peinado", "Corte Regular Fit"], en: ["100% Combed Cotton", "Regular Fit"] }
+                options: { sizes: ['S','M','L','XL'], colors: ['black', 'white'] },
+                desc: { es: "Concepto: Lleva la historia en el pecho. Panel frontal de alta definición (DTG) con el arte narrativo de 'A Light Divided'. Materiales: Algodón peinado 'Soft Cotton'. Fresco, ligero y de tacto suave.", en: "Concept: Wear the story on your chest. High definition front panel (DTG) with 'A Light Divided' narrative art. Materials: Combed 'Soft Cotton'. Fresh, light and soft touch." },
+                guide: {
+                    es: "SELECCIONA GÉNERO:\n• Elige MUJER para un corte 'Slim Fit' que se entalla en la cintura y mangas más cortas.\n• Elige HOMBRE para un corte 'Regular Fit' recto y estructurado en hombros.\n• COLOR: Blanco para la luz, Negro para la sombra.",
+                    en: "SELECT GENDER:\n• Select WOMAN for a Slim Fit cut. \n• Select MAN for a structured Regular Fit.\n• COLOR: White for light, Black for shadow."
+                }
             },
             
-            // 2. SHADOW WALKER
+            // 2. THE ROGUE VEST
             {
-                id: 2, type: 'equip', isClothing: true,
-                name: { es: "SHADOW WALKER", en: "SHADOW WALKER" },
-                price: 50.00, tag: { es: "NIVEL 2", en: "LEVEL 2" },
-                icon: "fa-user-secret",
-                images: [
-                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-blanca.jpg",
+                id: 2, 
+                name: { es: "THE ROGUE VEST", en: "The Rogue Vest" },
+                price: 55.00, 
+                tag: { es: "NIVEL 2", en: "LEVEL 2" },
+                icon: "fa-vest",
+                images: {
+                    man_white: "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-blanca.jpg",
+                    man_black: "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-negra.jpg",
+                    woman_white: "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-1.jpg",
+                    woman_black: "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-2.jpg"
+                },
+                showcase: [
                     "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-negra.jpg",
-                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-1.jpg",
-                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-2.jpg",
-                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-3.jpg",
-                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-4.jpg"
+                    "assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-1.jpg"
                 ],
-                options: { sizes: ['S','M','L','XL'], colors: ['black','white'], warning: true },
-                desc: { es: "Para caminar entre las sombras con estilo.", en: "To walk among shadows with style." },
-                specs: { es: ["Algodón Heavyweight 220g", "Corte OVERSIZED"], en: ["Heavyweight Cotton 220g", "OVERSIZED Cut"] }
+                options: { sizes: ['S','M','L','XL'], colors: ['black','white'] },
+                desc: { es: "Concepto: Agilidad pura. Hoodie sin mangas diseñado para el combate urbano y entrenamiento. Materiales: French Terry de peso medio (Respirable). Cierre frontal metálico de alta resistencia. Detalle: Logotipo 'Joziel' (Firma) en el pecho.", en: "Concept: Pure agility. Sleeveless hoodie designed for urban combat and training. Materials: Mid-weight French Terry (Breathable). High resistance metal front zipper. Detail: 'Joziel' (Signature) logo on chest." },
+                guide: {
+                    es: "SELECCIONA GÉNERO:\n• Elige HOMBRE si tienes espalda ancha y buscas una sisa abierta (estilo Gym).\n• Elige MUJER si buscas un talle más corto y cerrado en el busto (estilo Sport/Crop).",
+                    en: "SELECT GENDER:\n• Select MAN for a broad, open fit.\n• Select WOMAN for a shorter, closer fit."
+                }
             },
             
-            // 3. THE MASTER EDITION (4 IMÁGENES EXACTAS)
+            // 3. SHADOW ARMOR L/S
             { 
-                id: 3, type: 'equip', isClothing: true, 
-                name: { es: "THE MASTER EDITION", en: "THE MASTER EDITION" }, 
-                price: 50.00, tag: { es: "NIVEL 3", en: "LEVEL 3" }, 
-                icon: "fa-box-open", 
-                images: [
-                    "assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-blanca.jpg",
+                id: 3, 
+                name: { es: "SHADOW ARMOR L/S", en: "Shadow Armor L/S" }, 
+                price: 50.00, 
+                tag: { es: "NIVEL 3", en: "LEVEL 3" }, 
+                icon: "fa-user-ninja", 
+                images: {
+                    man_white: "assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-blanca.jpg",
+                    man_black: "assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-negra.jpg",
+                    woman_white: "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-1.jpg",
+                    woman_black: "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-2.jpg"
+                },
+                showcase: [
                     "assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-negra.jpg",
-                    "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-1.jpg",
-                    "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-2.jpg",
-                    "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-3.jpg",
-                    "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-4.jpg"
+                    "assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-1.jpg"
                 ],
-                options: { sizes: ['S','M','L','XL','XXL'], colors: ['white', 'black'] }, 
-                desc: { es: "La máxima expresión del universo.", en: "The ultimate expression." }, 
-                specs: { es: ["Camiseta Ultra-Pesada 240g", "Vintage Wash"], en: ["Ultra-Heavy Tee 240g", "Vintage Wash"] } 
+                options: { sizes: ['S','M','L','XL'], colors: ['black', 'white'] }, 
+                desc: { es: "Concepto: Tu piel es el lienzo. Camiseta de manga larga con efecto 'Segunda Piel'. Materiales: Algodón Premium de peso intermedio. Arte: FULL SLEEVE PRINT (Impresión de manga completa) en el brazo izquierdo. Diseño realista de Rosas y Calaveras.", en: "Concept: Your skin is the canvas. Long sleeve tee with 'Second Skin' effect. Materials: Premium mid-weight cotton. Art: FULL SLEEVE PRINT on left arm. Realistic Roses & Skulls design." }, 
+                guide: {
+                    es: "SELECCIONA GÉNERO (IMPORTANTE):\n• MUJER: Vital elegir este corte para que la manga quede ajustada a la piel y el tatuaje parezca real.\n• HOMBRE: Manga más holgada y hombros reforzados para comodidad.",
+                    en: "SELECT GENDER (IMPORTANT):\n• WOMAN: Vital to choose this cut so the sleeve fits tight to skin and tattoo looks real.\n• MAN: Looser sleeve and reinforced shoulders for comfort."
+                }
             },
             
-            // 4. LUMENFALL HOODIE (4 IMÁGENES EXACTAS - IMAGEN CORREGIDA)
+            // 4. LUMENFALL HEAVY HOODIE
             { 
-                id: 4, type: 'equip', isClothing: true, 
-                name: { es: "LUMENFALL HOODIE", en: "LUMENFALL HOODIE" }, 
-                price: 85.00, tag: { es: "WINTER", en: "WINTER" }, icon: "fa-user-ninja",
-                images: [
-                    "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca.jpg",
+                id: 4, 
+                name: { es: "LUMENFALL HEAVY HOODIE", en: "Lumenfall Heavy Hoodie" }, 
+                price: 85.00, 
+                tag: { es: "NIVEL 4", en: "LEVEL 4" }, 
+                icon: "fa-hood-cloak",
+                images: {
+                    man_white: "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca.jpg",
+                    man_black: "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra.jpg",
+                    woman_white: "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-1.jpg",
+                    woman_black: "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra-2.jpg"
+                },
+                showcase: [
                     "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra.jpg",
-                    "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-1.jpg",
-                    "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra-2.jpg",
-                    "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-3.jpg",
-                    "assets/Imagenes/Ropa/Sudaderas/Sudadera-negra-4.jpg"
+                    "assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-1.jpg"
                 ],
-                options: { sizes: ['S','M','L','XL','XXL'], colors: ['white', 'black'] }, 
-                desc: { es: "Tu escudo contra el frío.", en: "Your shield against the cold." }, 
-                specs: { es: ["Burda Pesada Perchada", "Interior Térmico"], en: ["Heavy Brushed Fleece", "Thermal Interior"] } 
+                options: { sizes: ['S','M','L','XL','XXL'], colors: ['black', 'white'] }, 
+                desc: { es: "Concepto: Protección total. Tu refugio contra el frío y el ruido exterior. Materiales: HEAVYWEIGHT FLEECE (Algodón Pesado). Interior perchado. Arte: Manga izquierda 'tatuada' completa sobre tela gruesa.", en: "Concept: Total protection. Your shelter against cold and noise. Materials: HEAVYWEIGHT FLEECE. Brushed interior. Art: Full 'tattooed' left sleeve on thick fabric." }, 
+                guide: {
+                    es: "SELECCIONA GÉNERO:\n• Elige HOMBRE si buscas el estilo 'Oversized' (Grande, ancho y urbano).\n• Elige MUJER si prefieres que la pretina ajuste correctamente en la cadera (evita el efecto 'bolsa').",
+                    en: "SELECT GENDER:\n• Select MAN for an Oversized style.\n• Select WOMAN if you prefer the waistband to fit correctly on the hip."
+                }
             },
             
+            // 5. MY TEMPO - SIGNATURE BUNDLE
             {
-                id: 7, type: 'equip', isClothing: true,
-                name: { es: "MY TEMPO SIGNATURE TEE", en: "MY TEMPO SIGNATURE TEE" },
-                price: 45.00, tag: { es: "MUSIC", en: "MUSIC" },
-                icon: "fa-music",
-                images: [
-                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-blanca.jpg",
+                id: 5,
+                name: { es: "MY TEMPO - SIGNATURE BUNDLE", en: "My Tempo - Signature Bundle (Includes Box + Digital Access)" },
+                price: 85.00, 
+                tag: { es: "NIVEL 5", en: "LEVEL 5" },
+                icon: "fa-box-open",
+                images: {
+                    man_white: "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-blanca.jpg",
+                    man_black: "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-negra.jpg",
+                    woman_white: "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-1.jpg",
+                    woman_black: "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-2.jpg"
+                },
+                showcase: [
                     "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-negra.jpg",
-                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-1.jpg",
-                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-2.jpg",
-                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-3.jpg",
-                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-4.jpg"
+                    "assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-1.jpg"
                 ],
                 options: { sizes: ['S','M','L','XL','XXL'], colors: ['black','white'] },
-                desc: { es: "La frecuencia visual del sonido.", en: "The visual frequency of sound." },
-                specs: { es: ["Algodón Premium 210g", "Boxy Fit"], en: ["Premium Cotton 210g", "Boxy Fit"] }
-            },
-            { id: 5, type: 'art', isClothing: false, name: { es: "Llavero Rúnico", en: "Runic Keychain" }, price: 10.00, tag: { es: "ACCESORIO", en: "ACCESSORY" }, icon: "fa-key", desc: { es: "Lleva la marca de la Sombra siempre contigo.", en: "Carry the Shadow mark with you always." }, specs: { es: ["Aleación Zinc"], en: ["Zinc Alloy"] } },
-            { id: 6, type: 'art', isClothing: false, name: { es: "BITÁCORA DEL CAOS", en: "CHAOS LOGBOOK" }, price: 30.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-journal-whills", desc: { es: "Este artefacto está siendo materializado.", en: "This artifact is being materialized." }, specs: { es: ["Tapa Dura Soft Touch"], en: ["Soft Touch Hardcover"] }, comingSoon: true },
-            { id: 8, type: 'art', isClothing: false, name: { es: "EL GRIMORIO", en: "THE GRIMOIRE" }, price: 45.00, tag: { es: "LORE", en: "LORE" }, icon: "fa-book-skull", desc: { es: "Este artefacto está siendo materializado.", en: "This artifact is being materialized." }, specs: { es: ["Edición Limitada"], en: ["Limited Edition"] }, comingSoon: true }
+                desc: { es: "Concepto: Conéctate a la frecuencia. Edición de Lujo. 📦 QUÉ INCLUYE EL PACK: Camiseta Signature Tee + Caja de Edición Especial + Llavero Oficial + Tarjeta de Acceso (QR Audio WAV + Lore).", en: "Concept: Connect to the frequency. Luxury Edition. 📦 BUNDLE INCLUDES: Signature Tee + Special Edition Box + Official Keychain + Access Card (QR Audio WAV + Lore)." },
+                guide: {
+                    es: "SELECCIONA GÉNERO:\n• MUJER: Corte entallado y femenino.\n• HOMBRE: Corte clásico recto.",
+                    en: "SELECT GENDER:\n• WOMAN: Slim and feminine cut.\n• MAN: Classic straight cut."
+                }
+            }
         ];
 
-        let currentLang = 'es'; let cart = []; let currentProdId = null; let selectedSize = null; let selectedColor = null; let modalQty = 1; let carouselIntervals = {};
+        let currentLang = 'es'; let cart = []; let currentProdId = null; 
+        let selectedSize = null; let selectedColor = null; let selectedGender = null;
+        let modalQty = 1;
 
-        // GLOBAL SYNC TIMER (RELOJ MAESTRO)
+        // GLOBAL SYNC TIMER
         let globalImageIndex = 0;
         setInterval(() => {
             globalImageIndex++;
@@ -551,13 +608,10 @@
 
         function updateAllCarousels() {
             products.forEach(p => {
-                if(p.images && p.images.length > 0) {
-                    // SELECCIONAR TODAS LAS IMÁGENES DENTRO DEL FADE-CONTAINER
+                if(p.showcase && p.showcase.length > 0) {
                     const images = document.querySelectorAll(`#fade-${p.id} .fade-img`);
                     if(images.length > 0) {
-                        // Modulo para asegurar que no se rompa si un producto tiene menos fotos
                         const activeIndex = globalImageIndex % images.length;
-                        
                         images.forEach((img, index) => {
                             if(index === activeIndex) img.classList.add('active');
                             else img.classList.remove('active');
@@ -578,88 +632,131 @@
                 btnEn.classList.remove('text-gray-500', 'hover:text-white'); btnEn.classList.add('bg-lumenGold', 'text-black');
                 btnEs.classList.remove('bg-lumenGold', 'text-black'); btnEs.classList.add('text-gray-500', 'hover:text-white');
             }
-            document.querySelectorAll('[data-i18n]').forEach(el => { if(translations[lang][el.getAttribute('data-i18n')]) el.innerHTML = translations[lang][el.getAttribute('data-i18n')]; });
-            renderStore(); if(document.getElementById('cart-modal').classList.contains('active')) renderCartList();
+            document.querySelectorAll('[data-i18n]').forEach(el => { 
+                const key = el.getAttribute('data-i18n');
+                if(translations[lang][key]) el.innerHTML = translations[lang][key]; 
+            });
+            renderStore(); 
+            if(document.getElementById('cart-modal').classList.contains('active')) renderCartList();
         }
 
         function renderStore() {
             const equipContainer = document.getElementById('carousel-equipamiento');
-            const artContainer = document.getElementById('carousel-artefactos');
-            equipContainer.innerHTML = ''; artContainer.innerHTML = '';
+            equipContainer.innerHTML = '';
 
             products.forEach(p => {
                 const name = p.name[currentLang]; const tag = p.tag[currentLang];
                 let imageHTML = '';
                 
-                // IMPLEMENTACIÓN DE CROSS-FADE EN VITRINA
-                if (p.images) {
-                    const imagesMarkup = p.images.map((src, index) => {
-                        // La primera imagen empieza activa si el índice global coincide, o por defecto la 0
-                        const isActive = (globalImageIndex % p.images.length) === index ? 'active' : '';
+                if (p.showcase) {
+                    const imagesMarkup = p.showcase.map((src, index) => {
+                        const isActive = (globalImageIndex % p.showcase.length) === index ? 'active' : '';
                         return `<img src="${src}" class="fade-img ${isActive}" alt="${name}">`;
                     }).join('');
-                    
                     imageHTML = `<div id="fade-${p.id}" class="fade-container">${imagesMarkup}</div>`;
                 } else { 
-                    imageHTML = `<div class="w-full h-full flex items-center justify-center"><i class="fa-solid ${p.icon} text-9xl text-white/20 group-hover:text-white/40 transition-transform duration-500 group-hover:scale-110"></i></div>`; 
+                    imageHTML = `<div class="w-full h-full flex items-center justify-center"><i class="fa-solid ${p.icon} text-9xl text-white/20"></i></div>`; 
                 }
 
                 const cardHTML = `<div class="product-card group cursor-pointer" onclick="openProduct(${p.id})"><div class="h-3/4 bg-gray-900 flex items-center justify-center relative border-b border-white/5 overflow-hidden">${imageHTML}<div class="absolute top-6 left-6 bg-lumenGold text-black text-xs font-bold px-3 py-1.5 uppercase rounded-sm z-10">${tag}</div><div class="absolute bottom-6 right-6 bg-black/60 backdrop-blur px-4 py-2 rounded-full text-white font-bold border border-white/20 text-lg z-10">$${p.price.toFixed(2)}</div></div><div class="h-1/4 p-6 flex flex-col justify-center bg-[#111]"><h3 class="text-white font-serif text-xl leading-tight mb-2 truncate font-bold">${name}</h3><p class="text-gray-500 text-sm line-clamp-2">${p.desc[currentLang]}</p></div></div>`;
-                if(p.type === 'equip') equipContainer.innerHTML += cardHTML; else artContainer.innerHTML += cardHTML;
+                equipContainer.innerHTML += cardHTML;
             });
         }
 
         function openProduct(id) {
             const p = products.find(x => x.id === id); if(!p) return;
-            currentProdId = id; selectedSize = null; selectedColor = null; modalQty = 1;
+            currentProdId = id; selectedSize = null; selectedColor = null; selectedGender = null; modalQty = 1;
             
+            // Reiniciar botones
+            document.querySelectorAll('.selector-btn, .size-btn, .color-btn').forEach(b => b.classList.remove('selected'));
+
+            // Renderizar imagen inicial (Man + Black por defecto)
             const modalImgContainer = document.getElementById('modal-img-container');
-            if(p.images) { modalImgContainer.innerHTML = `<img id="modal-main-img" src="${p.images[0]}" class="w-full h-full object-cover"><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`; } 
-            else { modalImgContainer.innerHTML = `<i id="m-icon" class="fa-solid ${p.icon} text-[180px] text-white/10 drop-shadow-2xl"></i><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`; }
+            const initialImg = p.images['man_black'] || p.showcase[0]; 
+            modalImgContainer.innerHTML = `<img id="modal-main-img" src="${initialImg}" class="w-full h-full object-cover"><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`;
 
-            document.getElementById('modal-qty').innerText = modalQty; document.getElementById('m-title').innerText = p.name[currentLang]; document.getElementById('m-tag').innerText = p.tag[currentLang]; document.getElementById('m-desc').innerText = p.desc[currentLang]; document.getElementById('m-specs').innerHTML = p.specs[currentLang].map(s => `<li class="flex items-start border-b border-white/10 pb-3 last:border-0"><i class="fa-solid fa-angle-right text-lumenGold mt-1 mr-3 text-lg"></i>${s}</li>`).join('');
+            document.getElementById('modal-qty').innerText = modalQty; 
+            document.getElementById('m-title').innerText = p.name[currentLang]; 
+            document.getElementById('m-tag').innerText = p.tag[currentLang]; 
+            document.getElementById('m-desc').innerText = p.desc[currentLang];
+            document.getElementById('gender-help-text').innerText = p.guide[currentLang];
 
-            const btn = document.getElementById('add-to-cart-btn'); const qtyContainer = document.getElementById('qty-container'); const protocolBtn = document.getElementById('protocol-btn'); const selectorsDiv = document.getElementById('selectors-container');
+            const selectorsDiv = document.getElementById('selectors-container');
+            selectorsDiv.classList.remove('hidden');
 
-            if(p.comingSoon) {
-                btn.onclick = () => window.open(`https://wa.me/593996480843?text=Hola, quiero unirme a la WAITLIST para: ${p.name.es}`, '_blank');
-                btn.innerHTML = `<span>EN FORJA / WAITLIST</span> <i class="fa-brands fa-whatsapp"></i>`;
-                btn.classList.replace('bg-white', 'bg-gray-800'); btn.classList.replace('text-black', 'text-white');
-                qtyContainer.style.display = 'none'; protocolBtn.style.display = 'none'; selectorsDiv.classList.add('hidden');
-            } else {
-                btn.onclick = addToCartCurrent; btn.innerHTML = `<span data-i18n="addCart">AGREGAR</span>`;
-                btn.classList.replace('bg-gray-800', 'bg-white'); btn.classList.replace('text-white', 'text-black');
-                qtyContainer.style.display = 'flex'; protocolBtn.style.display = 'flex';
-                if(p.isClothing) {
-                    selectorsDiv.classList.remove('hidden');
-                    document.getElementById('size-options').innerHTML = p.options.sizes.map(s => `<div onclick="selectSize('${s}', this)" class="size-btn cursor-pointer bg-black hover:bg-white/10">${s}</div>`).join('');
-                    document.getElementById('color-options').innerHTML = p.options.colors.map(c => `<div onclick="selectColor('${c}', this)" class="color-btn ${c} bg-${c === 'black' ? 'black' : 'white'}" title="${c}"></div>`).join('');
-                } else { selectorsDiv.classList.add('hidden'); }
-            }
+            // Renderizar Tallas
+            document.getElementById('size-options').innerHTML = p.options.sizes.map(s => `<button onclick="selectSize('${s}', this)" class="selector-btn hover:bg-white/10">${s}</button>`).join('');
+            
+            // Renderizar Colores
+            document.getElementById('color-options').innerHTML = p.options.colors.map(c => `<div onclick="selectColor('${c}', this)" class="color-btn ${c} bg-${c === 'black' ? 'black' : 'white'}" title="${c}"></div>`).join('');
+
             document.getElementById('product-modal').classList.add('active');
         }
 
-        function selectSize(size, btn) { selectedSize = size; document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }
+        function selectGender(gender, btn) {
+            selectedGender = gender;
+            // Remover selected de los botones de género
+            btn.parentElement.querySelectorAll('.selector-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            updateModalImage();
+        }
+
+        function selectSize(size, btn) { 
+            selectedSize = size; 
+            document.getElementById('size-options').querySelectorAll('.selector-btn').forEach(b => b.classList.remove('selected')); 
+            btn.classList.add('selected'); 
+        }
         
         function selectColor(color, btn) { 
             selectedColor = color; 
-            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); 
-            const p = products.find(x => x.id === currentProdId);
-            if(p && p.images) { 
-                const img = document.getElementById('modal-main-img'); 
-                if(img) {
-                    img.src = color === 'white' ? p.images[0] : p.images[1];
-                }
-            } 
+            document.getElementById('color-options').querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected')); 
+            btn.classList.add('selected'); 
+            updateModalImage();
         }
+
+        function updateModalImage() {
+            const p = products.find(x => x.id === currentProdId);
+            if (!p) return;
+
+            // Default fallback logic
+            let imgKey = 'man_black';
+            
+            if (selectedGender && selectedColor) {
+                imgKey = `${selectedGender}_${selectedColor}`;
+            } else if (selectedGender) {
+                imgKey = `${selectedGender}_black`; // Default color
+            } else if (selectedColor) {
+                imgKey = `man_${selectedColor}`; // Default gender
+            }
+
+            const newSrc = p.images[imgKey];
+            const imgEl = document.getElementById('modal-main-img');
+            if (imgEl && newSrc) {
+                imgEl.src = newSrc;
+            }
+        }
+
         function adjustQty(change) { modalQty += change; if(modalQty < 1) modalQty = 1; document.getElementById('modal-qty').innerText = modalQty; }
 
         function addToCartCurrent() {
             const p = products.find(x => x.id === currentProdId);
-            if(p.isClothing && (!selectedSize || !selectedColor)) { alert("⚠️ Por favor selecciona TALLA y COLOR."); return; }
-            let cartImage = null; if(p.isClothing && p.images && selectedColor) { cartImage = p.images[selectedColor === 'white' ? 0 : 1]; }
-            const existingIdx = cart.findIndex(item => item.id === p.id && item.selSize === selectedSize && item.selColor === selectedColor);
-            if(existingIdx > -1) { cart[existingIdx].qty += modalQty; } else { cart.push({ ...p, selSize: selectedSize, selColor: selectedColor, qty: modalQty, cartImage: cartImage }); }
+            
+            // VALIDACIÓN ESTRICTA
+            if(!selectedGender || !selectedSize || !selectedColor) { 
+                alert("⚠️ PROTOCOLO INCOMPLETO:\nPor favor selecciona GÉNERO, TALLA y COLOR para continuar."); 
+                return; 
+            }
+
+            let cartImage = p.images[`${selectedGender}_${selectedColor}`] || p.images['man_black'];
+            
+            const existingIdx = cart.findIndex(item => item.id === p.id && item.selSize === selectedSize && item.selColor === selectedColor && item.selGender === selectedGender);
+            
+            if(existingIdx > -1) { 
+                cart[existingIdx].qty += modalQty; 
+            } else { 
+                cart.push({ ...p, selSize: selectedSize, selColor: selectedColor, selGender: selectedGender, qty: modalQty, cartImage: cartImage }); 
+            }
+            
             updateCartBadge(); closeProduct();
             const btn = document.getElementById('cart-btn'); btn.style.borderColor = "#D4AF37"; setTimeout(() => btn.style.borderColor = "", 500);
         }
@@ -670,11 +767,37 @@
             const list = document.getElementById('cart-list');
             if(cart.length === 0) { list.innerHTML = `<div class="text-center text-gray-500 mt-20 text-lg"><p>${translations[currentLang].emptyCart}</p></div>`; updateTotals(0); return; }
             let subtotal = 0; list.innerHTML = '';
+            
             cart.forEach((item, idx) => {
                 const itemTotal = item.price * item.qty; subtotal += itemTotal;
-                let variantsHTML = item.isClothing ? `<div class="text-xs text-gray-400 mt-2">Talla: <strong class="text-lumenGold text-sm">${item.selSize}</strong> | Color: <strong class="text-white text-sm">${item.selColor === 'black' ? 'Negro' : 'Blanco'}</strong></div>` : '';
-                let visualElement = item.cartImage ? `<img src="${item.cartImage}" class="w-full h-full object-cover rounded-xl border border-white/5">` : `<div class="w-full h-full flex items-center justify-center text-gray-600"><i class="fa-solid ${item.icon} text-2xl"></i></div>`;
-                list.innerHTML += `<div class="flex flex-col bg-[#111] p-6 rounded-2xl border border-white/10 mb-4"><div class="flex items-center gap-6 mb-4"><div class="w-20 h-20 bg-black rounded-xl border border-white/5 flex-shrink-0">${visualElement}</div><div class="flex-1"><div class="text-white font-bold font-serif text-lg">${item.name[currentLang]}</div>${variantsHTML}<div class="text-lumenGold text-lg font-bold mt-1">$${item.price.toFixed(2)} c/u</div></div></div><div class="flex items-center justify-between border-t border-white/5 pt-4"><div class="flex items-center gap-4 bg-black rounded-lg p-1"><button onclick="updateCartItemQty(${idx}, -1)" class="w-10 h-10 text-white font-bold hover:bg-white/10 rounded">-</button><span class="text-white font-bold w-6 text-center">${item.qty}</span><button onclick="updateCartItemQty(${idx}, 1)" class="w-10 h-10 text-white font-bold hover:bg-white/10 rounded">+</button></div><div class="text-white font-bold text-xl">$${itemTotal.toFixed(2)}</div><button onclick="removeFromCart(${idx})" class="text-gray-500 hover:text-red-500 p-2 ml-2"><i class="fa-solid fa-trash text-lg"></i></button></div></div>`;
+                
+                let genderText = item.selGender === 'man' ? (currentLang === 'es' ? 'Hombre' : 'Man') : (currentLang === 'es' ? 'Mujer' : 'Woman');
+                let colorText = item.selColor === 'black' ? (currentLang === 'es' ? 'Negro' : 'Black') : (currentLang === 'es' ? 'Blanco' : 'White');
+
+                list.innerHTML += `
+                <div class="flex flex-col bg-[#111] p-6 rounded-2xl border border-white/10 mb-4">
+                    <div class="flex items-center gap-6 mb-4">
+                        <div class="w-20 h-20 bg-black rounded-xl border border-white/5 flex-shrink-0">
+                            <img src="${item.cartImage}" class="w-full h-full object-cover rounded-xl">
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-white font-bold font-serif text-lg">${item.name[currentLang]}</div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                <span class="text-lumenGold font-bold">${genderText}</span> | Talla: <span class="text-white font-bold">${item.selSize}</span> | ${colorText}
+                            </div>
+                            <div class="text-lumenGold text-lg font-bold mt-1">$${item.price.toFixed(2)} c/u</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between border-t border-white/5 pt-4">
+                        <div class="flex items-center gap-4 bg-black rounded-lg p-1">
+                            <button onclick="updateCartItemQty(${idx}, -1)" class="w-10 h-10 text-white font-bold hover:bg-white/10 rounded">-</button>
+                            <span class="text-white font-bold w-6 text-center">${item.qty}</span>
+                            <button onclick="updateCartItemQty(${idx}, 1)" class="w-10 h-10 text-white font-bold hover:bg-white/10 rounded">+</button>
+                        </div>
+                        <div class="text-white font-bold text-xl">$${itemTotal.toFixed(2)}</div>
+                        <button onclick="removeFromCart(${idx})" class="text-gray-500 hover:text-red-500 p-2 ml-2"><i class="fa-solid fa-trash text-lg"></i></button>
+                    </div>
+                </div>`;
             });
             updateTotals(subtotal);
         }
@@ -689,16 +812,22 @@
         function startCheckout() {
             if(cart.length === 0) return;
             const name = document.getElementById('customer-name').value.trim();
-            if(!name) { alert("⚠️ Por favor, escribe tu nombre."); return; }
-            let subtotal = 0; let message = `NUEVO PEDIDO LA ARMERÍA:\nCliente: ${name}\n\nPedido:\n`;
+            if(!name) { alert("⚠️ Por favor, escribe tu nombre para identificar la orden."); return; }
+            
+            let subtotal = 0; 
+            let message = `NUEVO PEDIDO LA ARMERÍA:\nCliente: ${name}\n\n⚔️ ARSENAL SOLICITADO:\n`;
+            
             cart.forEach(item => { 
                 const itemTotal = item.price * item.qty; subtotal += itemTotal;
-                message += `${item.qty}x ${item.name.es}`; 
-                if(item.isClothing) message += ` | Talla: ${item.selSize} | Color: ${item.selColor === 'black' ? 'Negro' : 'Blanco'}`; 
-                message += ` | Sub: $${itemTotal.toFixed(2)}\n`; 
+                const genderTxt = item.selGender === 'man' ? 'Hombre' : 'Mujer';
+                const colorTxt = item.selColor === 'black' ? 'Negro' : 'Blanco';
+                
+                message += `▪️ ${item.qty}x ${item.name.es}\n   [${genderTxt} | Talla: ${item.selSize} | Color: ${colorTxt}]\n`; 
             });
+            
             const iva = subtotal * 0.15; const total = subtotal + iva;
-            message += `\nSubtotal: $${subtotal.toFixed(2)}\nIVA (15%): $${iva.toFixed(2)}\nTOTAL A PAGAR: $${total.toFixed(2)}\n\n(Entiendo el tiempo de forjado: 8-12 días)`;
+            message += `\nSubtotal: $${subtotal.toFixed(2)}\nIVA (15%): $${iva.toFixed(2)}\nTOTAL A PAGAR: $${total.toFixed(2)}\n\n(Acepto el tiempo de forjado: 8-12 días)`;
+            
             window.open(`https://wa.me/593996480843?text=${encodeURIComponent(message)}`, '_blank');
         }
 
