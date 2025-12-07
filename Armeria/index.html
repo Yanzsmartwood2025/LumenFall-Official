@@ -279,6 +279,22 @@
         }
         .color-btn.white.selected::after { color: #000; }
         .color-btn.black.selected::after { color: #fff; }
+
+        /* CALIBRACIÓN DE IMÁGENES (8/10 ZOOM) */
+        @media (orientation: portrait) {
+            .hero-calibrated {
+                background-size: auto 85% !important; /* Mantiene proporción, limita altura */
+            }
+        }
+        @media (orientation: landscape) {
+            .hero-calibrated {
+                background-size: 85% auto !important; /* Mantiene proporción, limita anchura */
+            }
+        }
+        .hero-calibrated {
+            background-repeat: no-repeat !important;
+            background-position: center !important;
+        }
     </style>
 </head>
 <body class="flex flex-col h-[100dvh] relative bg-[#050505]">
@@ -355,23 +371,23 @@
                 <!-- Slide 0 -->
                 <div class="hero-slide active" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-0.png'); background-size: contain; background-repeat: no-repeat;"></div>
                 <!-- Slide 1 -->
-                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-1.jpg');"></div>
+                <div class="hero-slide hero-calibrated" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-1.jpg');"></div>
                 <!-- Slide 2 -->
-                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-2.jpg');"></div>
+                <div class="hero-slide hero-calibrated" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-2.jpg');"></div>
                 <!-- Slide 3 -->
-                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-3.jpg');"></div>
+                <div class="hero-slide hero-calibrated" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-3.jpg');"></div>
                 <!-- Slide 4 -->
-                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-4.jpg');"></div>
+                <div class="hero-slide hero-calibrated" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-4.jpg');"></div>
                 <!-- Slide 5 -->
-                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-5.jpg');"></div>
+                <div class="hero-slide hero-calibrated" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-5.jpg');"></div>
                 <!-- Slide 6 -->
-                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-6.jpg');"></div>
+                <div class="hero-slide hero-calibrated" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-6.jpg');"></div>
                 <!-- Slide 7 -->
                 <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-7.png'); background-size: contain; background-repeat: no-repeat;"></div>
                 <!-- Slide 8 -->
-                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-8.jpg');"></div>
+                <div class="hero-slide hero-calibrated" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-8.jpg');"></div>
                 <!-- Slide 9 -->
-                <div class="hero-slide" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-9.jpg');"></div>
+                <div class="hero-slide hero-calibrated" style="background-image: url('assets/Imagenes/Pantalla-principal/Pantalla-9.jpg');"></div>
                 
                 <div class="absolute inset-0 bg-black/10"></div> 
             </div>
