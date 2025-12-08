@@ -312,7 +312,7 @@
         </button>
 
         <!-- Title (Center) -->
-        <h1 class="title-font text-2xl text-lumenGold tracking-[0.2em] font-bold drop-shadow-md opacity-0 md:opacity-100">LA ARMERÍA</h1>
+        <h1 class="title-font text-2xl text-lumenGold tracking-[0.2em] font-bold drop-shadow-md opacity-0 md:opacity-100" data-i18n="mainTitle">LA ARMERÍA</h1>
 
         <!-- Right Side Controls (Flag + Cart) -->
         <div class="flex items-center gap-4 pointer-events-auto">
@@ -397,10 +397,10 @@
             </div>
             <div class="hero-gradient"></div>
             <div class="absolute bottom-0 left-0 w-full z-20 pointer-events-none px-6 pb-24 flex flex-col items-center justify-end h-full">
-                <h2 class="title-font text-4xl md:text-5xl text-white font-bold drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] tracking-widest mb-2">EL CAOS TANGIBLE</h2>
+                <h2 class="title-font text-4xl md:text-5xl text-white font-bold drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] tracking-widest mb-2" data-i18n="heroTitle">EL CAOS TANGIBLE</h2>
                 <div class="flex items-center gap-3">
                     <div class="h-[1px] w-8 bg-lumenGold"></div>
-                    <p class="text-lumenGold text-xs md:text-sm tracking-[0.3em] font-bold uppercase">EQUIPAMIENTO & LORE</p>
+                    <p class="text-lumenGold text-xs md:text-sm tracking-[0.3em] font-bold uppercase" data-i18n="heroSubtitle">EQUIPAMIENTO & LORE</p>
                     <div class="h-[1px] w-8 bg-lumenGold"></div>
                 </div>
             </div>
@@ -459,8 +459,8 @@
                         </div>
                         <!-- Unboxing Sub-buttons -->
                         <div id="unboxing-options" class="hidden mt-4 grid grid-cols-2 gap-4">
-                            <button onclick="selectUnboxingItem('box')" class="selector-btn unboxing-sub-btn" id="ub-box">THE BLACK BOX</button>
-                            <button onclick="selectUnboxingItem('items')" class="selector-btn unboxing-sub-btn" id="ub-items">LLAVERO + TARJETA</button>
+                            <button onclick="selectUnboxingItem('box')" class="selector-btn unboxing-sub-btn" id="ub-box" data-i18n="ubBox">THE BLACK BOX</button>
+                            <button onclick="selectUnboxingItem('items')" class="selector-btn unboxing-sub-btn" id="ub-items" data-i18n="ubItems">LLAVERO + TARJETA</button>
                         </div>
                     </div>
                     
@@ -527,13 +527,16 @@
         const translations = { 
             es: { 
                 // GENERAL
+                mainTitle: "LA ARMERÍA", heroTitle: "EL CAOS TANGIBLE", heroSubtitle: "EQUIPAMIENTO & LORE",
                 langTitle: "IDIOMA", dataTitle: "DATOS", equipTitle: "EQUIPAMIENTO", equipSub: "Desliza para explorar", artTitle: "ARTEFACTOS", artSub: "Lore & Accesorios", 
-                termsFooter: "Términos y Condiciones", descTitle: "Descripción", addCart: "AGREGAR", termsHeader: "TÉRMINOS & ENVÍOS", cartTitle: "TU ARSENAL", 
+                termsFooter: "Términos y Condiciones", descTitle: "Descripción", addCart: "AGREGAR", preOrder: "RESERVAR", termsHeader: "TÉRMINOS & ENVÍOS", cartTitle: "TU ARSENAL",
                 total: "TOTAL", checkout: "ENVIAR PEDIDO", emptyCart: "Tu arsenal está vacío.", payTitle: "Métodos de Pago",
                 genderLabel: "GÉNERO / GENDER", sizeLabel: "TALLA / SIZE", colorLabel: "COLOR", qtyLabel: "CANTIDAD", 
                 manBtn: "HOMBRE", womanBtn: "MUJER", equipGuideTitle: "GUÍA DE EQUIPAMIENTO", forgeTimeTitle: "TIEMPO DE FORJADO", 
                 forgeTimeVal: "8 - 12 DÍAS (VER DETALLES)", logisticsTitle: "LOGÍSTICA DE GUERRA", totalTime: "TIEMPO TOTAL:", 
                 totalTimeVal: "8 - 12 DÍAS", operatorId: "Identificación del Operador", subtotal: "Subtotal", tax: "IVA (15%)",
+                // UNBOXING
+                unboxingBtn: "UNBOXING", ubBox: "THE BLACK BOX", ubItems: "LLAVERO + TARJETA",
                 // NUEVOS
                 topBar: "🇪🇨 LANZAMIENTO EXCLUSIVO ECUADOR. Envíos nacionales activos.",
                 delTitle: "PROTOCOLO DE ENTREGA", delSubtitle: "FORJADO A MEDIDA", delText: '"En La Armería no almacenamos polvo. Cada prenda se confecciona y estampa bajo pedido <strong class="text-white">exclusivamente para ti</strong>."',
@@ -553,13 +556,16 @@
             }, 
             en: { 
                 // GENERAL
+                mainTitle: "THE ARMORY", heroTitle: "TANGIBLE CHAOS", heroSubtitle: "EQUIPMENT & LORE",
                 langTitle: "LANGUAGE", dataTitle: "CONTACT INFO", equipTitle: "EQUIPMENT", equipSub: "Swipe to explore", artTitle: "ARTIFACTS", artSub: "Lore & Accessories", 
-                termsFooter: "Terms & Conditions", descTitle: "Description", addCart: "ADD TO ARSENAL", termsHeader: "TERMS & SHIPPING", cartTitle: "YOUR ARSENAL", 
+                termsFooter: "Terms & Conditions", descTitle: "Description", addCart: "ADD TO ARSENAL", preOrder: "PRE-ORDER", termsHeader: "TERMS & SHIPPING", cartTitle: "YOUR ARSENAL",
                 total: "TOTAL", checkout: "SEND ORDER", emptyCart: "Your arsenal is empty.", payTitle: "Payment Methods",
                 genderLabel: "GENDER", sizeLabel: "SIZE", colorLabel: "COLOR", qtyLabel: "QUANTITY", 
                 manBtn: "MAN", womanBtn: "WOMAN", equipGuideTitle: "EQUIPMENT GUIDE", forgeTimeTitle: "FORGING TIME", 
                 forgeTimeVal: "8 - 12 DAYS (SEE DETAILS)", logisticsTitle: "WAR LOGISTICS", totalTime: "TOTAL TIME:", 
                 totalTimeVal: "8 - 12 DAYS", operatorId: "Operator ID / Callsign", subtotal: "Subtotal", tax: "TAX (15%)",
+                // UNBOXING
+                unboxingBtn: "UNBOXING", ubBox: "THE BLACK BOX", ubItems: "KEYCHAIN + CARD",
                 // NEW
                 topBar: "🌎 WORLDWIDE SHIPPING AVAILABLE. Exclusive Launch.",
                 delTitle: "DELIVERY PROTOCOL", delSubtitle: "CUSTOM FORGED", delText: '"At The Armory we do not store dust. Every garment is crafted and printed on demand <strong class="text-white">exclusively for you</strong>."',
@@ -898,7 +904,7 @@
             } else {
                 let btnLabel = translations[currentLang].addCart;
                 if (p.isPreOrder) {
-                    btnLabel = "RESERVAR / PRE-ORDER";
+                    btnLabel = translations[currentLang].preOrder;
                 }
 
                 addBtn.innerHTML = `<span>${btnLabel}</span>`;
@@ -925,7 +931,8 @@
                         const ubBtn = document.createElement('button');
                         ubBtn.id = 'ub-main-btn';
                         ubBtn.className = 'selector-btn flex-1';
-                        ubBtn.innerText = 'UNBOXING';
+                        ubBtn.setAttribute('data-i18n', 'unboxingBtn');
+                        ubBtn.innerText = translations[currentLang].unboxingBtn;
                         ubBtn.onclick = function() { selectUnboxing(this); };
                         genderContainer.appendChild(ubBtn);
                     }
@@ -1100,6 +1107,8 @@
             let cartImage = null;
             if (p.isClothing) {
                  cartImage = p.images[`${selectedGender}_${selectedColor}`] || p.images['man_black'];
+            } else if (p.showcase && p.showcase.length > 0) {
+                 cartImage = p.showcase[0];
             }
             
             const existingIdx = cart.findIndex(item => 
