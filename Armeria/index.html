@@ -871,8 +871,14 @@
                      }, { once: true });
                  }
 
+            } else if (p.showcase && p.showcase.length > 0) {
+                 // ARTIFACTS WITH IMAGES (Static)
+                 modalImgContainer.innerHTML = `<img src="${p.showcase[0]}" class="w-full h-full object-cover" alt="${p.name[currentLang]}">
+                 <div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50 pointer-events-none z-30">
+                     <span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span>
+                 </div>`;
             } else {
-                 // ARTIFACTS / NO CLOTHING
+                 // ARTIFACTS / NO CLOTHING FALLBACK
                  modalImgContainer.innerHTML = `<i id="m-icon" class="fa-solid ${p.icon} text-[180px] text-white/10 drop-shadow-2xl"></i><div class="absolute bottom-6 right-6 bg-black/90 backdrop-blur px-8 py-4 rounded-full border-2 border-lumenGold/50"><span id="m-price-display" class="text-4xl font-bold text-white font-sans">$${p.price.toFixed(2)}</span></div>`;
             }
 
