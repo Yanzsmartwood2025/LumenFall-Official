@@ -3,7 +3,7 @@
         const assetUrls = {
             runningSprite: 'assets/sprites/characters/LumenFall.png',
             attackSprite: 'assets/sprites/characters/attack_sprite_sheet.png',
-            jumpSprite: 'assets/imagenes/saltando.png',
+            jumpSprite: 'assets/sprites/characters/LumenFall.png',
             flameParticle: 'assets/sprites/effects/fuego.png',
             wallTexture: 'assets/environment/tiles/pared-calabozo.png',
             doorTexture: 'assets/environment/objects/puerta-calabozo.png',
@@ -13,7 +13,6 @@
             introImage: 'assets/ui/Intro.jpg',
             menuBackgroundImage: 'assets/ui/menu-principal.jpg',
             animatedEnergyBar: 'assets/ui/barra-de-energia.png',
-            halleyStatueTexture: 'assets/sprites/characters/Halley-piedra.png',
             enemySprite: 'assets/sprites/enemies/enemigo-1.png'
         };
 
@@ -286,7 +285,6 @@
                 resume: "Reanudar",
                 gamepadConnected: "Control Conectado",
                 audioControls: "Controles de Audio",
-                halleyStatueDialogue: "Esta es la estatua de Halley, la primera guardiana. Su luz guió a los perdidos.",
                 shoot: "Disparar",
                 attack: "Atacar",
                 activateGamepad: "Activar Control",
@@ -305,7 +303,6 @@
                 resume: "Resume",
                 gamepadConnected: "Gamepad Connected",
                 audioControls: "Audio Controls",
-                halleyStatueDialogue: "This is the statue of Halley, the first guardian. Her light guided the lost.",
                 shoot: "Shoot",
                 attack: "Attack",
                 activateGamepad: "Activate Gamepad",
@@ -1163,16 +1160,12 @@
                 id: 'room_5',
                 name: 'Habitación 5',
                 gates: [{ id: 'return_5', x: 0, destination: 'dungeon_1', numeral: 'V' }],
-                specters: [],
-                statues: [{
-                    x: 15,
-                    y: 3,
-                    textureUrl: assetUrls.halleyStatueTexture,
-                    dialogueKey: 'halleyStatueDialogue'
-                }]
+                specters: []
             },
             boss_room: { id: 'boss_room', name: 'Sala del Jefe', gates: [{ id: 'return_boss', x: 0, destination: 'dungeon_1', numeral: 'VI' }], specters: [] },
         };
+
+        let sharedFlameMaterial = null;
 
         class RealisticFlame {
             constructor(scene, position, lifetime = -1) {
@@ -1186,7 +1179,16 @@
             }
 
             init() {
-                const particleMaterial = new THREE.PointsMaterial({ color: 0x00aaff, size: 0.4, map: textureLoader.load(assetUrls.flameParticle), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false });
+                if (!sharedFlameMaterial) {
+                    sharedFlameMaterial = new THREE.PointsMaterial({
+                        color: 0x00aaff,
+                        size: 0.4,
+                        map: textureLoader.load(assetUrls.flameParticle),
+                        blending: THREE.AdditiveBlending,
+                        transparent: true,
+                        depthWrite: false
+                    });
+                }
                 const particleGeometry = new THREE.BufferGeometry();
                 const positions = new Float32Array(this.particleCount * 3);
                 for (let i = 0; i < this.particleCount; i++) {
@@ -1196,7 +1198,7 @@
                     this.velocities.push({ x: (Math.random() - 0.5) * 0.02, y: Math.random() * 0.1, z: (Math.random() - 0.5) * 0.02, lifetime: Math.random() * 2 });
                 }
                 particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-                this.particles = new THREE.Points(particleGeometry, particleMaterial);
+                this.particles = new THREE.Points(particleGeometry, sharedFlameMaterial);
                 this.scene.add(this.particles);
                 this.light = new THREE.PointLight(0x00aaff, 2.0, 20);
                 this.light.position.copy(this.position);
@@ -1483,7 +1485,7 @@
                     return;
                 }
 
-                const texture = textureLoader.load(assetUrls.halleyStatueTexture);
+                const texture = textureLoader.load(assetUrls.wallTexture);
                 const pieceSize = 3;
 
                 const correctPositions = [
@@ -1572,20 +1574,25 @@
             }
         }
 
+        let sharedProjectileMaterial = null;
+
         class Projectile {
             constructor(scene, startPosition, direction) {
                 this.scene = scene;
                 this.lifetime = 2;
                 this.speed = 0.5;
 
-                const material = new THREE.MeshBasicMaterial({
-                    map: textureLoader.load(assetUrls.flameParticle),
-                    color: 0xaaddff,
-                    transparent: true,
-                    blending: THREE.AdditiveBlending,
-                });
+                if (!sharedProjectileMaterial) {
+                    sharedProjectileMaterial = new THREE.MeshBasicMaterial({
+                        map: textureLoader.load(assetUrls.flameParticle),
+                        color: 0xaaddff,
+                        transparent: true,
+                        blending: THREE.AdditiveBlending,
+                    });
+                }
+
                 const geometry = new THREE.PlaneGeometry(1.0, 1.0);
-                this.mesh = new THREE.Mesh(geometry, material);
+                this.mesh = new THREE.Mesh(geometry, sharedProjectileMaterial);
                 this.mesh.position.copy(startPosition);
 
                 this.velocity = new THREE.Vector3(direction.x, direction.y, 0).multiplyScalar(this.speed);

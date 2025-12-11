@@ -1,0 +1,17 @@
+127.0.0.1 - - [11/Dec/2025 17:15:54] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:54] "GET /css/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:54] "GET /assets/ui/barra-de-energia.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:54] "GET /assets/sprites/effects/fuego.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:54] "GET /assets/sprites/characters/attack_sprite_sheet.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:54] "GET /assets/ui/menu-principal.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:54] "GET /js/game.js HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:55] "GET /assets/environment/objects/antorcha.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:55] "GET /assets/environment/objects/puerta-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:55] "GET /assets/environment/tiles/pared-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:56] "GET /assets/ui/Intro.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:57] "GET /assets/audio/characters/joziel/pasos-joziel.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:57] "GET /assets/audio/ambience/dungeons/calabozo_de_piedra.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:57] "GET /assets/audio/puerta-calabozo.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:57] "GET /assets/audio/voz-fantasma.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:58] "GET /assets/sprites/characters/LumenFall.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:15:58] "GET /assets/sprites/enemies/fantasma.png HTTP/1.1" 200 -
