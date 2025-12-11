@@ -286,7 +286,7 @@
                 gamepadConnected: "Control Conectado",
                 audioControls: "Controles de Audio",
                 shoot: "Disparar",
-                attack: "Atacar",
+                attack: "Recargar",
                 activateGamepad: "Activar Control",
                 deactivateGamepad: "Activar Táctil",
                 vibrationOff: "Vibración: OFF",
@@ -305,7 +305,7 @@
                 gamepadConnected: "Gamepad Connected",
                 audioControls: "Audio Controls",
                 shoot: "Shoot",
-                attack: "Attack",
+                attack: "Reload",
                 activateGamepad: "Activate Gamepad",
                 deactivateGamepad: "Activate Touch",
                 vibrationOff: "Vibration: OFF",
@@ -601,19 +601,51 @@
             if (isPaused) return;
             isAttackButtonPressed = true;
             attackPressStartTime = Date.now();
+            btnAttack.classList.add('button-active-aura'); // Activar efecto visual
+            triggerMobileVibration(200); // Vibrar inmediatamente al pulsar
         }
         function handleAttackPressEnd() {
             if (isPaused) return;
             isAttackButtonPressed = false;
+            btnAttack.classList.remove('button-active-aura'); // Desactivar efecto visual
         }
 
-        btnAttack.addEventListener('mousedown', () => !isGamepadModeActive && handleAttackPressStart());
+        btnAttack.addEventListener('mousedown', () => {
+             if (!isGamepadModeActive) {
+                 handleAttackPressStart();
+                 triggerMobileVibration(100);
+             }
+        });
         btnAttack.addEventListener('mouseup', () => !isGamepadModeActive && handleAttackPressEnd());
-        btnAttack.addEventListener('touchstart', (e) => { if(!isGamepadModeActive) { e.preventDefault(); handleAttackPressStart(); } }, { passive: false });
+        btnAttack.addEventListener('mouseleave', () => !isGamepadModeActive && handleAttackPressEnd());
+
+        btnAttack.addEventListener('touchstart', (e) => {
+             if(!isGamepadModeActive) {
+                 e.preventDefault();
+                 handleAttackPressStart();
+                 triggerMobileVibration(100);
+             }
+        }, { passive: false });
         btnAttack.addEventListener('touchend', () => !isGamepadModeActive && handleAttackPressEnd());
 
-        btnShoot.addEventListener('mousedown', () => { if(!isPaused && !isGamepadModeActive) player.shoot(joyVector); });
-        btnShoot.addEventListener('touchstart', (e) => { if(!isPaused && !isGamepadModeActive) { e.preventDefault(); player.shoot(joyVector); } }, { passive: false });
+        btnShoot.addEventListener('mousedown', () => {
+             if(!isPaused && !isGamepadModeActive) {
+                 player.shoot(joyVector);
+                 btnShoot.classList.add('button-active-aura');
+                 triggerMobileVibration(50);
+                 setTimeout(() => btnShoot.classList.remove('button-active-aura'), 200);
+             }
+        });
+
+        btnShoot.addEventListener('touchstart', (e) => {
+             if(!isPaused && !isGamepadModeActive) {
+                 e.preventDefault();
+                 player.shoot(joyVector);
+                 btnShoot.classList.add('button-active-aura');
+                 triggerMobileVibration(50);
+                 setTimeout(() => btnShoot.classList.remove('button-active-aura'), 200);
+             }
+        }, { passive: false });
 
 
         doorPromptFlame.addEventListener('mousedown', (e) => { if (!isPaused) { e.preventDefault(); interactPressed = true; } });
@@ -681,9 +713,8 @@
             const s = strong * scale;
             const w = weak * scale;
 
-            if (navigator.vibrate) {
-                navigator.vibrate(duration);
-            }
+            // La vibración del navegador (móvil) se maneja mejor directamente en el evento táctil
+            // Aquí dejamos la del gamepad y un fallback
 
             const gp = navigator.getGamepads()[0];
             if (gp && gp.vibrationActuator) {
@@ -693,6 +724,13 @@
                     weakMagnitude: w,
                     strongMagnitude: s,
                 });
+            }
+        }
+
+        // Función auxiliar para forzar la vibración en móviles
+        function triggerMobileVibration(duration = 50) {
+            if (vibrationLevel > 0 && navigator.vibrate) {
+                navigator.vibrate(duration);
             }
         }
 
