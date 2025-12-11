@@ -99,6 +99,7 @@
 
         let isGamepadModeActive = false;
         let isVibrationEnabled = true;
+        let vibrationIntensity = 1.0;
         let isAttackButtonPressed = false;
         let attackPressStartTime = 0;
         let interactPressed = false;
@@ -267,6 +268,7 @@
         const gamepadStatus = document.getElementById('gamepad-status');
         const gamepadToggleButton = document.getElementById('gamepad-toggle');
         const vibrationToggleButton = document.getElementById('vibration-toggle');
+        const vibrationIntensitySlider = document.getElementById('vibration-intensity');
         const controlsContainer = document.getElementById('controls');
         const gameOverScreen = document.getElementById('game-over-screen');
         const continueButton = document.getElementById('continue-button');
@@ -290,7 +292,8 @@
                 activateGamepad: "Activar Control",
                 deactivateGamepad: "Activar Táctil",
                 toggleVibrationOn: "Vibración: ON",
-                toggleVibrationOff: "Vibración: OFF"
+                toggleVibrationOff: "Vibración: OFF",
+                vibrationIntensity: "Intensidad Vibración:"
             },
             en: {
                 start: "Start",
@@ -308,7 +311,8 @@
                 activateGamepad: "Activate Gamepad",
                 deactivateGamepad: "Activate Touch",
                 toggleVibrationOn: "Vibration: ON",
-                toggleVibrationOff: "Vibration: OFF"
+                toggleVibrationOff: "Vibration: OFF",
+                vibrationIntensity: "Vibration Intensity:"
             }
         };
 
@@ -437,6 +441,7 @@
         resumeButton.addEventListener('click', resumeGame);
         gamepadToggleButton.addEventListener('click', toggleGamepadMode);
         vibrationToggleButton.addEventListener('click', toggleVibration);
+        vibrationIntensitySlider.addEventListener('input', (e) => { vibrationIntensity = parseFloat(e.target.value); });
         musicVolumeSlider.addEventListener('input', (e) => setAudioVolume('ambiente', e.target.value));
         sfxVolumeSlider.addEventListener('input', (e) => setAudioVolume('pasos', e.target.value));
 
@@ -666,14 +671,27 @@
 
         function vibrateGamepad(duration = 50, strong = 0.8, weak = 0.8) {
             if (!isVibrationEnabled) return;
+            // Apply intensity multiplier
+            const adjustedStrong = Math.min(1.0, strong * vibrationIntensity);
+            const adjustedWeak = Math.min(1.0, weak * vibrationIntensity);
+
+            // Don't vibrate if intensity results in 0
+            if (adjustedStrong <= 0 && adjustedWeak <= 0) return;
+
             const gp = navigator.getGamepads()[0];
             if (gp && gp.vibrationActuator) {
                 gp.vibrationActuator.playEffect("dual-rumble", {
                     startDelay: 0,
                     duration: duration,
-                    weakMagnitude: weak,
-                    strongMagnitude: strong,
+                    weakMagnitude: adjustedWeak,
+                    strongMagnitude: adjustedStrong,
                 });
+            } else if (navigator.vibrate) {
+                // Fallback for mobile devices without Gamepad API but with Vibration API
+                // Simple vibration doesn't support magnitude, just duration
+                if (vibrationIntensity > 0) {
+                    navigator.vibrate(duration);
+                }
             }
         }
 
@@ -923,11 +941,11 @@
                 }
 
                 if (this.currentState !== 'shooting') {
-                    if (controls.attackHeld) {
-                        if(this.currentState !== 'attacking') vibrateGamepad(100, 0.8, 0.8);
-                        this.currentState = 'attacking';
-                    } else {
-                        const isJumpingInput = joyY > 0.5;
+                    const isJumpingInput = joyY > 0.5;
+
+                    // Prioritize movement or jump input over attack hold
+                    if (isMoving || (isJumpingInput && this.isGrounded && !this.jumpInputReceived) || this.isJumping) {
+                        // Movement/Jump Logic
                         if (isJumpingInput && this.isGrounded && !this.jumpInputReceived) {
                             this.isJumping = true;
                             this.isGrounded = false;
@@ -939,10 +957,21 @@
                         }
 
                         if (isMoving) {
-                            this.currentState = 'running';
-                        } else if (!this.isJumping) {
-                            this.currentState = 'idle';
+                            this.currentState = this.isGrounded ? 'running' : 'jumping';
+                        } else if (this.isJumping) {
+                            this.currentState = 'jumping';
                         }
+                    } else if (controls.attackHeld) {
+                        // Attack Logic (Only if not moving)
+                        if(this.currentState !== 'attacking') vibrateGamepad(100, 0.8, 0.8);
+                        this.currentState = 'attacking';
+                        this.velocity.x = 0; // Prevent sliding while attacking
+                    } else {
+                        // Idle Logic
+                        if (!isJumpingInput) {
+                            this.jumpInputReceived = false;
+                        }
+                        this.currentState = 'idle';
                     }
                 }
 

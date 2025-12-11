@@ -1,76 +1,60 @@
-127.0.0.1 - - [11/Dec/2025 17:41:50] "GET /index.html HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:41:51] "GET /assets/js/auth-core.js HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:41:51] "GET /assets/imagenes/icono-inicio-web/icono-joziel-2.png HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:41:51] "GET /assets/imagenes/Icono-inicio.png HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:41:51] "GET /assets/imagenes/icono-redes-sociales/instagram.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:41:51] "GET /assets/imagenes/icono-redes-sociales/facebook.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:41:51] "GET /assets/imagenes/icono-redes-sociales/x.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:41:51] "GET /assets/imagenes/icono-redes-sociales/tik-tok.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:41:51] "GET /assets/imagenes/icono-redes-sociales/you-tube.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:41:52] code 404, message File not found
-127.0.0.1 - - [11/Dec/2025 17:41:52] "GET /assets/flama-bg.mp4 HTTP/1.1" 404 -
-127.0.0.1 - - [11/Dec/2025 17:41:52] code 404, message File not found
-127.0.0.1 - - [11/Dec/2025 17:41:52] "GET /sw.js HTTP/1.1" 404 -
-127.0.0.1 - - [11/Dec/2025 17:42:32] "GET /index.html HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:32] "GET /assets/js/auth-core.js HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:32] "GET /assets/imagenes/icono-inicio-web/icono-joziel-2.png HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:32] "GET /assets/imagenes/Icono-inicio.png HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:32] "GET /assets/imagenes/icono-redes-sociales/facebook.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:32] "GET /assets/imagenes/icono-redes-sociales/instagram.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:32] "GET /assets/imagenes/icono-redes-sociales/x.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:32] "GET /assets/imagenes/icono-redes-sociales/tik-tok.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:32] "GET /assets/imagenes/icono-redes-sociales/you-tube.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:32] code 404, message File not found
-127.0.0.1 - - [11/Dec/2025 17:42:32] "GET /assets/flama-bg.mp4 HTTP/1.1" 404 -
-127.0.0.1 - - [11/Dec/2025 17:42:32] code 404, message File not found
-127.0.0.1 - - [11/Dec/2025 17:42:32] "GET /sw.js HTTP/1.1" 404 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/index.html HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Iconos/Icono_lumenfall.png HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Pantalla-principal/Pantalla-0.png HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Pantalla-principal/Pantalla-1.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Pantalla-principal/Pantalla-2.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Pantalla-principal/Pantalla-3.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Pantalla-principal/Pantalla-4.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Pantalla-principal/Pantalla-5.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Pantalla-principal/Pantalla-6.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Pantalla-principal/Pantalla-7.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Pantalla-principal/Pantalla-8.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Pantalla-principal/Pantalla-9.png HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Pantalla-principal/Pantalla-10.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Pantalla-principal/Pantalla-11.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-basicas/camiseta-blanca-basica.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-1.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-basicas/camiseta-negra-basica.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-blanca-basica-3.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-negra-basica-4.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-basicas/Camiseta-negra-basica-2.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-blanca.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-negra.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-1.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-2.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-3.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camiseta-sin-mangas/Camiseta-sin-mangas-4.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-negra.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-mangas-largas/Camiseta-manga-larga-blanca.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-3.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-1.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-4.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-mangas-largas/Exhibicion-2.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Sudaderas/Sudadera-negra-4.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-3.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Sudaderas/Sudadera-blanca-1.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:33] "GET /Armeria/assets/Imagenes/Ropa/Sudaderas/Sudadera-negra-2.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:34] "GET /Armeria/assets/Imagenes/Ropa/Sudaderas/Sudadera-negra.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:34] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-blanca.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:34] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-1.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:34] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-2.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:34] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-negra.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:34] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-3.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:34] "GET /Armeria/assets/Imagenes/Ropa/Camisetas-musicales/my-tempo-4.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:34] "GET /Armeria/assets/Imagenes/Accesorios/Accesorios-carrusel/Llavero/Llavero-1.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:34] "GET /Armeria/assets/Imagenes/Accesorios/Accesorios-carrusel/Cuaderno/Cuaderno-1.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:34] "GET /Armeria/assets/Imagenes/Accesorios/Accesorios-carrusel/Libro/Libro-1.jpg HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:34] "GET /Musica/index.html HTTP/1.1" 200 -
-127.0.0.1 - - [11/Dec/2025 17:42:34] code 404, message File not found
-127.0.0.1 - - [11/Dec/2025 17:42:34] "GET /assets/flama-bg.mp4 HTTP/1.1" 404 -
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/http/server.py", line 1314, in <module>
+    test(
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/http/server.py", line 1261, in test
+    with ServerClass(addr, HandlerClass) as httpd:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/socketserver.py", line 457, in __init__
+    self.server_bind()
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/http/server.py", line 1308, in server_bind
+    return super().server_bind()
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/http/server.py", line 136, in server_bind
+    socketserver.TCPServer.server_bind(self)
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/socketserver.py", line 478, in server_bind
+    self.socket.bind(self.server_address)
+OSError: [Errno 98] Address already in use
+127.0.0.1 - - [11/Dec/2025 17:57:27] "GET /Lumenfall-juego/index.html HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:57:27] "GET /Lumenfall-juego/css/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:57:27] "GET /Lumenfall-juego/assets/ui/barra-de-energia.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:57:27] "GET /assets/js/auth-core.js HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:57:27] "GET /Lumenfall-juego/assets/sprites/effects/fuego.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:57:27] "GET /Lumenfall-juego/assets/sprites/characters/attack_sprite_sheet.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:57:27] "GET /Lumenfall-juego/assets/ui/menu-principal.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:57:27] "GET /Lumenfall-juego/js/game.js HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:57:28] "GET /Lumenfall-juego/assets/environment/objects/antorcha.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:57:28] "GET /Lumenfall-juego/assets/environment/objects/puerta-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:57:28] "GET /Lumenfall-juego/assets/environment/tiles/pared-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:57:29] "GET /Lumenfall-juego/assets/ui/Intro.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:58:15] "GET /Lumenfall-juego/index.html HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:58:15] "GET /Lumenfall-juego/css/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:58:15] "GET /Lumenfall-juego/assets/ui/barra-de-energia.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:58:15] "GET /assets/js/auth-core.js HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:58:15] "GET /Lumenfall-juego/assets/sprites/characters/attack_sprite_sheet.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:58:15] "GET /Lumenfall-juego/assets/ui/menu-principal.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:58:15] "GET /Lumenfall-juego/assets/sprites/effects/fuego.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:58:15] "GET /Lumenfall-juego/js/game.js HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:58:15] "GET /Lumenfall-juego/assets/environment/tiles/pared-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:58:15] "GET /Lumenfall-juego/assets/environment/objects/puerta-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:58:15] "GET /Lumenfall-juego/assets/environment/objects/antorcha.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:58:16] "GET /Lumenfall-juego/assets/ui/Intro.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:04] "GET /Lumenfall-juego/index.html HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:04] "GET /Lumenfall-juego/assets/sprites/effects/fuego.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:04] "GET /Lumenfall-juego/assets/sprites/characters/attack_sprite_sheet.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:04] "GET /Lumenfall-juego/assets/ui/barra-de-energia.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:04] "GET /Lumenfall-juego/css/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:04] "GET /Lumenfall-juego/assets/ui/menu-principal.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:04] "GET /assets/js/auth-core.js HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:04] "GET /Lumenfall-juego/js/game.js HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:04] "GET /Lumenfall-juego/assets/environment/tiles/pared-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:04] "GET /Lumenfall-juego/assets/environment/objects/antorcha.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:04] "GET /Lumenfall-juego/assets/environment/objects/puerta-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:05] "GET /Lumenfall-juego/assets/ui/Intro.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:06] "GET /Lumenfall-juego/assets/audio/ambience/dungeons/calabozo_de_piedra.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:06] "GET /Lumenfall-juego/assets/audio/puerta-calabozo.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:06] "GET /Lumenfall-juego/assets/audio/characters/joziel/pasos-joziel.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:06] "GET /Lumenfall-juego/assets/audio/voz-fantasma.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:08] "GET /Lumenfall-juego/assets/sprites/characters/LumenFall.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Dec/2025 17:59:08] "GET /Lumenfall-juego/assets/sprites/enemies/fantasma.png HTTP/1.1" 200 -
