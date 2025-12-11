@@ -602,12 +602,14 @@
             isAttackButtonPressed = true;
             attackPressStartTime = Date.now();
             btnAttack.classList.add('button-active-aura'); // Activar efecto visual
+            btnAttack.classList.add('pressed'); // Activar animación de pulsado
             triggerMobileVibration(200); // Vibrar inmediatamente al pulsar
         }
         function handleAttackPressEnd() {
             if (isPaused) return;
             isAttackButtonPressed = false;
             btnAttack.classList.remove('button-active-aura'); // Desactivar efecto visual
+            btnAttack.classList.remove('pressed'); // Desactivar animación de pulsado
         }
 
         btnAttack.addEventListener('mousedown', () => {
@@ -632,8 +634,12 @@
              if(!isPaused && !isGamepadModeActive) {
                  player.shoot(joyVector);
                  btnShoot.classList.add('button-active-aura');
+                 btnShoot.classList.add('pressed');
                  triggerMobileVibration(50);
-                 setTimeout(() => btnShoot.classList.remove('button-active-aura'), 200);
+                 setTimeout(() => {
+                     btnShoot.classList.remove('button-active-aura');
+                     btnShoot.classList.remove('pressed');
+                 }, 200);
              }
         });
 
@@ -642,8 +648,12 @@
                  e.preventDefault();
                  player.shoot(joyVector);
                  btnShoot.classList.add('button-active-aura');
+                 btnShoot.classList.add('pressed');
                  triggerMobileVibration(50);
-                 setTimeout(() => btnShoot.classList.remove('button-active-aura'), 200);
+                 setTimeout(() => {
+                     btnShoot.classList.remove('button-active-aura');
+                     btnShoot.classList.remove('pressed');
+                 }, 200);
              }
         }, { passive: false });
 
