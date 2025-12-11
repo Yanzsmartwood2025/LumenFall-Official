@@ -47,7 +47,7 @@
             });
         }
 
-        function playAudio(name, loop = false, playbackRate = 1.0, volume = 0.5) {
+        function playAudio(name, loop = false, playbackRate = 1.0, volume = 0.5, startOffset = 0) {
             if (!audioBuffers[name]) return;
             if (audioSources[name] && audioSources[name].buffer) stopAudio(name);
             const source = audioContext.createBufferSource();
@@ -57,7 +57,7 @@
             const gainNode = audioContext.createGain();
             gainNode.gain.value = volume;
             source.connect(gainNode).connect(audioContext.destination);
-            source.start(0);
+            source.start(0, startOffset);
             audioSources[name] = source;
             gainNodes[name] = gainNode;
         }
@@ -873,7 +873,8 @@
 
                 if (this.shootCooldown > 0) return;
                 vibrateGamepad(50, 0.5, 0.5);
-                playAudio('fireball_cast', false, 0.9 + Math.random() * 0.2);
+                // Offset de 0.4s para saltar el silencio inicial
+                playAudio('fireball_cast', false, 0.9 + Math.random() * 0.2, 0.5, 0.4);
                 playAudio('attack_voice', false, 0.9 + Math.random() * 0.2);
 
                 const startPosition = this.mesh.position.clone().add(new THREE.Vector3(0, 0.2, 0.5));
@@ -1043,7 +1044,8 @@
                             this.velocity.y = this.jumpPower;
                             this.currentState = 'jumping';
                             this.jumpInputReceived = true;
-                            playAudio('jump', false, 0.9 + Math.random() * 0.2);
+                            // Offset de 0.1s para respuesta inmediata
+                            playAudio('jump', false, 0.9 + Math.random() * 0.2, 0.5, 0.1);
                             vibrateGamepad(100, 0.5, 0.5);
                         } else if (!isJumpingInput) {
                             this.jumpInputReceived = false;
