@@ -47,7 +47,7 @@
             });
         }
 
-        function playAudio(name, loop = false, playbackRate = 1.0) {
+        function playAudio(name, loop = false, playbackRate = 1.0, volume = 0.5) {
             if (!audioBuffers[name]) return;
             if (audioSources[name] && audioSources[name].buffer) stopAudio(name);
             const source = audioContext.createBufferSource();
@@ -55,11 +55,18 @@
             source.loop = loop;
             source.playbackRate.value = playbackRate;
             const gainNode = audioContext.createGain();
-            gainNode.gain.value = 0.5;
+            gainNode.gain.value = volume;
             source.connect(gainNode).connect(audioContext.destination);
             source.start(0);
             audioSources[name] = source;
             gainNodes[name] = gainNode;
+
+            if (name === 'hurt') {
+                const stopTime = audioContext.currentTime + 1.0;
+                source.stop(stopTime);
+                gainNode.gain.setValueAtTime(volume, audioContext.currentTime + 0.8);
+                gainNode.gain.linearRampToValueAtTime(0.01, stopTime);
+            }
         }
 
         function stopAudio(name) {
@@ -948,9 +955,16 @@
                     if (controls.attackHeld) {
                         if (this.currentState !== 'attacking') {
                             vibrateGamepad(100, 0.8, 0.8);
-                            playAudio('charge', true, 0.9 + Math.random() * 0.2);
+                            playAudio('charge', true, 1.0, 1.5);
                         }
                         this.currentState = 'attacking';
+
+                        if (audioSources['charge']) {
+                            const currentRate = audioSources['charge'].playbackRate.value;
+                            if (currentRate < 2.0) {
+                                audioSources['charge'].playbackRate.value += deltaTime * 0.5;
+                            }
+                        }
                     } else {
                         if (audioSources['charge']) stopAudio('charge');
                         const isJumpingInput = joyY > 0.5;
