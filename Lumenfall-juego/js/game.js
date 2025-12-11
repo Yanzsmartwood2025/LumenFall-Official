@@ -807,15 +807,20 @@
                 this.powerBarFill = document.getElementById('power-fill');
             }
 
-            restorePowerAndHealth() {
-                const healthRestore = this.maxHealth * 0.05;
-                const powerRestore = this.maxPower * 0.05;
-
-                this.health = Math.min(this.maxHealth, this.health + healthRestore);
-                this.power = Math.min(this.maxPower, this.power + powerRestore);
-
+            restoreHealth(amount) {
+                this.health = Math.min(this.maxHealth, this.health + amount);
                 this.energyBarFill.style.width = `${(this.health / this.maxHealth) * 100}%`;
+            }
+
+            restorePower(amount) {
+                this.power = Math.min(this.maxPower, this.power + amount);
                 this.powerBarFill.style.width = `${(this.power / this.maxPower) * 100}%`;
+            }
+
+            restorePowerAndHealth() {
+                // Deprecated, keeping for safety if called elsewhere, but we should use specific methods
+                this.restoreHealth(this.maxHealth * 0.05);
+                this.restorePower(this.maxPower * 0.05);
             }
 
             applyKnockback(enemy) {
@@ -920,15 +925,16 @@
 
                 // Crear 6 llamas alrededor del personaje
                 for (let i = 0; i < 6; i++) {
-                    const sprite = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), auraMaterial);
+                    // Aumentamos el tamaño para cubrir el cuerpo (Player es 4.2x4.2)
+                    const sprite = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 6.0), auraMaterial);
                     const angle = (i / 6) * Math.PI * 2;
-                    // Posicionarlas en un anillo, elevándose desde los pies (y ~ -1.5 relativo al centro)
-                    sprite.position.set(Math.cos(angle) * 1.5, -1.5 + Math.random(), Math.sin(angle) * 0.5);
+                    // Ajustamos posición Y para que cubra desde abajo hasta arriba
+                    sprite.position.set(Math.cos(angle) * 1.5, -0.5 + Math.random(), Math.sin(angle) * 0.5);
                     sprite.userData = {
                         angle: angle,
                         speed: 2.0 + Math.random(),
                         yOffset: Math.random() * 2,
-                        initialY: -1.5
+                        initialY: 0.0 // Base centrada para cubrir todo el cuerpo
                     };
                     this.auraGroup.add(sprite);
                 }
@@ -1015,8 +1021,8 @@
                     if (controls.attackHeld && !isMovingInput && !isJumpingInput) {
                         if (this.currentState !== 'attacking') {
                             vibrateGamepad(100, 0.8, 0.8);
-                            // Volumen aumentado a 1.0 para 'charge'
-                            playAudio('charge', true, 0.9 + Math.random() * 0.2, 1.0);
+                            // Volumen aumentado significativamente para 'charge'
+                            playAudio('charge', true, 0.9 + Math.random() * 0.2, 4.0);
                         }
                         this.currentState = 'attacking';
 
@@ -1278,6 +1284,8 @@
         };
 
         let sharedFlameMaterial = null;
+        let sharedHealthMaterial = null;
+        let sharedPowerMaterial = null;
 
         class RealisticFlame {
             constructor(scene, position, lifetime = -1) {
@@ -1563,7 +1571,9 @@
                     // 50% de probabilidad de soltar un power-up
                     if (Math.random() < 0.5) {
                         const dropPosition = this.mesh.position.clone();
-                        allPowerUps.push(new PowerUp(this.scene, dropPosition));
+                        // 50% Salud (verde), 50% Poder (azul)
+                        const type = Math.random() < 0.5 ? 'health' : 'power';
+                        allPowerUps.push(new PowerUp(this.scene, dropPosition, type));
                     }
 
                     const index = allSimpleEnemies.indexOf(this);
@@ -1768,19 +1778,38 @@
         }
 
         class PowerUp {
-            constructor(scene, position) {
+            constructor(scene, position, type) {
                 this.scene = scene;
-                const geometry = new THREE.SphereGeometry(0.4, 16, 16);
-                // Material que combina azul y verde
-                const material = new THREE.MeshStandardMaterial({
-                    color: 0x00ff00, // Verde
-                    emissive: 0x00ffff, // Azul cian brillante
-                    emissiveIntensity: 2,
-                    roughness: 0.2
-                });
+                this.type = type; // 'health' or 'power'
+
+                const geometry = new THREE.PlaneGeometry(0.8, 1.2); // Flama pequeña
+
+                if (!sharedHealthMaterial) {
+                    sharedHealthMaterial = new THREE.MeshBasicMaterial({
+                        map: textureLoader.load(assetUrls.flameParticle),
+                        color: 0x00ff00, // Verde para salud
+                        transparent: true,
+                        blending: THREE.AdditiveBlending,
+                        side: THREE.DoubleSide
+                    });
+                }
+
+                if (!sharedPowerMaterial) {
+                    sharedPowerMaterial = new THREE.MeshBasicMaterial({
+                        map: textureLoader.load(assetUrls.flameParticle),
+                        color: 0x00aaff, // Azul para poder
+                        transparent: true,
+                        blending: THREE.AdditiveBlending,
+                        side: THREE.DoubleSide
+                    });
+                }
+
+                const material = (this.type === 'health') ? sharedHealthMaterial : sharedPowerMaterial;
+
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.copy(position);
                 this.scene.add(this.mesh);
+
                 this.lifetime = 10; // El power-up desaparece después de 10 segundos
                 this.bobbingAngle = Math.random() * Math.PI * 2;
                 this.velocity = new THREE.Vector3((Math.random() - 0.5) * 0.04, 0, 0); // Movimiento lateral lento
@@ -1795,9 +1824,13 @@
                     return;
                 }
 
+                // Animación simple de la flama (escalado pulsante)
+                const pulse = 1.0 + Math.sin(Date.now() * 0.01) * 0.2;
+                this.mesh.scale.set(pulse, pulse, 1);
+
                 if (player && player.isAbsorbing) {
                     const direction = player.mesh.position.clone().sub(this.mesh.position).normalize();
-                    const absorptionSpeed = 0.1;
+                    const absorptionSpeed = 0.2; // Un poco más rápido al absorber
                     this.velocity.lerp(direction.multiplyScalar(absorptionSpeed), 0.1);
                 }
 
@@ -1810,10 +1843,17 @@
                 // Efecto de flotación
                 this.bobbingAngle += 0.05;
                 this.mesh.position.y += Math.sin(this.bobbingAngle) * 0.01;
+                // Billboard: mirar siempre a la cámara
+                this.mesh.lookAt(camera.position);
 
                 // Comprobar colisión con el jugador
                 if (player && this.mesh.position.distanceTo(player.mesh.position) < 1.5) {
-                    player.restorePowerAndHealth();
+                    if (this.type === 'health') {
+                        player.restoreHealth(player.maxHealth * 0.10); // Restaura 10% salud
+                    } else if (this.type === 'power') {
+                        player.restorePower(player.maxPower * 0.15); // Restaura 15% poder
+                    }
+
                     this.scene.remove(this.mesh);
                     const index = allPowerUps.indexOf(this);
                     if (index > -1) allPowerUps.splice(index, 1);
