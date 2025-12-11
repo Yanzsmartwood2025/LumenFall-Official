@@ -98,7 +98,7 @@
         const completedRooms = { room_1: false, room_2: false, room_3: false, room_4: false, room_5: false };
 
         let isGamepadModeActive = false;
-        let isVibrationEnabled = true;
+        let vibrationLevel = 1; // 0: Off, 1: Soft, 2: Strong
         let isAttackButtonPressed = false;
         let attackPressStartTime = 0;
         let interactPressed = false;
@@ -289,8 +289,9 @@
                 attack: "Atacar",
                 activateGamepad: "Activar Control",
                 deactivateGamepad: "Activar Táctil",
-                toggleVibrationOn: "Vibración: ON",
-                toggleVibrationOff: "Vibración: OFF"
+                vibrationOff: "Vibración: OFF",
+                vibrationSoft: "Vibración: SUAVE",
+                vibrationStrong: "Vibración: FUERTE"
             },
             en: {
                 start: "Start",
@@ -307,8 +308,9 @@
                 attack: "Attack",
                 activateGamepad: "Activate Gamepad",
                 deactivateGamepad: "Activate Touch",
-                toggleVibrationOn: "Vibration: ON",
-                toggleVibrationOff: "Vibration: OFF"
+                vibrationOff: "Vibration: OFF",
+                vibrationSoft: "Vibration: SOFT",
+                vibrationStrong: "Vibration: STRONG"
             }
         };
 
@@ -325,9 +327,8 @@
                 ? lang.deactivateGamepad
                 : lang.activateGamepad;
 
-            vibrationToggleButton.textContent = isVibrationEnabled
-                ? lang.toggleVibrationOn
-                : lang.toggleVibrationOff;
+            const vibKeys = ['vibrationOff', 'vibrationSoft', 'vibrationStrong'];
+            vibrationToggleButton.textContent = lang[vibKeys[vibrationLevel]];
 
             // Update dynamic text if visible
             if (transitionOverlay.classList.contains('visible')) {
@@ -371,7 +372,10 @@
                     loadAudio('pasos', 'assets/audio/characters/joziel/pasos-joziel.mp3'),
                     loadAudio('ambiente', 'assets/audio/ambience/dungeons/calabozo_de_piedra.mp3'),
                     loadAudio('puerta', 'assets/audio/puerta-calabozo.mp3'),
-                    loadAudio('fantasma_lamento', 'assets/audio/voz-fantasma.mp3')
+                    loadAudio('fantasma_lamento', 'assets/audio/voz-fantasma.mp3'),
+                    loadAudio('jump', 'assets/audio/characters/joziel/jump.mp3'),
+                    loadAudio('fireball_cast', 'assets/audio/characters/joziel/fireball_cast.mp3'),
+                    loadAudio('fireball_impact', 'assets/audio/characters/joziel/fireball_impact.mp3')
                 ]);
             } catch (error) {
                 console.error("Error loading audio", error);
@@ -425,7 +429,7 @@
         }
 
         function toggleVibration() {
-            isVibrationEnabled = !isVibrationEnabled;
+            vibrationLevel = (vibrationLevel + 1) % 3;
             updateUIText();
         }
 
@@ -665,14 +669,23 @@
         });
 
         function vibrateGamepad(duration = 50, strong = 0.8, weak = 0.8) {
-            if (!isVibrationEnabled) return;
+            if (vibrationLevel === 0) return;
+
+            const scale = vibrationLevel === 1 ? 0.5 : 1.0;
+            const s = strong * scale;
+            const w = weak * scale;
+
+            if (navigator.vibrate) {
+                navigator.vibrate(duration);
+            }
+
             const gp = navigator.getGamepads()[0];
             if (gp && gp.vibrationActuator) {
                 gp.vibrationActuator.playEffect("dual-rumble", {
                     startDelay: 0,
                     duration: duration,
-                    weakMagnitude: weak,
-                    strongMagnitude: strong,
+                    weakMagnitude: w,
+                    strongMagnitude: s,
                 });
             }
         }
@@ -839,6 +852,7 @@
 
                 if (this.shootCooldown > 0) return;
                 vibrateGamepad(50, 0.5, 0.5);
+                playAudio('fireball_cast', false, 0.9 + Math.random() * 0.2);
 
                 const startPosition = this.mesh.position.clone().add(new THREE.Vector3(0, 0.2, 0.5));
                 let direction = new THREE.Vector2(this.isFacingLeft ? -1 : 1, 0);
@@ -934,6 +948,8 @@
                             this.velocity.y = this.jumpPower;
                             this.currentState = 'jumping';
                             this.jumpInputReceived = true;
+                            playAudio('jump', false, 0.9 + Math.random() * 0.2);
+                            vibrateGamepad(100, 0.5, 0.5);
                         } else if (!isJumpingInput) {
                             this.jumpInputReceived = false;
                         }
@@ -1612,6 +1628,7 @@
                 // Wall collision
                 if (this.mesh.position.x < player.minPlayerX || this.mesh.position.x > player.maxPlayerX) {
                     allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
+                    playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
                     this.lifetime = 0;
                     return false;
                 }
@@ -1621,6 +1638,7 @@
                     if (this.mesh.position.distanceTo(enemy.mesh.position) < (enemy.mesh.geometry.parameters.height / 2)) {
                         enemy.takeHit();
                         allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
+                        playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
                         this.lifetime = 0; // Mark for removal
                         return false; // Projectile disappears
                     }
