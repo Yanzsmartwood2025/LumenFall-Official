@@ -377,6 +377,7 @@
                     loadAudio('fireball_cast', 'assets/audio/characters/joziel/fireball_cast.mp3'),
                     loadAudio('fireball_impact', 'assets/audio/characters/joziel/fireball_impact.mp3'),
                     loadAudio('charge', 'assets/audio/characters/joziel/charge.mp3'),
+                    loadAudio('hurt', 'assets/audio/characters/joziel/hurt.mp3'),
                     loadAudio('attack_voice', 'assets/audio/characters/joziel/attack_voice.mp3')
                 ]);
             } catch (error) {
@@ -834,6 +835,7 @@
                 this.health -= amount;
                 this.isInvincible = true;
                 this.invincibilityTimer = this.invincibilityDuration;
+                playAudio('hurt', false, 0.9 + Math.random() * 0.2);
                 this.applyKnockback(enemy);
                 this.energyBarFill.style.width = `${(this.health / this.maxHealth) * 100}%`;
 
