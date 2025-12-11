@@ -248,7 +248,7 @@ html, body {
             width: 80%;
             height: 80%;
             border-radius: 50%;
-            animation: rotate-ring 4s linear infinite;
+            animation: rotate-ring 10s linear infinite; /* Velocidad reducida (más lento) */
         }
 
         .flame-ring img {
@@ -262,16 +262,46 @@ html, body {
         }
 
         /* Posicionamiento circular de las 5 flamas */
-        /* Estrategia: Centrar la imagen en el contenedor, rotarla el ángulo deseado y luego desplazarla hacia afuera (radio) */
-        .flame-ring img:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg) translate(0, -100%); }
-        .flame-ring img:nth-child(2) { transform: translate(-50%, -50%) rotate(72deg) translate(0, -100%); }
-        .flame-ring img:nth-child(3) { transform: translate(-50%, -50%) rotate(144deg) translate(0, -100%); }
-        .flame-ring img:nth-child(4) { transform: translate(-50%, -50%) rotate(216deg) translate(0, -100%); }
-        .flame-ring img:nth-child(5) { transform: translate(-50%, -50%) rotate(288deg) translate(0, -100%); }
+        /* Rotamos 90 grados adicionales para que se vean "horizontales" (tangentes al círculo) */
+        .flame-ring img:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg) translate(0, -100%) rotate(90deg); }
+        .flame-ring img:nth-child(2) { transform: translate(-50%, -50%) rotate(72deg) translate(0, -100%) rotate(90deg); }
+        .flame-ring img:nth-child(3) { transform: translate(-50%, -50%) rotate(144deg) translate(0, -100%) rotate(90deg); }
+        .flame-ring img:nth-child(4) { transform: translate(-50%, -50%) rotate(216deg) translate(0, -100%) rotate(90deg); }
+        .flame-ring img:nth-child(5) { transform: translate(-50%, -50%) rotate(288deg) translate(0, -100%) rotate(90deg); }
 
         @keyframes rotate-ring {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+        }
+
+        /* Efecto de "Aura" para el botón activo */
+        .button-active-aura {
+            position: relative;
+        }
+
+        .button-active-aura::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 140%;
+            height: 140%;
+            transform: translate(-50%, -50%);
+            background-image: url('../assets/sprites/effects/fuego.png'); /* Ruta relativa a style.css (subir a root) */
+            /* ../assets/sprites/effects/fuego.png -> assets/sprites/effects/fuego.png desde css/ */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.8;
+            pointer-events: none;
+            z-index: -1;
+            filter: drop-shadow(0 0 10px #00aaff) hue-rotate(180deg); /* Hue rotate para darle tono azulado similar al personaje */
+            animation: aura-pulse 0.5s infinite alternate;
+        }
+
+        @keyframes aura-pulse {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+            100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
         }
 
         .control-btn:active {
