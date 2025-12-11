@@ -317,6 +317,11 @@
         <!-- Right Side Controls (Flag + Cart) -->
         <div class="flex items-center gap-4 pointer-events-auto">
             
+            <!-- User Profile Button -->
+            <button onclick="openProfileModal()" id="user-btn" class="w-14 h-14 flex items-center justify-center rounded-full bg-black/40 backdrop-blur border border-white/20 hover:bg-white/20 transition text-white">
+                <i class="fa-solid fa-user text-2xl"></i>
+            </button>
+
             <!-- Bandera Indicador/Toggle -->
             <button onclick="toggleLanguageQuick()" id="header-lang-btn" class="w-10 h-10 flex items-center justify-center text-3xl drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)] hover:scale-110 transition-transform" aria-label="Cambiar Idioma">
                 🇪🇸
@@ -505,6 +510,52 @@
         <div class="flex-1 overflow-y-auto bg-black p-8 pt-32 pb-12"><div class="max-w-lg mx-auto space-y-10 text-gray-300"><section><h3 class="text-lumenGold font-bold uppercase mb-3 border-b border-white/10 pb-2" data-i18n="t1Title">1. MODELO DE PRODUCCIÓN (El Forjado)</h3><p class="text-sm leading-relaxed" data-i18n="t1Desc">En La Armería operamos bajo un modelo "Made to Order". Tiempo de Producción: 5 a 8 días hábiles. Tiempo Total Estimado: 8 a 12 días.</p></section><section><h3 class="text-lumenGold font-bold uppercase mb-3 border-b border-white/10 pb-2" data-i18n="t2Title">2. POLÍTICA DE ENVÍOS</h3><p class="text-sm leading-relaxed" data-i18n="t2Desc">Envíos directos a todo Ecuador vía Servientrega. Internacional vía DHL.</p></section><section><h3 class="text-lumenGold font-bold uppercase mb-3 border-b border-white/10 pb-2" data-i18n="t3Title">3. CAMBIOS Y DEVOLUCIONES</h3><p class="text-sm leading-relaxed" data-i18n="t3Desc">No devoluciones por arrepentimiento. Cambios de talla solo 3 días post-recepción.</p></section></div></div>
     </div>
 
+    <!-- MODAL PROFILE -->
+    <div id="profile-modal" class="full-screen-modal z-[250]">
+        <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10">
+            <h2 class="text-lumenGold font-bold tracking-widest text-lg">OPERADOR</h2>
+            <button onclick="closeProfileModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition">
+                <i class="fa-solid fa-xmark text-4xl"></i>
+            </button>
+        </div>
+        <div class="flex-1 flex flex-col items-center justify-center p-8 bg-black">
+
+            <!-- Estado: NO Logueado -->
+            <div id="profile-logged-out" class="text-center w-full max-w-sm">
+                <i class="fa-solid fa-lock text-6xl text-gray-700 mb-6"></i>
+                <h3 class="text-white text-2xl font-bold mb-2">ACCESO RESTRINGIDO</h3>
+                <p class="text-gray-400 mb-8">Identifícate para sincronizar tu estado y obtener tu Código de Juego.</p>
+                <div class="space-y-4">
+                    <button id="store-google-login" class="w-full flex items-center justify-center p-4 rounded bg-white text-black font-bold uppercase tracking-wider hover:bg-gray-200 transition">
+                        <i class="fa-brands fa-google mr-3"></i> Google
+                    </button>
+                    <button id="store-facebook-login" class="w-full flex items-center justify-center p-4 rounded bg-blue-600 text-white font-bold uppercase tracking-wider hover:bg-blue-700 transition">
+                        <i class="fa-brands fa-facebook-f mr-3"></i> Facebook
+                    </button>
+                </div>
+            </div>
+
+            <!-- Estado: Logueado -->
+            <div id="profile-logged-in" class="hidden text-center w-full max-w-sm">
+                <div class="w-24 h-24 rounded-full bg-lumenGold/20 border-2 border-lumenGold flex items-center justify-center mx-auto mb-6 text-lumenGold text-4xl">
+                    <i class="fa-solid fa-user-astronaut"></i>
+                </div>
+                <h3 id="store-user-email" class="text-white text-lg font-bold mb-2 break-all">usuario@email.com</h3>
+                <p class="text-gray-500 text-sm uppercase tracking-widest mb-8">OPERADOR VERIFICADO</p>
+
+                <div class="bg-[#111] border border-lumenGold/30 p-4 rounded-lg mb-8">
+                     <p class="text-lumenGold text-xs font-bold mb-2">CÓDIGO DE JUEGO (NIVEL 1)</p>
+                     <p id="store-game-code" class="text-white text-3xl font-mono tracking-widest font-bold">---</p>
+                </div>
+
+                <button id="store-logout" class="text-red-500 font-bold uppercase tracking-widest hover:text-red-400 text-sm border-b border-red-900 pb-1">
+                    Cerrar Sesión
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     <!-- MODAL INFO -->
     <div id="info-modal" class="full-screen-modal z-[110]">
         <div class="absolute top-0 w-full p-6 flex justify-between items-center z-50 bg-black/90 backdrop-blur border-b border-white/10"><h2 class="text-lumenGold font-bold tracking-widest text-xl" data-i18n="termsHeader">TÉRMINOS & ENVÍOS</h2><button onclick="closeInfoModal()" class="w-12 h-12 flex items-center justify-center text-white hover:text-red-500 transition"><i class="fa-solid fa-xmark text-4xl"></i></button></div>
@@ -523,7 +574,66 @@
         </div>
     </div>
 
+    <!-- Auth Core -->
+    <script type="module" src="../assets/js/auth-core.js"></script>
+
     <script>
+        // AUTH UI LOGIC FOR STORE
+        function openProfileModal() { document.getElementById('profile-modal').classList.add('active'); }
+        function closeProfileModal() { document.getElementById('profile-modal').classList.remove('active'); }
+
+        // Init Auth Listeners
+        function initStoreAuth() {
+            if (!window.LumenfallAuth) {
+                requestAnimationFrame(initStoreAuth);
+                return;
+            }
+
+            // Bind Buttons
+            const gBtn = document.getElementById('store-google-login');
+            const fBtn = document.getElementById('store-facebook-login');
+            const lBtn = document.getElementById('store-logout');
+
+            if(gBtn) gBtn.onclick = () => window.LumenfallAuth.loginWithGoogle();
+            if(fBtn) fBtn.onclick = () => window.LumenfallAuth.loginWithFacebook();
+            if(lBtn) lBtn.onclick = () => window.LumenfallAuth.logout();
+
+            // Listen state
+            window.LumenfallAuth.onStateChanged((user, userData) => {
+                const userBtn = document.getElementById('user-btn');
+                const loggedOutView = document.getElementById('profile-logged-out');
+                const loggedInView = document.getElementById('profile-logged-in');
+                const emailDisplay = document.getElementById('store-user-email');
+                const codeDisplay = document.getElementById('store-game-code');
+
+                if (user) {
+                    // Update Button Style
+                    userBtn.classList.add('text-lumenGold', 'border-lumenGold');
+                    userBtn.classList.remove('text-white', 'border-white/20');
+
+                    // Update Modal Content
+                    loggedOutView.classList.add('hidden');
+                    loggedInView.classList.remove('hidden');
+                    emailDisplay.textContent = user.email;
+
+                    if(userData && userData.gameCode) {
+                        codeDisplay.textContent = userData.gameCode;
+                    } else {
+                        codeDisplay.textContent = '...';
+                    }
+                } else {
+                    // Reset Button Style
+                    userBtn.classList.remove('text-lumenGold', 'border-lumenGold');
+                    userBtn.classList.add('text-white', 'border-white/20');
+
+                    // Update Modal Content
+                    loggedOutView.classList.remove('hidden');
+                    loggedInView.classList.add('hidden');
+                }
+            });
+        }
+        initStoreAuth();
+
         const translations = { 
             es: { 
                 // GENERAL
