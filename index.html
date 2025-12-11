@@ -136,7 +136,17 @@
                 </div>
                 
                 <div id="user-info" class="hidden space-y-4">
-                    <p id="user-email" class="text-gray-300 text-sm break-all"></p>
+                    <div class="bg-gray-800 p-4 rounded-lg border border-gray-600">
+                        <p class="text-gray-400 text-xs uppercase tracking-widest mb-1">Operador Conectado</p>
+                        <p id="user-email" class="text-white font-bold text-sm break-all mb-4"></p>
+
+                        <!-- Bloque para mostrar el Código de Juego -->
+                        <div id="game-code-block" class="hidden bg-black/50 p-2 rounded border border-yellow-500/30">
+                            <p class="text-yellow-500 text-[10px] font-mono mb-1">CÓDIGO DE ACCESO (NIVEL 1)</p>
+                            <p id="game-code-display" class="text-white font-mono text-xl tracking-[0.2em] font-bold">CARGANDO...</p>
+                        </div>
+                    </div>
+
                     <button id="logout-button" class="w-full p-3 rounded-lg font-semibold transition-colors duration-200 bg-red-600 text-white hover:bg-red-700">
                         Cerrar Sesión
                     </button>
@@ -267,150 +277,85 @@
         });
     </script>
 
-    <!-- Lógica de Firebase y Prompt de Instalación -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            onAuthStateChanged, 
-            signInWithPopup, 
-            GoogleAuthProvider, 
-            FacebookAuthProvider,
-            signInWithCustomToken,
-            signInAnonymously,
-            signOut 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <!-- Cargar el Sistema de Autenticación Central (El Breaker) -->
+    <script type="module" src="assets/js/auth-core.js"></script>
 
-        // --- 1. Configuración de Firebase ---
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config)
-            : {
-                apiKey: "TU_API_KEY",
-                authDomain: "TU_AUTH_DOMAIN",
-                projectId: "TU_PROJECT_ID",
-                // ...etc
-            };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-lumenfall-app';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        try {
-            setLogLevel('Debug');
-        } catch (e) {
-            console.error("Error al configurar el nivel de log de Firestore:", e);
-        }
-
-        // --- 2. Inicialización de Firebase ---
-        let app, auth, db;
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            console.log("Firebase inicializado correctamente.");
-        } catch (e) {
-            console.error("Error al inicializar Firebase:", e);
-            document.getElementById("auth-container").innerHTML = '<p class="text-red-500">Error al conectar con el servidor.</p>';
-            return; 
-        }
-
-        // --- 3. Referencias al DOM ---
+    <!-- Lógica de UI para Autenticación -->
+    <script>
+        // Referencias al DOM
         const loginButtons = document.getElementById('login-buttons');
         const userInfo = document.getElementById('user-info');
         const userEmail = document.getElementById('user-email');
+        const gameCodeBlock = document.getElementById('game-code-block');
+        const gameCodeDisplay = document.getElementById('game-code-display');
         const googleLoginBtn = document.getElementById('google-login');
         const facebookLoginBtn = document.getElementById('facebook-login');
         const logoutBtn = document.getElementById('logout-button');
         const installButton = document.getElementById('install-pwa-button'); 
 
-        // --- 4. Lógica de Autenticación Firebase ---
-        const googleProvider = new GoogleAuthProvider();
-        const facebookProvider = new FacebookAuthProvider();
+        // Esperar a que el script de auth se cargue y exponga el objeto global
+        // Usamos un intervalo simple para chequear la existencia de LumenfallAuth si fuera necesario,
+        // pero como es type="module" y este script es diferido (o posterior), usaremos un evento o
+        // confiaremos en que el módulo se ejecute.
+        // La mejor manera con módulos es esperar a que LumenfallAuth esté disponible.
 
-        async function signIn(provider) {
-            try {
-                const result = await signInWithPopup(auth, provider);
-                console.log("Inicio de sesión exitoso:", result.user);
-            } catch (error) {
-                console.error("Error en el inicio de sesión:", error.code, error.message);
+        function initUI() {
+            if (!window.LumenfallAuth) {
+                requestAnimationFrame(initUI);
+                return;
             }
-        }
 
-        async function logOut() {
-            try {
-                await signOut(auth);
-                console.log("Sesión cerrada.");
-            } catch (error) {
-                console.error("Error al cerrar sesión:", error);
-            }
-        }
+            // Conectar botones
+            if(googleLoginBtn) googleLoginBtn.onclick = window.LumenfallAuth.loginWithGoogle;
+            if(facebookLoginBtn) facebookLoginBtn.onclick = window.LumenfallAuth.loginWithFacebook;
+            if(logoutBtn) logoutBtn.onclick = window.LumenfallAuth.logout;
 
-        if(googleLoginBtn) googleLoginBtn.addEventListener('click', () => signIn(googleProvider));
-        if(facebookLoginBtn) facebookLoginBtn.addEventListener('click', () => signIn(facebookProvider));
-        if(logoutBtn) logoutBtn.addEventListener('click', logOut);
+            // Suscribirse a cambios de estado
+            window.LumenfallAuth.onStateChanged((user, userData) => {
+                if (user) {
+                    userEmail.textContent = user.email || 'Agente';
+                    loginButtons.classList.add('hidden');
+                    userInfo.classList.remove('hidden');
 
-        // --- 5. Observador de Autenticación ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log("Usuario autenticado:", user.email, "UID:", user.uid);
-                userEmail.textContent = `Conectado como: ${user.email || 'Usuario Anónimo'}`;
-                loginButtons.classList.add('hidden');
-                userInfo.classList.remove('hidden');
-            } else {
-                console.log("Usuario no autenticado.");
-                userEmail.textContent = '';
-                loginButtons.classList.remove('hidden');
-                userInfo.classList.add('hidden');
-            }
-        });
-
-        // --- 6. Inicio de Sesión Inicial ---
-        (async () => {
-            if (auth.currentUser) {
-                 console.log("Usuario ya autenticado:", auth.currentUser.uid);
-                 return;
-            }
-            try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
+                    if (userData && userData.gameCode) {
+                        gameCodeBlock.classList.remove('hidden');
+                        gameCodeDisplay.textContent = userData.gameCode;
+                    } else {
+                        gameCodeBlock.classList.add('hidden');
+                    }
                 } else {
-                    await signInAnonymously(auth);
+                    userEmail.textContent = '';
+                    gameCodeBlock.classList.add('hidden');
+                    loginButtons.classList.remove('hidden');
+                    userInfo.classList.add('hidden');
                 }
-            } catch (error) {
-                console.error("Error durante el inicio de sesión inicial:", error);
-            }
-        })();
+            });
+        }
 
-        // --- 7. Lógica del Prompt de Instalación PWA ---
+        // Iniciar
+        initUI();
+
+        // Prompt de Instalación PWA (Mantenido igual)
         let deferredPrompt;
-
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            if(installButton) {
-                installButton.classList.remove('hidden');
-            }
-            console.log('Evento beforeinstallprompt disparado.');
+            if(installButton) installButton.classList.remove('hidden');
         });
-
         if(installButton) {
             installButton.addEventListener('click', async () => {
                 installButton.classList.add('hidden');
                 if (deferredPrompt) {
                     deferredPrompt.prompt();
                     const { outcome } = await deferredPrompt.userChoice;
-                    console.log(`Resultado del prompt de instalación: ${outcome}`);
                     deferredPrompt = null;
                 }
             });
         }
-
         window.addEventListener('appinstalled', () => {
-            if(installButton) {
-                installButton.classList.add('hidden');
-            }
+            if(installButton) installButton.classList.add('hidden');
             deferredPrompt = null;
-            console.log('PWA fue instalada');
         });
-
     </script>
 
 </body>

@@ -199,10 +199,18 @@
         <source src="../assets/flama-bg.mp4" type="video/mp4"> 
     </video>
 
+    <!-- Auth Core -->
+    <script type="module" src="../assets/js/auth-core.js"></script>
+
     <!-- Botón Regresar -->
     <a href="../index.html" class="absolute top-6 left-6 text-white/50 hover:text-white transition z-50 bg-black/30 p-2 rounded-full backdrop-blur-sm border border-white/10">
         <i class="fa-solid fa-arrow-left text-xl"></i>
     </a>
+
+    <!-- Botón Login Simple -->
+    <button id="music-login-btn" onclick="window.LumenfallAuth.loginWithGoogle()" class="absolute top-6 right-6 text-white/50 hover:text-lumenGold transition z-50 bg-black/30 p-2 rounded-full backdrop-blur-sm border border-white/10">
+        <i class="fa-solid fa-user text-xl"></i>
+    </button>
 
     <!-- Main Wrapper -->
     <div class="flex-grow flex flex-col items-center justify-start px-0 sm:px-2 z-10 w-full max-w-lg mx-auto mt-2 pt-2">
