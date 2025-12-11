@@ -295,7 +295,7 @@ html, body {
             opacity: 0.8;
             pointer-events: none;
             z-index: -1;
-            filter: drop-shadow(0 0 10px #00ffff) hue-rotate(165deg) saturate(300%) brightness(120%); /* Ajustado para coincidir con el fuego azul/cian del personaje */
+            filter: hue-rotate(200deg) saturate(300%) brightness(120%) drop-shadow(0 0 10px #00aaff); /* Ajustado a azul profundo y corrección de orden de filtros */
             animation: aura-pulse 0.5s infinite alternate;
         }
 
@@ -304,9 +304,9 @@ html, body {
             100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
         }
 
-        .control-btn:active {
+        .control-btn:active, .control-btn.pressed {
             background-color: rgba(255, 255, 255, 0.2);
-            transform: scale(0.95);
+            transform: scale(0.90);
             box-shadow: 0 2px 8px rgba(0,0,0,0.7);
         }
 
