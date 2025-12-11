@@ -263,11 +263,11 @@ html, body {
 
         /* Posicionamiento circular de las 5 flamas */
         /* Rotamos 90 grados adicionales para que se vean "horizontales" (tangentes al círculo) */
-        .flame-ring img:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg) translate(0, -100%) rotate(90deg); }
-        .flame-ring img:nth-child(2) { transform: translate(-50%, -50%) rotate(72deg) translate(0, -100%) rotate(90deg); }
-        .flame-ring img:nth-child(3) { transform: translate(-50%, -50%) rotate(144deg) translate(0, -100%) rotate(90deg); }
-        .flame-ring img:nth-child(4) { transform: translate(-50%, -50%) rotate(216deg) translate(0, -100%) rotate(90deg); }
-        .flame-ring img:nth-child(5) { transform: translate(-50%, -50%) rotate(288deg) translate(0, -100%) rotate(90deg); }
+        .flame-ring img:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg) translate(0, -100%) rotate(-90deg); }
+        .flame-ring img:nth-child(2) { transform: translate(-50%, -50%) rotate(72deg) translate(0, -100%) rotate(-90deg); }
+        .flame-ring img:nth-child(3) { transform: translate(-50%, -50%) rotate(144deg) translate(0, -100%) rotate(-90deg); }
+        .flame-ring img:nth-child(4) { transform: translate(-50%, -50%) rotate(216deg) translate(0, -100%) rotate(-90deg); }
+        .flame-ring img:nth-child(5) { transform: translate(-50%, -50%) rotate(288deg) translate(0, -100%) rotate(-90deg); }
 
         @keyframes rotate-ring {
             from { transform: rotate(0deg); }
@@ -295,7 +295,7 @@ html, body {
             opacity: 0.8;
             pointer-events: none;
             z-index: -1;
-            filter: drop-shadow(0 0 10px #00aaff) hue-rotate(180deg); /* Hue rotate para darle tono azulado similar al personaje */
+            filter: drop-shadow(0 0 10px #00ffff) hue-rotate(165deg) saturate(300%) brightness(120%); /* Ajustado para coincidir con el fuego azul/cian del personaje */
             animation: aura-pulse 0.5s infinite alternate;
         }
 
