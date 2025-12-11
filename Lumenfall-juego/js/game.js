@@ -18,7 +18,7 @@
 
         const totalRunningFrames = 8;
         const totalAttackFrames = 6;
-        const totalJumpFrames = 4;
+        const totalJumpFrames = 8;
         const totalSpecterFrames = 5;
         const totalEnemyFrames = 5;
         const animationSpeed = 80;
@@ -375,7 +375,9 @@
                     loadAudio('fantasma_lamento', 'assets/audio/voz-fantasma.mp3'),
                     loadAudio('jump', 'assets/audio/characters/joziel/jump.mp3'),
                     loadAudio('fireball_cast', 'assets/audio/characters/joziel/fireball_cast.mp3'),
-                    loadAudio('fireball_impact', 'assets/audio/characters/joziel/fireball_impact.mp3')
+                    loadAudio('fireball_impact', 'assets/audio/characters/joziel/fireball_impact.mp3'),
+                    loadAudio('charge', 'assets/audio/characters/joziel/charge.mp3'),
+                    loadAudio('attack_voice', 'assets/audio/characters/joziel/attack_voice.mp3')
                 ]);
             } catch (error) {
                 console.error("Error loading audio", error);
@@ -430,6 +432,9 @@
 
         function toggleVibration() {
             vibrationLevel = (vibrationLevel + 1) % 3;
+            if (vibrationLevel > 0 && navigator.vibrate) {
+                navigator.vibrate(200);
+            }
             updateUIText();
         }
 
@@ -853,6 +858,7 @@
                 if (this.shootCooldown > 0) return;
                 vibrateGamepad(50, 0.5, 0.5);
                 playAudio('fireball_cast', false, 0.9 + Math.random() * 0.2);
+                playAudio('attack_voice', false, 0.9 + Math.random() * 0.2);
 
                 const startPosition = this.mesh.position.clone().add(new THREE.Vector3(0, 0.2, 0.5));
                 let direction = new THREE.Vector2(this.isFacingLeft ? -1 : 1, 0);
@@ -938,9 +944,13 @@
 
                 if (this.currentState !== 'shooting') {
                     if (controls.attackHeld) {
-                        if(this.currentState !== 'attacking') vibrateGamepad(100, 0.8, 0.8);
+                        if (this.currentState !== 'attacking') {
+                            vibrateGamepad(100, 0.8, 0.8);
+                            playAudio('charge', true, 0.9 + Math.random() * 0.2);
+                        }
                         this.currentState = 'attacking';
                     } else {
+                        if (audioSources['charge']) stopAudio('charge');
                         const isJumpingInput = joyY > 0.5;
                         if (isJumpingInput && this.isGrounded && !this.jumpInputReceived) {
                             this.isJumping = true;
@@ -960,6 +970,8 @@
                             this.currentState = 'idle';
                         }
                     }
+                } else {
+                    if (audioSources['charge']) stopAudio('charge');
                 }
 
                 // Aplicar gravedad y velocidad vertical
