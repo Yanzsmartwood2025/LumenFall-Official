@@ -18,7 +18,7 @@
 
         const totalRunningFrames = 8;
         const totalAttackFrames = 6;
-        const totalJumpFrames = 4;
+        const totalJumpFrames = 8; // Same as running frames to match sheet
         const totalSpecterFrames = 5;
         const totalEnemyFrames = 5;
         const animationSpeed = 80;
@@ -754,7 +754,7 @@
 
                 this.runningTexture.repeat.x = 1 / totalRunningFrames;
                 this.attackTexture.repeat.x = 1 / totalAttackFrames;
-                this.jumpTexture.repeat.x = 1 / totalJumpFrames;
+                this.jumpTexture.repeat.x = 1 / totalRunningFrames; // Correct scaling for the 8-frame sheet
 
                 const playerHeight = 4.2;
                 const playerWidth = 4.2;
@@ -937,28 +937,34 @@
                 }
 
                 if (this.currentState !== 'shooting') {
-                    if (controls.attackHeld) {
+                    // Update jump input state first
+                    const isJumpingInput = joyY > 0.5;
+                    if (isJumpingInput && this.isGrounded && !this.jumpInputReceived) {
+                        this.isJumping = true;
+                        this.isGrounded = false;
+                        this.velocity.y = this.jumpPower;
+                        this.currentState = 'jumping';
+                        this.jumpInputReceived = true;
+                        playAudio('jump', false, 0.9 + Math.random() * 0.2);
+                        vibrateGamepad(100, 0.5, 0.5);
+                    } else if (!isJumpingInput) {
+                        this.jumpInputReceived = false;
+                    }
+
+                    // Prioritize states: Jump > Move > Attack > Idle
+                    if (this.isJumping) {
+                         this.currentState = 'jumping';
+                    } else if (isMoving) {
+                        this.currentState = 'running';
+                    } else if (controls.attackHeld) {
+                        // Only attack/charge if NOT moving
                         if(this.currentState !== 'attacking') vibrateGamepad(100, 0.8, 0.8);
                         this.currentState = 'attacking';
+                        // Slowly recharge power
+                        this.power = Math.min(this.maxPower, this.power + (5 * deltaTime));
+                        this.powerBarFill.style.width = `${(this.power / this.maxPower) * 100}%`;
                     } else {
-                        const isJumpingInput = joyY > 0.5;
-                        if (isJumpingInput && this.isGrounded && !this.jumpInputReceived) {
-                            this.isJumping = true;
-                            this.isGrounded = false;
-                            this.velocity.y = this.jumpPower;
-                            this.currentState = 'jumping';
-                            this.jumpInputReceived = true;
-                            playAudio('jump', false, 0.9 + Math.random() * 0.2);
-                            vibrateGamepad(100, 0.5, 0.5);
-                        } else if (!isJumpingInput) {
-                            this.jumpInputReceived = false;
-                        }
-
-                        if (isMoving) {
-                            this.currentState = 'running';
-                        } else if (!this.isJumping) {
-                            this.currentState = 'idle';
-                        }
+                        this.currentState = 'idle';
                     }
                 }
 
