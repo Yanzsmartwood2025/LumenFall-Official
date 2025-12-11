@@ -47,7 +47,7 @@
             });
         }
 
-        function playAudio(name, loop = false, playbackRate = 1.0) {
+        function playAudio(name, loop = false, playbackRate = 1.0, volume = 0.5) {
             if (!audioBuffers[name]) return;
             if (audioSources[name] && audioSources[name].buffer) stopAudio(name);
             const source = audioContext.createBufferSource();
@@ -55,7 +55,7 @@
             source.loop = loop;
             source.playbackRate.value = playbackRate;
             const gainNode = audioContext.createGain();
-            gainNode.gain.value = 0.5;
+            gainNode.gain.value = volume;
             source.connect(gainNode).connect(audioContext.destination);
             source.start(0);
             audioSources[name] = source;
@@ -836,6 +836,15 @@
                 this.isInvincible = true;
                 this.invincibilityTimer = this.invincibilityDuration;
                 playAudio('hurt', false, 0.9 + Math.random() * 0.2);
+
+                // Recortar sonido 'hurt' a ~1 segundo con desvanecimiento
+                if (gainNodes['hurt'] && audioSources['hurt']) {
+                    const now = audioContext.currentTime;
+                    gainNodes['hurt'].gain.setValueAtTime(0.5, now);
+                    gainNodes['hurt'].gain.linearRampToValueAtTime(0, now + 1.0);
+                    audioSources['hurt'].stop(now + 1.0);
+                }
+
                 this.applyKnockback(enemy);
                 this.energyBarFill.style.width = `${(this.health / this.maxHealth) * 100}%`;
 
@@ -893,6 +902,59 @@
                 this.mesh.add(leftHandFlame);
                 this.leftHandFlame = leftHandFlame;
                 this.leftHandFlame.position.set(0.6, 0.3, 0.3);
+
+                this.createAura();
+            }
+
+            createAura() {
+                this.auraGroup = new THREE.Group();
+                const auraTexture = textureLoader.load(assetUrls.flameParticle);
+                const auraMaterial = new THREE.MeshBasicMaterial({
+                    map: auraTexture,
+                    color: 0x00ffff, // Cyan
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    opacity: 0.6,
+                    side: THREE.DoubleSide
+                });
+
+                // Crear 6 llamas alrededor del personaje
+                for (let i = 0; i < 6; i++) {
+                    const sprite = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), auraMaterial);
+                    const angle = (i / 6) * Math.PI * 2;
+                    // Posicionarlas en un anillo, elevándose desde los pies (y ~ -1.5 relativo al centro)
+                    sprite.position.set(Math.cos(angle) * 1.5, -1.5 + Math.random(), Math.sin(angle) * 0.5);
+                    sprite.userData = {
+                        angle: angle,
+                        speed: 2.0 + Math.random(),
+                        yOffset: Math.random() * 2,
+                        initialY: -1.5
+                    };
+                    this.auraGroup.add(sprite);
+                }
+
+                this.auraGroup.visible = false;
+                this.mesh.add(this.auraGroup);
+            }
+
+            updateAura(deltaTime) {
+                if (!this.auraGroup.visible) return;
+
+                // Rotar todo el grupo lentamente
+                this.auraGroup.rotation.y += 2.0 * deltaTime;
+
+                this.auraGroup.children.forEach(p => {
+                     // Efecto de pulso y flotación
+                     const time = Date.now() * 0.005;
+                     const scale = 1.0 + Math.sin(time * p.userData.speed) * 0.3;
+                     p.scale.set(scale, scale, scale);
+
+                     // Movimiento vertical suave
+                     p.position.y = p.userData.initialY + Math.sin(time + p.userData.angle) * 0.5;
+
+                     // Que siempre miren a la cámara (billboard) para que se vean bien
+                     p.lookAt(camera.position);
+                });
             }
 
             updateAttackFlames() {
@@ -945,15 +1007,30 @@
                 }
 
                 if (this.currentState !== 'shooting') {
-                    if (controls.attackHeld) {
+                    // Prioridad de movimiento sobre carga
+                    const isJumpingInput = joyY > 0.5;
+                    // Consideramos movimiento si hay input significativo
+                    const isMovingInput = Math.abs(joyX) > 0.1;
+
+                    if (controls.attackHeld && !isMovingInput && !isJumpingInput) {
                         if (this.currentState !== 'attacking') {
                             vibrateGamepad(100, 0.8, 0.8);
-                            playAudio('charge', true, 0.9 + Math.random() * 0.2);
+                            // Volumen aumentado a 1.0 para 'charge'
+                            playAudio('charge', true, 0.9 + Math.random() * 0.2, 1.0);
                         }
                         this.currentState = 'attacking';
+
+                        // Regeneración lenta de poder (10 unidades/segundo)
+                        if (this.power < this.maxPower) {
+                            this.power += 10 * deltaTime;
+                            if (this.power > this.maxPower) this.power = this.maxPower;
+                            this.powerBarFill.style.width = `${(this.power / this.maxPower) * 100}%`;
+                        }
+
                     } else {
+                        // Si estábamos cargando y nos movemos, detener el audio de carga
                         if (audioSources['charge']) stopAudio('charge');
-                        const isJumpingInput = joyY > 0.5;
+
                         if (isJumpingInput && this.isGrounded && !this.jumpInputReceived) {
                             this.isJumping = true;
                             this.isGrounded = false;
@@ -1005,7 +1082,12 @@
                 const isAttacking = this.currentState === 'attacking';
                 this.rightHandFlame.visible = isAttacking;
                 this.leftHandFlame.visible = isAttacking;
-                if (isAttacking) this.updateAttackFlames();
+                this.auraGroup.visible = isAttacking;
+
+                if (isAttacking) {
+                    this.updateAttackFlames();
+                    this.updateAura(deltaTime);
+                }
 
                 if (Date.now() - this.lastFrameTime > animationSpeed) {
                     this.lastFrameTime = Date.now();
