@@ -3,6 +3,8 @@
         const assetUrls = {
             runningSprite: 'assets/sprites/Joziel/Movimiento/correr.png',
             runningShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Sombra-correr.jpg',
+            idleSprite: 'assets/sprites/Joziel/Movimiento/Idle.png',
+            idleShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Idle-sombra.jpg',
             attackSprite: 'assets/sprites/characters/attack_sprite_sheet.png',
             jumpSprite: 'assets/sprites/Joziel/Movimiento/correr.png',
             flameParticle: 'assets/sprites/effects/fuego.png',
@@ -18,11 +20,13 @@
         };
 
         const totalRunningFrames = 7;
+        const totalIdleFrames = 5;
         const totalAttackFrames = 6;
         const totalJumpFrames = 7;
         const totalSpecterFrames = 5;
         const totalEnemyFrames = 5;
         const animationSpeed = 80;
+        const idleAnimationSpeed = 150;
         const specterAnimationSpeed = 120;
         const moveSpeed = 0.2;
         const playableAreaWidth = 120;
@@ -389,7 +393,7 @@
             setAudioVolume('pasos', sfxVolumeSlider.value);
 
             menuScreen.style.opacity = 0;
-            menuScreen.addEventListener('transitionend', () => {
+            const onTransitionEnd = () => {
                 menuScreen.style.display = 'none';
                 document.getElementById('bg-canvas').style.display = 'block';
                 document.getElementById('ui-container').style.display = 'flex';
@@ -398,7 +402,15 @@
                 player = new Player();
                 loadLevelById(currentLevelId);
                 animate();
-            }, { once: true });
+            };
+            menuScreen.addEventListener('transitionend', onTransitionEnd, { once: true });
+            // Fallback in case transitionend doesn't fire (e.g. tab inactive)
+            setTimeout(() => {
+                if (menuScreen.style.display !== 'none') {
+                    menuScreen.removeEventListener('transitionend', onTransitionEnd);
+                    onTransitionEnd();
+                }
+            }, 1000);
         }
 
         function pauseGame() {
@@ -805,6 +817,8 @@
              constructor() {
                 this.runningTexture = textureLoader.load(assetUrls.runningSprite);
                 this.runningShadowTexture = textureLoader.load(assetUrls.runningShadowSprite);
+                this.idleTexture = textureLoader.load(assetUrls.idleSprite);
+                this.idleShadowTexture = textureLoader.load(assetUrls.idleShadowSprite);
                 this.attackTexture = textureLoader.load(assetUrls.attackSprite);
                 // jumpTexture points to the same file as runningSprite now, but we load it independently
                 // (or we can reuse runningTexture logic). For now, let's just keep the reference but we will override logic.
@@ -813,6 +827,10 @@
                 // Configurar texturas de correr (Grid 4x2)
                 this.runningTexture.repeat.set(0.25, 0.5);
                 this.runningShadowTexture.repeat.set(0.25, 0.5);
+
+                // Configurar texturas de Idle (Strip 1x5)
+                this.idleTexture.repeat.set(1 / totalIdleFrames, 1);
+                this.idleShadowTexture.repeat.set(1 / totalIdleFrames, 1);
 
                 // Mapeo de frames para la cuadrícula 4x2 (3 arriba, 4 abajo)
                 // Row 1 (UV y=0.5) = Top, Row 0 (UV y=0.0) = Bottom
@@ -1176,42 +1194,54 @@
                 this.auraGroup.visible = isAttacking;
 
                 // Controlar visibilidad del glowMesh (ojos brillantes)
-                // Solo visible en estados donde usamos el sprite sheet de correr (running, jumping)
-                const useRunningSprites = (this.currentState === 'running' || this.currentState === 'jumping' || (this.currentState === 'idle' && false)); // Idle usa attack frame 0 por defecto en el codigo original
-                this.glowMesh.visible = useRunningSprites;
+                // Visible en Idle, Running y Jumping
+                const showGlow = (this.currentState === 'idle' || this.currentState === 'running' || this.currentState === 'jumping');
+                this.glowMesh.visible = showGlow;
 
                 if (isAttacking) {
                     this.updateAttackFlames();
                     this.updateAura(deltaTime);
                 }
 
-                if (Date.now() - this.lastFrameTime > animationSpeed) {
+                // Velocidad variable según el estado (Idle es más lento)
+                const currentAnimSpeed = (this.currentState === 'idle') ? idleAnimationSpeed : animationSpeed;
+
+                if (Date.now() - this.lastFrameTime > currentAnimSpeed) {
                     this.lastFrameTime = Date.now();
-                    let totalFrames, currentTexture;
+                    let totalFrames, currentTexture, shadowTexture;
                     let isGridSprite = false;
 
                     switch (this.currentState) {
                         case 'shooting':
-                            [totalFrames, currentTexture] = [totalAttackFrames, this.attackTexture];
+                            [totalFrames, currentTexture, shadowTexture] = [totalAttackFrames, this.attackTexture, null];
                             this.currentFrame = 2;
                             break;
                         case 'attacking':
-                            [totalFrames, currentTexture] = [totalAttackFrames, this.attackTexture];
+                            [totalFrames, currentTexture, shadowTexture] = [totalAttackFrames, this.attackTexture, null];
                             if (this.currentFrame < totalFrames - 1) this.currentFrame++;
                             break;
                         case 'running':
-                            [totalFrames, currentTexture] = [totalRunningFrames, this.runningTexture];
-                            this.currentFrame = (this.currentFrame + 1) % totalFrames;
+                            [totalFrames, currentTexture, shadowTexture] = [totalRunningFrames, this.runningTexture, this.runningShadowTexture];
+                            // Lógica especial Running: Frame 0 (Start) -> Loop Frames 1-6
+                            this.currentFrame++;
+                            if (this.currentFrame >= totalFrames) {
+                                this.currentFrame = 1; // Volver al inicio del ciclo de correr (saltando frame 0)
+                            }
                             isGridSprite = true;
                             break;
                         case 'jumping':
-                            // Usamos runningTexture para el salto, animado en bucle
-                            [totalFrames, currentTexture] = [totalRunningFrames, this.runningTexture]; // Nota: this.runningTexture (ya configurada)
+                            // Usamos runningTexture para el salto
+                            [totalFrames, currentTexture, shadowTexture] = [totalRunningFrames, this.runningTexture, this.runningShadowTexture];
                             this.currentFrame = (this.currentFrame + 1) % totalFrames;
                             isGridSprite = true;
                             break;
+                        case 'idle':
+                            [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
+                            this.currentFrame = (this.currentFrame + 1) % totalFrames;
+                            break;
                         default:
-                            [totalFrames, currentTexture] = [totalAttackFrames, this.attackTexture];
+                            // Fallback a idle si algo falla
+                            [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
                             this.currentFrame = 0;
                             break;
                     }
@@ -1219,18 +1249,31 @@
                     if (currentTexture) {
                         this.mesh.material.map = currentTexture;
 
+                        // Actualizar textura del glowMesh si corresponde
+                        if (shadowTexture && this.glowMesh.material.map !== shadowTexture) {
+                            this.glowMesh.material.map = shadowTexture;
+                            this.glowMesh.material.needsUpdate = true;
+                        }
+
                         if (isGridSprite && this.runningFrameMap) {
-                            // Usar el mapa de coordenadas para el grid 4x2
+                            // Usar el mapa de coordenadas para el grid 4x2 (Running/Jumping)
                             const frameData = this.runningFrameMap[this.currentFrame];
                             if (frameData) {
                                 currentTexture.offset.set(frameData.x, frameData.y);
-                                // Sincronizar el mapa de sombras/brillo
-                                this.runningShadowTexture.offset.set(frameData.x, frameData.y);
+                                // Sincronizar el mapa de sombras/brillo si existe
+                                if (shadowTexture) {
+                                    shadowTexture.offset.set(frameData.x, frameData.y);
+                                }
                             }
                         } else {
-                            // Comportamiento lineal estándar (para attackSprite)
-                            currentTexture.offset.x = this.currentFrame / totalFrames;
-                            currentTexture.offset.y = 0; // Asegurar Y 0 para strips horizontales
+                            // Comportamiento lineal estándar (Idle, Attack, etc)
+                            const uOffset = this.currentFrame / totalFrames;
+                            currentTexture.offset.x = uOffset;
+                            currentTexture.offset.y = 0;
+                            if (shadowTexture) {
+                                shadowTexture.offset.x = uOffset;
+                                shadowTexture.offset.y = 0;
+                            }
                         }
                     }
                 }
