@@ -1,9 +1,10 @@
 // --- src/game.js (Lógica Principal) ---
 
         const assetUrls = {
-            runningSprite: 'assets/sprites/characters/LumenFall.png',
+            runningSprite: 'assets/sprites/Joziel/Movimiento/correr.png',
+            runningShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Sombra-correr.jpg',
             attackSprite: 'assets/sprites/characters/attack_sprite_sheet.png',
-            jumpSprite: 'assets/sprites/characters/LumenFall.png',
+            jumpSprite: 'assets/sprites/Joziel/Movimiento/correr.png',
             flameParticle: 'assets/sprites/effects/fuego.png',
             wallTexture: 'assets/environment/tiles/pared-calabozo.png',
             doorTexture: 'assets/environment/objects/puerta-calabozo.png',
@@ -16,9 +17,9 @@
             enemySprite: 'assets/sprites/enemies/enemigo-1.png'
         };
 
-        const totalRunningFrames = 8;
+        const totalRunningFrames = 7;
         const totalAttackFrames = 6;
-        const totalJumpFrames = 8;
+        const totalJumpFrames = 7;
         const totalSpecterFrames = 5;
         const totalEnemyFrames = 5;
         const animationSpeed = 80;
@@ -803,12 +804,31 @@
         class Player {
              constructor() {
                 this.runningTexture = textureLoader.load(assetUrls.runningSprite);
+                this.runningShadowTexture = textureLoader.load(assetUrls.runningShadowSprite);
                 this.attackTexture = textureLoader.load(assetUrls.attackSprite);
+                // jumpTexture points to the same file as runningSprite now, but we load it independently
+                // (or we can reuse runningTexture logic). For now, let's just keep the reference but we will override logic.
                 this.jumpTexture = textureLoader.load(assetUrls.jumpSprite);
 
-                this.runningTexture.repeat.x = 1 / totalRunningFrames;
+                // Configurar texturas de correr (Grid 4x2)
+                this.runningTexture.repeat.set(0.25, 0.5);
+                this.runningShadowTexture.repeat.set(0.25, 0.5);
+
+                // Mapeo de frames para la cuadrícula 4x2 (3 arriba, 4 abajo)
+                // Row 1 (UV y=0.5) = Top, Row 0 (UV y=0.0) = Bottom
+                this.runningFrameMap = [
+                    { x: 0, y: 0.5 },    // Top 1
+                    { x: 0.25, y: 0.5 }, // Top 2
+                    { x: 0.5, y: 0.5 },  // Top 3
+                    { x: 0, y: 0 },      // Bottom 1
+                    { x: 0.25, y: 0 },   // Bottom 2
+                    { x: 0.5, y: 0 },    // Bottom 3
+                    { x: 0.75, y: 0 }    // Bottom 4
+                ];
+
                 this.attackTexture.repeat.x = 1 / totalAttackFrames;
-                this.jumpTexture.repeat.x = 1 / totalJumpFrames;
+                // Jump uses running texture logic now, so repeat is same as running
+                this.jumpTexture.repeat.set(0.25, 0.5);
 
                 const playerHeight = 4.2;
                 const playerWidth = 4.2;
@@ -819,6 +839,21 @@
                 this.mesh.position.y = playerHeight / 2;
                 this.mesh.castShadow = true;
                 scene.add(this.mesh);
+
+                // Crear mesh para el efecto de brillo (ojos)
+                const glowMaterial = new THREE.MeshBasicMaterial({
+                    map: this.runningShadowTexture,
+                    color: 0xffffff,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending, // La magia: negro es transparente, lo demás suma luz
+                    side: THREE.DoubleSide,
+                    depthWrite: false // Evita problemas de z-fighting u oclusión rara
+                });
+                this.glowMesh = new THREE.Mesh(playerGeometry, glowMaterial);
+                // Un micro offset en Z para evitar z-fighting si depthWrite fuera true, pero con false y mismo plano suele ir bien.
+                // Lo pondremos un pelín por delante por si acaso.
+                this.glowMesh.position.z = 0.01;
+                this.mesh.add(this.glowMesh);
 
                 this.playerLight = new THREE.PointLight(0xffffff, 0.5, 8);
                 scene.add(this.playerLight);
@@ -1140,6 +1175,11 @@
                 this.leftHandFlame.visible = isAttacking;
                 this.auraGroup.visible = isAttacking;
 
+                // Controlar visibilidad del glowMesh (ojos brillantes)
+                // Solo visible en estados donde usamos el sprite sheet de correr (running, jumping)
+                const useRunningSprites = (this.currentState === 'running' || this.currentState === 'jumping' || (this.currentState === 'idle' && false)); // Idle usa attack frame 0 por defecto en el codigo original
+                this.glowMesh.visible = useRunningSprites;
+
                 if (isAttacking) {
                     this.updateAttackFlames();
                     this.updateAura(deltaTime);
@@ -1148,16 +1188,50 @@
                 if (Date.now() - this.lastFrameTime > animationSpeed) {
                     this.lastFrameTime = Date.now();
                     let totalFrames, currentTexture;
+                    let isGridSprite = false;
+
                     switch (this.currentState) {
-                        case 'shooting': [totalFrames, currentTexture] = [totalAttackFrames, this.attackTexture]; this.currentFrame = 2; break;
-                        case 'attacking': [totalFrames, currentTexture] = [totalAttackFrames, this.attackTexture]; if (this.currentFrame < totalFrames - 1) this.currentFrame++; break;
-                        case 'running': [totalFrames, currentTexture] = [totalRunningFrames, this.runningTexture]; this.currentFrame = (this.currentFrame + 1) % totalFrames; break;
-                        case 'jumping': [totalFrames, currentTexture] = [totalJumpFrames, this.jumpTexture]; this.currentFrame = this.velocity.y > 0 ? 1 : 2; break;
-                        default: [totalFrames, currentTexture] = [totalAttackFrames, this.attackTexture]; this.currentFrame = 0; break;
+                        case 'shooting':
+                            [totalFrames, currentTexture] = [totalAttackFrames, this.attackTexture];
+                            this.currentFrame = 2;
+                            break;
+                        case 'attacking':
+                            [totalFrames, currentTexture] = [totalAttackFrames, this.attackTexture];
+                            if (this.currentFrame < totalFrames - 1) this.currentFrame++;
+                            break;
+                        case 'running':
+                            [totalFrames, currentTexture] = [totalRunningFrames, this.runningTexture];
+                            this.currentFrame = (this.currentFrame + 1) % totalFrames;
+                            isGridSprite = true;
+                            break;
+                        case 'jumping':
+                            // Usamos runningTexture para el salto, animado en bucle
+                            [totalFrames, currentTexture] = [totalRunningFrames, this.runningTexture]; // Nota: this.runningTexture (ya configurada)
+                            this.currentFrame = (this.currentFrame + 1) % totalFrames;
+                            isGridSprite = true;
+                            break;
+                        default:
+                            [totalFrames, currentTexture] = [totalAttackFrames, this.attackTexture];
+                            this.currentFrame = 0;
+                            break;
                     }
+
                     if (currentTexture) {
                         this.mesh.material.map = currentTexture;
-                        currentTexture.offset.x = this.currentFrame / totalFrames;
+
+                        if (isGridSprite && this.runningFrameMap) {
+                            // Usar el mapa de coordenadas para el grid 4x2
+                            const frameData = this.runningFrameMap[this.currentFrame];
+                            if (frameData) {
+                                currentTexture.offset.set(frameData.x, frameData.y);
+                                // Sincronizar el mapa de sombras/brillo
+                                this.runningShadowTexture.offset.set(frameData.x, frameData.y);
+                            }
+                        } else {
+                            // Comportamiento lineal estándar (para attackSprite)
+                            currentTexture.offset.x = this.currentFrame / totalFrames;
+                            currentTexture.offset.y = 0; // Asegurar Y 0 para strips horizontales
+                        }
                     }
                 }
             }
