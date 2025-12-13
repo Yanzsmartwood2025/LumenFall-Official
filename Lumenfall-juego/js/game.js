@@ -81,7 +81,9 @@
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        window.camera = camera; // Debug exposure
         const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: true, alpha: true });
+        window.renderer = renderer; // Debug exposure
         const textureLoader = new THREE.TextureLoader();
         const clock = new THREE.Clock();
 
@@ -123,8 +125,10 @@
         renderer.shadowMap.enabled = true;
         renderer.setClearColor(0x000000, 0);
 
-        const ambientLight = new THREE.AmbientLight(0x808080, 1.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        scene.fog = null;
         scene.add(ambientLight);
+        window.scene = scene; // Debug exposure
         const directionalLight = new THREE.DirectionalLight(0xaaaaaa, 0.5);
         directionalLight.position.set(5, 10, 5);
         directionalLight.castShadow = true;
@@ -427,6 +431,7 @@
                 controlsContainer.style.opacity = '1';
                 controlsContainer.style.pointerEvents = 'auto';
                 player = new Player();
+                window.player = player; // Debug exposure
                 loadLevelById(currentLevelId);
                 animate();
             };
@@ -893,7 +898,7 @@
                 this.mesh.position.y = playerHeight / 2;
                 this.mesh.scale.set(1.32, 1.32, 1); // Start with Idle scale
                 this.mesh.castShadow = true;
-                this.mesh.frustumCulled = true; // Optimization
+                this.mesh.frustumCulled = false; // Optimization
                 this.mesh.renderOrder = 0;
                 scene.add(this.mesh);
 
@@ -921,7 +926,7 @@
 
                 this.glowMesh = new THREE.Mesh(playerGeometry, glowMaterial);
                 this.glowMesh.position.set(0, 0, 0.05); // Ligeramente en frente para evitar Z-fighting
-                this.glowMesh.frustumCulled = true; // Optimización
+                this.glowMesh.frustumCulled = false; // Optimización
                 this.mesh.add(this.glowMesh); // Hijo del mesh principal para heredar transformaciones
 
                 // Volumetric Bloom (Feet Light) - Electric Cyan
@@ -1056,7 +1061,7 @@
                 flameGroup.add(flameLight);
                 const attackFlameMaterial = new THREE.MeshBasicMaterial({ map: textureLoader.load(assetUrls.flameParticle), color: 0xaaddff, transparent: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
                 const flameCore = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), attackFlameMaterial);
-                flameCore.frustumCulled = true; // Optimization
+                flameCore.frustumCulled = false; // Optimization
                 flameGroup.add(flameCore);
                 flameGroup.visible = false;
                 this.mesh.add(flameGroup);
@@ -1087,7 +1092,7 @@
                 for (let i = 0; i < 6; i++) {
                     // Aumentamos el tamaño para cubrir el cuerpo (Player es 4.2x4.2)
                     const sprite = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 6.0), auraMaterial);
-                    sprite.frustumCulled = true; // Optimization
+                    sprite.frustumCulled = false; // Optimization
                     const angle = (i / 6) * Math.PI * 2;
                     // Ajustamos posición Y para que cubra desde abajo hasta arriba
                     sprite.position.set(Math.cos(angle) * 1.5, -0.5 + Math.random(), Math.sin(angle) * 0.5);
@@ -1261,21 +1266,6 @@
 
                 this.playerLight.position.set(this.mesh.position.x, this.mesh.position.y + 1, this.mesh.position.z + 2);
 
-                // Actualizar Glow Mesh (Ojos)
-                if (shadowTexture) {
-                    this.glowMesh.visible = true;
-                    if (this.glowMesh.material.map !== shadowTexture) {
-                        this.glowMesh.material.map = shadowTexture;
-                    }
-                    // Sincronizar offset y repeat con la textura principal
-                    if (currentTexture) {
-                        this.glowMesh.material.map.repeat.copy(currentTexture.repeat);
-                        this.glowMesh.material.map.offset.copy(currentTexture.offset);
-                    }
-                } else {
-                    this.glowMesh.visible = false;
-                }
-
                 if (this.currentState !== previousState) this.currentFrame = -1;
 
                 const isAttacking = this.currentState === 'attacking';
@@ -1392,6 +1382,21 @@
                             currentTexture.offset.x = uOffset;
                             currentTexture.offset.y = 0;
                         }
+                    }
+
+                    // Actualizar Glow Mesh (Ojos)
+                    if (shadowTexture) {
+                        this.glowMesh.visible = true;
+                        if (this.glowMesh.material.map !== shadowTexture) {
+                            this.glowMesh.material.map = shadowTexture;
+                        }
+                        // Sincronizar offset y repeat con la textura principal
+                        if (currentTexture) {
+                            this.glowMesh.material.map.repeat.copy(currentTexture.repeat);
+                            this.glowMesh.material.map.offset.copy(currentTexture.offset);
+                        }
+                    } else {
+                        this.glowMesh.visible = false;
                     }
                 }
             }
@@ -1519,7 +1524,7 @@
                 const ray = new THREE.Mesh(rayGeometry, godRayMaterial);
                 ray.position.set(pos.x, 15, camera.position.z - roomDepth + 2); // High up, slightly in front of wall
                 ray.rotation.z = pos.rotZ;
-                ray.frustumCulled = true; // Optimization
+                ray.frustumCulled = false; // Optimization
                 scene.add(ray);
             });
         }
@@ -1555,7 +1560,7 @@
                 });
 
                 this.points = new THREE.Points(geometry, material);
-                this.points.frustumCulled = true; // Optimization
+                this.points.frustumCulled = false; // Optimization
                 this.scene.add(this.points);
             }
 
@@ -1591,7 +1596,7 @@
 
                 decal.position.set(x, y, z);
                 decal.rotation.z = Math.random() * Math.PI;
-                decal.frustumCulled = true; // Optimization
+                decal.frustumCulled = false; // Optimization
                 scene.add(decal);
             }
 
@@ -1610,7 +1615,7 @@
                 decal.rotation.x = -Math.PI / 2;
                 decal.position.set(x, 0.05, z); // Slightly above floor (y=0)
                 decal.rotation.z = Math.random() * Math.PI;
-                decal.frustumCulled = true; // Optimization
+                decal.frustumCulled = false; // Optimization
                 scene.add(decal);
             }
         }
@@ -1651,7 +1656,7 @@
                 this.sprite = new THREE.Sprite(spriteMaterial);
                 this.sprite.position.copy(position);
                 this.sprite.scale.set(1.5, 1.5, 1.5);
-                this.sprite.frustumCulled = true; // Optimization: Enable Frustum Culling
+                this.sprite.frustumCulled = false; // Optimization: Enable Frustum Culling
                 this.scene.add(this.sprite);
 
                 this.light = new THREE.PointLight(0x00aaff, 1.5, 12);
@@ -1683,7 +1688,7 @@
         function createTorch(x, y, z, isLit) {
             const torchMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 1.8), torchMaterial);
             torchMesh.position.set(x, y, z);
-            torchMesh.frustumCulled = true; // Optimization
+            torchMesh.frustumCulled = false; // Optimization
             scene.add(torchMesh);
             if (isLit) {
                 // Use the new AmbientTorchFlame (Orange/Warm) instead of RealisticFlame (Blue)
@@ -1700,24 +1705,24 @@
             floor.rotation.x = -Math.PI / 2;
             floor.position.z = camera.position.z - (roomDepth / 2);
             floor.receiveShadow = true;
-            floor.frustumCulled = true; // Optimization
+            floor.frustumCulled = false; // Optimization
             scene.add(floor);
 
             const wall = new THREE.Mesh(new THREE.PlaneGeometry(playableAreaWidth, 20), wallMaterial);
             wall.position.set(0, 10, camera.position.z - roomDepth);
-            wall.frustumCulled = true; // Optimization
+            wall.frustumCulled = false; // Optimization
             scene.add(wall);
 
             const sideWallGeometry = new THREE.PlaneGeometry(roomDepth, 20);
             const leftSideWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
             leftSideWall.rotation.y = Math.PI / 2;
             leftSideWall.position.set(-playableAreaWidth / 2, 10, camera.position.z - roomDepth / 2);
-            leftSideWall.frustumCulled = true; // Optimization
+            leftSideWall.frustumCulled = false; // Optimization
             scene.add(leftSideWall);
             const rightSideWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
             rightSideWall.rotation.y = -Math.PI / 2;
             rightSideWall.position.set(playableAreaWidth / 2, 10, camera.position.z - roomDepth / 2);
-            rightSideWall.frustumCulled = true; // Optimization
+            rightSideWall.frustumCulled = false; // Optimization
             scene.add(rightSideWall);
 
             levelData.gates.forEach(gateData => {
@@ -1728,14 +1733,14 @@
                 const gateGroup = new THREE.Group();
                 const gateMesh = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), doorMaterial.clone());
                 gateMesh.position.set(0, 4, 0.3);
-                gateMesh.frustumCulled = true; // Optimization
+                gateMesh.frustumCulled = false; // Optimization
                 gateGroup.add(gateMesh);
 
                 // Shadow Mesh at Base
                 const shadowMesh = new THREE.Mesh(new THREE.PlaneGeometry(10, 3), doorShadowMaterial);
                 shadowMesh.rotation.x = -Math.PI / 2;
                 shadowMesh.position.set(0, 0.1, 1.0); // Slightly above floor and in front of door
-                shadowMesh.frustumCulled = true; // Optimization
+                shadowMesh.frustumCulled = false; // Optimization
                 gateGroup.add(shadowMesh);
 
                 gateGroup.position.x = gateData.x;
@@ -1858,7 +1863,7 @@
                 this.sprite = new THREE.Sprite(sharedFootstepMaterial);
                 this.sprite.position.set(x + (Math.random() - 0.5) * 1.0, y + 0.2, z + (Math.random() - 0.5) * 0.5);
                 this.sprite.scale.set(0.5, 0.5, 0.5); // Small
-                this.sprite.frustumCulled = true; // Optimization
+                this.sprite.frustumCulled = false; // Optimization
                 this.scene.add(this.sprite);
 
                 this.velocity = new THREE.Vector3((Math.random() - 0.5) * 0.05, Math.random() * 0.05, 0);
@@ -1912,7 +1917,7 @@
                 }
                 particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
                 this.particles = new THREE.Points(particleGeometry, sharedFlameMaterial);
-                this.particles.frustumCulled = true; // Optimization
+                this.particles.frustumCulled = false; // Optimization
                 this.scene.add(this.particles);
                 this.light = new THREE.PointLight(0x00aaff, 2.0, 20);
                 this.light.position.copy(this.position);
@@ -1978,7 +1983,7 @@
                 const specterGeometry = new THREE.PlaneGeometry(4.2, 4.2);
                 this.mesh = new THREE.Mesh(specterGeometry, specterMaterial);
                 this.mesh.position.set(this.initialX, this.floatingCenterY, camera.position.z - roomDepth + 1);
-                this.mesh.frustumCulled = true; // Optimization
+                this.mesh.frustumCulled = false; // Optimization
                 this.scene.add(this.mesh);
             }
 
@@ -2099,7 +2104,7 @@
                 this.mesh = new THREE.Mesh(enemyGeometry, enemyMaterial);
                 this.mesh.position.set(initialX, enemyHeight / 2, 0); // Z=0 para alinear con el jugador
                 this.mesh.castShadow = true;
-                this.mesh.frustumCulled = true; // Optimization
+                this.mesh.frustumCulled = false; // Optimization
                 this.scene.add(this.mesh);
 
                 this.hitCount = 0;
@@ -2195,7 +2200,7 @@
                 const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
                 this.table = new THREE.Mesh(tableGeometry, tableMaterial);
                 this.table.position.set(x, 1, camera.position.z - roomDepth + 4);
-                this.table.frustumCulled = true; // Optimization
+                this.table.frustumCulled = false; // Optimization
                 this.scene.add(this.table);
 
                 if (this.isSolved) {
@@ -2228,7 +2233,7 @@
                     const piece = new THREE.Mesh(new THREE.PlaneGeometry(pieceSize, pieceSize), material);
                     piece.position.copy(initialPositions[i]).add(new THREE.Vector3(x, 4, this.table.position.z + 2.1));
                     piece.userData.targetPosition = correctPositions[i].clone().add(new THREE.Vector3(x, 4, this.table.position.z + 2.1));
-                    piece.frustumCulled = true; // Optimization
+                    piece.frustumCulled = false; // Optimization
                     this.pieces.push(piece);
                     this.scene.add(piece);
                 }
@@ -2277,7 +2282,7 @@
                 const geometry = new THREE.SphereGeometry(0.5, 32, 32);
                 this.mesh = new THREE.Mesh(geometry, this.isActive ? this.activeMaterial : this.inactiveMaterial);
                 this.mesh.position.set(x, y, camera.position.z - roomDepth + 3);
-                this.mesh.frustumCulled = true; // Optimization
+                this.mesh.frustumCulled = false; // Optimization
                 scene.add(this.mesh);
 
                 this.light = new THREE.PointLight(0xffffff, 1, 10);
@@ -2315,7 +2320,7 @@
                 const geometry = new THREE.PlaneGeometry(1.0, 1.0);
                 this.mesh = new THREE.Mesh(geometry, sharedProjectileMaterial);
                 this.mesh.position.copy(startPosition);
-                this.mesh.frustumCulled = true; // Optimization
+                this.mesh.frustumCulled = false; // Optimization
 
                 this.velocity = new THREE.Vector3(direction.x, direction.y, 0).multiplyScalar(this.speed);
 
@@ -2368,7 +2373,7 @@
                 const geometry = new THREE.PlaneGeometry(6, 6);
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.set(x, y, z);
-                this.mesh.frustumCulled = true; // Optimization
+                this.mesh.frustumCulled = false; // Optimization
                 this.scene.add(this.mesh);
             }
 
@@ -2409,7 +2414,7 @@
 
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.copy(position);
-                this.mesh.frustumCulled = true; // Optimization
+                this.mesh.frustumCulled = false; // Optimization
                 this.scene.add(this.mesh);
 
                 this.lifetime = 10; // El power-up desaparece después de 10 segundos
