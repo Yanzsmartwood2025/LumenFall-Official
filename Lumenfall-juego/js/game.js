@@ -866,6 +866,7 @@
                 const playerMaterial = new THREE.MeshBasicMaterial({ map: this.runningTexture, transparent: true, side: THREE.DoubleSide, alphaTest: 0.5 });
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
                 this.mesh.position.y = playerHeight / 2;
+                this.mesh.scale.set(1.5, 1.5, 1);
                 this.mesh.castShadow = true;
                 this.mesh.renderOrder = 0;
                 scene.add(this.mesh);
@@ -1090,6 +1091,7 @@
             }
 
             update(deltaTime, controls) {
+                const wasFacingLeft = this.isFacingLeft;
                 this.isAbsorbing = controls.attackHeld;
 
                 if (this.isInvincible) {
@@ -1237,12 +1239,6 @@
 
                 this.glowMesh.visible = showGlow;
 
-                if (this.currentState === 'idle') {
-                    this.mesh.scale.set(1.15, 1.15, 1);
-                } else {
-                    this.mesh.scale.set(1, 1, 1);
-                }
-
                 if (isAttacking) {
                     this.updateAttackFlames();
                     this.updateAura(deltaTime);
@@ -1250,6 +1246,18 @@
 
                 // Velocidad variable según el estado (Idle es más lento)
                 const currentAnimSpeed = (this.currentState === 'idle') ? idleAnimationSpeed : animationSpeed;
+
+                const stateChanged = this.currentState !== previousState;
+                const directionChanged = this.currentState === 'running' && this.isFacingLeft !== wasFacingLeft;
+
+                if (stateChanged || directionChanged) {
+                    this.currentFrame = -1;
+                    this.lastFrameTime = 0; // Force immediate update
+
+                    if (this.currentState === 'running' && this.isFacingLeft && wasFacingLeft) {
+                        this.currentFrame = 2; // Start at frame 3 (next increment will be 3)
+                    }
+                }
 
                 if (Date.now() - this.lastFrameTime > currentAnimSpeed) {
                     this.lastFrameTime = Date.now();
