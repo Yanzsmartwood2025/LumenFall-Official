@@ -897,6 +897,23 @@
                 this.mesh.renderOrder = 0;
                 scene.add(this.mesh);
 
+                // Crear mesh para el efecto de brillo (ojos)
+                const glowMaterial = new THREE.MeshBasicMaterial({
+                    map: this.runningShadowTexture,
+                    color: 0xffffff,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending, // La magia: negro es transparente, lo demás suma luz
+                    side: THREE.DoubleSide,
+                    depthWrite: false // Evita problemas de z-fighting u oclusión rara
+                });
+                this.glowMesh = new THREE.Mesh(playerGeometry, glowMaterial);
+                // Un micro offset en Z para evitar z-fighting si depthWrite fuera true, pero con false y mismo plano suele ir bien.
+                // Lo pondremos un pelín por delante por si acaso.
+                this.glowMesh.position.z = 0.01;
+                this.glowMesh.frustumCulled = true; // Optimization
+                this.glowMesh.renderOrder = 1;
+                this.mesh.add(this.glowMesh);
+
                 // Volumetric Bloom (Feet Light) - Electric Cyan
                 this.playerLight = new THREE.PointLight(0x00FFFF, 1.2, 12); // Intenso, rango medio
                 scene.add(this.playerLight);
@@ -1227,6 +1244,15 @@
                      this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
                 }
 
+                // Ajustar Z del efecto de brillo para que siempre esté frente a la cámara (local Z se invierte al rotar)
+                // Si la rotación es 0, Z debe ser positivo. Si es PI, Z debe ser negativo (relativo al padre).
+                // Con el hack de arriba (running left -> rot 0), el glowMesh quedaría en +0.05 (visible).
+                if (this.mesh.rotation.y === 0) {
+                    this.glowMesh.position.z = 0.05;
+                } else {
+                    this.glowMesh.position.z = -0.05;
+                }
+
                 // Camera follow logic
                 camera.position.x = this.mesh.position.x;
                 const targetCameraY = this.mesh.position.y + 1.9; // Maintain initial offset
@@ -1240,6 +1266,17 @@
                 this.rightHandFlame.visible = isAttacking;
                 this.leftHandFlame.visible = isAttacking;
                 this.auraGroup.visible = isAttacking;
+
+                // Controlar visibilidad del glowMesh (ojos brillantes)
+                // Visible en Idle, Running y Jumping
+                let showGlow = (this.currentState === 'idle' || this.currentState === 'running' || this.currentState === 'jumping');
+
+                // Ocultar ojos si estamos corriendo hacia la izquierda (vista de espalda)
+                if (this.currentState === 'running' && this.isFacingLeft) {
+                    showGlow = false;
+                }
+
+                this.glowMesh.visible = showGlow;
 
                 if (isAttacking) {
                     this.updateAttackFlames();
@@ -1332,6 +1369,12 @@
                     if (currentTexture) {
                         this.mesh.material.map = currentTexture;
 
+                        // Actualizar textura del glowMesh si corresponde
+                        if (shadowTexture && this.glowMesh.material.map !== shadowTexture) {
+                            this.glowMesh.material.map = shadowTexture;
+                            this.glowMesh.material.needsUpdate = true;
+                        }
+
                         if (isGridSprite) {
                             // Seleccionar el mapa correcto
                             let frameMap = this.runningFrameMap;
@@ -1343,12 +1386,20 @@
                             const frameData = frameMap[this.currentFrame];
                             if (frameData) {
                                 currentTexture.offset.set(frameData.x, frameData.y);
+                                // Sincronizar el mapa de sombras/brillo si existe
+                                if (shadowTexture) {
+                                    shadowTexture.offset.set(frameData.x, frameData.y);
+                                }
                             }
                         } else {
                             // Comportamiento lineal estándar (Idle, Attack, etc)
                             const uOffset = this.currentFrame / totalFrames;
                             currentTexture.offset.x = uOffset;
                             currentTexture.offset.y = 0;
+                            if (shadowTexture) {
+                                shadowTexture.offset.x = uOffset;
+                                shadowTexture.offset.y = 0;
+                            }
                         }
                     }
                 }
