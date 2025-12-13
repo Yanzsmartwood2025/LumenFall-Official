@@ -147,18 +147,23 @@ scene.add(lightningLight);
 
 function triggerLightningStrike() {
     // Evento Impacto: Flash intenso + Audio fuerte
-    // Light: 0 -> 5.0 -> 0 very fast (0.1s)
-    lightningLight.intensity = 5.0;
+    // Light: 0 -> 10.0 -> Flickers -> 0 (Extended duration ~500ms)
+    lightningLight.intensity = 10.0;
     isLightningActive = true;
-    if (dustSystem) dustSystem.setLightningState(5.0); // Boost particles
+    if (dustSystem) dustSystem.setLightningState(10.0); // Boost particles
 
     playAudio('thunder_strike', false, 1.0, 1.0); // Play full volume
+
+    // Flicker sequence: Flash -> Dim -> Flash -> Off
+    setTimeout(() => { lightningLight.intensity = 2.0; }, 100);
+    setTimeout(() => { lightningLight.intensity = 8.0; }, 200);
+    setTimeout(() => { lightningLight.intensity = 1.0; }, 350);
 
     setTimeout(() => {
         lightningLight.intensity = 0;
         isLightningActive = false;
         if (dustSystem) dustSystem.setLightningState(0);
-    }, 100);
+    }, 500);
 }
 
 function triggerDistantThunder() {
@@ -1386,7 +1391,8 @@ function triggerDistantThunder() {
                                 // Frames 0-10 totales. Loop 5-10.
                                 totalFrames = 11;
                                 currentTexture = this.runningBackTexture;
-                                shadowTexture = null; // Apagar ojos/brillo en esta vista
+                                // Usar la sombra de correr (Correr-1) pero los últimos 4 cuadros y en espejo
+                                shadowTexture = this.runningShadowTexture;
 
                                 this.currentFrame++;
                                 // Si veníamos de otro estado, currentFrame empieza en 0.
@@ -1452,10 +1458,46 @@ function triggerDistantThunder() {
                         if (this.glowMesh.material.map !== shadowTexture) {
                             this.glowMesh.material.map = shadowTexture;
                         }
-                        // Sincronizar offset y repeat con la textura principal
-                        if (currentTexture) {
-                            this.glowMesh.material.map.repeat.copy(currentTexture.repeat);
-                            this.glowMesh.material.map.offset.copy(currentTexture.offset);
+
+                        // Lógica especial para mapear la sombra cuando se corre a la izquierda
+                        // Movimiento-B usa frames 5-10 (6 frames) en bucle.
+                        // Sombra-correr tiene 9 frames (0-8). Queremos usar los "últimos 4" (5, 6, 7, 8).
+                        if (this.isFacingLeft && this.currentState === 'running') {
+                            this.glowMesh.scale.x = -1; // Espejo (mirar izquierda)
+
+                            // Mapear los frames de Movimiento-B (5..10) a los frames de Sombra (5..8)
+                            // Ciclo simple: 5->5, 6->6, 7->7, 8->8, 9->5, 10->6...
+                            // Offset base de sombra es 5.
+                            // Frame relativo de animación: (this.currentFrame - 5)
+                            // Frame relativo de sombra: (this.currentFrame - 5) % 4
+                            // Frame absoluto de sombra: 5 + (...)
+
+                            // Si estamos en arranque (0-4), no mostrar sombra o usar frame 5?
+                            // El usuario dijo "solo está activando cuando Mira o cuando va hacia la derecha y cuando Mira a la izquierda o camina a la izquierda ya no activa"
+                            // y "ayúdame a revisar que sean los últimos Sprint los cuatro últimos".
+                            // Asumiremos que solo activamos en el loop (>=5).
+
+                            if (this.currentFrame >= 5) {
+                                const shadowFrameIndex = 5 + ((this.currentFrame - 5) % 4);
+                                const shadowFrameData = this.runningFrameMap[shadowFrameIndex]; // Usamos el mapa de la textura original (running)
+
+                                if (shadowFrameData) {
+                                    this.glowMesh.material.map.offset.set(shadowFrameData.x, shadowFrameData.y);
+                                }
+                                // Asegurar que el repeat sea el correcto (de runningTexture)
+                                this.glowMesh.material.map.repeat.set(0.125, 0.5);
+                            } else {
+                                // En frames de arranque de Movimiento-B (0-4) ocultamos los ojos si no hay correspondencia clara
+                                this.glowMesh.visible = false;
+                            }
+
+                        } else {
+                            this.glowMesh.scale.x = 1; // Normal
+                            // Sincronizar offset y repeat con la textura principal (Standard logic)
+                            if (currentTexture) {
+                                this.glowMesh.material.map.repeat.copy(currentTexture.repeat);
+                                this.glowMesh.material.map.offset.copy(currentTexture.offset);
+                            }
                         }
                     } else {
                         this.glowMesh.visible = false;
@@ -2417,7 +2459,8 @@ function triggerDistantThunder() {
                 // Asumiendo que el sprite original apunta hacia arriba (como una flama normal),
                 // restamos 90 grados (PI/2) para que "Arriba" apunte a "Derecha" si el ángulo es 0.
                 const angle = Math.atan2(direction.y, direction.x);
-                this.mesh.rotation.z = angle - Math.PI / 2;
+                // Ajustado: angle + Math.PI / 2 para invertir la dirección (180 grados extra) porque la bola salía "al revés"
+                this.mesh.rotation.z = angle + Math.PI / 2;
 
                 this.velocity = new THREE.Vector3(direction.x, direction.y, 0).multiplyScalar(this.speed);
 
