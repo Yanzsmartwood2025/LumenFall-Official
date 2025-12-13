@@ -866,7 +866,7 @@
                 const playerMaterial = new THREE.MeshBasicMaterial({ map: this.runningTexture, transparent: true, side: THREE.DoubleSide, alphaTest: 0.5 });
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
                 this.mesh.position.y = playerHeight / 2;
-                this.mesh.scale.set(1.15, 1.15, 1);
+                this.mesh.scale.set(1.32, 1.32, 1); // Start with Idle scale
                 this.mesh.castShadow = true;
                 this.mesh.renderOrder = 0;
                 scene.add(this.mesh);
@@ -1249,6 +1249,17 @@
 
                 const stateChanged = this.currentState !== previousState;
                 const directionChanged = this.currentState === 'running' && this.isFacingLeft !== wasFacingLeft;
+
+                if (stateChanged) {
+                    // Ajustar escala según el estado para compensar diferencias visuales en los sprites
+                    if (this.currentState === 'idle') {
+                        // Compensación visual para el sprite de Idle que parece más pequeño
+                        this.mesh.scale.set(1.32, 1.32, 1);
+                    } else {
+                        // Escala estándar para Running, Jumping, Attacking
+                        this.mesh.scale.set(1.15, 1.15, 1);
+                    }
+                }
 
                 if (stateChanged || directionChanged) {
                     this.currentFrame = -1;
