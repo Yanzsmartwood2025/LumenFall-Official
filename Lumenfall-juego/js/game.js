@@ -1178,6 +1178,8 @@
 
                 this.mesh.position.x = Math.max(this.minPlayerX, Math.min(this.maxPlayerX, this.mesh.position.x));
                 this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
+                // Ajustar Z del efecto de brillo para que siempre esté frente a la cámara (local Z se invierte al rotar)
+                this.glowMesh.position.z = this.isFacingLeft ? -0.01 : 0.01;
 
                 // Camera follow logic
                 camera.position.x = this.mesh.position.x;
@@ -1231,6 +1233,7 @@
                             // Lógica especial Running: Frame 0 (Start) -> Loop Frames 2-6
                             // Al iniciar con currentFrame = -1, el primer frame mostrado será el 0.
                             this.currentFrame++;
+                            if (this.currentFrame === 0) this.currentFrame = 1; // Saltar frame 0
                             if (this.currentFrame >= totalFrames) {
                                 this.currentFrame = 2; // Volver al bucle (saltando frame 0 y 1 para evitar repeticiones extrañas)
                             }
