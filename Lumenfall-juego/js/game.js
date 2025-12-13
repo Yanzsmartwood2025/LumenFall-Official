@@ -1186,7 +1186,7 @@
 
                 this.playerLight.position.set(this.mesh.position.x, this.mesh.position.y + 1, this.mesh.position.z + 2);
 
-                if (this.currentState !== previousState) this.currentFrame = 0;
+                if (this.currentState !== previousState) this.currentFrame = -1;
 
                 const isAttacking = this.currentState === 'attacking';
                 this.rightHandFlame.visible = isAttacking;
@@ -1197,6 +1197,12 @@
                 // Visible en Idle, Running y Jumping
                 const showGlow = (this.currentState === 'idle' || this.currentState === 'running' || this.currentState === 'jumping');
                 this.glowMesh.visible = showGlow;
+
+                if (this.currentState === 'idle') {
+                    this.mesh.scale.set(1.15, 1.15, 1);
+                } else {
+                    this.mesh.scale.set(1, 1, 1);
+                }
 
                 if (isAttacking) {
                     this.updateAttackFlames();
@@ -1222,10 +1228,11 @@
                             break;
                         case 'running':
                             [totalFrames, currentTexture, shadowTexture] = [totalRunningFrames, this.runningTexture, this.runningShadowTexture];
-                            // Lógica especial Running: Frame 0 (Start) -> Loop Frames 1-6
+                            // Lógica especial Running: Frame 0 (Start) -> Loop Frames 2-6
+                            // Al iniciar con currentFrame = -1, el primer frame mostrado será el 0.
                             this.currentFrame++;
                             if (this.currentFrame >= totalFrames) {
-                                this.currentFrame = 1; // Volver al inicio del ciclo de correr (saltando frame 0)
+                                this.currentFrame = 2; // Volver al bucle (saltando frame 0 y 1 para evitar repeticiones extrañas)
                             }
                             isGridSprite = true;
                             break;
