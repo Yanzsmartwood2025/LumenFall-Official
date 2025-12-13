@@ -897,6 +897,33 @@
                 this.mesh.renderOrder = 0;
                 scene.add(this.mesh);
 
+                // Glow Mesh (Ojos Brillantes)
+                // Usamos AdditiveBlending para que el fondo negro desaparezca y solo los ojos (blancos/grises) brillen con el color.
+                const glowMaterial = new THREE.MeshBasicMaterial({
+                    map: null, // Se asignará dinámicamente
+                    color: 0x00FFFF, // Cian intenso
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    side: THREE.DoubleSide
+                });
+
+                // Opción alternativa solicitada (Emissive) si se prefiere sobre Basic+Additive:
+                // const glowMaterial = new THREE.MeshStandardMaterial({
+                //    map: null,
+                //    color: 0x000000,
+                //    emissive: 0x00FFFF,
+                //    emissiveIntensity: 2.0,
+                //    transparent: true,
+                //    blending: THREE.AdditiveBlending, // Aún necesario para ignorar el negro de la textura jpg
+                //    side: THREE.DoubleSide
+                // });
+                // Usamos Basic+Additive porque es el estándar para "efectos de brillo sobre sprite negro".
+
+                this.glowMesh = new THREE.Mesh(playerGeometry, glowMaterial);
+                this.glowMesh.position.set(0, 0, 0.05); // Ligeramente en frente para evitar Z-fighting
+                this.glowMesh.frustumCulled = true; // Optimización
+                this.mesh.add(this.glowMesh); // Hijo del mesh principal para heredar transformaciones
+
                 // Volumetric Bloom (Feet Light) - Electric Cyan
                 this.playerLight = new THREE.PointLight(0x00FFFF, 1.2, 12); // Intenso, rango medio
                 scene.add(this.playerLight);
@@ -1233,6 +1260,21 @@
                 camera.position.y += (targetCameraY - camera.position.y) * 0.05; // Smoothly interpolate
 
                 this.playerLight.position.set(this.mesh.position.x, this.mesh.position.y + 1, this.mesh.position.z + 2);
+
+                // Actualizar Glow Mesh (Ojos)
+                if (shadowTexture) {
+                    this.glowMesh.visible = true;
+                    if (this.glowMesh.material.map !== shadowTexture) {
+                        this.glowMesh.material.map = shadowTexture;
+                    }
+                    // Sincronizar offset y repeat con la textura principal
+                    if (currentTexture) {
+                        this.glowMesh.material.map.repeat.copy(currentTexture.repeat);
+                        this.glowMesh.material.map.offset.copy(currentTexture.offset);
+                    }
+                } else {
+                    this.glowMesh.visible = false;
+                }
 
                 if (this.currentState !== previousState) this.currentFrame = -1;
 
@@ -1601,7 +1643,7 @@
                 // Texture is shared (from cache)
                 const spriteMaterial = new THREE.SpriteMaterial({
                     map: textureLoader.load(assetUrls.flameParticle),
-                    color: 0xFFaa00, // Warm Orange
+                    color: 0x00aaff, // Cian/Azul (Pesadilla)
                     transparent: true,
                     blending: THREE.AdditiveBlending
                 });
@@ -1612,7 +1654,7 @@
                 this.sprite.frustumCulled = true; // Optimization: Enable Frustum Culling
                 this.scene.add(this.sprite);
 
-                this.light = new THREE.PointLight(0xFFaa00, 1.5, 12);
+                this.light = new THREE.PointLight(0x00aaff, 1.5, 12);
                 this.light.position.copy(position);
                 this.scene.add(this.light);
 
