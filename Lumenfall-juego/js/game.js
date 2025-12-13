@@ -87,6 +87,7 @@
 
         let player;
         const allFlames = [];
+        const allFootstepParticles = [];
         const allSpecters = [];
         const allSimpleEnemies = [];
         const allGates = [];
@@ -248,6 +249,11 @@
             for (let i = allFlames.length - 1; i >= 0; i--) {
                 if (!allFlames[i].update(deltaTime)) {
                     allFlames.splice(i, 1);
+                }
+            }
+            for (let i = allFootstepParticles.length - 1; i >= 0; i--) {
+                if (!allFootstepParticles[i].update(deltaTime)) {
+                    allFootstepParticles.splice(i, 1);
                 }
             }
             allSpecters.forEach(specter => specter.update(deltaTime, player));
@@ -908,19 +914,10 @@
                 this.playerLight = new THREE.PointLight(0x00FFFF, 1.2, 12); // Intenso, rango medio
                 scene.add(this.playerLight);
 
-                // Floor Glow Sprite
-                const glowTexture = textureLoader.load(assetUrls.flameParticle); // Usamos la misma textura de fuego difusa
-                const floorGlowMaterial = new THREE.SpriteMaterial({
-                    map: glowTexture,
-                    color: 0x00FFFF,
-                    transparent: true,
-                    opacity: 0.5,
-                    blending: THREE.AdditiveBlending
-                });
-                this.floorGlowSprite = new THREE.Sprite(floorGlowMaterial);
-                this.floorGlowSprite.scale.set(4, 2, 1); // Aplanado
-                this.floorGlowSprite.position.y = -1.8; // A los pies (relativo al jugador)
-                this.mesh.add(this.floorGlowSprite);
+                // Floor Light (PointLight) - Replaces Floor Glow Sprite
+                this.floorLight = new THREE.PointLight(0x00FFFF, 2.0, 15);
+                this.floorLight.position.set(0, -2.0, 0); // Near feet
+                this.mesh.add(this.floorLight);
 
                 this.createAttackFlame();
 
@@ -1201,6 +1198,10 @@
 
                         if (isMoving) {
                             this.currentState = 'running';
+                            // Emit footstep particles
+                            if (Math.random() < 0.3) { // Low density
+                                 allFootstepParticles.push(new FootstepParticle(scene, this.mesh.position.x, 0.2, this.mesh.position.z));
+                            }
                         } else if (!this.isJumping) {
                             this.currentState = 'idle';
                         }
@@ -1520,6 +1521,7 @@
                 }
             }
             allFlames.length = 0;
+            allFootstepParticles.length = 0;
             allSpecters.length = 0;
             allSimpleEnemies.forEach(enemy => scene.remove(enemy.mesh));
             allSimpleEnemies.length = 0;
@@ -1681,6 +1683,43 @@
         let sharedFlameMaterial = null;
         let sharedHealthMaterial = null;
         let sharedPowerMaterial = null;
+        let sharedFootstepMaterial = null;
+
+        class FootstepParticle {
+            constructor(scene, x, y, z) {
+                this.scene = scene;
+                if (!sharedFootstepMaterial) {
+                     sharedFootstepMaterial = new THREE.SpriteMaterial({
+                        map: textureLoader.load(assetUrls.flameParticle),
+                        color: 0x00FFFF,
+                        transparent: true,
+                        opacity: 0.6,
+                        blending: THREE.AdditiveBlending
+                    });
+                }
+                this.sprite = new THREE.Sprite(sharedFootstepMaterial);
+                this.sprite.position.set(x + (Math.random() - 0.5) * 1.0, y + 0.2, z + (Math.random() - 0.5) * 0.5);
+                this.sprite.scale.set(0.5, 0.5, 0.5); // Small
+                this.scene.add(this.sprite);
+
+                this.velocity = new THREE.Vector3((Math.random() - 0.5) * 0.05, Math.random() * 0.05, 0);
+                this.lifetime = 0.5 + Math.random() * 0.3; // Short life
+                this.maxLifetime = this.lifetime;
+            }
+
+            update(deltaTime) {
+                this.lifetime -= deltaTime;
+                if (this.lifetime <= 0) {
+                    this.scene.remove(this.sprite);
+                    return false;
+                }
+
+                this.sprite.position.add(this.velocity);
+                this.sprite.material.opacity = (this.lifetime / this.maxLifetime) * 0.6;
+
+                return true;
+            }
+        }
 
         class RealisticFlame {
             constructor(scene, position, lifetime = -1) {
