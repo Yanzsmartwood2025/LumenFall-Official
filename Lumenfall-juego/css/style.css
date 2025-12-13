@@ -763,3 +763,13 @@ html, body {
         display: none !important;
     }
 }
+#vignette-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.7) 90%);
+    z-index: 5; /* Above canvas (usually 0-1) but below UI (usually 10+) */
+}

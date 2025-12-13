@@ -152,7 +152,24 @@
                 let interactableObject = null;
 
                 allGates.forEach(gate => {
+                    const distance = player.mesh.position.distanceTo(gate.mesh.position);
                     const distanceX = Math.abs(player.mesh.position.x - gate.mesh.position.x);
+
+                    // Atmospheric Dimming & Interactive Glow
+                    const gateMesh = gate.mesh.children[0]; // Assuming 0 is the door mesh
+                    if (distance < 10) {
+                        // Close: Pulse Blue Rim Light
+                        const pulse = (Math.sin(Date.now() * 0.005) + 1) * 0.5; // 0 to 1
+                        gateMesh.material.emissive.setHex(0x00aaff);
+                        gateMesh.material.emissiveIntensity = 0.5 + pulse * 0.5;
+                        gateMesh.material.color.setHex(0xffffff); // Full brightness
+                    } else {
+                        // Far: Dim it down (Atmosphere)
+                        gateMesh.material.emissiveIntensity = 0;
+                        const dimFactor = Math.max(0.2, 1 - (distance / 40));
+                        gateMesh.material.color.setScalar(dimFactor);
+                    }
+
                     if (distanceX < 4) {
                         isNearInteractable = true;
                         interactableObject = {type: 'gate', object: gate};
@@ -887,8 +904,23 @@
                 this.glowMesh.renderOrder = 1;
                 this.mesh.add(this.glowMesh);
 
-                this.playerLight = new THREE.PointLight(0xffffff, 0.5, 8);
+                // Volumetric Bloom (Feet Light) - Electric Cyan
+                this.playerLight = new THREE.PointLight(0x00FFFF, 1.2, 12); // Intenso, rango medio
                 scene.add(this.playerLight);
+
+                // Floor Glow Sprite
+                const glowTexture = textureLoader.load(assetUrls.flameParticle); // Usamos la misma textura de fuego difusa
+                const floorGlowMaterial = new THREE.SpriteMaterial({
+                    map: glowTexture,
+                    color: 0x00FFFF,
+                    transparent: true,
+                    opacity: 0.5,
+                    blending: THREE.AdditiveBlending
+                });
+                this.floorGlowSprite = new THREE.Sprite(floorGlowMaterial);
+                this.floorGlowSprite.scale.set(4, 2, 1); // Aplanado
+                this.floorGlowSprite.position.y = -1.8; // A los pies (relativo al jugador)
+                this.mesh.add(this.floorGlowSprite);
 
                 this.createAttackFlame();
 
@@ -1371,7 +1403,34 @@
         wallTexture.wrapS = wallTexture.wrapT = THREE.RepeatWrapping;
         const wallMaterial = new THREE.MeshStandardMaterial({ map: wallTexture, color: 0x454555 });
         const doorTexture = textureLoader.load(assetUrls.doorTexture);
-        const doorMaterial = new THREE.MeshStandardMaterial({ map: doorTexture, transparent: true, alphaTest: 0.5 });
+        const doorMaterial = new THREE.MeshStandardMaterial({
+            map: doorTexture,
+            transparent: true,
+            alphaTest: 0.5,
+            emissive: 0x000000,
+            emissiveIntensity: 0
+        });
+
+        // Shadow for Door Base
+        function createShadowTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(64, 64, 10, 64, 64, 60);
+            gradient.addColorStop(0, 'rgba(0,0,0,0.8)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 128, 128);
+            return new THREE.CanvasTexture(canvas);
+        }
+        const doorShadowTexture = createShadowTexture();
+        const doorShadowMaterial = new THREE.MeshBasicMaterial({
+            map: doorShadowTexture,
+            transparent: true,
+            depthWrite: false
+        });
+
         const floorTexture = textureLoader.load(assetUrls.wallTexture);
         floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
         floorTexture.repeat.set(30, 2);
@@ -1379,6 +1438,79 @@
         const torchTexture = textureLoader.load(assetUrls.torchTexture);
         const torchMaterial = new THREE.MeshStandardMaterial({ map: torchTexture, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide });
         const floorGeometry = new THREE.PlaneGeometry(playableAreaWidth, roomDepth);
+
+        // --- Procedural Texturing (Dirt/Decals) ---
+        function generateNoiseTexture() {
+            const size = 128;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, size, size);
+
+            for (let i = 0; i < 200; i++) {
+                const x = Math.random() * size;
+                const y = Math.random() * size;
+                const r = Math.random() * 5 + 1;
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(100, 100, 100, ${Math.random() * 0.5})`;
+                ctx.fill();
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            return texture;
+        }
+
+        const dirtTexture = generateNoiseTexture();
+        const dirtMaterial = new THREE.MeshBasicMaterial({
+            map: dirtTexture,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.MultiplyBlending, // Darkens the background
+            depthWrite: false,
+            side: THREE.DoubleSide
+        });
+
+        function addDecals(scene, levelData) {
+            // Randomly place dirt patches on the back wall
+            for (let i = 0; i < 15; i++) {
+                const width = Math.random() * 5 + 3;
+                const height = Math.random() * 5 + 3;
+                const decal = new THREE.Mesh(new THREE.PlaneGeometry(width, height), dirtMaterial);
+
+                const x = (Math.random() - 0.5) * playableAreaWidth;
+                const y = Math.random() * 10 + 2;
+                // Slightly in front of the wall (wall is at camera.position.z - roomDepth)
+                const z = camera.position.z - roomDepth + 0.1;
+
+                decal.position.set(x, y, z);
+                decal.rotation.z = Math.random() * Math.PI;
+                scene.add(decal);
+            }
+
+             // Randomly place dirt patches on the floor
+             for (let i = 0; i < 15; i++) {
+                const width = Math.random() * 5 + 3;
+                const height = Math.random() * 5 + 3;
+                const decal = new THREE.Mesh(new THREE.PlaneGeometry(width, height), dirtMaterial);
+
+                const x = (Math.random() - 0.5) * playableAreaWidth;
+                // Floor is at -roomDepth/2 relative to camera Z roughly, but simpler to place on XZ plane
+                // Floor mesh is at z: camera.position.z - (roomDepth / 2)
+                const zCenter = camera.position.z - (roomDepth / 2);
+                const z = zCenter + (Math.random() - 0.5) * roomDepth;
+
+                decal.rotation.x = -Math.PI / 2;
+                decal.position.set(x, 0.05, z); // Slightly above floor (y=0)
+                decal.rotation.z = Math.random() * Math.PI;
+                scene.add(decal);
+            }
+        }
 
         function clearSceneForLevelLoad() {
             for (let i = scene.children.length - 1; i >= 0; i--) {
@@ -1441,6 +1573,13 @@
                 const gateMesh = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), doorMaterial.clone());
                 gateMesh.position.set(0, 4, 0.3);
                 gateGroup.add(gateMesh);
+
+                // Shadow Mesh at Base
+                const shadowMesh = new THREE.Mesh(new THREE.PlaneGeometry(10, 3), doorShadowMaterial);
+                shadowMesh.rotation.x = -Math.PI / 2;
+                shadowMesh.position.set(0, 0.1, 1.0); // Slightly above floor and in front of door
+                gateGroup.add(shadowMesh);
+
                 gateGroup.position.x = gateData.x;
                 gateGroup.position.z = camera.position.z - roomDepth;
                 scene.add(gateGroup);
@@ -1487,6 +1626,8 @@
                     ));
                 });
             }
+
+            addDecals(scene, levelData);
         }
 
         function loadLevelById(levelId, spawnX = null) {
