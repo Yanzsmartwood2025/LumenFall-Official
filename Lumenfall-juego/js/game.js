@@ -949,16 +949,12 @@ function triggerDistantThunder() {
                 const playerWidth = 2.9; // Adjusted for 1011x371 sprite aspect ratio (approx 0.68)
 
                 const playerGeometry = new THREE.PlaneGeometry(playerWidth, playerHeight);
-                // Cambio a MeshStandardMaterial para reaccionar a la luz (rayos)
-                // roughness 1 (mate), metalness 0, emissive bajo para visibilidad en oscuridad
-                const playerMaterial = new THREE.MeshStandardMaterial({
+                // Cambio a MeshBasicMaterial para mantener colores originales ("Full HD") sin verse afectado por luces/sombras
+                const playerMaterial = new THREE.MeshBasicMaterial({
                     map: this.runningTexture,
                     transparent: true,
                     side: THREE.DoubleSide,
-                    alphaTest: 0.5,
-                    roughness: 1.0,
-                    metalness: 0.0,
-                    emissive: 0x222222
+                    alphaTest: 0.5
                 });
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
                 this.mesh.position.y = playerHeight / 2;
@@ -2417,6 +2413,12 @@ function triggerDistantThunder() {
                 this.mesh.position.copy(startPosition);
                 this.mesh.frustumCulled = false; // Optimization
 
+                // Rotar el proyectil según la dirección para que la cola quede atrás
+                // Asumiendo que el sprite original apunta hacia arriba (como una flama normal),
+                // restamos 90 grados (PI/2) para que "Arriba" apunte a "Derecha" si el ángulo es 0.
+                const angle = Math.atan2(direction.y, direction.x);
+                this.mesh.rotation.z = angle - Math.PI / 2;
+
                 this.velocity = new THREE.Vector3(direction.x, direction.y, 0).multiplyScalar(this.speed);
 
                 this.scene.add(this.mesh);
@@ -2428,6 +2430,11 @@ function triggerDistantThunder() {
                     allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
                     return false;
                 }
+
+                // Efecto de latido (pulsing) suave: "chiquito un poquito grande"
+                const pulse = 1.0 + Math.sin((2.0 - this.lifetime) * 15) * 0.2;
+                this.mesh.scale.set(pulse, pulse, 1);
+
                 this.mesh.position.x += this.velocity.x;
                 this.mesh.position.y += this.velocity.y;
 
