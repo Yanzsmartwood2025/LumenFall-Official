@@ -24,7 +24,7 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 20; /* Lo pone delante del canvas y la viñeta */
+    z-index: 9999; /* Lo pone delante del canvas y la viñeta */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -225,6 +225,7 @@ html, body {
             box-shadow: 0 5px 15px rgba(0,0,0,0.5);
             backdrop-filter: blur(5px);
             padding-top: 5px;
+    filter: drop-shadow(0 0 2px cyan);
         }
 
         .control-btn img {
@@ -376,6 +377,7 @@ html, body {
             color: white;
             text-align: center;
             width: 250px;
+    filter: drop-shadow(0 0 2px cyan);
         }
 
         .menu-option:hover {

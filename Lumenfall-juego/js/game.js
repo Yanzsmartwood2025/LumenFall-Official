@@ -96,6 +96,7 @@
         const allPuzzles = [];
         const allProjectiles = [];
         const allPowerUps = [];
+        let dustSystem;
 
         let currentLevelId = 'dungeon_1';
         let isPaused = false;
@@ -260,6 +261,7 @@
             allSimpleEnemies.forEach(enemy => enemy.update(deltaTime));
             allPuzzles.forEach(puzzle => puzzle.update(deltaTime));
             allPowerUps.forEach(powerUp => powerUp.update(deltaTime));
+            if (dustSystem) dustSystem.update();
 
             for (let i = allProjectiles.length - 1; i >= 0; i--) {
                 if (!allProjectiles[i].update(deltaTime)) {
@@ -891,24 +893,9 @@
                 this.mesh.position.y = playerHeight / 2;
                 this.mesh.scale.set(1.32, 1.32, 1); // Start with Idle scale
                 this.mesh.castShadow = true;
+                this.mesh.frustumCulled = true; // Optimization
                 this.mesh.renderOrder = 0;
                 scene.add(this.mesh);
-
-                // Crear mesh para el efecto de brillo (ojos)
-                const glowMaterial = new THREE.MeshBasicMaterial({
-                    map: this.runningShadowTexture,
-                    color: 0xffffff,
-                    transparent: true,
-                    blending: THREE.AdditiveBlending, // La magia: negro es transparente, lo demás suma luz
-                    side: THREE.DoubleSide,
-                    depthWrite: false // Evita problemas de z-fighting u oclusión rara
-                });
-                this.glowMesh = new THREE.Mesh(playerGeometry, glowMaterial);
-                // Un micro offset en Z para evitar z-fighting si depthWrite fuera true, pero con false y mismo plano suele ir bien.
-                // Lo pondremos un pelín por delante por si acaso.
-                this.glowMesh.position.z = 0.01;
-                this.glowMesh.renderOrder = 1;
-                this.mesh.add(this.glowMesh);
 
                 // Volumetric Bloom (Feet Light) - Electric Cyan
                 this.playerLight = new THREE.PointLight(0x00FFFF, 1.2, 12); // Intenso, rango medio
@@ -1042,6 +1029,7 @@
                 flameGroup.add(flameLight);
                 const attackFlameMaterial = new THREE.MeshBasicMaterial({ map: textureLoader.load(assetUrls.flameParticle), color: 0xaaddff, transparent: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
                 const flameCore = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), attackFlameMaterial);
+                flameCore.frustumCulled = true; // Optimization
                 flameGroup.add(flameCore);
                 flameGroup.visible = false;
                 this.mesh.add(flameGroup);
@@ -1072,6 +1060,7 @@
                 for (let i = 0; i < 6; i++) {
                     // Aumentamos el tamaño para cubrir el cuerpo (Player es 4.2x4.2)
                     const sprite = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 6.0), auraMaterial);
+                    sprite.frustumCulled = true; // Optimization
                     const angle = (i / 6) * Math.PI * 2;
                     // Ajustamos posición Y para que cubra desde abajo hasta arriba
                     sprite.position.set(Math.cos(angle) * 1.5, -0.5 + Math.random(), Math.sin(angle) * 0.5);
@@ -1238,15 +1227,6 @@
                      this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
                 }
 
-                // Ajustar Z del efecto de brillo para que siempre esté frente a la cámara (local Z se invierte al rotar)
-                // Si la rotación es 0, Z debe ser positivo. Si es PI, Z debe ser negativo (relativo al padre).
-                // Con el hack de arriba (running left -> rot 0), el glowMesh quedaría en +0.05 (visible).
-                if (this.mesh.rotation.y === 0) {
-                    this.glowMesh.position.z = 0.05;
-                } else {
-                    this.glowMesh.position.z = -0.05;
-                }
-
                 // Camera follow logic
                 camera.position.x = this.mesh.position.x;
                 const targetCameraY = this.mesh.position.y + 1.9; // Maintain initial offset
@@ -1260,17 +1240,6 @@
                 this.rightHandFlame.visible = isAttacking;
                 this.leftHandFlame.visible = isAttacking;
                 this.auraGroup.visible = isAttacking;
-
-                // Controlar visibilidad del glowMesh (ojos brillantes)
-                // Visible en Idle, Running y Jumping
-                let showGlow = (this.currentState === 'idle' || this.currentState === 'running' || this.currentState === 'jumping');
-
-                // Ocultar ojos si estamos corriendo hacia la izquierda (vista de espalda)
-                if (this.currentState === 'running' && this.isFacingLeft) {
-                    showGlow = false;
-                }
-
-                this.glowMesh.visible = showGlow;
 
                 if (isAttacking) {
                     this.updateAttackFlames();
@@ -1363,12 +1332,6 @@
                     if (currentTexture) {
                         this.mesh.material.map = currentTexture;
 
-                        // Actualizar textura del glowMesh si corresponde
-                        if (shadowTexture && this.glowMesh.material.map !== shadowTexture) {
-                            this.glowMesh.material.map = shadowTexture;
-                            this.glowMesh.material.needsUpdate = true;
-                        }
-
                         if (isGridSprite) {
                             // Seleccionar el mapa correcto
                             let frameMap = this.runningFrameMap;
@@ -1380,20 +1343,12 @@
                             const frameData = frameMap[this.currentFrame];
                             if (frameData) {
                                 currentTexture.offset.set(frameData.x, frameData.y);
-                                // Sincronizar el mapa de sombras/brillo si existe
-                                if (shadowTexture) {
-                                    shadowTexture.offset.set(frameData.x, frameData.y);
-                                }
                             }
                         } else {
                             // Comportamiento lineal estándar (Idle, Attack, etc)
                             const uOffset = this.currentFrame / totalFrames;
                             currentTexture.offset.x = uOffset;
                             currentTexture.offset.y = 0;
-                            if (shadowTexture) {
-                                shadowTexture.offset.x = uOffset;
-                                shadowTexture.offset.y = 0;
-                            }
                         }
                     }
                 }
@@ -1476,6 +1431,109 @@
             depthWrite: false,
             side: THREE.DoubleSide
         });
+
+        // --- Atmospheric Effects (God Rays & Dust) ---
+
+        function createGodRayTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            // Gradient: Top (Cyan/White) -> Bottom (Transparent)
+            const gradient = ctx.createLinearGradient(0, 0, 0, 256);
+            gradient.addColorStop(0, 'rgba(200, 255, 255, 0.3)'); // Pale Cyan, transparent
+            gradient.addColorStop(0.4, 'rgba(200, 255, 255, 0.1)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 64, 256);
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        const godRayTexture = createGodRayTexture();
+        const godRayMaterial = new THREE.MeshBasicMaterial({
+            map: godRayTexture,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending,
+            side: THREE.DoubleSide,
+            depthWrite: false
+        });
+
+        function createGodRays(scene) {
+            // 2-3 rays fixed in the world (Simulated Light Shafts)
+            const rayGeometry = new THREE.PlaneGeometry(12, 40);
+
+            // Fixed coordinates mimicking cracks in the ceiling
+            const positions = [
+                { x: -20, z: -10, rotZ: 0.1 },
+                { x: 10, z: -12, rotZ: -0.15 },
+                { x: 45, z: -8, rotZ: 0.05 }
+            ];
+
+            positions.forEach(pos => {
+                const ray = new THREE.Mesh(rayGeometry, godRayMaterial);
+                ray.position.set(pos.x, 15, camera.position.z - roomDepth + 2); // High up, slightly in front of wall
+                ray.rotation.z = pos.rotZ;
+                ray.frustumCulled = true; // Optimization
+                scene.add(ray);
+            });
+        }
+
+        class DustSystem {
+            constructor(scene) {
+                this.scene = scene;
+                this.count = 300;
+
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(this.count * 3);
+                this.velocities = [];
+
+                for (let i = 0; i < this.count; i++) {
+                    positions[i * 3] = (Math.random() - 0.5) * playableAreaWidth; // Spread across room
+                    positions[i * 3 + 1] = Math.random() * 20; // Height
+                    positions[i * 3 + 2] = camera.position.z - roomDepth + Math.random() * 15; // Depth
+
+                    this.velocities.push({
+                        x: (Math.random() - 0.5) * 0.02,
+                        y: (Math.random() - 0.5) * 0.02
+                    });
+                }
+
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+                const material = new THREE.PointsMaterial({
+                    color: 0xccffff, // Pale Cyan
+                    size: 0.15,
+                    transparent: true,
+                    opacity: 0.6,
+                    blending: THREE.AdditiveBlending
+                });
+
+                this.points = new THREE.Points(geometry, material);
+                this.points.frustumCulled = true; // Optimization
+                this.scene.add(this.points);
+            }
+
+            update() {
+                const positions = this.points.geometry.attributes.position.array;
+                for (let i = 0; i < this.count; i++) {
+                    positions[i * 3] += this.velocities[i].x;
+                    positions[i * 3 + 1] += this.velocities[i].y;
+
+                    // Wrap around boundaries to keep dust in the room
+                    if (positions[i * 3 + 1] > 20) positions[i * 3 + 1] = 0;
+                    if (positions[i * 3 + 1] < 0) positions[i * 3 + 1] = 20;
+
+                    const halfWidth = playableAreaWidth / 2;
+                    if (positions[i * 3] > halfWidth) positions[i * 3] = -halfWidth;
+                    if (positions[i * 3] < -halfWidth) positions[i * 3] = halfWidth;
+                }
+                this.points.geometry.attributes.position.needsUpdate = true;
+            }
+        }
 
         function addDecals(scene, levelData) {
             // Randomly place dirt patches on the back wall
@@ -1686,6 +1744,8 @@
             }
 
             addDecals(scene, levelData);
+            createGodRays(scene);
+            dustSystem = new DustSystem(scene);
         }
 
         function loadLevelById(levelId, spawnX = null) {
@@ -1756,6 +1816,7 @@
                 this.sprite = new THREE.Sprite(sharedFootstepMaterial);
                 this.sprite.position.set(x + (Math.random() - 0.5) * 1.0, y + 0.2, z + (Math.random() - 0.5) * 0.5);
                 this.sprite.scale.set(0.5, 0.5, 0.5); // Small
+                this.sprite.frustumCulled = true; // Optimization
                 this.scene.add(this.sprite);
 
                 this.velocity = new THREE.Vector3((Math.random() - 0.5) * 0.05, Math.random() * 0.05, 0);
@@ -1809,6 +1870,7 @@
                 }
                 particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
                 this.particles = new THREE.Points(particleGeometry, sharedFlameMaterial);
+                this.particles.frustumCulled = true; // Optimization
                 this.scene.add(this.particles);
                 this.light = new THREE.PointLight(0x00aaff, 2.0, 20);
                 this.light.position.copy(this.position);
@@ -2173,6 +2235,7 @@
                 const geometry = new THREE.SphereGeometry(0.5, 32, 32);
                 this.mesh = new THREE.Mesh(geometry, this.isActive ? this.activeMaterial : this.inactiveMaterial);
                 this.mesh.position.set(x, y, camera.position.z - roomDepth + 3);
+                this.mesh.frustumCulled = true; // Optimization
                 scene.add(this.mesh);
 
                 this.light = new THREE.PointLight(0xffffff, 1, 10);
@@ -2210,6 +2273,7 @@
                 const geometry = new THREE.PlaneGeometry(1.0, 1.0);
                 this.mesh = new THREE.Mesh(geometry, sharedProjectileMaterial);
                 this.mesh.position.copy(startPosition);
+                this.mesh.frustumCulled = true; // Optimization
 
                 this.velocity = new THREE.Vector3(direction.x, direction.y, 0).multiplyScalar(this.speed);
 
@@ -2303,6 +2367,7 @@
 
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.copy(position);
+                this.mesh.frustumCulled = true; // Optimization
                 this.scene.add(this.mesh);
 
                 this.lifetime = 10; // El power-up desaparece después de 10 segundos
