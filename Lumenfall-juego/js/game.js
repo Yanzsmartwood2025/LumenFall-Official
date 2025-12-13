@@ -2,6 +2,7 @@
 
         const assetUrls = {
             runningSprite: 'assets/sprites/Joziel/Movimiento/Correr-1.png',
+            runningBackSprite: 'assets/sprites/Joziel/Movimiento-B/Movimiento-B-1.png',
             runningShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Sombra-correr-1.jpg',
             idleSprite: 'assets/sprites/Joziel/Movimiento/Idle.png',
             idleShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Idle-sombra.jpg',
@@ -817,6 +818,7 @@
         class Player {
              constructor() {
                 this.runningTexture = textureLoader.load(assetUrls.runningSprite);
+                this.runningBackTexture = textureLoader.load(assetUrls.runningBackSprite);
                 this.runningShadowTexture = textureLoader.load(assetUrls.runningShadowSprite);
                 this.idleTexture = textureLoader.load(assetUrls.idleSprite);
                 this.idleShadowTexture = textureLoader.load(assetUrls.idleShadowSprite);
@@ -827,6 +829,7 @@
 
                 // Configurar texturas de correr (Grid 8x2)
                 this.runningTexture.repeat.set(0.125, 0.5);
+                this.runningBackTexture.repeat.set(0.125, 0.5); // Grid 8x2 igual
                 this.runningShadowTexture.repeat.set(0.125, 0.5);
 
                 // Configurar texturas de Idle (Strip 1x5)
@@ -842,6 +845,15 @@
                 }
                 // 1 frame abajo (8)
                 this.runningFrameMap.push({ x: 0, y: 0 });
+
+                // Mapeo de frames para correr de espaldas (11 frames: 0-7 arriba, 8-10 abajo)
+                this.runningBackFrameMap = [];
+                for (let i = 0; i < 8; i++) {
+                    this.runningBackFrameMap.push({ x: i * 0.125, y: 0.5 });
+                }
+                for (let i = 0; i < 3; i++) {
+                    this.runningBackFrameMap.push({ x: i * 0.125, y: 0 });
+                }
 
                 this.attackTexture.repeat.x = 1 / totalAttackFrames;
                 // Jump uses running texture logic now, so repeat is same as running
@@ -1178,9 +1190,27 @@
                 }
 
                 this.mesh.position.x = Math.max(this.minPlayerX, Math.min(this.maxPlayerX, this.mesh.position.x));
-                this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
+
+                // Rotación del personaje
+                if (this.isFacingLeft && this.currentState === 'running') {
+                     // Caso especial: Running Left usa Movimiento-B que ya está orientado a la izquierda
+                     // No rotamos el mesh (0), o lo rotamos PI si el sprite estuviera a la derecha.
+                     // Asumiendo que Movimiento-B mira a la izquierda:
+                     this.mesh.rotation.y = 0;
+                     // Si Movimiento-B mira a la Izquierda en el PNG, rotation 0 lo muestra a la Izquierda.
+                     // Si usáramos PI, se voltearía a la derecha.
+                } else {
+                     this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
+                }
+
                 // Ajustar Z del efecto de brillo para que siempre esté frente a la cámara (local Z se invierte al rotar)
-                this.glowMesh.position.z = this.isFacingLeft ? -0.05 : 0.05;
+                // Si la rotación es 0, Z debe ser positivo. Si es PI, Z debe ser negativo (relativo al padre).
+                // Con el hack de arriba (running left -> rot 0), el glowMesh quedaría en +0.05 (visible).
+                if (this.mesh.rotation.y === 0) {
+                    this.glowMesh.position.z = 0.05;
+                } else {
+                    this.glowMesh.position.z = -0.05;
+                }
 
                 // Camera follow logic
                 camera.position.x = this.mesh.position.x;
@@ -1198,7 +1228,13 @@
 
                 // Controlar visibilidad del glowMesh (ojos brillantes)
                 // Visible en Idle, Running y Jumping
-                const showGlow = (this.currentState === 'idle' || this.currentState === 'running' || this.currentState === 'jumping');
+                let showGlow = (this.currentState === 'idle' || this.currentState === 'running' || this.currentState === 'jumping');
+
+                // Ocultar ojos si estamos corriendo hacia la izquierda (vista de espalda)
+                if (this.currentState === 'running' && this.isFacingLeft) {
+                    showGlow = false;
+                }
+
                 this.glowMesh.visible = showGlow;
 
                 if (this.currentState === 'idle') {
@@ -1230,13 +1266,30 @@
                             if (this.currentFrame < totalFrames - 1) this.currentFrame++;
                             break;
                         case 'running':
-                            [totalFrames, currentTexture, shadowTexture] = [totalRunningFrames, this.runningTexture, this.runningShadowTexture];
-                            // Lógica especial Running: Frames 0-8 (Inicio) -> Loop Frames 2-8
-                            this.currentFrame++;
-                            if (this.currentFrame >= totalFrames) {
-                                this.currentFrame = 2; // Bucle: volver al frame 2 (el tercero), saltando 0 y 1
+                            if (this.isFacingLeft) {
+                                // Lógica especial Running Left (Movimiento-B / Espalda)
+                                // Frames 0-10 totales. Loop 3-10.
+                                totalFrames = 11;
+                                currentTexture = this.runningBackTexture;
+                                shadowTexture = null; // Apagar ojos/brillo en esta vista
+
+                                this.currentFrame++;
+                                // Si veníamos de otro estado, currentFrame empieza en 0.
+                                // Si llegamos al final (11), volvemos a 3.
+                                if (this.currentFrame >= totalFrames) {
+                                    this.currentFrame = 3;
+                                }
+                                isGridSprite = true;
+                            } else {
+                                // Running Right (Estándar)
+                                [totalFrames, currentTexture, shadowTexture] = [totalRunningFrames, this.runningTexture, this.runningShadowTexture];
+                                // Lógica especial Running: Frames 0-8 (Inicio) -> Loop Frames 2-8
+                                this.currentFrame++;
+                                if (this.currentFrame >= totalFrames) {
+                                    this.currentFrame = 2; // Bucle: volver al frame 2 (el tercero), saltando 0 y 1
+                                }
+                                isGridSprite = true;
                             }
-                            isGridSprite = true;
                             break;
                         case 'jumping':
                             // Usamos runningTexture para el salto
@@ -1264,9 +1317,15 @@
                             this.glowMesh.material.needsUpdate = true;
                         }
 
-                        if (isGridSprite && this.runningFrameMap) {
-                            // Usar el mapa de coordenadas para el grid 4x2 (Running/Jumping)
-                            const frameData = this.runningFrameMap[this.currentFrame];
+                        if (isGridSprite) {
+                            // Seleccionar el mapa correcto
+                            let frameMap = this.runningFrameMap;
+                            if (this.isFacingLeft && this.currentState === 'running') {
+                                frameMap = this.runningBackFrameMap;
+                            }
+
+                            // Usar el mapa de coordenadas
+                            const frameData = frameMap[this.currentFrame];
                             if (frameData) {
                                 currentTexture.offset.set(frameData.x, frameData.y);
                                 // Sincronizar el mapa de sombras/brillo si existe
