@@ -1268,16 +1268,16 @@
                         case 'running':
                             if (this.isFacingLeft) {
                                 // Lógica especial Running Left (Movimiento-B / Espalda)
-                                // Frames 0-10 totales. Loop 3-10.
+                                // Frames 0-10 totales. Loop 5-10.
                                 totalFrames = 11;
                                 currentTexture = this.runningBackTexture;
                                 shadowTexture = null; // Apagar ojos/brillo en esta vista
 
                                 this.currentFrame++;
                                 // Si veníamos de otro estado, currentFrame empieza en 0.
-                                // Si llegamos al final (11), volvemos a 3.
+                                // Si llegamos al final (11), volvemos a 5.
                                 if (this.currentFrame >= totalFrames) {
-                                    this.currentFrame = 3;
+                                    this.currentFrame = 5;
                                 }
                                 isGridSprite = true;
                             } else {
