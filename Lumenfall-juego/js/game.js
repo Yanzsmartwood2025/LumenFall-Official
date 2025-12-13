@@ -866,7 +866,7 @@
                 const playerMaterial = new THREE.MeshBasicMaterial({ map: this.runningTexture, transparent: true, side: THREE.DoubleSide, alphaTest: 0.5 });
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
                 this.mesh.position.y = playerHeight / 2;
-                this.mesh.scale.set(1.5, 1.5, 1);
+                this.mesh.scale.set(1.15, 1.15, 1);
                 this.mesh.castShadow = true;
                 this.mesh.renderOrder = 0;
                 scene.add(this.mesh);
