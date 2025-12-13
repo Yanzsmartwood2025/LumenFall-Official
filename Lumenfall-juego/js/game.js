@@ -107,7 +107,9 @@
         let animationFrameId;
 
 let lightningLight;
-let lightningTimer = Math.random() * 15 + 10;
+let stormTimerStrike = Math.random() * 20 + 20; // 20-40s initial
+let stormTimerDistant = Math.random() * 7 + 8; // 8-15s initial
+let isLightningActive = false;
 
         const completedRooms = { room_1: false, room_2: false, room_3: false, room_4: false, room_5: false };
 
@@ -140,21 +142,34 @@ let lightningTimer = Math.random() * 15 + 10;
 
 lightningLight = new THREE.DirectionalLight(0xaaddff, 0);
 lightningLight.position.set(0, 20, 10);
+lightningLight.castShadow = true;
 scene.add(lightningLight);
 
-function triggerLightning() {
-    // Flash effect: High intensity -> Off -> High -> Off
-    const flashIntensity = 2.5;
-    lightningLight.intensity = flashIntensity;
+function triggerLightningStrike() {
+    // Evento Impacto: Flash intenso + Audio fuerte
+    // Light: 0 -> 5.0 -> 0 very fast (0.1s)
+    lightningLight.intensity = 5.0;
+    isLightningActive = true;
+    if (dustSystem) dustSystem.setLightningState(5.0); // Boost particles
+
+    playAudio('thunder_strike', false, 1.0, 1.0); // Play full volume
+
     setTimeout(() => {
         lightningLight.intensity = 0;
-        setTimeout(() => {
-            lightningLight.intensity = flashIntensity;
-            setTimeout(() => {
-                lightningLight.intensity = 0;
-            }, 80);
-        }, 100);
+        isLightningActive = false;
+        if (dustSystem) dustSystem.setLightningState(0);
     }, 100);
+}
+
+function triggerDistantThunder() {
+    // Evento Distante: Parpadeo suave + Audio medio
+    // Light: 0 -> 0.5 -> 0
+    lightningLight.intensity = 0.5;
+    playAudio('thunder_distant', false, 1.0, 0.4); // Play lower volume
+
+    setTimeout(() => {
+        lightningLight.intensity = 0;
+    }, 150); // Slightly longer fade for distant flicker
 }
 
         function animate() {
@@ -163,10 +178,18 @@ function triggerLightning() {
             const deltaTime = clock.getDelta();
 
     if (!isPaused) {
-        lightningTimer -= deltaTime;
-        if (lightningTimer <= 0) {
-            triggerLightning();
-            lightningTimer = Math.random() * 15 + 10; // 10-25 seconds
+        // Storm Logic: Option B (Independent Timers)
+        stormTimerStrike -= deltaTime;
+        stormTimerDistant -= deltaTime;
+
+        if (stormTimerStrike <= 0) {
+            triggerLightningStrike();
+            stormTimerStrike = Math.random() * 20 + 20; // Reset to 20-40s
+        }
+
+        if (stormTimerDistant <= 0) {
+            triggerDistantThunder();
+            stormTimerDistant = Math.random() * 7 + 8; // Reset to 8-15s
         }
     }
 
@@ -445,7 +468,9 @@ function triggerLightning() {
                     loadAudio('fireball_impact', 'assets/audio/characters/joziel/fireball_impact.mp3'),
                     loadAudio('charge', 'assets/audio/characters/joziel/charge.mp3'),
                     loadAudio('hurt', 'assets/audio/characters/joziel/hurt.mp3'),
-                    loadAudio('attack_voice', 'assets/audio/characters/joziel/attack_voice.mp3')
+                    loadAudio('attack_voice', 'assets/audio/characters/joziel/attack_voice.mp3'),
+                    loadAudio('thunder_strike', 'assets/audio/sfx/thunder_strike.mp3'),
+                    loadAudio('thunder_distant', 'assets/audio/sfx/thunder_distant.mp3')
                 ]);
             } catch (error) {
                 console.error("Error loading audio", error);
@@ -924,7 +949,17 @@ function triggerLightning() {
                 const playerWidth = 2.9; // Adjusted for 1011x371 sprite aspect ratio (approx 0.68)
 
                 const playerGeometry = new THREE.PlaneGeometry(playerWidth, playerHeight);
-                const playerMaterial = new THREE.MeshBasicMaterial({ map: this.runningTexture, transparent: true, side: THREE.DoubleSide, alphaTest: 0.5 });
+                // Cambio a MeshStandardMaterial para reaccionar a la luz (rayos)
+                // roughness 1 (mate), metalness 0, emissive bajo para visibilidad en oscuridad
+                const playerMaterial = new THREE.MeshStandardMaterial({
+                    map: this.runningTexture,
+                    transparent: true,
+                    side: THREE.DoubleSide,
+                    alphaTest: 0.5,
+                    roughness: 1.0,
+                    metalness: 0.0,
+                    emissive: 0x222222
+                });
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
                 this.mesh.position.y = playerHeight / 2;
                 this.mesh.scale.set(1.32, 1.32, 1); // Start with Idle scale
@@ -1585,7 +1620,7 @@ function triggerLightning() {
 
                 const material = new THREE.PointsMaterial({
             color: 0xffffff,
-            size: 0.8,
+            size: 0.2,
             map: textureLoader.load(assetUrls.dustParticle),
                     transparent: true,
             opacity: 0.4,
@@ -1601,6 +1636,18 @@ function triggerLightning() {
         // Manually expand to cover potential movement
         geometry.boundingSphere.radius = 100;
                 this.scene.add(this.points);
+            }
+
+            setLightningState(intensity) {
+                // Manual reaction to lightning
+                // Intensity > 0 implies lightning strike
+                if (intensity > 1.0) {
+                     this.points.material.opacity = 0.8; // Boost opacity
+                     this.points.material.color.setHex(0xaaddff); // Tint Blue
+                } else {
+                     this.points.material.opacity = 0.4; // Reset to base (0.4 requested)
+                     this.points.material.color.setHex(0xffffff); // Reset to White
+                }
             }
 
             update() {
