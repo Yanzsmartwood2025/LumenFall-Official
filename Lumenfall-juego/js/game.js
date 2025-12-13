@@ -17,7 +17,8 @@
             introImage: 'assets/ui/Intro.jpg',
             menuBackgroundImage: 'assets/ui/menu-principal.jpg',
             animatedEnergyBar: 'assets/ui/barra-de-energia.png',
-            enemySprite: 'assets/sprites/enemies/enemigo-1.png'
+    enemySprite: 'assets/sprites/enemies/enemigo-1.png',
+    dustParticle: 'assets/vfx/particles/Polvo.png'
         };
 
         const totalRunningFrames = 9;
@@ -105,6 +106,9 @@
         let isTransitioning = false;
         let animationFrameId;
 
+let lightningLight;
+let lightningTimer = Math.random() * 15 + 10;
+
         const completedRooms = { room_1: false, room_2: false, room_3: false, room_4: false, room_5: false };
 
         let isGamepadModeActive = false;
@@ -134,10 +138,37 @@
         directionalLight.castShadow = true;
         scene.add(directionalLight);
 
+lightningLight = new THREE.DirectionalLight(0xaaddff, 0);
+lightningLight.position.set(0, 20, 10);
+scene.add(lightningLight);
+
+function triggerLightning() {
+    // Flash effect: High intensity -> Off -> High -> Off
+    const flashIntensity = 2.5;
+    lightningLight.intensity = flashIntensity;
+    setTimeout(() => {
+        lightningLight.intensity = 0;
+        setTimeout(() => {
+            lightningLight.intensity = flashIntensity;
+            setTimeout(() => {
+                lightningLight.intensity = 0;
+            }, 80);
+        }, 100);
+    }, 100);
+}
+
         function animate() {
             if (isPaused) return;
             animationFrameId = requestAnimationFrame(animate);
             const deltaTime = clock.getDelta();
+
+    if (!isPaused) {
+        lightningTimer -= deltaTime;
+        if (lightningTimer <= 0) {
+            triggerLightning();
+            lightningTimer = Math.random() * 15 + 10; // 10-25 seconds
+        }
+    }
 
             if (isGamepadModeActive) {
                 handleGamepadInput();
@@ -1532,48 +1563,65 @@
         class DustSystem {
             constructor(scene) {
                 this.scene = scene;
-                this.count = 300;
+        this.count = 200; // Adjusted for larger particles
 
                 const geometry = new THREE.BufferGeometry();
                 const positions = new Float32Array(this.count * 3);
                 this.velocities = [];
+        this.phases = [];
 
                 for (let i = 0; i < this.count; i++) {
-                    positions[i * 3] = (Math.random() - 0.5) * playableAreaWidth; // Spread across room
-                    positions[i * 3 + 1] = Math.random() * 20; // Height
-                    positions[i * 3 + 2] = camera.position.z - roomDepth + Math.random() * 15; // Depth
+            positions[i * 3] = (Math.random() - 0.5) * playableAreaWidth;
+            positions[i * 3 + 1] = Math.random() * 20;
+            positions[i * 3 + 2] = camera.position.z - roomDepth + Math.random() * 15;
 
                     this.velocities.push({
-                        x: (Math.random() - 0.5) * 0.02,
-                        y: (Math.random() - 0.5) * 0.02
+                y: -(Math.random() * 0.01 + 0.005) // Fall slowly
                     });
+            this.phases.push(Math.random() * Math.PI * 2);
                 }
 
                 geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
                 const material = new THREE.PointsMaterial({
-                    color: 0xccffff, // Pale Cyan
-                    size: 0.15,
+            color: 0xffffff,
+            size: 0.8,
+            map: textureLoader.load(assetUrls.dustParticle),
                     transparent: true,
-                    opacity: 0.6,
-                    blending: THREE.AdditiveBlending
+            opacity: 0.4,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            alphaTest: 0.01
                 });
 
                 this.points = new THREE.Points(geometry, material);
-                this.points.frustumCulled = false; // Optimization
+        this.points.frustumCulled = true; // Optimization: Enable Frustum Culling
+        // Ensure bounding sphere covers the area so it doesn't disappear unexpectedly
+        geometry.computeBoundingSphere();
+        // Manually expand to cover potential movement
+        geometry.boundingSphere.radius = 100;
                 this.scene.add(this.points);
             }
 
             update() {
                 const positions = this.points.geometry.attributes.position.array;
+        const time = Date.now() * 0.001;
+
                 for (let i = 0; i < this.count; i++) {
-                    positions[i * 3] += this.velocities[i].x;
+            // Swaying movement (simulating air draft)
+            const sway = Math.sin(time + this.phases[i]) * 0.02;
+            positions[i * 3] += sway;
+
+            // Falling movement
                     positions[i * 3 + 1] += this.velocities[i].y;
 
-                    // Wrap around boundaries to keep dust in the room
-                    if (positions[i * 3 + 1] > 20) positions[i * 3 + 1] = 0;
-                    if (positions[i * 3 + 1] < 0) positions[i * 3 + 1] = 20;
+            // Wrap around Y (vertical)
+            if (positions[i * 3 + 1] < 0) {
+                positions[i * 3 + 1] = 20;
+                positions[i * 3] = (Math.random() - 0.5) * playableAreaWidth; // Randomize X on respawn
+            }
 
+            // Wrap around X (horizontal boundaries)
                     const halfWidth = playableAreaWidth / 2;
                     if (positions[i * 3] > halfWidth) positions[i * 3] = -halfWidth;
                     if (positions[i * 3] < -halfWidth) positions[i * 3] = halfWidth;
