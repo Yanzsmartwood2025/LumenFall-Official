@@ -1491,6 +1491,7 @@
 
                 decal.position.set(x, y, z);
                 decal.rotation.z = Math.random() * Math.PI;
+                decal.frustumCulled = true; // Optimization
                 scene.add(decal);
             }
 
@@ -1509,6 +1510,7 @@
                 decal.rotation.x = -Math.PI / 2;
                 decal.position.set(x, 0.05, z); // Slightly above floor (y=0)
                 decal.rotation.z = Math.random() * Math.PI;
+                decal.frustumCulled = true; // Optimization
                 scene.add(decal);
             }
         }
@@ -1532,12 +1534,60 @@
             numeralsContainer.innerHTML = '';
         }
 
+        class AmbientTorchFlame {
+            constructor(scene, position) {
+                this.scene = scene;
+                this.position = position;
+
+                // Create a unique material per torch to allow individual opacity flickering
+                // Texture is shared (from cache)
+                const spriteMaterial = new THREE.SpriteMaterial({
+                    map: textureLoader.load(assetUrls.flameParticle),
+                    color: 0xFFaa00, // Warm Orange
+                    transparent: true,
+                    blending: THREE.AdditiveBlending
+                });
+
+                this.sprite = new THREE.Sprite(spriteMaterial);
+                this.sprite.position.copy(position);
+                this.sprite.scale.set(1.5, 1.5, 1.5);
+                this.sprite.frustumCulled = true; // Optimization: Enable Frustum Culling
+                this.scene.add(this.sprite);
+
+                this.light = new THREE.PointLight(0xFFaa00, 1.5, 12);
+                this.light.position.copy(position);
+                this.scene.add(this.light);
+
+                this.initialScale = 1.5;
+                this.timeOffset = Math.random() * 100;
+            }
+
+            update(deltaTime) {
+                const time = Date.now() * 0.005 + this.timeOffset;
+
+                // Wind Simulation (Scale Noise)
+                const scaleNoise = Math.sin(time * 3) * 0.15 + Math.cos(time * 7) * 0.05;
+                const newScale = this.initialScale + scaleNoise;
+                this.sprite.scale.set(newScale, newScale, 1.0);
+
+                // Opacity Flicker
+                this.sprite.material.opacity = 0.8 + Math.sin(time * 12) * 0.15 + Math.random() * 0.05;
+
+                // Light Intensity Flicker
+                this.light.intensity = 1.5 + Math.sin(time * 10) * 0.3 + Math.random() * 0.2;
+
+                return true; // Always active
+            }
+        }
+
         function createTorch(x, y, z, isLit) {
             const torchMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 1.8), torchMaterial);
             torchMesh.position.set(x, y, z);
+            torchMesh.frustumCulled = true; // Optimization
             scene.add(torchMesh);
             if (isLit) {
-                allFlames.push(new RealisticFlame(scene, new THREE.Vector3(x, y + 1.3, z + 0.2)));
+                // Use the new AmbientTorchFlame (Orange/Warm) instead of RealisticFlame (Blue)
+                allFlames.push(new AmbientTorchFlame(scene, new THREE.Vector3(x, y + 1.3, z + 0.2)));
             }
         }
 
@@ -1550,20 +1600,24 @@
             floor.rotation.x = -Math.PI / 2;
             floor.position.z = camera.position.z - (roomDepth / 2);
             floor.receiveShadow = true;
+            floor.frustumCulled = true; // Optimization
             scene.add(floor);
 
             const wall = new THREE.Mesh(new THREE.PlaneGeometry(playableAreaWidth, 20), wallMaterial);
             wall.position.set(0, 10, camera.position.z - roomDepth);
+            wall.frustumCulled = true; // Optimization
             scene.add(wall);
 
             const sideWallGeometry = new THREE.PlaneGeometry(roomDepth, 20);
             const leftSideWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
             leftSideWall.rotation.y = Math.PI / 2;
             leftSideWall.position.set(-playableAreaWidth / 2, 10, camera.position.z - roomDepth / 2);
+            leftSideWall.frustumCulled = true; // Optimization
             scene.add(leftSideWall);
             const rightSideWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
             rightSideWall.rotation.y = -Math.PI / 2;
             rightSideWall.position.set(playableAreaWidth / 2, 10, camera.position.z - roomDepth / 2);
+            rightSideWall.frustumCulled = true; // Optimization
             scene.add(rightSideWall);
 
             levelData.gates.forEach(gateData => {
@@ -1574,12 +1628,14 @@
                 const gateGroup = new THREE.Group();
                 const gateMesh = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), doorMaterial.clone());
                 gateMesh.position.set(0, 4, 0.3);
+                gateMesh.frustumCulled = true; // Optimization
                 gateGroup.add(gateMesh);
 
                 // Shadow Mesh at Base
                 const shadowMesh = new THREE.Mesh(new THREE.PlaneGeometry(10, 3), doorShadowMaterial);
                 shadowMesh.rotation.x = -Math.PI / 2;
                 shadowMesh.position.set(0, 0.1, 1.0); // Slightly above floor and in front of door
+                shadowMesh.frustumCulled = true; // Optimization
                 gateGroup.add(shadowMesh);
 
                 gateGroup.position.x = gateData.x;
@@ -1818,6 +1874,7 @@
                 const specterGeometry = new THREE.PlaneGeometry(4.2, 4.2);
                 this.mesh = new THREE.Mesh(specterGeometry, specterMaterial);
                 this.mesh.position.set(this.initialX, this.floatingCenterY, camera.position.z - roomDepth + 1);
+                this.mesh.frustumCulled = true; // Optimization
                 this.scene.add(this.mesh);
             }
 
@@ -1938,6 +1995,7 @@
                 this.mesh = new THREE.Mesh(enemyGeometry, enemyMaterial);
                 this.mesh.position.set(initialX, enemyHeight / 2, 0); // Z=0 para alinear con el jugador
                 this.mesh.castShadow = true;
+                this.mesh.frustumCulled = true; // Optimization
                 this.scene.add(this.mesh);
 
                 this.hitCount = 0;
@@ -2033,6 +2091,7 @@
                 const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
                 this.table = new THREE.Mesh(tableGeometry, tableMaterial);
                 this.table.position.set(x, 1, camera.position.z - roomDepth + 4);
+                this.table.frustumCulled = true; // Optimization
                 this.scene.add(this.table);
 
                 if (this.isSolved) {
@@ -2065,6 +2124,7 @@
                     const piece = new THREE.Mesh(new THREE.PlaneGeometry(pieceSize, pieceSize), material);
                     piece.position.copy(initialPositions[i]).add(new THREE.Vector3(x, 4, this.table.position.z + 2.1));
                     piece.userData.targetPosition = correctPositions[i].clone().add(new THREE.Vector3(x, 4, this.table.position.z + 2.1));
+                    piece.frustumCulled = true; // Optimization
                     this.pieces.push(piece);
                     this.scene.add(piece);
                 }
@@ -2202,6 +2262,7 @@
                 const geometry = new THREE.PlaneGeometry(6, 6);
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.set(x, y, z);
+                this.mesh.frustumCulled = true; // Optimization
                 this.scene.add(this.mesh);
             }
 
