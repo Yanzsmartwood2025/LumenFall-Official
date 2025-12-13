@@ -116,6 +116,7 @@
         camera.updateProjectionMatrix();
 
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
         renderer.shadowMap.enabled = true;
         renderer.setClearColor(0x000000, 0);
 
@@ -856,6 +857,7 @@
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
                 this.mesh.position.y = playerHeight / 2;
                 this.mesh.castShadow = true;
+                this.mesh.renderOrder = 0;
                 scene.add(this.mesh);
 
                 // Crear mesh para el efecto de brillo (ojos)
@@ -871,6 +873,7 @@
                 // Un micro offset en Z para evitar z-fighting si depthWrite fuera true, pero con false y mismo plano suele ir bien.
                 // Lo pondremos un pelín por delante por si acaso.
                 this.glowMesh.position.z = 0.01;
+                this.glowMesh.renderOrder = 1;
                 this.mesh.add(this.glowMesh);
 
                 this.playerLight = new THREE.PointLight(0xffffff, 0.5, 8);
@@ -1179,7 +1182,7 @@
                 this.mesh.position.x = Math.max(this.minPlayerX, Math.min(this.maxPlayerX, this.mesh.position.x));
                 this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
                 // Ajustar Z del efecto de brillo para que siempre esté frente a la cámara (local Z se invierte al rotar)
-                this.glowMesh.position.z = this.isFacingLeft ? -0.01 : 0.01;
+                this.glowMesh.position.z = this.isFacingLeft ? -0.05 : 0.05;
 
                 // Camera follow logic
                 camera.position.x = this.mesh.position.x;
