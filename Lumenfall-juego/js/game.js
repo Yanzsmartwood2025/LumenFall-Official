@@ -1,8 +1,8 @@
 // --- src/game.js (Lógica Principal) ---
 
         const assetUrls = {
-            runningSprite: 'assets/sprites/Joziel/Movimiento/correr.png',
-            runningShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Sombra-correr.jpg',
+            runningSprite: 'assets/sprites/Joziel/Movimiento/Correr-1.png',
+            runningShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Sombra-correr-1.jpg',
             idleSprite: 'assets/sprites/Joziel/Movimiento/Idle.png',
             idleShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Idle-sombra.jpg',
             attackSprite: 'assets/sprites/characters/attack_sprite_sheet.png',
@@ -19,7 +19,7 @@
             enemySprite: 'assets/sprites/enemies/enemigo-1.png'
         };
 
-        const totalRunningFrames = 7;
+        const totalRunningFrames = 9;
         const totalIdleFrames = 5;
         const totalAttackFrames = 6;
         const totalJumpFrames = 7;
@@ -825,32 +825,30 @@
                 // (or we can reuse runningTexture logic). For now, let's just keep the reference but we will override logic.
                 this.jumpTexture = textureLoader.load(assetUrls.jumpSprite);
 
-                // Configurar texturas de correr (Grid 4x2)
-                this.runningTexture.repeat.set(0.25, 0.5);
-                this.runningShadowTexture.repeat.set(0.25, 0.5);
+                // Configurar texturas de correr (Grid 8x2)
+                this.runningTexture.repeat.set(0.125, 0.5);
+                this.runningShadowTexture.repeat.set(0.125, 0.5);
 
                 // Configurar texturas de Idle (Strip 1x5)
                 this.idleTexture.repeat.set(1 / totalIdleFrames, 1);
                 this.idleShadowTexture.repeat.set(1 / totalIdleFrames, 1);
 
-                // Mapeo de frames para la cuadrícula 4x2 (3 arriba, 4 abajo)
+                // Mapeo de frames para la cuadrícula 8x2 (8 arriba, 1 abajo)
                 // Row 1 (UV y=0.5) = Top, Row 0 (UV y=0.0) = Bottom
-                this.runningFrameMap = [
-                    { x: 0, y: 0.5 },    // Top 1
-                    { x: 0.25, y: 0.5 }, // Top 2
-                    { x: 0.5, y: 0.5 },  // Top 3
-                    { x: 0, y: 0 },      // Bottom 1
-                    { x: 0.25, y: 0 },   // Bottom 2
-                    { x: 0.5, y: 0 },    // Bottom 3
-                    { x: 0.75, y: 0 }    // Bottom 4
-                ];
+                this.runningFrameMap = [];
+                // 8 frames arriba (0 a 7)
+                for (let i = 0; i < 8; i++) {
+                    this.runningFrameMap.push({ x: i * 0.125, y: 0.5 });
+                }
+                // 1 frame abajo (8)
+                this.runningFrameMap.push({ x: 0, y: 0 });
 
                 this.attackTexture.repeat.x = 1 / totalAttackFrames;
                 // Jump uses running texture logic now, so repeat is same as running
-                this.jumpTexture.repeat.set(0.25, 0.5);
+                this.jumpTexture.repeat.set(0.125, 0.5);
 
                 const playerHeight = 4.2;
-                const playerWidth = 4.2;
+                const playerWidth = 2.9; // Adjusted for 1011x371 sprite aspect ratio (approx 0.68)
 
                 const playerGeometry = new THREE.PlaneGeometry(playerWidth, playerHeight);
                 const playerMaterial = new THREE.MeshBasicMaterial({ map: this.runningTexture, transparent: true, side: THREE.DoubleSide, alphaTest: 0.5 });
@@ -1233,12 +1231,10 @@
                             break;
                         case 'running':
                             [totalFrames, currentTexture, shadowTexture] = [totalRunningFrames, this.runningTexture, this.runningShadowTexture];
-                            // Lógica especial Running: Frame 0 (Start) -> Loop Frames 2-6
-                            // Al iniciar con currentFrame = -1, el primer frame mostrado será el 0.
+                            // Lógica especial Running: Frames 0-8 (Inicio) -> Loop Frames 2-8
                             this.currentFrame++;
-                            if (this.currentFrame === 0) this.currentFrame = 1; // Saltar frame 0
                             if (this.currentFrame >= totalFrames) {
-                                this.currentFrame = 2; // Volver al bucle (saltando frame 0 y 1 para evitar repeticiones extrañas)
+                                this.currentFrame = 2; // Bucle: volver al frame 2 (el tercero), saltando 0 y 1
                             }
                             isGridSprite = true;
                             break;
