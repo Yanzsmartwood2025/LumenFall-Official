@@ -1342,13 +1342,10 @@ function triggerDistantThunder() {
                 this.mesh.position.x = Math.max(this.minPlayerX, Math.min(this.maxPlayerX, this.mesh.position.x));
 
                 // Rotación del personaje
-                if (this.isFacingLeft && this.currentState === 'running') {
-                     // Caso especial: Running Left usa Movimiento-B que ya está orientado a la izquierda
-                     // No rotamos el mesh (0), o lo rotamos PI si el sprite estuviera a la derecha.
-                     // Asumiendo que Movimiento-B mira a la izquierda:
+                if (this.isFacingLeft && (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing')) {
+                     // Caso especial: Los sprites de Movimiento-B (Run, Jump, Land) ya miran a la izquierda (muestran espalda/tatuaje).
+                     // No rotamos el mesh (0). Si usáramos PI, se voltearían a la derecha.
                      this.mesh.rotation.y = 0;
-                     // Si Movimiento-B mira a la Izquierda en el PNG, rotation 0 lo muestra a la Izquierda.
-                     // Si usáramos PI, se voltearía a la derecha.
                 } else {
                      this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
                 }
@@ -1455,16 +1452,18 @@ function triggerDistantThunder() {
                         if (this.currentFrame < 3) this.currentFrame = 5;
 
                      } else {
-                        // Right Jump (Forward Read: 0->3)
+                        // Right Jump (Forward Read: Physics Based)
                         currentTexture = this.jumpTexture;
                         shadowTexture = this.runningShadowTexture;
                         isJumpSprite = true; // Use special jump map
 
-                        if (this.currentFrame === -1) this.currentFrame = 0; // Start Frame
-                        else this.currentFrame++; // Increment
-
-                        // Loop Air frames (1-3)
-                        if (this.currentFrame > 3) this.currentFrame = 1;
+                        if (this.velocity.y > 0) {
+                            // Subiendo: Impulso (Frame 0)
+                            this.currentFrame = 0;
+                        } else {
+                             // Cayendo: Frame 1 fijo (para evitar aleteo)
+                             this.currentFrame = 1;
+                        }
                      }
                      break;
 
