@@ -2410,8 +2410,8 @@ function triggerDistantThunder() {
                     const maxDist = 30;
                     let vol = 1 - (distanceToPlayer / maxDist);
                     if (vol < 0) vol = 0;
-                    // Growl is background noise, keep it subtle (max 0.4)
-                    this.growlGain.gain.setTargetAtTime(vol * 0.4, audioContext.currentTime, 0.1);
+                    // Growl volume increased to max (1.0)
+                    this.growlGain.gain.setTargetAtTime(vol * 1.0, audioContext.currentTime, 0.1);
                 }
 
                 // Audio Logic: Steps
@@ -2425,7 +2425,7 @@ function triggerDistantThunder() {
                 // Audio Logic: Impact (Stone Breaking)
                 this.impactTimer -= deltaTime;
                 if (this.impactTimer <= 0) {
-                     this.playScopedSound('enemy1_impact', 1.0, 0.8, distanceToPlayer);
+                     this.playScopedSound('enemy1_impact', 1.0, 1.0, distanceToPlayer);
                      this.impactTimer = Math.random() * 6 + 4; // Every 4-10 seconds
                 }
 
