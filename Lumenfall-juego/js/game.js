@@ -7,7 +7,8 @@
             idleSprite: 'assets/sprites/Joziel/Movimiento/Idle.png',
             idleShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Idle-sombra.jpg',
             attackSprite: 'assets/sprites/Joziel/attack_sprite_sheet.png',
-            jumpSprite: 'assets/sprites/Joziel/Movimiento/correr.png',
+    jumpSprite: 'assets/sprites/Joziel/Movimiento/saltar.png',
+    jumpBackSprite: 'assets/sprites/Joziel/Movimiento-B/saltar-b.png',
             flameParticle: 'assets/vfx/particles/fuego.png',
             wallTexture: 'assets/environment/dungeon/pared-calabozo.png',
             doorTexture: 'assets/environment/dungeon/puerta-calabozo.png',
@@ -914,9 +915,8 @@ function triggerDistantThunder() {
                 this.idleTexture = textureLoader.load(assetUrls.idleSprite);
                 this.idleShadowTexture = textureLoader.load(assetUrls.idleShadowSprite);
                 this.attackTexture = textureLoader.load(assetUrls.attackSprite);
-                // jumpTexture points to the same file as runningSprite now, but we load it independently
-                // (or we can reuse runningTexture logic). For now, let's just keep the reference but we will override logic.
                 this.jumpTexture = textureLoader.load(assetUrls.jumpSprite);
+        this.jumpBackTexture = textureLoader.load(assetUrls.jumpBackSprite);
 
                 // Configurar texturas de correr (Grid 8x2)
                 this.runningTexture.repeat.set(0.125, 0.5);
@@ -926,6 +926,12 @@ function triggerDistantThunder() {
                 // Configurar texturas de Idle (Strip 1x5)
                 this.idleTexture.repeat.set(1 / totalIdleFrames, 1);
                 this.idleShadowTexture.repeat.set(1 / totalIdleFrames, 1);
+
+        // Configurar texturas de Salto
+        // Right Jump: 3x2 Grid (6 frames) -> Cols 3 (0.333), Rows 2 (0.5)
+        this.jumpTexture.repeat.set(1/3, 0.5);
+        // Left Jump: 1x8 Strip (8 frames) -> Cols 8 (0.125), Rows 1 (1.0)
+        this.jumpBackTexture.repeat.set(0.125, 1);
 
                 // Mapeo de frames para la cuadrícula 8x2 (8 arriba, 1 abajo)
                 // Row 1 (UV y=0.5) = Top, Row 0 (UV y=0.0) = Bottom
@@ -946,9 +952,13 @@ function triggerDistantThunder() {
                     this.runningBackFrameMap.push({ x: i * 0.125, y: 0 });
                 }
 
+        // Mapeo de frames para Salto Derecho (3x2)
+        // Top Row (0-2), Bottom Row (3-5)
+        this.jumpFrameMap = [];
+        for (let i = 0; i < 3; i++) this.jumpFrameMap.push({ x: i * (1/3), y: 0.5 }); // Top
+        for (let i = 0; i < 3; i++) this.jumpFrameMap.push({ x: i * (1/3), y: 0.0 }); // Bottom
+
                 this.attackTexture.repeat.x = 1 / totalAttackFrames;
-                // Jump uses running texture logic now, so repeat is same as running
-                this.jumpTexture.repeat.set(0.125, 0.5);
 
                 const playerHeight = 4.2;
                 const playerWidth = 2.9; // Adjusted for 1011x371 sprite aspect ratio (approx 0.68)
@@ -1276,6 +1286,7 @@ function triggerDistantThunder() {
                             this.isGrounded = false;
                             this.velocity.y = this.jumpPower;
                             this.currentState = 'jumping';
+            this.currentFrame = -1; // Force reset
                             this.jumpInputReceived = true;
                             // Offset de 0.1s para respuesta inmediata
                             playAudio('jump', false, 0.9 + Math.random() * 0.2, 0.5, 0.1);
@@ -1284,13 +1295,13 @@ function triggerDistantThunder() {
                             this.jumpInputReceived = false;
                         }
 
-                        if (isMoving) {
+                        if (isMoving && !this.isJumping) {
                             this.currentState = 'running';
                             // Emit footstep particles
                             if (Math.random() < 0.3) { // Low density
                                  allFootstepParticles.push(new FootstepParticle(scene, this.mesh.position.x, 0.2, this.mesh.position.z));
                             }
-                        } else if (!this.isJumping) {
+        } else if (!this.isJumping && this.currentState !== 'landing') {
                             this.currentState = 'idle';
                         }
                     }
@@ -1307,9 +1318,25 @@ function triggerDistantThunder() {
 
                 if (this.mesh.position.y <= this.mesh.geometry.parameters.height / 2) {
                     this.mesh.position.y = this.mesh.geometry.parameters.height / 2;
-                    this.isGrounded = true;
-                    this.isJumping = false;
-                    this.velocity.y = 0;
+
+            // Landing Logic
+            if (!this.isGrounded) {
+                this.isGrounded = true;
+                this.isJumping = false;
+                this.velocity.y = 0;
+
+                const isMovingInput = Math.abs(controls.joyVector.x) > 0.1;
+                const isJumpingInput = controls.joyVector.y > 0.5;
+
+                // Priority: If moving or jumping, skip landing animation
+                if (isMovingInput || isJumpingInput) {
+                     // Transition handled next frame by input logic
+                     this.currentState = 'idle'; // Reset safely
+                } else {
+                     this.currentState = 'landing';
+                     this.currentFrame = -1; // Will start at 0
+                }
+            }
                 }
 
                 this.mesh.position.x = Math.max(this.minPlayerX, Math.min(this.maxPlayerX, this.mesh.position.x));
@@ -1345,21 +1372,28 @@ function triggerDistantThunder() {
                     this.updateAura(deltaTime);
                 }
 
-                // Velocidad variable según el estado (Idle es más lento)
-                const currentAnimSpeed = (this.currentState === 'idle') ? idleAnimationSpeed : animationSpeed;
+        // Velocidad variable según el estado
+        let currentAnimSpeed = animationSpeed;
+        if (this.currentState === 'idle') currentAnimSpeed = idleAnimationSpeed;
+        // Faster Jump for Left side (Movimiento-B) to match duration
+        if ((this.currentState === 'jumping' || this.currentState === 'landing') && this.isFacingLeft) {
+            currentAnimSpeed = 60;
+        }
 
                 const stateChanged = this.currentState !== previousState;
-                const directionChanged = this.currentState === 'running' && this.isFacingLeft !== wasFacingLeft;
+        const directionChanged = (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing') && this.isFacingLeft !== wasFacingLeft;
 
-                if (stateChanged) {
-                    // Ajustar escala según el estado para compensar diferencias visuales en los sprites
-                    if (this.currentState === 'idle') {
-                        // Compensación visual para el sprite de Idle que parece más pequeño
+        if (stateChanged || directionChanged) {
+             // Scale Logic Adjustment
+             if (this.currentState === 'idle') {
                         this.mesh.scale.set(1.32, 1.32, 1);
-                    } else {
-                        // Escala estándar para Running, Jumping, Attacking
+             } else if ((this.currentState === 'jumping' || this.currentState === 'landing') && !this.isFacingLeft) {
+                // Right Jump/Land -> Scale Down
+                this.mesh.scale.set(0.88, 0.88, 1);
+             } else {
+                // Standard for Running, Attacking, and Left Jump
                         this.mesh.scale.set(1.15, 1.15, 1);
-                    }
+             }
                 }
 
                 if (stateChanged || directionChanged) {
@@ -1375,6 +1409,7 @@ function triggerDistantThunder() {
                     this.lastFrameTime = Date.now();
                     let totalFrames, currentTexture, shadowTexture;
                     let isGridSprite = false;
+            let isJumpSprite = false;
 
                     switch (this.currentState) {
                         case 'shooting':
@@ -1388,15 +1423,11 @@ function triggerDistantThunder() {
                         case 'running':
                             if (this.isFacingLeft) {
                                 // Lógica especial Running Left (Movimiento-B / Espalda)
-                                // Frames 0-10 totales. Loop 5-10.
                                 totalFrames = 11;
                                 currentTexture = this.runningBackTexture;
-                                // Usar la sombra de correr (Correr-1) pero los últimos 4 cuadros y en espejo
                                 shadowTexture = this.runningShadowTexture;
 
                                 this.currentFrame++;
-                                // Si veníamos de otro estado, currentFrame empieza en 0.
-                                // Si llegamos al final (11), volvemos a 5.
                                 if (this.currentFrame >= totalFrames) {
                                     this.currentFrame = 5;
                                 }
@@ -1404,20 +1435,66 @@ function triggerDistantThunder() {
                             } else {
                                 // Running Right (Estándar)
                                 [totalFrames, currentTexture, shadowTexture] = [totalRunningFrames, this.runningTexture, this.runningShadowTexture];
-                                // Lógica especial Running: Frames 0-8 (Inicio) -> Loop Frames 2-8
                                 this.currentFrame++;
                                 if (this.currentFrame >= totalFrames) {
-                                    this.currentFrame = 2; // Bucle: volver al frame 2 (el tercero), saltando 0 y 1
+                            this.currentFrame = 2;
                                 }
                                 isGridSprite = true;
                             }
                             break;
                         case 'jumping':
-                            // Usamos runningTexture para el salto
-                            [totalFrames, currentTexture, shadowTexture] = [totalRunningFrames, this.runningTexture, this.runningShadowTexture];
-                            this.currentFrame = (this.currentFrame + 1) % totalFrames;
-                            isGridSprite = true;
+                     if (this.isFacingLeft) {
+                        // Left Jump (Reverse Read: 7->0)
+                        currentTexture = this.jumpBackTexture;
+                        shadowTexture = this.runningShadowTexture;
+
+                        if (this.currentFrame === -1) this.currentFrame = 7; // Start Frame (Impulse)
+                        else this.currentFrame--; // Decrement
+
+                        // Loop Air frames (5,4,3) until landing
+                        if (this.currentFrame < 3) this.currentFrame = 5;
+
+                     } else {
+                        // Right Jump (Forward Read: 0->3)
+                        currentTexture = this.jumpTexture;
+                        shadowTexture = this.runningShadowTexture;
+                        isJumpSprite = true; // Use special jump map
+
+                        if (this.currentFrame === -1) this.currentFrame = 0; // Start Frame
+                        else this.currentFrame++; // Increment
+
+                        // Loop Air frames (1-3)
+                        if (this.currentFrame > 3) this.currentFrame = 1;
+                     }
+                     break;
+
+                case 'landing':
+                    if (this.isFacingLeft) {
+                        // Left Land (Reverse Read: 2->0)
+                        currentTexture = this.jumpBackTexture;
+                        shadowTexture = this.runningShadowTexture;
+
+                        if (this.currentFrame === -1 || this.currentFrame > 2) this.currentFrame = 2;
+                        else this.currentFrame--;
+
+                        if (this.currentFrame < 0) {
+                            this.currentState = 'idle'; // End of land
+                        }
+                    } else {
+                        // Right Land (Forward Read: 4->5)
+                        currentTexture = this.jumpTexture;
+                        shadowTexture = this.runningShadowTexture;
+                        isJumpSprite = true;
+
+                        if (this.currentFrame === -1 || this.currentFrame < 4) this.currentFrame = 4;
+                        else this.currentFrame++;
+
+                        if (this.currentFrame > 5) {
+                            this.currentState = 'idle';
+                        }
+                    }
                             break;
+
                         case 'idle':
                             [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
                             this.currentFrame = (this.currentFrame + 1) % totalFrames;
@@ -1444,9 +1521,19 @@ function triggerDistantThunder() {
                             if (frameData) {
                                 currentTexture.offset.set(frameData.x, frameData.y);
                             }
+                } else if (isJumpSprite) {
+                    // Use Jump Frame Map for Right Jump
+                     const frameData = this.jumpFrameMap[this.currentFrame];
+                     if (frameData) {
+                         currentTexture.offset.set(frameData.x, frameData.y);
+                     }
                         } else {
-                            // Comportamiento lineal estándar (Idle, Attack, etc)
-                            const uOffset = this.currentFrame / totalFrames;
+                    // Comportamiento lineal estándar (Idle, Attack, Left Jump Strip)
+                    // Note: Left Jump/Land uses strip (1x8) logic, which matches this
+                    // Total frames for Left Jump Strip is 8
+                    const framesInStrip = (currentTexture === this.jumpBackTexture) ? 8 : totalFrames;
+
+                    const uOffset = this.currentFrame / framesInStrip;
                             currentTexture.offset.x = uOffset;
                             currentTexture.offset.y = 0;
                         }
