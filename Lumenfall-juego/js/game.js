@@ -476,7 +476,10 @@ function triggerDistantThunder() {
                     loadAudio('hurt', 'assets/audio/characters/joziel/hurt.mp3'),
                     loadAudio('attack_voice', 'assets/audio/characters/joziel/attack_voice.mp3'),
                     loadAudio('thunder_strike', 'assets/audio/sfx/thunder_strike.mp3'),
-                    loadAudio('thunder_distant', 'assets/audio/sfx/thunder_distant.mp3')
+                    loadAudio('thunder_distant', 'assets/audio/sfx/thunder_distant.mp3'),
+                    loadAudio('enemy1_growl', 'assets/audio/enemigos/enemigo-1/movimiento.mp3'),
+                    loadAudio('enemy1_step', 'assets/audio/enemigos/enemigo-1/pasos.mp3'),
+                    loadAudio('enemy1_impact', 'assets/audio/enemigos/enemigo-1/impacto.mp3')
                 ]);
             } catch (error) {
                 console.error("Error loading audio", error);
@@ -1850,7 +1853,10 @@ function triggerDistantThunder() {
             allFlames.length = 0;
             allFootstepParticles.length = 0;
             allSpecters.length = 0;
-            allSimpleEnemies.forEach(enemy => scene.remove(enemy.mesh));
+            allSimpleEnemies.forEach(enemy => {
+                 if (enemy.stopAudio) enemy.stopAudio();
+                 scene.remove(enemy.mesh);
+            });
             allSimpleEnemies.length = 0;
             allGates.length = 0;
             allStatues.length = 0;
@@ -2340,12 +2346,88 @@ function triggerDistantThunder() {
                 this.direction = -1; // -1 for left, 1 for right
                 this.patrolRange = { min: -playableAreaWidth / 2 + 5, max: playableAreaWidth / 2 - 5 };
                 this.mesh.position.x = this.patrolRange.max; // Start at the right edge
+
+                // Audio System
+                this.stepTimer = 0;
+                this.impactTimer = Math.random() * 5 + 3; // Initial random delay
+                this.growlSource = null;
+                this.growlGain = null;
+                this.startGrowl();
+            }
+
+            startGrowl() {
+                if (!audioBuffers['enemy1_growl']) return;
+                this.growlSource = audioContext.createBufferSource();
+                this.growlSource.buffer = audioBuffers['enemy1_growl'];
+                this.growlSource.loop = true;
+                this.growlGain = audioContext.createGain();
+                this.growlGain.gain.value = 0; // Start silent, update in loop
+                this.growlSource.connect(this.growlGain).connect(audioContext.destination);
+                this.growlSource.start();
+            }
+
+            stopAudio(fadeOutDuration = 0) {
+                if (this.growlSource) {
+                    if (fadeOutDuration > 0 && this.growlGain) {
+                        try {
+                            const now = audioContext.currentTime;
+                            this.growlGain.gain.setValueAtTime(this.growlGain.gain.value, now);
+                            this.growlGain.gain.linearRampToValueAtTime(0, now + fadeOutDuration);
+                            this.growlSource.stop(now + fadeOutDuration);
+                        } catch(e) {
+                             this.growlSource.stop();
+                        }
+                    } else {
+                        try { this.growlSource.stop(); } catch(e) {}
+                    }
+                    this.growlSource = null;
+                }
+            }
+
+            playScopedSound(name, rate, baseVolume, distance) {
+                if (!audioBuffers[name]) return;
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffers[name];
+                source.playbackRate.value = rate;
+
+                const gain = audioContext.createGain();
+                const maxDist = 30;
+                let vol = 1 - (distance / maxDist);
+                if (vol < 0) vol = 0;
+                gain.gain.value = baseVolume * vol * vol; // Quadratic falloff
+
+                source.connect(gain).connect(audioContext.destination);
+                source.start();
             }
 
             update(deltaTime) {
                 if (!this.isAlive || !player) return;
 
                 const distanceToPlayer = this.mesh.position.distanceTo(player.mesh.position);
+
+                // Update Growl Volume (Distance Based)
+                if (this.growlGain) {
+                    const maxDist = 30;
+                    let vol = 1 - (distanceToPlayer / maxDist);
+                    if (vol < 0) vol = 0;
+                    // Growl is background noise, keep it subtle (max 0.4)
+                    this.growlGain.gain.setTargetAtTime(vol * 0.4, audioContext.currentTime, 0.1);
+                }
+
+                // Audio Logic: Steps
+                this.stepTimer -= deltaTime;
+                if (this.stepTimer <= 0) {
+                    // Play step sound, slowed down (0.75)
+                    this.playScopedSound('enemy1_step', 0.75, 0.6, distanceToPlayer);
+                    this.stepTimer = 0.6; // ~600ms between steps
+                }
+
+                // Audio Logic: Impact (Stone Breaking)
+                this.impactTimer -= deltaTime;
+                if (this.impactTimer <= 0) {
+                     this.playScopedSound('enemy1_impact', 1.0, 0.8, distanceToPlayer);
+                     this.impactTimer = Math.random() * 6 + 4; // Every 4-10 seconds
+                }
 
                 // Lógica de cambio de estado
                 if (distanceToPlayer < this.detectionRange) {
@@ -2388,6 +2470,9 @@ function triggerDistantThunder() {
                 if (this.hitCount >= 6) { // Derrotado después de 6 golpes
                     this.isAlive = false;
                     this.scene.remove(this.mesh);
+
+                    // Fade out growl on death (1.5s fade)
+                    this.stopAudio(1.5);
 
                     // 50% de probabilidad de soltar un power-up
                     if (Math.random() < 0.5) {
