@@ -2417,9 +2417,9 @@ function triggerDistantThunder() {
                 // Audio Logic: Steps
                 this.stepTimer -= deltaTime;
                 if (this.stepTimer <= 0) {
-                    // Play step sound, slowed down (0.75)
-                    this.playScopedSound('enemy1_step', 0.75, 0.6, distanceToPlayer);
-                    this.stepTimer = 0.6; // ~600ms between steps
+                    // Play step sound, slowed down further (0.7) and less frequent
+                    this.playScopedSound('enemy1_step', 0.7, 0.8, distanceToPlayer); // Increased volume slightly
+                    this.stepTimer = 1.2; // ~1200ms between steps (Slower walk)
                 }
 
                 // Audio Logic: Impact (Stone Breaking)
