@@ -7,7 +7,8 @@
             idleSprite: 'assets/sprites/Joziel/Movimiento/Idle.png',
             idleShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Idle-sombra.jpg',
             attackSprite: 'assets/sprites/Joziel/attack_sprite_sheet.png',
-            jumpSprite: 'assets/sprites/Joziel/Movimiento/correr.png',
+            jumpSprite: 'assets/sprites/Joziel/Movimiento/saltar.png',
+            jumpBackSprite: 'assets/sprites/Joziel/Movimiento-B/saltar-b.png',
             flameParticle: 'assets/vfx/particles/fuego.png',
             wallTexture: 'assets/environment/dungeon/pared-calabozo.png',
             doorTexture: 'assets/environment/dungeon/puerta-calabozo.png',
@@ -24,7 +25,8 @@
         const totalRunningFrames = 9;
         const totalIdleFrames = 5;
         const totalAttackFrames = 6;
-        const totalJumpFrames = 7;
+        const totalJumpRightFrames = 6; // 3x2 Grid
+        const totalJumpLeftFrames = 8;  // 8x1 Grid (Reverse)
         const totalSpecterFrames = 5;
         const totalEnemyFrames = 5;
         const animationSpeed = 80;
@@ -914,14 +916,19 @@ function triggerDistantThunder() {
                 this.idleTexture = textureLoader.load(assetUrls.idleSprite);
                 this.idleShadowTexture = textureLoader.load(assetUrls.idleShadowSprite);
                 this.attackTexture = textureLoader.load(assetUrls.attackSprite);
-                // jumpTexture points to the same file as runningSprite now, but we load it independently
-                // (or we can reuse runningTexture logic). For now, let's just keep the reference but we will override logic.
                 this.jumpTexture = textureLoader.load(assetUrls.jumpSprite);
+                this.jumpBackTexture = textureLoader.load(assetUrls.jumpBackSprite);
 
                 // Configurar texturas de correr (Grid 8x2)
                 this.runningTexture.repeat.set(0.125, 0.5);
                 this.runningBackTexture.repeat.set(0.125, 0.5); // Grid 8x2 igual
                 this.runningShadowTexture.repeat.set(0.125, 0.5);
+
+                // Configurar texturas de Salto
+                // Salto Derecho (saltar.png): 3 columnas, 2 filas.
+                this.jumpTexture.repeat.set(1/3, 0.5);
+                // Salto Izquierdo (saltar-b.png): 8 columnas, 1 fila.
+                this.jumpBackTexture.repeat.set(1/8, 1);
 
                 // Configurar texturas de Idle (Strip 1x5)
                 this.idleTexture.repeat.set(1 / totalIdleFrames, 1);
@@ -946,9 +953,25 @@ function triggerDistantThunder() {
                     this.runningBackFrameMap.push({ x: i * 0.125, y: 0 });
                 }
 
+                // Mapeo Salto Derecho (3x2) - 6 Frames
+                // Orden: Arriba Izq->Der, luego Abajo Izq->Der
+                this.jumpFrameMap = [];
+                // Fila Arriba (y=0.5)
+                for (let i = 0; i < 3; i++) this.jumpFrameMap.push({ x: i * (1/3), y: 0.5 });
+                // Fila Abajo (y=0)
+                for (let i = 0; i < 3; i++) this.jumpFrameMap.push({ x: i * (1/3), y: 0 });
+
+                // Mapeo Salto Izquierdo (8x1) - 8 Frames - LECTURA INVERSA
+                // El usuario indicó: "comienza desde el lado derecho hacia la izquierda".
+                // Frame anim 0 -> Ultima columna (x = 7/8)
+                // Frame anim 7 -> Primera columna (x = 0)
+                this.jumpBackFrameMap = [];
+                for (let i = 0; i < 8; i++) {
+                    // (7 - i) invierte el índice
+                    this.jumpBackFrameMap.push({ x: (7 - i) * (1/8), y: 0 });
+                }
+
                 this.attackTexture.repeat.x = 1 / totalAttackFrames;
-                // Jump uses running texture logic now, so repeat is same as running
-                this.jumpTexture.repeat.set(0.125, 0.5);
 
                 const playerHeight = 4.2;
                 const playerWidth = 2.9; // Adjusted for 1011x371 sprite aspect ratio (approx 0.68)
@@ -1349,22 +1372,34 @@ function triggerDistantThunder() {
                 const currentAnimSpeed = (this.currentState === 'idle') ? idleAnimationSpeed : animationSpeed;
 
                 const stateChanged = this.currentState !== previousState;
-                const directionChanged = this.currentState === 'running' && this.isFacingLeft !== wasFacingLeft;
+                // Force update if direction changes during running OR jumping (since jump sprites differ by direction)
+                const directionChanged = (this.currentState === 'running' || this.currentState === 'jumping') && this.isFacingLeft !== wasFacingLeft;
 
-                if (stateChanged) {
-                    // Ajustar escala según el estado para compensar diferencias visuales en los sprites
+                // Function to apply scale immediately based on state and direction
+                const applyScale = () => {
                     if (this.currentState === 'idle') {
                         // Compensación visual para el sprite de Idle que parece más pequeño
                         this.mesh.scale.set(1.32, 1.32, 1);
+                    } else if (this.currentState === 'jumping') {
+                        if (this.isFacingLeft) {
+                            // Jump Left (Ratio 0.67 vs Mesh 0.69)
+                            // Scale X = 1.15 * (0.673 / 0.690) ≈ 1.12
+                            this.mesh.scale.set(1.12, 1.15, 1);
+                        } else {
+                            // Jump Right (Ratio 0.43 vs Mesh 0.69)
+                            // Scale X = 1.15 * (0.437 / 0.690) ≈ 0.73
+                            this.mesh.scale.set(0.73, 1.15, 1);
+                        }
                     } else {
-                        // Escala estándar para Running, Jumping, Attacking
+                        // Standard Scale for Running, Attacking
                         this.mesh.scale.set(1.15, 1.15, 1);
                     }
-                }
+                };
 
                 if (stateChanged || directionChanged) {
                     this.currentFrame = -1;
                     this.lastFrameTime = 0; // Force immediate update
+                    applyScale(); // Apply scale immediately on state/direction change
 
                     if (this.currentState === 'running' && this.isFacingLeft && wasFacingLeft) {
                         this.currentFrame = 2; // Start at frame 3 (next increment will be 3)
@@ -1413,8 +1448,13 @@ function triggerDistantThunder() {
                             }
                             break;
                         case 'jumping':
-                            // Usamos runningTexture para el salto
-                            [totalFrames, currentTexture, shadowTexture] = [totalRunningFrames, this.runningTexture, this.runningShadowTexture];
+                            if (this.isFacingLeft) {
+                                // Salto B (Izquierda) - Tira Horizontal 8 frames invertida
+                                [totalFrames, currentTexture, shadowTexture] = [totalJumpLeftFrames, this.jumpBackTexture, this.runningShadowTexture];
+                            } else {
+                                // Salto (Derecha) - Grid 3x2
+                                [totalFrames, currentTexture, shadowTexture] = [totalJumpRightFrames, this.jumpTexture, this.runningShadowTexture];
+                            }
                             this.currentFrame = (this.currentFrame + 1) % totalFrames;
                             isGridSprite = true;
                             break;
