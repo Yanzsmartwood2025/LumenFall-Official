@@ -1447,11 +1447,17 @@ function triggerDistantThunder() {
                         currentTexture = this.jumpBackTexture;
                         shadowTexture = this.runningShadowTexture;
 
-                        if (this.currentFrame === -1) this.currentFrame = 7; // Start Frame (Impulse)
-                        else this.currentFrame--; // Decrement
+                        if (this.velocity.y > 0) {
+                            // Rising Phase (7 -> 3)
+                            if (this.currentFrame === -1) this.currentFrame = 7;
+                            else this.currentFrame--;
 
-                        // Hold Frame 2 for falling until landing
-                        if (this.currentFrame < 2) this.currentFrame = 2;
+                            // Prevent entering the falling frame (2) while still rising
+                            if (this.currentFrame < 3) this.currentFrame = 3;
+                        } else {
+                            // Falling Phase (Hold Frame 2)
+                            this.currentFrame = 2;
+                        }
 
                      } else {
                         // Right Jump (Forward Read: 0->3)
