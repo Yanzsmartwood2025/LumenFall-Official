@@ -1345,13 +1345,9 @@ function triggerDistantThunder() {
                 this.mesh.position.x = Math.max(this.minPlayerX, Math.min(this.maxPlayerX, this.mesh.position.x));
 
                 // Rotación del personaje
-                if (this.isFacingLeft && this.currentState === 'running') {
-                     // Caso especial: Running Left usa Movimiento-B que ya está orientado a la izquierda
-                     // No rotamos el mesh (0), o lo rotamos PI si el sprite estuviera a la derecha.
-                     // Asumiendo que Movimiento-B mira a la izquierda:
+                if (this.isFacingLeft && (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing')) {
+                     // Caso especial: Running, Jumping, Landing Left usa sprites (Movimiento-B, saltar-b) que ya están orientados a la izquierda
                      this.mesh.rotation.y = 0;
-                     // Si Movimiento-B mira a la Izquierda en el PNG, rotation 0 lo muestra a la Izquierda.
-                     // Si usáramos PI, se voltearía a la derecha.
                 } else {
                      this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
                 }
