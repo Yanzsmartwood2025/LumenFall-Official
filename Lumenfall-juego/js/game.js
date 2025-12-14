@@ -1450,8 +1450,8 @@ function triggerDistantThunder() {
                         if (this.currentFrame === -1) this.currentFrame = 7; // Start Frame (Impulse)
                         else this.currentFrame--; // Decrement
 
-                        // Loop Air frames (5,4,3) until landing
-                        if (this.currentFrame < 3) this.currentFrame = 5;
+                        // Hold Frame 2 for falling until landing
+                        if (this.currentFrame < 2) this.currentFrame = 2;
 
                      } else {
                         // Right Jump (Forward Read: 0->3)
