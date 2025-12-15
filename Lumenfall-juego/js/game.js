@@ -1460,16 +1460,20 @@ function triggerDistantThunder() {
                         }
 
                      } else {
-                        // Right Jump (Forward Read: 0->3)
+                        // Right Jump (Modified Logic: 0 -> 2 (Rise) -> 1 (Fall))
                         currentTexture = this.jumpTexture;
                         shadowTexture = this.runningShadowTexture;
-                        isJumpSprite = true; // Use special jump map
+                        isJumpSprite = true;
 
-                        if (this.currentFrame === -1) this.currentFrame = 0; // Start Frame
-                        else this.currentFrame++; // Increment
-
-                        // Loop Air frames (1-3)
-                        if (this.currentFrame > 3) this.currentFrame = 1;
+                        if (this.currentFrame === -1) {
+                            this.currentFrame = 0; // Start at 0
+                        } else if (this.currentFrame === 0) {
+                             this.currentFrame = 2; // Move to 2 after 0 completes
+                        } else if (this.velocity.y > 0) {
+                             this.currentFrame = 2; // Hold 2 while rising
+                        } else {
+                             this.currentFrame = 1; // Hold 1 while falling
+                        }
                      }
                      break;
 
@@ -1486,12 +1490,12 @@ function triggerDistantThunder() {
                             this.currentState = 'idle'; // End of land
                         }
                     } else {
-                        // Right Land (Forward Read: 4->5)
+                        // Right Land (Forward Read: 3->4->5)
                         currentTexture = this.jumpTexture;
                         shadowTexture = this.runningShadowTexture;
                         isJumpSprite = true;
 
-                        if (this.currentFrame === -1 || this.currentFrame < 4) this.currentFrame = 4;
+                        if (this.currentFrame === -1 || this.currentFrame < 3) this.currentFrame = 3;
                         else this.currentFrame++;
 
                         if (this.currentFrame > 5) {
