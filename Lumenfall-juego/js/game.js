@@ -1177,6 +1177,7 @@ function triggerDistantThunder() {
                 this.invincibilityDuration = 2.0; // 2 segundos de invencibilidad
                 this.invincibilityTimer = 0;
                 this.isAbsorbing = false;
+                this.hasPlayedIdleIntro = false;
 
                 this.maxPower = 100;
                 this.power = this.maxPower;
@@ -1575,6 +1576,7 @@ function triggerDistantThunder() {
         const directionChanged = (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing' || this.currentState === 'idle') && this.isFacingLeft !== wasFacingLeft;
 
         if (stateChanged || directionChanged) {
+             this.hasPlayedIdleIntro = false;
              // Scale Logic Adjustment
              if (this.currentState === 'idle') {
                         this.mesh.scale.set(1.32, 1.32, 1);
@@ -1703,11 +1705,19 @@ function triggerDistantThunder() {
                         case 'idle':
                             if (this.isFacingLeft) {
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleBackFrames, this.idleBackTexture, this.idleShadowTexture];
-                                // Loop logic: Play full sequence once, then loop 4 <-> 5
-                                if (this.currentFrame < 4) {
+
+                                if (!this.hasPlayedIdleIntro) {
                                     this.currentFrame++;
+                                    if (this.currentFrame >= 5) {
+                                        this.currentFrame = 5;
+                                        this.hasPlayedIdleIntro = true;
+                                    }
                                 } else {
-                                    this.currentFrame = (this.currentFrame === 4) ? 5 : 4;
+                                    // Bucle: 2, 3, 4 (Saltar frame 5)
+                                    this.currentFrame++;
+                                    if (this.currentFrame > 4) {
+                                        this.currentFrame = 2;
+                                    }
                                 }
                             } else {
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
