@@ -1591,19 +1591,22 @@ function triggerDistantThunder() {
         // --- PERSISTENT SCALE LOGIC (Every Frame) ---
         // Se ejecuta en cada frame para asegurar que la escala sea correcta incluso tras transiciones automáticas
         if (!this.isFacingLeft) {
-            // MIRA A LA DERECHA
-            if (this.currentState === 'idle' || this.currentState === 'jumping' || this.currentState === 'landing') {
-                this.mesh.scale.set(1.65, 1.65, 1); // Compensación para que se vea grande
+            // --- DERECHA ---
+            if (this.currentState === 'idle') {
+                this.mesh.scale.set(1.65, 1.65, 1); // Solo Idle es gigante
             } else {
-                this.mesh.scale.set(1.15, 1.15, 1); // Running u otros
+                this.mesh.scale.set(1.15, 1.15, 1); // Salto, Correr, Ataque estandarizados
             }
+            // NOTA: No forzamos rotation.y = 0 aquí para no romper la rotación del Ataque (que requiere Math.PI/0 según dirección)
+            // La rotación para movimiento ya se maneja en el bloque "isMovementState" anterior.
         } else {
-            // MIRA A LA IZQUIERDA (Valores estándar)
+            // --- IZQUIERDA ---
             if (this.currentState === 'idle') {
                 this.mesh.scale.set(1.32, 1.32, 1);
             } else {
-                this.mesh.scale.set(1.15, 1.15, 1);
+                this.mesh.scale.set(1.15, 1.15, 1); // Todo lo demás estandarizado
             }
+            // NOTA: Idem anterior.
         }
 
                 if (stateChanged || directionChanged) {
