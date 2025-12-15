@@ -146,29 +146,151 @@ lightningLight.position.set(0, 20, 10);
 lightningLight.castShadow = true;
 scene.add(lightningLight);
 
+let lightningPointLight;
+
+class LightningBolt {
+    constructor(scene, startPos, endPos) {
+        this.scene = scene;
+        this.lifetime = 0.5; // Duración total del flash
+        this.timer = 0;
+
+        // Generar geometría zig-zag 3D
+        const points = [];
+        const segments = 12;
+        const totalDist = startPos.distanceTo(endPos);
+        const step = totalDist / segments;
+        const direction = new THREE.Vector3().subVectors(endPos, startPos).normalize();
+
+        points.push(startPos.clone());
+
+        let currentPos = startPos.clone();
+        for(let i=1; i<segments; i++) {
+            currentPos.add(direction.clone().multiplyScalar(step));
+            // Añadir desplazamiento aleatorio en X/Z para el zig-zag
+            const offset = 0.8; // Amplitud del zig-zag
+            currentPos.x += (Math.random() - 0.5) * offset;
+            currentPos.z += (Math.random() - 0.5) * offset;
+            points.push(currentPos.clone());
+        }
+        points.push(endPos.clone());
+
+        // Crear Mesh usando TubeGeometry para dar volumen 3D
+        const path = new THREE.CatmullRomCurve3(points);
+        const geometry = new THREE.TubeGeometry(path, segments, 0.15, 4, false); // Radio 0.15
+
+        // Material: Blanco núcleo brillante con borde Cian
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff, // Blanco puro
+            side: THREE.DoubleSide
+        });
+
+        this.mesh = new THREE.Mesh(geometry, material);
+
+        // Añadir un "glow" mesh exterior ligeramente más grande y cian
+        const glowGeo = new THREE.TubeGeometry(path, segments, 0.3, 4, false);
+        const glowMat = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.5,
+            blending: THREE.AdditiveBlending,
+            side: THREE.DoubleSide,
+            depthWrite: false
+        });
+        this.glowMesh = new THREE.Mesh(glowGeo, glowMat);
+        this.mesh.add(this.glowMesh);
+
+        this.mesh.frustumCulled = false;
+        this.scene.add(this.mesh);
+    }
+
+    update(deltaTime) {
+        this.timer += deltaTime;
+        if (this.timer >= this.lifetime) {
+            this.scene.remove(this.mesh);
+            return false; // Murió
+        }
+
+        // Efecto de parpadeo frenético
+        const flicker = Math.random() > 0.5 ? 1.0 : 0.0;
+        this.mesh.visible = flicker > 0;
+
+        // Desvanecer al final
+        if (this.timer > 0.3) {
+                this.mesh.scale.multiplyScalar(0.8);
+        }
+
+        return true;
+    }
+}
+
 function triggerLightningStrike() {
-    // Randomize Lightning Position (Left/Right)
-    const randomX = (Math.random() - 0.5) * 160; // Range -80 to 80
-    lightningLight.position.x = randomX;
+    // Lógica de seguimiento al jugador: Caer cerca (izq o der)
+    let strikeX = 0;
+    if (player && player.mesh) {
+        // Offset aleatorio entre 5 y 15 unidades, positivo o negativo
+        const offset = (Math.random() * 10 + 5) * (Math.random() > 0.5 ? 1 : -1);
+        strikeX = player.mesh.position.x + offset;
+
+        // Mantener dentro de los límites jugables visuales
+        strikeX = Math.max(-60, Math.min(60, strikeX));
+    } else {
+        strikeX = (Math.random() - 0.5) * 60;
+    }
+
+    // Configurar posición del rayo
+    const startPos = new THREE.Vector3(strikeX, 25, -5); // Empezar alto y un poco al fondo
+    const endPos = new THREE.Vector3(strikeX, 0, 2);   // Caer al piso, cerca del plano Z del jugador (Z=0 aprox)
+
+    // Instanciar el Rayo Visual 3D
+    allFlames.push(new LightningBolt(scene, startPos, endPos)); // Usamos el array de updates genérico
+
+    // Posicionar la Luz Global (Directional) para el flash general
+    lightningLight.position.x = strikeX;
+
+    // Crear/Mover Luz Puntual para Sombras Dramáticas
+    if (!lightningPointLight) {
+        lightningPointLight = new THREE.PointLight(0xffffff, 0, 50); // Luz Blanca, rango 50
+        lightningPointLight.castShadow = true;
+        lightningPointLight.shadow.bias = -0.0001;
+        lightningPointLight.shadow.mapSize.width = 1024;
+        lightningPointLight.shadow.mapSize.height = 1024;
+        scene.add(lightningPointLight);
+    }
+
+    // Posicionar la luz puntual justo encima del impacto para proyectar sombras alargadas
+    lightningPointLight.position.copy(endPos);
+    lightningPointLight.position.y += 2.0; // Un poco elevado del piso
 
     // Evento Impacto: Flash intenso + Audio fuerte
-    // Light: 0 -> 10.0 -> Flickers -> 0 (Extended duration ~500ms)
-    lightningLight.intensity = 10.0;
+    // Light: 0 -> 20.0 (Más intenso)
+    lightningLight.intensity = 5.0; // Flash ambiente cian
+    lightningPointLight.intensity = 20.0; // Flash local blanco (sombras duras)
+
     isLightningActive = true;
     if (dustSystem) dustSystem.setLightningState(10.0); // Boost particles
 
     playAudio('thunder_strike', false, 1.0, 1.0); // Play full volume
 
     // Flicker sequence: Flash -> Dim -> Flash -> Off
-    setTimeout(() => { lightningLight.intensity = 2.0; }, 100);
-    setTimeout(() => { lightningLight.intensity = 8.0; }, 200);
-    setTimeout(() => { lightningLight.intensity = 1.0; }, 350);
+    const flickerTimeline = [
+        { t: 50,  iDir: 1.0, iPoint: 5.0 },
+        { t: 100, iDir: 4.0, iPoint: 15.0 },
+        { t: 200, iDir: 0.5, iPoint: 2.0 },
+        { t: 250, iDir: 3.0, iPoint: 10.0 },
+        { t: 400, iDir: 0.0, iPoint: 0.0 }
+    ];
 
-    setTimeout(() => {
-        lightningLight.intensity = 0;
-        isLightningActive = false;
-        if (dustSystem) dustSystem.setLightningState(0);
-    }, 500);
+    flickerTimeline.forEach(step => {
+        setTimeout(() => {
+            lightningLight.intensity = step.iDir;
+            lightningPointLight.intensity = step.iPoint;
+
+            if (step.t === 400) {
+                isLightningActive = false;
+                if (dustSystem) dustSystem.setLightningState(0);
+            }
+        }, step.t);
+    });
 }
 
 function triggerDistantThunder() {
@@ -1156,15 +1278,24 @@ function triggerDistantThunder() {
                     depthWrite: false
                 });
 
+                // Material especial para proyectar sombras sólidas desde objetos transparentes
+                const shadowMaterial = new THREE.MeshDepthMaterial({
+                    depthPacking: THREE.RGBADepthPacking
+                });
+
                 // Torso (Cylinder)
                 // Radius 0.15, Height 2.0
                 const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 2.0, 8), material);
                 torso.position.y = -0.2;
+                torso.castShadow = true;
+                torso.customDepthMaterial = shadowMaterial;
                 this.proxyGroup.add(torso);
 
                 // Head (Sphere)
                 const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), material);
                 head.position.y = 1.2;
+                head.castShadow = true;
+                head.customDepthMaterial = shadowMaterial;
                 this.proxyGroup.add(head);
 
                 // Arms (Cylinders)
@@ -1173,11 +1304,15 @@ function triggerDistantThunder() {
                 const leftArm = new THREE.Mesh(armGeo, material);
                 leftArm.position.set(-0.35, 0.4, 0);
                 leftArm.rotation.z = Math.PI / 6;
+                leftArm.castShadow = true;
+                leftArm.customDepthMaterial = shadowMaterial;
                 this.proxyGroup.add(leftArm);
 
                 const rightArm = new THREE.Mesh(armGeo, material);
                 rightArm.position.set(0.35, 0.4, 0);
                 rightArm.rotation.z = -Math.PI / 6;
+                rightArm.castShadow = true;
+                rightArm.customDepthMaterial = shadowMaterial;
                 this.proxyGroup.add(rightArm);
 
                 // Position behind the sprite
