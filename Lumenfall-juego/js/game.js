@@ -5,6 +5,7 @@
             runningBackSprite: 'assets/sprites/Joziel/Movimiento-B/Movimiento-B-1.png',
             runningShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Sombra-correr-1.jpg',
             idleSprite: 'assets/sprites/Joziel/Movimiento/Idle.png',
+            idleBackSprite: 'assets/sprites/Joziel/Movimiento-B/idle-B.png',
             idleShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Idle-sombra.jpg',
             attackSprite: 'assets/sprites/Joziel/attack_sprite_sheet.png',
     jumpSprite: 'assets/sprites/Joziel/Movimiento/saltar.png',
@@ -1042,6 +1043,7 @@ function triggerDistantThunder() {
                 this.runningBackTexture = textureLoader.load(assetUrls.runningBackSprite);
                 this.runningShadowTexture = textureLoader.load(assetUrls.runningShadowSprite);
                 this.idleTexture = textureLoader.load(assetUrls.idleSprite);
+                this.idleBackTexture = textureLoader.load(assetUrls.idleBackSprite);
                 this.idleShadowTexture = textureLoader.load(assetUrls.idleShadowSprite);
                 this.attackTexture = textureLoader.load(assetUrls.attackSprite);
                 this.jumpTexture = textureLoader.load(assetUrls.jumpSprite);
@@ -1054,6 +1056,7 @@ function triggerDistantThunder() {
 
                 // Configurar texturas de Idle (Strip 1x5)
                 this.idleTexture.repeat.set(1 / totalIdleFrames, 1);
+                this.idleBackTexture.repeat.set(1 / totalIdleFrames, 1);
                 this.idleShadowTexture.repeat.set(1 / totalIdleFrames, 1);
 
         // Configurar texturas de Salto
@@ -1533,8 +1536,8 @@ function triggerDistantThunder() {
                 this.mesh.position.x = Math.max(this.minPlayerX, Math.min(this.maxPlayerX, this.mesh.position.x));
 
                 // Rotación del personaje
-                if (this.isFacingLeft && (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing')) {
-                     // Caso especial: Running, Jumping, Landing Left usa sprites (Movimiento-B, saltar-b) que ya están orientados a la izquierda
+                if (this.isFacingLeft && (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing' || this.currentState === 'idle')) {
+                     // Caso especial: Running, Jumping, Landing Left y Idle Left usa sprites (Movimiento-B, saltar-b, idle-B) que ya están orientados a la izquierda
                      this.mesh.rotation.y = 0;
                 } else {
                      this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
@@ -1568,7 +1571,7 @@ function triggerDistantThunder() {
         }
 
                 const stateChanged = this.currentState !== previousState;
-        const directionChanged = (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing') && this.isFacingLeft !== wasFacingLeft;
+        const directionChanged = (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing' || this.currentState === 'idle') && this.isFacingLeft !== wasFacingLeft;
 
         if (stateChanged || directionChanged) {
              // Scale Logic Adjustment
@@ -1697,7 +1700,11 @@ function triggerDistantThunder() {
                             break;
 
                         case 'idle':
-                            [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
+                            if (this.isFacingLeft) {
+                                [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleBackTexture, this.idleShadowTexture];
+                            } else {
+                                [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
+                            }
                             this.currentFrame = (this.currentFrame + 1) % totalFrames;
                             break;
                         default:
@@ -1750,8 +1757,16 @@ function triggerDistantThunder() {
                         // Lógica especial para mapear la sombra cuando se corre a la izquierda
                         // Movimiento-B usa frames 5-10 (6 frames) en bucle.
                         // Sombra-correr tiene 9 frames (0-8). Queremos usar los "últimos 4" (5, 6, 7, 8).
-                        if (this.isFacingLeft && this.currentState === 'running') {
+                        if (this.isFacingLeft && (this.currentState === 'running' || this.currentState === 'idle')) {
                             this.glowMesh.scale.x = -1; // Espejo (mirar izquierda)
+
+                            if (this.currentState === 'idle') {
+                                // Para Idle Left, solo aseguramos que el offset sea correcto (0-4)
+                                // La textura de sombra ya está cargada
+                                // No hay mapeo complejo como en running
+                                this.glowMesh.material.map.repeat.copy(currentTexture.repeat);
+                                this.glowMesh.material.map.offset.copy(currentTexture.offset);
+                            }
 
                             // Mapear los frames de Movimiento-B (5..10) a los frames de Sombra (5..8)
                             // Ciclo simple: 5->5, 6->6, 7->7, 8->8, 9->5, 10->6...
