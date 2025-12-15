@@ -1566,7 +1566,13 @@ function triggerDistantThunder() {
 
         // Velocidad variable según el estado
         let currentAnimSpeed = animationSpeed;
-        if (this.currentState === 'idle') currentAnimSpeed = idleAnimationSpeed;
+        if (this.currentState === 'idle') {
+            currentAnimSpeed = idleAnimationSpeed;
+            // Loop más lento para Idle-B
+            if (this.isFacingLeft && this.hasPlayedIdleIntro) {
+                currentAnimSpeed = 350;
+            }
+        }
         // Faster Jump for Left side (Movimiento-B) to match duration
         if ((this.currentState === 'jumping' || this.currentState === 'landing') && this.isFacingLeft) {
             currentAnimSpeed = 60;
@@ -1713,11 +1719,8 @@ function triggerDistantThunder() {
                                         this.hasPlayedIdleIntro = true;
                                     }
                                 } else {
-                                    // Bucle: 2, 3, 4 (Saltar frame 5)
-                                    this.currentFrame++;
-                                    if (this.currentFrame > 4) {
-                                        this.currentFrame = 2;
-                                    }
+                                    // Bucle: 4 y 0 (Alternar)
+                                    this.currentFrame = (this.currentFrame === 4) ? 0 : 4;
                                 }
                             } else {
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
