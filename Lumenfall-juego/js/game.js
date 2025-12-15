@@ -1703,10 +1703,16 @@ function triggerDistantThunder() {
                         case 'idle':
                             if (this.isFacingLeft) {
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleBackFrames, this.idleBackTexture, this.idleShadowTexture];
+                                // Loop logic: Play full sequence once, then loop 4 <-> 5
+                                if (this.currentFrame < 4) {
+                                    this.currentFrame++;
+                                } else {
+                                    this.currentFrame = (this.currentFrame === 4) ? 5 : 4;
+                                }
                             } else {
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
+                                this.currentFrame = (this.currentFrame + 1) % totalFrames;
                             }
-                            this.currentFrame = (this.currentFrame + 1) % totalFrames;
                             break;
                         default:
                             // Fallback a idle si algo falla
@@ -1762,11 +1768,8 @@ function triggerDistantThunder() {
                             this.glowMesh.scale.x = -1; // Espejo (mirar izquierda)
 
                             if (this.currentState === 'idle') {
-                                // Para Idle Left, solo aseguramos que el offset sea correcto (0-4)
-                                // La textura de sombra ya está cargada
-                                // No hay mapeo complejo como en running
-                                this.glowMesh.material.map.repeat.copy(currentTexture.repeat);
-                                this.glowMesh.material.map.offset.copy(currentTexture.offset);
+                                // Deshabilitar efecto de ojos/sombra para Idle-B por estar desalineado
+                                this.glowMesh.visible = false;
                             }
 
                             // Mapear los frames de Movimiento-B (5..10) a los frames de Sombra (5..8)
