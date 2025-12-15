@@ -1586,22 +1586,25 @@ function triggerDistantThunder() {
 
         if (stateChanged || directionChanged) {
              this.hasPlayedIdleIntro = false;
-             // Scale Logic Adjustment
-             if (this.currentState === 'idle') {
-                 if (this.isFacingLeft) {
-                     this.mesh.scale.set(1.32, 1.32, 1);
-                 } else {
-                     // CORRECCIÓN VISUAL: Aumentar escala en Idle Derecha para compensar el tamaño de la textura
-                     this.mesh.scale.set(1.65, 1.65, 1);
-                 }
-             } else if ((this.currentState === 'jumping' || this.currentState === 'landing') && !this.isFacingLeft) {
-                // Right Jump/Land -> Scale Down
-                this.mesh.scale.set(0.88, 0.88, 1);
-             } else {
-                // Standard for Running, Attacking, and Left Jump
-                        this.mesh.scale.set(1.15, 1.15, 1);
-             }
-                }
+        }
+
+        // --- PERSISTENT SCALE LOGIC (Every Frame) ---
+        // Se ejecuta en cada frame para asegurar que la escala sea correcta incluso tras transiciones automáticas
+        if (!this.isFacingLeft) {
+            // MIRA A LA DERECHA
+            if (this.currentState === 'idle' || this.currentState === 'jumping' || this.currentState === 'landing') {
+                this.mesh.scale.set(1.65, 1.65, 1); // Compensación para que se vea grande
+            } else {
+                this.mesh.scale.set(1.15, 1.15, 1); // Running u otros
+            }
+        } else {
+            // MIRA A LA IZQUIERDA (Valores estándar)
+            if (this.currentState === 'idle') {
+                this.mesh.scale.set(1.32, 1.32, 1);
+            } else {
+                this.mesh.scale.set(1.15, 1.15, 1);
+            }
+        }
 
                 if (stateChanged || directionChanged) {
                     this.currentFrame = -1;
