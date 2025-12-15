@@ -1713,11 +1713,7 @@ function triggerDistantThunder() {
                                         this.hasPlayedIdleIntro = true;
                                     }
                                 } else {
-                                    // Bucle: 2, 3, 4 (Saltar frame 5)
-                                    this.currentFrame++;
-                                    if (this.currentFrame > 4) {
-                                        this.currentFrame = 2;
-                                    }
+                                    this.currentFrame = 4;
                                 }
                             } else {
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
