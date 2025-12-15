@@ -1727,9 +1727,7 @@ function triggerDistantThunder() {
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleBackFrames, this.idleBackTexture, this.idleShadowTexture];
 
                                 if (this.currentFrame === -1) {
-                                    this.currentFrame = 5;
-                                } else if (this.currentFrame === 5) {
-                                    this.currentFrame = 0;
+                                    this.currentFrame = 1;
                                 } else if (this.currentFrame < 4) {
                                     this.currentFrame++;
                                 } else {
