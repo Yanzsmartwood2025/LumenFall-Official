@@ -29,7 +29,7 @@
         const totalAttackFrames = 6;
         const totalJumpFrames = 7;
         const totalSpecterFrames = 5;
-        const totalEnemyFrames = 5;
+        const totalEnemyFrames = 10;
         const animationSpeed = 80;
         const idleAnimationSpeed = 150;
         const specterAnimationSpeed = 120;
@@ -2545,7 +2545,7 @@ function triggerDistantThunder() {
                 this.texture.repeat.x = 1 / totalEnemyFrames;
 
                 const enemyHeight = 5.6;
-                const enemyWidth = 5.6;
+                const enemyWidth = 1.8;
 
                 const enemyMaterial = new THREE.MeshStandardMaterial({
                     map: this.texture,
