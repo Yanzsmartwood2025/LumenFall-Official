@@ -19,7 +19,7 @@
             introImage: 'assets/ui/Intro.jpg',
             menuBackgroundImage: 'assets/ui/menu-principal.jpg',
             animatedEnergyBar: 'assets/ui/barra-de-energia.png',
-    enemySprite: 'assets/sprites/enemies/enemigo-1.png',
+    enemySprite: 'assets/sprites/enemies/enemigo-1.png?v=2',
     dustParticle: 'assets/vfx/particles/Polvo.png'
         };
 
@@ -1541,6 +1541,9 @@ function triggerDistantThunder() {
                 if (this.isFacingLeft && (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing' || this.currentState === 'idle')) {
                      // Caso especial: Running, Jumping, Landing Left y Idle Left usa sprites (Movimiento-B, saltar-b, idle-B) que ya están orientados a la izquierda
                      this.mesh.rotation.y = 0;
+                } else if (this.currentState === 'idle' || this.currentState === 'running') {
+                     // FIX: Forzar rotación 0 en Idle/Walk derecha también (para evitar voltear el sprite incorrectamente)
+                     this.mesh.rotation.y = 0;
                 } else {
                      this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
                 }
@@ -1585,7 +1588,12 @@ function triggerDistantThunder() {
              this.hasPlayedIdleIntro = false;
              // Scale Logic Adjustment
              if (this.currentState === 'idle') {
-                        this.mesh.scale.set(1.32, 1.32, 1);
+                if (!this.isFacingLeft) {
+                    // FIX: Compensar escala cuando mira a la derecha (Idle.png se ve pequeño)
+                    this.mesh.scale.set(1.65, 1.65, 1);
+                } else {
+                    this.mesh.scale.set(1.32, 1.32, 1);
+                }
              } else if ((this.currentState === 'jumping' || this.currentState === 'landing') && !this.isFacingLeft) {
                 // Right Jump/Land -> Scale Down
                 this.mesh.scale.set(0.88, 0.88, 1);
@@ -2261,6 +2269,14 @@ function triggerDistantThunder() {
             if (levelId === 'room_3') {
                 if (allSimpleEnemies.length === 0) {
                     allSimpleEnemies.push(new SimpleEnemy(scene, 0));
+                }
+            }
+
+            // TEST: Spawn Enemy in Dungeon 1 for immediate verification
+            if (levelId === 'dungeon_1') {
+                 if (allSimpleEnemies.length === 0) {
+                    // Spawn near player (offset 10)
+                    allSimpleEnemies.push(new SimpleEnemy(scene, 10));
                 }
             }
 
