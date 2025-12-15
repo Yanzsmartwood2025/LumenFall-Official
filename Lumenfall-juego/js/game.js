@@ -1448,15 +1448,18 @@ function triggerDistantThunder() {
                         shadowTexture = this.runningShadowTexture;
 
                         if (this.velocity.y > 0) {
-                            // Rising Phase (7 -> 3)
+                            // Rising Phase (7 -> 6 -> 4)
                             if (this.currentFrame === -1) this.currentFrame = 7;
                             else this.currentFrame--;
 
-                            // Prevent entering the falling frame (2) while still rising
-                            if (this.currentFrame < 3) this.currentFrame = 3;
+                            // Skip Frame 5 (Arrow pose)
+                            if (this.currentFrame === 5) this.currentFrame = 4;
+
+                            // Hold Frame 4 while rising
+                            if (this.currentFrame < 4) this.currentFrame = 4;
                         } else {
-                            // Falling Phase (Hold Frame 2)
-                            this.currentFrame = 2;
+                            // Falling Phase (Hold Frame 5 - Bent Knees)
+                            this.currentFrame = 5;
                         }
 
                      } else {
@@ -1475,11 +1478,12 @@ function triggerDistantThunder() {
 
                 case 'landing':
                     if (this.isFacingLeft) {
-                        // Left Land (Reverse Read: 2->0)
+                        // Left Land (Reverse Read: 1->0)
                         currentTexture = this.jumpBackTexture;
                         shadowTexture = this.runningShadowTexture;
 
-                        if (this.currentFrame === -1 || this.currentFrame > 2) this.currentFrame = 2;
+                        // Start at 1 (Skip 2)
+                        if (this.currentFrame === -1 || this.currentFrame > 1) this.currentFrame = 1;
                         else this.currentFrame--;
 
                         if (this.currentFrame < 0) {
