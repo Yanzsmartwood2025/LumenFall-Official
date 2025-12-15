@@ -972,7 +972,8 @@ function triggerDistantThunder() {
                     map: this.runningTexture,
                     transparent: true,
                     side: THREE.DoubleSide,
-                    alphaTest: 0.5
+                    alphaTest: 0.5,
+                    depthWrite: false
                 });
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
                 this.mesh.position.y = playerHeight / 2;
@@ -989,7 +990,8 @@ function triggerDistantThunder() {
                     color: 0x00FFFF, // Cian intenso
                     transparent: true,
                     blending: THREE.AdditiveBlending,
-                    side: THREE.DoubleSide
+                    side: THREE.DoubleSide,
+                    depthWrite: false
                 });
 
                 // Opción alternativa solicitada (Emissive) si se prefiere sobre Basic+Additive:
@@ -1019,6 +1021,7 @@ function triggerDistantThunder() {
                 this.mesh.add(this.floorLight);
 
                 this.createAttackFlame();
+                this.create3DProxy();
 
                 this.currentState = 'idle';
                 this.currentFrame = 0;
@@ -1132,6 +1135,51 @@ function triggerDistantThunder() {
                 this.shootCooldown = this.shootCooldownDuration;
                 this.currentState = 'shooting';
                 this.shootingTimer = 0.2;
+            }
+
+            create3DProxy() {
+                this.proxyGroup = new THREE.Group();
+                // Material: Black (invisible in ambient) but High Metalness/Smoothness for Specular Highlights
+                // Blending Additive ensures it doesn't block background (transparent)
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0x000000,
+                    roughness: 0.2,
+                    metalness: 1.0,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    side: THREE.DoubleSide,
+                    depthWrite: false
+                });
+
+                // Torso (Cylinder)
+                // Radius 0.15, Height 2.0
+                const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 2.0, 8), material);
+                torso.position.y = -0.2;
+                this.proxyGroup.add(torso);
+
+                // Head (Sphere)
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), material);
+                head.position.y = 1.2;
+                this.proxyGroup.add(head);
+
+                // Arms (Cylinders)
+                const armGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.2, 8);
+
+                const leftArm = new THREE.Mesh(armGeo, material);
+                leftArm.position.set(-0.35, 0.4, 0);
+                leftArm.rotation.z = Math.PI / 6;
+                this.proxyGroup.add(leftArm);
+
+                const rightArm = new THREE.Mesh(armGeo, material);
+                rightArm.position.set(0.35, 0.4, 0);
+                rightArm.rotation.z = -Math.PI / 6;
+                this.proxyGroup.add(rightArm);
+
+                // Position behind the sprite
+                this.proxyGroup.position.z = -0.2;
+
+                // Ensure it's part of the player mesh so it moves/rotates with it
+                this.mesh.add(this.proxyGroup);
             }
 
             createAttackFlame() {
