@@ -1720,15 +1720,15 @@ function triggerDistantThunder() {
                             if (this.isFacingLeft) {
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleBackFrames, this.idleBackTexture, this.idleShadowTexture];
 
-                                if (!this.hasPlayedIdleIntro) {
+                                if (this.currentFrame === -1) {
+                                    this.currentFrame = 5;
+                                } else if (this.currentFrame === 5) {
+                                    this.currentFrame = 0;
+                                } else if (this.currentFrame < 4) {
                                     this.currentFrame++;
-                                    if (this.currentFrame >= 5) {
-                                        this.currentFrame = 5;
-                                        this.hasPlayedIdleIntro = true;
-                                    }
                                 } else {
-                                    // Bucle: Mantener en frame 4
                                     this.currentFrame = 4;
+                                    this.hasPlayedIdleIntro = true;
                                 }
                             } else {
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
