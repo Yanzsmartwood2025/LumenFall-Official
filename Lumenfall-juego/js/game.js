@@ -20,6 +20,7 @@
             menuBackgroundImage: 'assets/ui/menu-principal.jpg',
             animatedEnergyBar: 'assets/ui/barra-de-energia.png',
     enemySprite: 'assets/sprites/enemies/enemigo-1.png?v=2',
+    enemyX1Sprite: 'assets/sprites/enemies/enemigo-x1.png',
     dustParticle: 'assets/vfx/particles/Polvo.png'
         };
 
@@ -30,6 +31,7 @@
         const totalJumpFrames = 7;
         const totalSpecterFrames = 5;
         const totalEnemyFrames = 10;
+        const totalEnemyX1Frames = 10;
         const animationSpeed = 80;
         const idleAnimationSpeed = 150;
         const specterAnimationSpeed = 120;
@@ -96,6 +98,8 @@
         const allFootstepParticles = [];
         const allSpecters = [];
         const allSimpleEnemies = [];
+        const allEnemiesX1 = [];
+        window.allEnemiesX1 = allEnemiesX1; // Debug exposure
         const allGates = [];
         const allStatues = [];
         const allOrbs = [];
@@ -342,6 +346,12 @@ function triggerDistantThunder() {
                     }
                 });
 
+                allEnemiesX1.forEach(enemy => {
+                    if (!player.isInvincible && player.mesh.position.distanceTo(enemy.mesh.position) < 2.5) { // Collision distance slightly larger
+                        player.takeDamage(player.maxHealth * 0.10, enemy); // More damage (10%)
+                    }
+                });
+
                 let isNearInteractable = false;
                 let interactableObject = null;
 
@@ -451,6 +461,7 @@ function triggerDistantThunder() {
             }
             allSpecters.forEach(specter => specter.update(deltaTime, player));
             allSimpleEnemies.forEach(enemy => enemy.update(deltaTime));
+            allEnemiesX1.forEach(enemy => enemy.update(deltaTime));
             allPuzzles.forEach(puzzle => puzzle.update(deltaTime));
             allPowerUps.forEach(powerUp => powerUp.update(deltaTime));
             if (dustSystem) dustSystem.update();
@@ -2102,6 +2113,11 @@ function triggerDistantThunder() {
                  scene.remove(enemy.mesh);
             });
             allSimpleEnemies.length = 0;
+            allEnemiesX1.forEach(enemy => {
+                 if (enemy.stopAudio) enemy.stopAudio();
+                 scene.remove(enemy.mesh);
+            });
+            allEnemiesX1.length = 0;
             allGates.length = 0;
             allStatues.length = 0;
             allOrbs.length = 0;
@@ -2278,11 +2294,13 @@ function triggerDistantThunder() {
                 }
             }
 
-            // TEST: Spawn Enemy in Dungeon 1 for immediate verification
+            // Spawn Enemy X1 in Dungeon 1 (Gate I)
             if (levelId === 'dungeon_1') {
-                 if (allSimpleEnemies.length === 0) {
-                    // Spawn near player (offset 10)
-                    allSimpleEnemies.push(new SimpleEnemy(scene, 10));
+                 if (allEnemiesX1.length === 0) {
+                    // Spawn near Gate 1 (approx x = -45 to -40). Gate 1 is at -50.
+                    // Player spawns at 0 or gate. If player is at start, Gate 1 is far left.
+                    // Spawn it visible but not on top of gate.
+                    allEnemiesX1.push(new EnemyX1(scene, -40));
                 }
             }
 
@@ -2742,6 +2760,222 @@ function triggerDistantThunder() {
             }
         }
 
+        class EnemyX1 {
+            constructor(scene, initialX) {
+                this.scene = scene;
+                this.texture = textureLoader.load(assetUrls.enemyX1Sprite);
+
+                // Configurar Grid 8x2
+                this.texture.repeat.set(0.125, 0.5);
+
+                const enemyHeight = 5.6;
+                const enemyWidth = 4.4; // Ajustado al aspect ratio 0.79
+
+                const enemyMaterial = new THREE.MeshStandardMaterial({
+                    map: this.texture,
+                    transparent: true,
+                    alphaTest: 0.1,
+                    side: THREE.DoubleSide
+                });
+                const enemyGeometry = new THREE.PlaneGeometry(enemyWidth, enemyHeight);
+                this.mesh = new THREE.Mesh(enemyGeometry, enemyMaterial);
+                this.mesh.position.set(initialX, enemyHeight / 2, 0);
+                this.mesh.castShadow = true;
+                this.mesh.frustumCulled = false;
+                this.scene.add(this.mesh);
+
+                this.hitCount = 0;
+                this.isAlive = true;
+
+                this.state = 'PATROL'; // Inicialmente patrulla
+                this.hasDetectedPlayer = false; // Flag para "siempre seguir"
+                this.detectionRange = 15.0; // Rango inicial de detección
+
+                this.patrolSpeed = 0.03;
+                this.pursueSpeed = 0.05; // Un poco más rápido pero "no tan rápido"
+
+                this.currentFrame = 0;
+                this.lastFrameTime = 0;
+                this.direction = -1;
+                this.patrolRange = { min: initialX - 10, max: initialX + 10 };
+
+                // Audio System
+                this.stepTimer = 0;
+                this.growlSource = null;
+                this.growlGain = null;
+                this.startGrowl();
+            }
+
+            startGrowl() {
+                if (!audioBuffers['enemy1_growl']) return;
+                this.growlSource = audioContext.createBufferSource();
+                this.growlSource.buffer = audioBuffers['enemy1_growl'];
+                this.growlSource.loop = true;
+
+                // Efecto "que juegue": Variación aleatoria de pitch inicial y loop
+                this.growlSource.playbackRate.value = 0.9 + Math.random() * 0.2;
+
+                this.growlGain = audioContext.createGain();
+                this.growlGain.gain.value = 0;
+                this.growlSource.connect(this.growlGain).connect(audioContext.destination);
+                this.growlSource.start();
+            }
+
+            stopAudio(fadeOutDuration = 0) {
+                if (this.growlSource) {
+                    if (fadeOutDuration > 0 && this.growlGain) {
+                        try {
+                            const now = audioContext.currentTime;
+                            this.growlGain.gain.setValueAtTime(this.growlGain.gain.value, now);
+                            this.growlGain.gain.linearRampToValueAtTime(0, now + fadeOutDuration);
+                            this.growlSource.stop(now + fadeOutDuration);
+                        } catch(e) {
+                             try { this.growlSource.stop(); } catch(e) {}
+                        }
+                    } else {
+                        try { this.growlSource.stop(); } catch(e) {}
+                    }
+                    this.growlSource = null;
+                }
+            }
+
+            playScopedSound(name, rate, baseVolume, distance) {
+                if (!audioBuffers[name]) return;
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffers[name];
+                source.playbackRate.value = rate;
+
+                const gain = audioContext.createGain();
+                const maxDist = 25; // Distancia para fade completo
+                let vol = 1 - (distance / maxDist);
+                if (vol < 0) vol = 0;
+                // Curva cuadrática para mejor sensación espacial
+                gain.gain.value = baseVolume * vol * vol;
+
+                source.connect(gain).connect(audioContext.destination);
+                source.start();
+            }
+
+            update(deltaTime) {
+                if (!this.isAlive || !player) return;
+
+                const distanceToPlayer = this.mesh.position.distanceTo(player.mesh.position);
+
+                // Update Growl Volume & "Play" Effect
+                if (this.growlGain) {
+                    const maxDist = 25;
+                    let vol = 1 - (distanceToPlayer / maxDist);
+                    if (vol < 0) vol = 0;
+
+                    // Si está muy cerca (<3), volumen 100% asegurado
+                    if (distanceToPlayer < 3) vol = 1.0;
+
+                    this.growlGain.gain.setTargetAtTime(vol, audioContext.currentTime, 0.1);
+
+                    // Modulación sutil del pitch para que "juegue"
+                    const time = Date.now() * 0.001;
+                    this.growlSource.playbackRate.value = 1.0 + Math.sin(time) * 0.05;
+                }
+
+                // Audio Logic: Steps
+                this.stepTimer -= deltaTime;
+                if (this.stepTimer <= 0) {
+                    // Sincronizado con la animación (~1 paso cada ciclo de caminata o medio ciclo)
+                    // Animación es 80ms * 10 frames = 800ms total.
+                    // Un paso cada 400ms suena bien.
+                    this.playScopedSound('enemy1_step', 1.0, 0.9, distanceToPlayer);
+                    this.stepTimer = 0.4;
+                }
+
+                // AI Logic: Persistent Pursuit
+                if (!this.hasDetectedPlayer) {
+                    if (distanceToPlayer < this.detectionRange) {
+                        this.hasDetectedPlayer = true;
+                        this.state = 'PURSUE';
+                    } else {
+                        this.state = 'PATROL';
+                    }
+                } else {
+                    // Una vez detectado, SIEMPRE persigue
+                    this.state = 'PURSUE';
+                }
+
+                let currentSpeed = this.patrolSpeed;
+
+                if (this.state === 'PURSUE') {
+                    currentSpeed = this.pursueSpeed;
+                    this.direction = (player.mesh.position.x > this.mesh.position.x) ? 1 : -1;
+                } else { // PATROL
+                    if (this.mesh.position.x <= this.patrolRange.min) {
+                        this.direction = 1;
+                    } else if (this.mesh.position.x >= this.patrolRange.max) {
+                        this.direction = -1;
+                    }
+                }
+
+                this.mesh.position.x += currentSpeed * this.direction;
+
+                // Rotación: Siempre mira hacia donde camina (o al jugador en persecución)
+                // Ojo: Si el sprite mira a la derecha por defecto:
+                // Mirar derecha (dir 1): scale.x = 1 (o rot.y = 0)
+                // Mirar izquierda (dir -1): scale.x = -1 (o rot.y = PI)
+                // Asumiremos sprite mira derecha.
+                const isMovingLeft = this.direction < 0;
+                this.mesh.rotation.y = isMovingLeft ? Math.PI : 0;
+
+                // Animate the sprite (0-9 loop)
+                if (Date.now() - this.lastFrameTime > animationSpeed) {
+                    this.lastFrameTime = Date.now();
+                    this.currentFrame = (this.currentFrame + 1) % totalEnemyX1Frames;
+
+                    // Mapping Grid 8x2
+                    // Rows: Top (0-7), Bottom (8-9)
+                    let col, row; // row 0 is bottom (y=0), row 1 is top (y=0.5) based on previous ThreeJS logic (UV 0,0 is bottom-left)
+
+                    // Wait, ThreeJS UVs: (0,0) is bottom-left.
+                    // If image has Top Row and Bottom Row.
+                    // Top Row (0-7) corresponds to higher Y (0.5 to 1.0). So offset.y = 0.5.
+                    // Bottom Row (8-9) corresponds to lower Y (0.0 to 0.5). So offset.y = 0.0.
+
+                    if (this.currentFrame < 8) {
+                        // Top Row
+                        col = this.currentFrame;
+                        this.texture.offset.set(col * 0.125, 0.5);
+                    } else {
+                        // Bottom Row (Frames 8, 9) -> Cols 0, 1
+                        col = this.currentFrame - 8;
+                        this.texture.offset.set(col * 0.125, 0.0);
+                    }
+                }
+            }
+
+            takeHit() {
+                if (!this.isAlive) return;
+                this.hitCount++;
+
+                // Sonido Impacto
+                const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
+                this.playScopedSound('enemy1_impact', 1.0, 1.0, dist);
+
+                if (this.hitCount >= 8) { // Un poco más resistente (8 golpes)
+                    this.isAlive = false;
+                    this.scene.remove(this.mesh);
+                    this.stopAudio(1.0);
+
+                    if (Math.random() < 0.6) {
+                        const dropPosition = this.mesh.position.clone();
+                        const type = Math.random() < 0.5 ? 'health' : 'power';
+                        allPowerUps.push(new PowerUp(this.scene, dropPosition, type));
+                    }
+
+                    const index = allEnemiesX1.indexOf(this);
+                    if (index > -1) {
+                        allEnemiesX1.splice(index, 1);
+                    }
+                }
+            }
+        }
+
         class Puzzle {
             constructor(scene, x, roomId) {
                 this.scene = scene;
@@ -2921,6 +3155,18 @@ function triggerDistantThunder() {
                         playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
                         this.lifetime = 0; // Mark for removal
                         return false; // Projectile disappears
+                    }
+                }
+
+                // Collision with Enemy X1
+                for (const enemy of allEnemiesX1) {
+                    // Height is 5.6, so hit box radius ~2.8
+                    if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
+                        enemy.takeHit();
+                        allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
+                        playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
+                        this.lifetime = 0;
+                        return false;
                     }
                 }
 
