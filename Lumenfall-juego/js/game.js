@@ -19,7 +19,7 @@
             introImage: 'assets/ui/Intro.jpg',
             menuBackgroundImage: 'assets/ui/menu-principal.jpg',
             animatedEnergyBar: 'assets/ui/barra-de-energia.png',
-    enemySprite: 'assets/sprites/enemies/enemigo-1.png',
+    enemySprite: 'assets/sprites/enemies/enemigo-1.png?v=2',
     dustParticle: 'assets/vfx/particles/Polvo.png'
         };
 
@@ -1543,6 +1543,9 @@ function triggerDistantThunder() {
                 const isMovementState = ['idle', 'running', 'jumping', 'landing'].includes(this.currentState);
                 if (isMovementState) {
                      this.mesh.rotation.y = 0;
+                } else if (this.currentState === 'idle' || this.currentState === 'running') {
+                     // FIX: Forzar rotación 0 en Idle/Walk derecha también (para evitar voltear el sprite incorrectamente)
+                     this.mesh.rotation.y = 0;
                 } else {
                      // Para Ataque (que usa un solo sprite sheet), sí permitimos rotación
                      this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
@@ -1588,12 +1591,21 @@ function triggerDistantThunder() {
              this.hasPlayedIdleIntro = false;
              // Scale Logic Adjustment
              if (this.currentState === 'idle') {
+update-enemy-cache-and-player-fix-12993793202048157953
+                if (!this.isFacingLeft) {
+                    // FIX: Compensar escala cuando mira a la derecha (Idle.png se ve pequeño)
+                    this.mesh.scale.set(1.65, 1.65, 1);
+                } else {
+                    this.mesh.scale.set(1.32, 1.32, 1);
+                }
+
                  if (this.isFacingLeft) {
                      this.mesh.scale.set(1.32, 1.32, 1);
                  } else {
                      // CORRECCIÓN VISUAL: Aumentar escala en Idle Derecha para compensar el tamaño de la textura
                      this.mesh.scale.set(1.65, 1.65, 1);
                  }
+main
              } else if ((this.currentState === 'jumping' || this.currentState === 'landing') && !this.isFacingLeft) {
                 // Right Jump/Land -> Scale Down
                 this.mesh.scale.set(0.88, 0.88, 1);
@@ -2269,6 +2281,14 @@ function triggerDistantThunder() {
             if (levelId === 'room_3') {
                 if (allSimpleEnemies.length === 0) {
                     allSimpleEnemies.push(new SimpleEnemy(scene, 0));
+                }
+            }
+
+            // TEST: Spawn Enemy in Dungeon 1 for immediate verification
+            if (levelId === 'dungeon_1') {
+                 if (allSimpleEnemies.length === 0) {
+                    // Spawn near player (offset 10)
+                    allSimpleEnemies.push(new SimpleEnemy(scene, 10));
                 }
             }
 
