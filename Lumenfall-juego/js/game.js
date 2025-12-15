@@ -1107,7 +1107,7 @@ function triggerDistantThunder() {
                 });
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
                 this.mesh.position.y = playerHeight / 2;
-                this.mesh.scale.set(1.32, 1.32, 1); // Start with Idle scale
+                this.mesh.scale.set(1.65, 1.65, 1); // Start with Idle scale (Right)
                 this.mesh.castShadow = true;
                 this.mesh.frustumCulled = false; // Optimization
                 this.mesh.renderOrder = 0;
@@ -1538,13 +1538,16 @@ function triggerDistantThunder() {
                 this.mesh.position.x = Math.max(this.minPlayerX, Math.min(this.maxPlayerX, this.mesh.position.x));
 
                 // Rotación del personaje
-                if (this.isFacingLeft && (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing' || this.currentState === 'idle')) {
-                     // Caso especial: Running, Jumping, Landing Left y Idle Left usa sprites (Movimiento-B, saltar-b, idle-B) que ya están orientados a la izquierda
+                // CORRECCIÓN VISUAL: Forzar rotación 0 en estados de movimiento para evitar "cambio de carril" (Z-depth artifacts)
+                // y confiar puramente en el cambio de texturas (Standard vs -B).
+                const isMovementState = ['idle', 'running', 'jumping', 'landing'].includes(this.currentState);
+                if (isMovementState) {
                      this.mesh.rotation.y = 0;
                 } else if (this.currentState === 'idle' || this.currentState === 'running') {
                      // FIX: Forzar rotación 0 en Idle/Walk derecha también (para evitar voltear el sprite incorrectamente)
                      this.mesh.rotation.y = 0;
                 } else {
+                     // Para Ataque (que usa un solo sprite sheet), sí permitimos rotación
                      this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
                 }
 
@@ -1588,12 +1591,21 @@ function triggerDistantThunder() {
              this.hasPlayedIdleIntro = false;
              // Scale Logic Adjustment
              if (this.currentState === 'idle') {
+update-enemy-cache-and-player-fix-12993793202048157953
                 if (!this.isFacingLeft) {
                     // FIX: Compensar escala cuando mira a la derecha (Idle.png se ve pequeño)
                     this.mesh.scale.set(1.65, 1.65, 1);
                 } else {
                     this.mesh.scale.set(1.32, 1.32, 1);
                 }
+
+                 if (this.isFacingLeft) {
+                     this.mesh.scale.set(1.32, 1.32, 1);
+                 } else {
+                     // CORRECCIÓN VISUAL: Aumentar escala en Idle Derecha para compensar el tamaño de la textura
+                     this.mesh.scale.set(1.65, 1.65, 1);
+                 }
+main
              } else if ((this.currentState === 'jumping' || this.currentState === 'landing') && !this.isFacingLeft) {
                 // Right Jump/Land -> Scale Down
                 this.mesh.scale.set(0.88, 0.88, 1);
