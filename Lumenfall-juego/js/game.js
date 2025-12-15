@@ -147,6 +147,10 @@ lightningLight.castShadow = true;
 scene.add(lightningLight);
 
 function triggerLightningStrike() {
+    // Randomize Lightning Position (Left/Right)
+    const randomX = (Math.random() - 0.5) * 160; // Range -80 to 80
+    lightningLight.position.x = randomX;
+
     // Evento Impacto: Flash intenso + Audio fuerte
     // Light: 0 -> 10.0 -> Flickers -> 0 (Extended duration ~500ms)
     lightningLight.intensity = 10.0;
@@ -1146,6 +1150,7 @@ function triggerDistantThunder() {
                     roughness: 0.2,
                     metalness: 1.0,
                     transparent: true,
+                    opacity: 0.1,
                     blending: THREE.AdditiveBlending,
                     side: THREE.DoubleSide,
                     depthWrite: false
