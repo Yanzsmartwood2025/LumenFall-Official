@@ -1719,8 +1719,8 @@ function triggerDistantThunder() {
                                         this.hasPlayedIdleIntro = true;
                                     }
                                 } else {
-                                    // Bucle: 4 y 0 (Alternar)
-                                    this.currentFrame = (this.currentFrame === 4) ? 0 : 4;
+                                    // Bucle: Mantener en frame 4
+                                    this.currentFrame = 4;
                                 }
                             } else {
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
