@@ -1533,8 +1533,8 @@ function triggerDistantThunder() {
                 this.mesh.position.x = Math.max(this.minPlayerX, Math.min(this.maxPlayerX, this.mesh.position.x));
 
                 // Rotación del personaje
-                if (this.isFacingLeft && (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing')) {
-                     // Caso especial: Running, Jumping, Landing Left usa sprites (Movimiento-B, saltar-b) que ya están orientados a la izquierda
+                if (this.isFacingLeft && (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing' || this.currentState === 'idle')) {
+                     // Caso especial: Sprites que ya miran a la izquierda o se voltean por escala (Idle)
                      this.mesh.rotation.y = 0;
                 } else {
                      this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
@@ -1568,12 +1568,13 @@ function triggerDistantThunder() {
         }
 
                 const stateChanged = this.currentState !== previousState;
-        const directionChanged = (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing') && this.isFacingLeft !== wasFacingLeft;
+        const directionChanged = (this.currentState === 'running' || this.currentState === 'jumping' || this.currentState === 'landing' || this.currentState === 'idle') && this.isFacingLeft !== wasFacingLeft;
 
         if (stateChanged || directionChanged) {
              // Scale Logic Adjustment
              if (this.currentState === 'idle') {
-                        this.mesh.scale.set(1.32, 1.32, 1);
+                        const scaleX = this.isFacingLeft ? -1.32 : 1.32;
+                        this.mesh.scale.set(scaleX, 1.32, 1);
              } else if ((this.currentState === 'jumping' || this.currentState === 'landing') && !this.isFacingLeft) {
                 // Right Jump/Land -> Scale Down
                 this.mesh.scale.set(0.88, 0.88, 1);
