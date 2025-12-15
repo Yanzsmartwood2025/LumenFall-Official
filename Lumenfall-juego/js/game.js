@@ -25,6 +25,7 @@
 
         const totalRunningFrames = 9;
         const totalIdleFrames = 5;
+        const totalIdleBackFrames = 6;
         const totalAttackFrames = 6;
         const totalJumpFrames = 7;
         const totalSpecterFrames = 5;
@@ -1056,7 +1057,7 @@ function triggerDistantThunder() {
 
                 // Configurar texturas de Idle (Strip 1x5)
                 this.idleTexture.repeat.set(1 / totalIdleFrames, 1);
-                this.idleBackTexture.repeat.set(1 / totalIdleFrames, 1);
+                this.idleBackTexture.repeat.set(1 / totalIdleBackFrames, 1);
                 this.idleShadowTexture.repeat.set(1 / totalIdleFrames, 1);
 
         // Configurar texturas de Salto
@@ -1701,7 +1702,7 @@ function triggerDistantThunder() {
 
                         case 'idle':
                             if (this.isFacingLeft) {
-                                [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleBackTexture, this.idleShadowTexture];
+                                [totalFrames, currentTexture, shadowTexture] = [totalIdleBackFrames, this.idleBackTexture, this.idleShadowTexture];
                             } else {
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
                             }
