@@ -1,0 +1,166 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/http/server.py", line 1314, in <module>
+    test(
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/http/server.py", line 1261, in test
+    with ServerClass(addr, HandlerClass) as httpd:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/socketserver.py", line 457, in __init__
+    self.server_bind()
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/http/server.py", line 1308, in server_bind
+    return super().server_bind()
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/http/server.py", line 136, in server_bind
+    socketserver.TCPServer.server_bind(self)
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/socketserver.py", line 478, in server_bind
+    self.socket.bind(self.server_address)
+OSError: [Errno 98] Address already in use
+127.0.0.1 - - [15/Dec/2025 05:50:34] "GET /Lumenfall-juego/index.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:34] "GET /Lumenfall-juego/css/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:34] "GET /Lumenfall-juego/assets/ui/barra-de-energia.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:34] "GET /assets/js/auth-core.js HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:34] "GET /Lumenfall-juego/assets/vfx/particles/fuego.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:34] "GET /Lumenfall-juego/js/game.js HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:34] "GET /Lumenfall-juego/assets/ui/menu-principal.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:35] "GET /Lumenfall-juego/assets/environment/dungeon/pared-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:35] "GET /Lumenfall-juego/assets/environment/props/antorcha.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:35] "GET /Lumenfall-juego/assets/environment/dungeon/puerta-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:35] "GET /Lumenfall-juego/assets/ui/Intro.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:36] "GET /Lumenfall-juego/assets/audio/characters/joziel/pasos-joziel.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:36] "GET /Lumenfall-juego/assets/audio/puerta-calabozo.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:36] "GET /Lumenfall-juego/assets/audio/ambience/dungeons/calabozo_de_piedra.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:37] "GET /Lumenfall-juego/assets/audio/characters/joziel/fireball_cast.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:37] "GET /Lumenfall-juego/assets/audio/characters/joziel/jump.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:37] "GET /Lumenfall-juego/assets/audio/voz-fantasma.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:37] "GET /Lumenfall-juego/assets/audio/characters/joziel/fireball_impact.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:37] "GET /Lumenfall-juego/assets/audio/characters/joziel/charge.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:37] "GET /Lumenfall-juego/assets/audio/characters/joziel/hurt.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:37] "GET /Lumenfall-juego/assets/audio/characters/joziel/attack_voice.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:37] "GET /Lumenfall-juego/assets/audio/sfx/thunder_strike.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:37] "GET /Lumenfall-juego/assets/audio/enemigos/enemigo-1/pasos.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:37] "GET /Lumenfall-juego/assets/audio/sfx/thunder_distant.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:37] "GET /Lumenfall-juego/assets/audio/enemigos/enemigo-1/movimiento.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:37] "GET /Lumenfall-juego/assets/audio/enemigos/enemigo-1/impacto.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:38] code 404, message File not found
+127.0.0.1 - - [15/Dec/2025 05:50:38] "GET /Lumenfall-juego/assets/sprites/Joziel/Sombras-efectos/Sombra-correr-1.jpg HTTP/1.1" 404 -
+127.0.0.1 - - [15/Dec/2025 05:50:38] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento-B/Movimiento-B-1.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:38] "GET /Lumenfall-juego/assets/sprites/Joziel/Sombras-efectos/Idle-sombra.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:38] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento/Idle.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:38] "GET /Lumenfall-juego/assets/sprites/Joziel/attack_sprite_sheet.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:38] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento/Correr-1.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:38] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento/saltar.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:38] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento-B/saltar-b.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:38] "GET /Lumenfall-juego/assets/sprites/enemies/fantasma.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:50:38] "GET /Lumenfall-juego/assets/vfx/particles/Polvo.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:18] "GET /Lumenfall-juego/index.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:18] "GET /Lumenfall-juego/css/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:18] "GET /Lumenfall-juego/assets/vfx/particles/fuego.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:18] "GET /Lumenfall-juego/assets/ui/barra-de-energia.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:18] "GET /assets/js/auth-core.js HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:18] "GET /Lumenfall-juego/js/game.js HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:18] "GET /Lumenfall-juego/assets/ui/menu-principal.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:18] "GET /Lumenfall-juego/assets/environment/dungeon/puerta-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:18] "GET /Lumenfall-juego/assets/environment/dungeon/pared-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:18] "GET /Lumenfall-juego/assets/environment/props/antorcha.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:18] "GET /Lumenfall-juego/assets/ui/Intro.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/characters/joziel/jump.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/characters/joziel/pasos-joziel.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/ambience/dungeons/calabozo_de_piedra.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/characters/joziel/fireball_cast.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/puerta-calabozo.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/voz-fantasma.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/characters/joziel/fireball_impact.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/characters/joziel/hurt.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/characters/joziel/charge.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/characters/joziel/attack_voice.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/sfx/thunder_strike.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/sfx/thunder_distant.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/enemigos/enemigo-1/movimiento.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/enemigos/enemigo-1/pasos.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:19] "GET /Lumenfall-juego/assets/audio/enemigos/enemigo-1/impacto.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:20] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento/Correr-1.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:20] "GET /Lumenfall-juego/assets/sprites/Joziel/attack_sprite_sheet.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:20] code 404, message File not found
+127.0.0.1 - - [15/Dec/2025 05:51:20] "GET /Lumenfall-juego/assets/sprites/Joziel/Sombras-efectos/Sombra-correr-1.jpg HTTP/1.1" 404 -
+127.0.0.1 - - [15/Dec/2025 05:51:20] "GET /Lumenfall-juego/assets/sprites/Joziel/Sombras-efectos/Idle-sombra.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:20] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento-B/Movimiento-B-1.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:20] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento/Idle.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:20] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento/saltar.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:20] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento-B/saltar-b.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:20] "GET /Lumenfall-juego/assets/sprites/enemies/fantasma.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:51:20] "GET /Lumenfall-juego/assets/vfx/particles/Polvo.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:03] "GET /Lumenfall-juego/index.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:04] "GET /assets/js/auth-core.js HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:04] "GET /Lumenfall-juego/assets/ui/barra-de-energia.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:04] "GET /Lumenfall-juego/assets/vfx/particles/fuego.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:04] "GET /Lumenfall-juego/css/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:04] "GET /Lumenfall-juego/js/game.js HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:04] "GET /Lumenfall-juego/assets/ui/menu-principal.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:04] "GET /Lumenfall-juego/assets/environment/props/antorcha.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:04] "GET /Lumenfall-juego/assets/environment/dungeon/pared-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:04] "GET /Lumenfall-juego/assets/environment/dungeon/puerta-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:04] "GET /Lumenfall-juego/assets/ui/Intro.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/characters/joziel/pasos-joziel.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/ambience/dungeons/calabozo_de_piedra.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/characters/joziel/fireball_cast.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/puerta-calabozo.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/characters/joziel/jump.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/voz-fantasma.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/characters/joziel/fireball_impact.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/sfx/thunder_distant.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/characters/joziel/attack_voice.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/characters/joziel/hurt.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/characters/joziel/charge.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/enemigos/enemigo-1/movimiento.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/enemigos/enemigo-1/pasos.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/sfx/thunder_strike.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:06] "GET /Lumenfall-juego/assets/audio/enemigos/enemigo-1/impacto.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:07] code 404, message File not found
+127.0.0.1 - - [15/Dec/2025 05:54:07] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento-B/Movimiento-B-1.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:07] "GET /Lumenfall-juego/assets/sprites/Joziel/Sombras-efectos/Sombra-correr-1.jpg HTTP/1.1" 404 -
+127.0.0.1 - - [15/Dec/2025 05:54:07] "GET /Lumenfall-juego/assets/sprites/Joziel/attack_sprite_sheet.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:07] "GET /Lumenfall-juego/assets/sprites/Joziel/Sombras-efectos/Idle-sombra.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:07] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento/Correr-1.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:07] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento/Idle.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:07] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento/saltar.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:07] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento-B/saltar-b.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:07] "GET /Lumenfall-juego/assets/sprites/enemies/fantasma.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:07] "GET /Lumenfall-juego/assets/vfx/particles/Polvo.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:46] "GET /Lumenfall-juego/index.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:46] "GET /Lumenfall-juego/css/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:46] "GET /Lumenfall-juego/assets/vfx/particles/fuego.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:46] "GET /Lumenfall-juego/assets/ui/barra-de-energia.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:46] "GET /assets/js/auth-core.js HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:46] "GET /Lumenfall-juego/js/game.js HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:46] "GET /Lumenfall-juego/assets/ui/menu-principal.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:47] "GET /Lumenfall-juego/assets/environment/dungeon/pared-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:47] "GET /Lumenfall-juego/assets/environment/dungeon/puerta-calabozo.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:47] "GET /Lumenfall-juego/assets/environment/props/antorcha.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:47] "GET /Lumenfall-juego/assets/ui/Intro.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/characters/joziel/pasos-joziel.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/characters/joziel/jump.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/voz-fantasma.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/puerta-calabozo.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/characters/joziel/fireball_cast.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/characters/joziel/charge.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/ambience/dungeons/calabozo_de_piedra.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/characters/joziel/fireball_impact.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/characters/joziel/hurt.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/characters/joziel/attack_voice.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/sfx/thunder_strike.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/sfx/thunder_distant.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/enemigos/enemigo-1/movimiento.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/enemigos/enemigo-1/pasos.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:48] "GET /Lumenfall-juego/assets/audio/enemigos/enemigo-1/impacto.mp3 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:49] "GET /Lumenfall-juego/assets/sprites/Joziel/attack_sprite_sheet.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:49] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento/Correr-1.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:49] code 404, message File not found
+127.0.0.1 - - [15/Dec/2025 05:54:49] "GET /Lumenfall-juego/assets/sprites/Joziel/Sombras-efectos/Sombra-correr-1.jpg HTTP/1.1" 404 -
+127.0.0.1 - - [15/Dec/2025 05:54:49] "GET /Lumenfall-juego/assets/sprites/Joziel/Sombras-efectos/Idle-sombra.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:49] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento-B/Movimiento-B-1.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:49] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento/Idle.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:49] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento/saltar.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:49] "GET /Lumenfall-juego/assets/sprites/Joziel/Movimiento-B/saltar-b.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:49] "GET /Lumenfall-juego/assets/sprites/enemies/fantasma.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Dec/2025 05:54:49] "GET /Lumenfall-juego/assets/vfx/particles/Polvo.png HTTP/1.1" 200 -
