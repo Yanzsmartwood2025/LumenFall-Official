@@ -101,7 +101,8 @@
         const allSpecters = [];
         const allSimpleEnemies = [];
         const allEnemiesX1 = [];
-        const allGhostNPCs = [];
+        const allWalkingMonsters = [];
+        const allDecorGhosts = [];
         window.allEnemiesX1 = allEnemiesX1; // Debug exposure
         const allGates = [];
         const allStatues = [];
@@ -355,6 +356,12 @@ function triggerDistantThunder() {
                     }
                 });
 
+                allWalkingMonsters.forEach(monster => {
+                    if (!player.isInvincible && player.mesh.position.distanceTo(monster.mesh.position) < 2.5) {
+                        player.takeDamage(player.maxHealth * 0.10, monster);
+                    }
+                });
+
                 let isNearInteractable = false;
                 let interactableObject = null;
 
@@ -465,7 +472,8 @@ function triggerDistantThunder() {
             allSpecters.forEach(specter => specter.update(deltaTime, player));
             allSimpleEnemies.forEach(enemy => enemy.update(deltaTime));
             allEnemiesX1.forEach(enemy => enemy.update(deltaTime));
-            allGhostNPCs.forEach(ghost => ghost.update(deltaTime));
+            allWalkingMonsters.forEach(monster => monster.update(deltaTime));
+            allDecorGhosts.forEach(ghost => ghost.update(deltaTime));
             allPuzzles.forEach(puzzle => puzzle.update(deltaTime));
             allPowerUps.forEach(powerUp => powerUp.update(deltaTime));
             if (dustSystem) dustSystem.update();
@@ -2122,11 +2130,16 @@ function triggerDistantThunder() {
                  scene.remove(enemy.mesh);
             });
             allEnemiesX1.length = 0;
-            allGhostNPCs.forEach(ghost => {
+            allWalkingMonsters.forEach(monster => {
+                 if (monster.stopAudio) monster.stopAudio();
+                 scene.remove(monster.mesh);
+            });
+            allWalkingMonsters.length = 0;
+            allDecorGhosts.forEach(ghost => {
                  if (ghost.stopAudio) ghost.stopAudio();
                  scene.remove(ghost.mesh);
             });
-            allGhostNPCs.length = 0;
+            allDecorGhosts.length = 0;
             allGates.length = 0;
             allStatues.length = 0;
             allOrbs.length = 0;
@@ -2309,9 +2322,14 @@ function triggerDistantThunder() {
                     // allEnemiesX1.push(new EnemyX1(scene, -40)); // Disabled
                 }
 
-                // Spawn Ghost NPC at Gate 2 (x: -30)
-                if (allGhostNPCs.length === 0) {
-                    allGhostNPCs.push(new GhostNPC(scene, -30));
+                // Spawn WalkingMonster at Gate 2 (x: -30)
+                if (allWalkingMonsters.length === 0) {
+                    allWalkingMonsters.push(new WalkingMonster(scene, -30));
+                }
+
+                // Spawn DecorGhost at Center (x: 0)
+                if (allDecorGhosts.length === 0) {
+                    allDecorGhosts.push(new DecorGhost(scene, 0));
                 }
             }
 
@@ -2987,15 +3005,15 @@ function triggerDistantThunder() {
             }
         }
 
-        class GhostNPC {
+        class WalkingMonster {
             constructor(scene, initialX) {
                 this.scene = scene;
                 this.texture = textureLoader.load(assetUrls.ghostNPCSprite);
                 // 1x8 Strip
                 this.texture.repeat.set(1 / totalGhostNPCFrames, 1);
 
-                const npcHeight = 5.6;
-                const npcWidth = 4.4;
+                const monsterHeight = 5.6;
+                const monsterWidth = 4.4;
 
                 const material = new THREE.MeshStandardMaterial({
                     map: this.texture,
@@ -3003,18 +3021,28 @@ function triggerDistantThunder() {
                     alphaTest: 0.1,
                     side: THREE.DoubleSide
                 });
-                const geometry = new THREE.PlaneGeometry(npcWidth, npcHeight);
+                const geometry = new THREE.PlaneGeometry(monsterWidth, monsterHeight);
                 this.mesh = new THREE.Mesh(geometry, material);
-                this.mesh.position.set(initialX, npcHeight / 2, 0);
+                // Y=2.1 (Pies en suelo, alineado con jugador)
+                this.mesh.position.set(initialX, 2.1, 0);
                 this.mesh.castShadow = true;
                 this.mesh.frustumCulled = false;
                 this.scene.add(this.mesh);
 
+                this.hitCount = 0;
+                this.isAlive = true;
+
+                this.state = 'PATROL';
+                this.hasDetectedPlayer = false;
+                this.detectionRange = 15.0;
+
                 this.patrolSpeed = 0.03;
+                this.pursueSpeed = 0.05;
+
                 this.currentFrame = 0;
                 this.lastFrameTime = 0;
-                this.direction = 1; // Start moving right
-                this.patrolRange = { min: initialX - 6, max: initialX + 6 };
+                this.direction = 1;
+                this.patrolRange = { min: initialX - 10, max: initialX + 10 };
 
                 // Audio System
                 this.stepTimer = 0;
@@ -3071,7 +3099,7 @@ function triggerDistantThunder() {
             }
 
             update(deltaTime) {
-                if (!player) return;
+                if (!this.isAlive || !player) return;
 
                 const distanceToPlayer = this.mesh.position.distanceTo(player.mesh.position);
 
@@ -3091,14 +3119,32 @@ function triggerDistantThunder() {
                     this.stepTimer = 0.4;
                 }
 
-                // Patrol Logic
-                if (this.mesh.position.x <= this.patrolRange.min) {
-                    this.direction = 1;
-                } else if (this.mesh.position.x >= this.patrolRange.max) {
-                    this.direction = -1;
+                // AI Logic (Copied from EnemyX1)
+                if (!this.hasDetectedPlayer) {
+                    if (distanceToPlayer < this.detectionRange) {
+                        this.hasDetectedPlayer = true;
+                        this.state = 'PURSUE';
+                    } else {
+                        this.state = 'PATROL';
+                    }
+                } else {
+                    this.state = 'PURSUE';
                 }
 
-                this.mesh.position.x += this.patrolSpeed * this.direction;
+                let currentSpeed = this.patrolSpeed;
+
+                if (this.state === 'PURSUE') {
+                    currentSpeed = this.pursueSpeed;
+                    this.direction = (player.mesh.position.x > this.mesh.position.x) ? 1 : -1;
+                } else { // PATROL
+                    if (this.mesh.position.x <= this.patrolRange.min) {
+                        this.direction = 1;
+                    } else if (this.mesh.position.x >= this.patrolRange.max) {
+                        this.direction = -1;
+                    }
+                }
+
+                this.mesh.position.x += currentSpeed * this.direction;
 
                 const isMovingLeft = this.direction < 0;
                 this.mesh.rotation.y = isMovingLeft ? Math.PI : 0;
@@ -3108,6 +3154,104 @@ function triggerDistantThunder() {
                     this.lastFrameTime = Date.now();
                     this.currentFrame = (this.currentFrame + 1) % totalGhostNPCFrames;
                     this.texture.offset.set(this.currentFrame * (1 / totalGhostNPCFrames), 0);
+                }
+            }
+
+            takeHit() {
+                if (!this.isAlive) return;
+                this.hitCount++;
+
+                const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
+                this.playScopedSound('enemy1_impact', 1.0, 1.0, dist);
+
+                if (this.hitCount >= 8) {
+                    this.isAlive = false;
+                    this.scene.remove(this.mesh);
+                    this.stopAudio(1.0);
+
+                    if (Math.random() < 0.6) {
+                        const dropPosition = this.mesh.position.clone();
+                        const type = Math.random() < 0.5 ? 'health' : 'power';
+                        allPowerUps.push(new PowerUp(this.scene, dropPosition, type));
+                    }
+
+                    const index = allWalkingMonsters.indexOf(this);
+                    if (index > -1) {
+                        allWalkingMonsters.splice(index, 1);
+                    }
+                }
+            }
+        }
+
+        class DecorGhost {
+            constructor(scene, x) {
+                this.scene = scene;
+                this.initialY = 3.5; // Floating height
+                this.texture = textureLoader.load(assetUrls.specterTexture);
+                this.texture.repeat.x = 1 / totalSpecterFrames;
+
+                const material = new THREE.MeshBasicMaterial({ // Basic to be bright/spectral
+                    map: this.texture,
+                    transparent: true,
+                    opacity: 0.8,
+                    blending: THREE.AdditiveBlending,
+                    side: THREE.DoubleSide,
+                    depthWrite: false
+                });
+
+                const geometry = new THREE.PlaneGeometry(4.2, 4.2);
+                this.mesh = new THREE.Mesh(geometry, material);
+                this.mesh.position.set(x, this.initialY, 0);
+                this.mesh.frustumCulled = false;
+                this.scene.add(this.mesh);
+
+                this.currentFrame = 0;
+                this.lastFrameTime = 0;
+
+                // Audio
+                this.voiceSource = null;
+                this.voiceGain = null;
+                this.startVoice();
+            }
+
+            startVoice() {
+                if (!audioBuffers['fantasma_lamento']) return;
+                this.voiceSource = audioContext.createBufferSource();
+                this.voiceSource.buffer = audioBuffers['fantasma_lamento'];
+                this.voiceSource.loop = true;
+                this.voiceSource.playbackRate.value = 0.9;
+
+                this.voiceGain = audioContext.createGain();
+                this.voiceGain.gain.value = 0;
+                this.voiceSource.connect(this.voiceGain).connect(audioContext.destination);
+                this.voiceSource.start();
+            }
+
+            stopAudio(fadeOutDuration = 0) {
+                if (this.voiceSource) {
+                     try { this.voiceSource.stop(); } catch(e) {}
+                     this.voiceSource = null;
+                }
+            }
+
+            update(deltaTime) {
+                // Animation
+                if (Date.now() - this.lastFrameTime > specterAnimationSpeed) {
+                    this.lastFrameTime = Date.now();
+                    this.currentFrame = (this.currentFrame + 1) % totalSpecterFrames;
+                    this.texture.offset.x = this.currentFrame / totalSpecterFrames;
+                }
+
+                // Floating
+                this.mesh.position.y = this.initialY + Math.sin(Date.now() * 0.002) * 0.5;
+
+                // Audio Volume based on distance
+                if (player && this.voiceGain) {
+                    const dist = this.mesh.position.distanceTo(player.mesh.position);
+                    const maxDist = 20;
+                    let vol = 1 - (dist / maxDist);
+                    if (vol < 0) vol = 0;
+                    this.voiceGain.gain.setTargetAtTime(vol * 0.8, audioContext.currentTime, 0.1);
                 }
             }
         }
@@ -3299,6 +3443,17 @@ function triggerDistantThunder() {
                     // Height is 5.6, so hit box radius ~2.8
                     if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                         enemy.takeHit();
+                        allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
+                        playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
+                        this.lifetime = 0;
+                        return false;
+                    }
+                }
+
+                // Collision with WalkingMonster
+                for (const monster of allWalkingMonsters) {
+                    if (this.mesh.position.distanceTo(monster.mesh.position) < 2.5) {
+                        monster.takeHit();
                         allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
                         playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
                         this.lifetime = 0;
