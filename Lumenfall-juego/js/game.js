@@ -518,6 +518,8 @@ function triggerDistantThunder() {
         const gameOverScreen = document.getElementById('game-over-screen');
         const continueButton = document.getElementById('continue-button');
         const quitButton = document.getElementById('quit-button');
+        const agonyOverlay = document.getElementById('agony-overlay');
+        const deathVideoContainer = document.getElementById('death-video-container');
 
         let currentLanguage = 'es';
         const translations = {
@@ -1008,6 +1010,12 @@ function triggerDistantThunder() {
         function restartLevel() {
             if (!player) return;
 
+            // Limpiar video y overlays
+            deathVideoContainer.style.display = 'none';
+            deathVideoContainer.innerHTML = '';
+            agonyOverlay.style.display = 'none';
+            agonyOverlay.style.backgroundColor = 'transparent';
+
             // Reset player state
             player.health = player.maxHealth;
             player.energyBarFill.style.width = '100%';
@@ -1018,9 +1026,92 @@ function triggerDistantThunder() {
 
             // Resume game logic
             isPaused = false;
+            if (audioContext.state === 'suspended') audioContext.resume();
+
+            // Reiniciar audio
             playAudio('ambiente', true);
+            setAudioVolume('ambiente', musicVolumeSlider.value);
+            setAudioVolume('pasos', sfxVolumeSlider.value);
+
             loadLevelById(currentLevelId); // Reload the current level
             animate();
+        }
+
+        function triggerDeathSequence() {
+            // 1. FASE 1: AGONÍA (2 Segundos)
+            isPaused = true;
+            cancelAnimationFrame(animationFrameId);
+
+            // Silenciar todo el juego inmediatamente (Silencio Absoluto)
+            for (let key in audioSources) {
+                stopAudio(key);
+            }
+            for (let key in gainNodes) {
+                try {
+                    gainNodes[key].gain.cancelScheduledValues(audioContext.currentTime);
+                    gainNodes[key].gain.setValueAtTime(0, audioContext.currentTime);
+                } catch(e) {}
+            }
+
+            agonyOverlay.style.display = 'block';
+            let flickerStep = 0;
+
+            // Secuencia: Juego (Transparente) -> Blanco -> Juego (Transparente) -> Negro
+            const flickerInterval = setInterval(() => {
+                flickerStep = (flickerStep + 1) % 4;
+                switch(flickerStep) {
+                    case 0: // Juego
+                        agonyOverlay.style.backgroundColor = 'transparent';
+                        break;
+                    case 1: // Blanco
+                        agonyOverlay.style.backgroundColor = 'white';
+                        break;
+                    case 2: // Juego
+                        agonyOverlay.style.backgroundColor = 'transparent';
+                        break;
+                    case 3: // Negro
+                        agonyOverlay.style.backgroundColor = 'black';
+                        break;
+                }
+            }, 100); // 100ms = Frenético
+
+            // 2. FASE 2: EL VIDEO (Después de 2 segundos)
+            setTimeout(() => {
+                clearInterval(flickerInterval);
+                agonyOverlay.style.display = 'none';
+                agonyOverlay.style.backgroundColor = 'transparent'; // Reset
+
+                // Mostrar contenedor de video
+                deathVideoContainer.style.display = 'flex';
+
+                // Crear y cargar video dinámicamente
+                const video = document.createElement('video');
+                video.id = 'death-video-element';
+                video.src = 'assets/videos/muerte-joziel.mp4';
+                video.autoplay = true;
+                video.playsInline = true; // Móviles
+                video.controls = false;
+                video.style.width = '100%';
+                video.style.height = '100%';
+                video.style.objectFit = 'cover';
+
+                // Manejar fin del video
+                video.onended = () => {
+                    // 3. FASE 3: GAME OVER MEJORADO
+                    deathVideoContainer.style.display = 'none';
+                    deathVideoContainer.innerHTML = ''; // Limpiar memoria
+                    gameOverScreen.style.display = 'flex';
+                };
+
+                deathVideoContainer.appendChild(video);
+
+                // Intentar reproducir
+                video.play().catch(e => {
+                    console.error("Error playing death video, skipping:", e);
+                    video.onended(); // Fallback si falla autoplay
+                });
+
+            }, 2000);
         }
 
         function handleGamepadInput() {
@@ -1255,12 +1346,8 @@ function triggerDistantThunder() {
 
                 if (this.health <= 0) {
                     this.health = 0;
-                    // Game Over
-                    gameOverScreen.style.display = 'flex';
-                    isPaused = true;
-                    stopAudio('ambiente');
-                    stopAudio('pasos');
-                    cancelAnimationFrame(animationFrameId);
+                    // Iniciar secuencia de muerte definitiva
+                    triggerDeathSequence();
                 }
             }
 

@@ -700,35 +700,84 @@ html, body {
         }
 
 #game-over-screen {
-    position: absolute;
+    position: fixed; /* Asegurar cobertura total */
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.95);
     color: white;
-    display: none; /* Initially hidden */
+    display: none;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 200;
-    font-family: 'Cinzel', serif;
+    z-index: 9999; /* Por encima de todo */
 }
 
 #game-over-screen h1 {
-    font-size: 4em;
-    margin-bottom: 20px;
+    font-family: 'Creepster', cursive;
+    font-size: 6em;
+    margin-bottom: 30px;
+    color: #8a0303; /* Rojo Sangre */
+    text-shadow: 2px 2px 0px #000;
+    position: relative;
+    animation: glitch-chaos 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+}
+
+@keyframes glitch-chaos {
+    0% { transform: translate(0); text-shadow: -2px 0 red, 2px 0 blue; }
+    20% { transform: translate(-2px, 2px); text-shadow: 2px 0 red, -2px 0 blue; }
+    40% { transform: translate(-2px, -2px); text-shadow: 0 0 transparent; }
+    60% { transform: translate(2px, 2px); text-shadow: -2px 0 red, 2px 0 blue; }
+    80% { transform: translate(2px, -2px); text-shadow: 2px 0 red, -2px 0 blue; }
+    100% { transform: translate(0); text-shadow: -2px 0 red, 2px 0 blue; }
 }
 
 #game-over-screen button {
-    font-family: 'Cinzel', serif;
-    font-size: 1.5em;
-    padding: 10px 20px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.2em;
+    padding: 15px 30px;
     margin: 10px;
     cursor: pointer;
-    background-color: #333;
-    color: white;
-    border: 2px solid white;
+    background-color: #300;
+    color: #f00;
+    border: 2px solid #800;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    box-shadow: 0 0 5px #500;
+}
+
+#game-over-screen button:hover {
+    background-color: #500;
+    color: #fff;
+    box-shadow: 0 0 20px #f00, inset 0 0 10px #f00;
+    transform: scale(1.05);
+}
+
+#death-video-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: black;
+    z-index: 10000; /* Maxima prioridad */
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+#agony-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10000;
+    pointer-events: none;
+    display: none;
+    background-color: transparent;
 }
 
 /* --- Estilos para el bloqueo de orientación --- */
