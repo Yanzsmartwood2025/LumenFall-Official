@@ -21,6 +21,7 @@
             animatedEnergyBar: 'assets/ui/barra-de-energia.png',
     enemySprite: 'assets/sprites/enemies/enemigo-1.png?v=2',
     enemyX1Sprite: 'assets/sprites/enemies/enemigo-x1.png',
+    ghostNPCSprite: 'assets/sprites/enemies/enemigo-x.png',
     dustParticle: 'assets/vfx/particles/Polvo.png'
         };
 
@@ -32,6 +33,7 @@
         const totalSpecterFrames = 5;
         const totalEnemyFrames = 10;
         const totalEnemyX1Frames = 10;
+        const totalGhostNPCFrames = 8;
         const animationSpeed = 80;
         const idleAnimationSpeed = 150;
         const specterAnimationSpeed = 120;
@@ -99,6 +101,7 @@
         const allSpecters = [];
         const allSimpleEnemies = [];
         const allEnemiesX1 = [];
+        const allGhostNPCs = [];
         window.allEnemiesX1 = allEnemiesX1; // Debug exposure
         const allGates = [];
         const allStatues = [];
@@ -462,6 +465,7 @@ function triggerDistantThunder() {
             allSpecters.forEach(specter => specter.update(deltaTime, player));
             allSimpleEnemies.forEach(enemy => enemy.update(deltaTime));
             allEnemiesX1.forEach(enemy => enemy.update(deltaTime));
+            allGhostNPCs.forEach(ghost => ghost.update(deltaTime));
             allPuzzles.forEach(puzzle => puzzle.update(deltaTime));
             allPowerUps.forEach(powerUp => powerUp.update(deltaTime));
             if (dustSystem) dustSystem.update();
@@ -2118,6 +2122,11 @@ function triggerDistantThunder() {
                  scene.remove(enemy.mesh);
             });
             allEnemiesX1.length = 0;
+            allGhostNPCs.forEach(ghost => {
+                 if (ghost.stopAudio) ghost.stopAudio();
+                 scene.remove(ghost.mesh);
+            });
+            allGhostNPCs.length = 0;
             allGates.length = 0;
             allStatues.length = 0;
             allOrbs.length = 0;
@@ -2290,17 +2299,19 @@ function triggerDistantThunder() {
 
             if (levelId === 'room_3') {
                 if (allSimpleEnemies.length === 0) {
-                    allSimpleEnemies.push(new SimpleEnemy(scene, 0));
+                    // allSimpleEnemies.push(new SimpleEnemy(scene, 0)); // Disabled
                 }
             }
 
             // Spawn Enemy X1 in Dungeon 1 (Gate I)
             if (levelId === 'dungeon_1') {
                  if (allEnemiesX1.length === 0) {
-                    // Spawn near Gate 1 (approx x = -45 to -40). Gate 1 is at -50.
-                    // Player spawns at 0 or gate. If player is at start, Gate 1 is far left.
-                    // Spawn it visible but not on top of gate.
-                    allEnemiesX1.push(new EnemyX1(scene, -40));
+                    // allEnemiesX1.push(new EnemyX1(scene, -40)); // Disabled
+                }
+
+                // Spawn Ghost NPC at Gate 2 (x: -30)
+                if (allGhostNPCs.length === 0) {
+                    allGhostNPCs.push(new GhostNPC(scene, -30));
                 }
             }
 
@@ -2972,6 +2983,131 @@ function triggerDistantThunder() {
                     if (index > -1) {
                         allEnemiesX1.splice(index, 1);
                     }
+                }
+            }
+        }
+
+        class GhostNPC {
+            constructor(scene, initialX) {
+                this.scene = scene;
+                this.texture = textureLoader.load(assetUrls.ghostNPCSprite);
+                // 1x8 Strip
+                this.texture.repeat.set(1 / totalGhostNPCFrames, 1);
+
+                const npcHeight = 5.6;
+                const npcWidth = 4.4;
+
+                const material = new THREE.MeshStandardMaterial({
+                    map: this.texture,
+                    transparent: true,
+                    alphaTest: 0.1,
+                    side: THREE.DoubleSide
+                });
+                const geometry = new THREE.PlaneGeometry(npcWidth, npcHeight);
+                this.mesh = new THREE.Mesh(geometry, material);
+                this.mesh.position.set(initialX, npcHeight / 2, 0);
+                this.mesh.castShadow = true;
+                this.mesh.frustumCulled = false;
+                this.scene.add(this.mesh);
+
+                this.patrolSpeed = 0.03;
+                this.currentFrame = 0;
+                this.lastFrameTime = 0;
+                this.direction = 1; // Start moving right
+                this.patrolRange = { min: initialX - 6, max: initialX + 6 };
+
+                // Audio System
+                this.stepTimer = 0;
+                this.growlSource = null;
+                this.growlGain = null;
+                this.startGrowl();
+            }
+
+            startGrowl() {
+                if (!audioBuffers['enemy1_growl']) return;
+                this.growlSource = audioContext.createBufferSource();
+                this.growlSource.buffer = audioBuffers['enemy1_growl'];
+                this.growlSource.loop = true;
+                this.growlSource.playbackRate.value = 0.9 + Math.random() * 0.2;
+
+                this.growlGain = audioContext.createGain();
+                this.growlGain.gain.value = 0;
+                this.growlSource.connect(this.growlGain).connect(audioContext.destination);
+                this.growlSource.start();
+            }
+
+            stopAudio(fadeOutDuration = 0) {
+                if (this.growlSource) {
+                    if (fadeOutDuration > 0 && this.growlGain) {
+                        try {
+                            const now = audioContext.currentTime;
+                            this.growlGain.gain.setValueAtTime(this.growlGain.gain.value, now);
+                            this.growlGain.gain.linearRampToValueAtTime(0, now + fadeOutDuration);
+                            this.growlSource.stop(now + fadeOutDuration);
+                        } catch(e) {
+                             try { this.growlSource.stop(); } catch(e) {}
+                        }
+                    } else {
+                        try { this.growlSource.stop(); } catch(e) {}
+                    }
+                    this.growlSource = null;
+                }
+            }
+
+            playScopedSound(name, rate, baseVolume, distance) {
+                if (!audioBuffers[name]) return;
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffers[name];
+                source.playbackRate.value = rate;
+
+                const gain = audioContext.createGain();
+                const maxDist = 25;
+                let vol = 1 - (distance / maxDist);
+                if (vol < 0) vol = 0;
+                gain.gain.value = baseVolume * vol * vol;
+
+                source.connect(gain).connect(audioContext.destination);
+                source.start();
+            }
+
+            update(deltaTime) {
+                if (!player) return;
+
+                const distanceToPlayer = this.mesh.position.distanceTo(player.mesh.position);
+
+                // Update Growl Volume
+                if (this.growlGain) {
+                    const maxDist = 25;
+                    let vol = 1 - (distanceToPlayer / maxDist);
+                    if (vol < 0) vol = 0;
+                    if (distanceToPlayer < 3) vol = 1.0;
+                    this.growlGain.gain.setTargetAtTime(vol, audioContext.currentTime, 0.1);
+                }
+
+                // Audio Logic: Steps
+                this.stepTimer -= deltaTime;
+                if (this.stepTimer <= 0) {
+                    this.playScopedSound('enemy1_step', 1.0, 0.9, distanceToPlayer);
+                    this.stepTimer = 0.4;
+                }
+
+                // Patrol Logic
+                if (this.mesh.position.x <= this.patrolRange.min) {
+                    this.direction = 1;
+                } else if (this.mesh.position.x >= this.patrolRange.max) {
+                    this.direction = -1;
+                }
+
+                this.mesh.position.x += this.patrolSpeed * this.direction;
+
+                const isMovingLeft = this.direction < 0;
+                this.mesh.rotation.y = isMovingLeft ? Math.PI : 0;
+
+                // Animate the sprite (0-7 loop)
+                if (Date.now() - this.lastFrameTime > animationSpeed) {
+                    this.lastFrameTime = Date.now();
+                    this.currentFrame = (this.currentFrame + 1) % totalGhostNPCFrames;
+                    this.texture.offset.set(this.currentFrame * (1 / totalGhostNPCFrames), 0);
                 }
             }
         }
