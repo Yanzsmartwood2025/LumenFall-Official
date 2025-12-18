@@ -1127,6 +1127,7 @@ function triggerDistantThunder() {
 
                     deathVideoContainer.appendChild(video);
 
+                    console.log("Attempting to play death video...");
                     video.play().catch(e => {
                         console.error("Error playing death video:", e);
                         video.onended();
