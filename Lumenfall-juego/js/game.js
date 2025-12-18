@@ -520,6 +520,8 @@ function triggerDistantThunder() {
         const quitButton = document.getElementById('quit-button');
         const agonyOverlay = document.getElementById('agony-overlay');
         const deathVideoContainer = document.getElementById('death-video-container');
+        const playerProfileImage = document.getElementById('player-profile-image');
+        const energyBarContainer = document.getElementById('energy-bar');
 
         let currentLanguage = 'es';
         const translations = {
@@ -1019,7 +1021,10 @@ function triggerDistantThunder() {
             // Reset player state
             player.health = player.maxHealth;
             player.energyBarFill.style.width = '100%';
+            player.checkHealthStatus(); // Reset UI colors
             player.mesh.position.set(0, player.mesh.geometry.parameters.height / 2, 0); // Reset position
+            player.mesh.scale.set(1.65, 1.65, 1); // Reset scale
+            player.mesh.visible = true; // Ensure visible
 
             // Hide Game Over screen
             gameOverScreen.style.display = 'none';
@@ -1042,7 +1047,7 @@ function triggerDistantThunder() {
             isPaused = true;
             cancelAnimationFrame(animationFrameId);
 
-            // Silenciar todo el juego inmediatamente (Silencio Absoluto)
+            // Silenciar todo el juego inmediatamente
             for (let key in audioSources) {
                 stopAudio(key);
             }
@@ -1054,64 +1059,82 @@ function triggerDistantThunder() {
             }
 
             agonyOverlay.style.display = 'block';
-            let flickerStep = 0;
 
-            // Secuencia: Juego (Transparente) -> Blanco -> Juego (Transparente) -> Negro
-            const flickerInterval = setInterval(() => {
-                flickerStep = (flickerStep + 1) % 4;
-                switch(flickerStep) {
-                    case 0: // Juego
-                        agonyOverlay.style.backgroundColor = 'transparent';
-                        break;
-                    case 1: // Blanco
-                        agonyOverlay.style.backgroundColor = 'white';
-                        break;
-                    case 2: // Juego
-                        agonyOverlay.style.backgroundColor = 'transparent';
-                        break;
-                    case 3: // Negro
-                        agonyOverlay.style.backgroundColor = 'black';
-                        break;
+            let startTime = null;
+            const duration = 2000; // 2 segundos
+            const initialScale = player.mesh.scale.clone();
+
+            function animateDeath(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                const progress = Math.min(elapsed / duration, 1.0);
+
+                // Efecto Metroid: Encogerse (Lerp Scale to 0)
+                const currentScale = 1.0 - progress;
+                player.mesh.scale.set(
+                    initialScale.x * currentScale,
+                    initialScale.y * currentScale,
+                    initialScale.z * currentScale
+                );
+
+                // Parpadeo Frenético (Overlay)
+                // Usamos Math.sin para alternar
+                if (elapsed < duration - 100) { // Dejar último instante para el flash
+                     const flicker = Math.floor(elapsed / 50) % 4; // Cambia cada 50ms
+                     switch(flicker) {
+                         case 0: agonyOverlay.style.backgroundColor = 'transparent'; break;
+                         case 1: agonyOverlay.style.backgroundColor = 'white'; break;
+                         case 2: agonyOverlay.style.backgroundColor = 'transparent'; break;
+                         case 3: agonyOverlay.style.backgroundColor = 'black'; break;
+                     }
+                } else {
+                     // Flash Final Sólido
+                     agonyOverlay.style.backgroundColor = 'white';
                 }
-            }, 100); // 100ms = Frenético
 
-            // 2. FASE 2: EL VIDEO (Después de 2 segundos)
-            setTimeout(() => {
-                clearInterval(flickerInterval);
-                agonyOverlay.style.display = 'none';
-                agonyOverlay.style.backgroundColor = 'transparent'; // Reset
+                // Renderizar escena ESTÁTICA (sin updates de lógica) para ver al player encogerse
+                renderer.render(scene, camera);
 
-                // Mostrar contenedor de video
-                deathVideoContainer.style.display = 'flex';
+                if (progress < 1.0) {
+                    requestAnimationFrame(animateDeath);
+                } else {
+                    // 2. FASE 2: VIDEO
+                    player.mesh.visible = false; // Ocultar totalmente
+                    agonyOverlay.style.backgroundColor = 'black'; // Fondo negro para transición
 
-                // Crear y cargar video dinámicamente
-                const video = document.createElement('video');
-                video.id = 'death-video-element';
-                video.src = 'assets/videos/muerte-joziel.mp4';
-                video.autoplay = true;
-                video.playsInline = true; // Móviles
-                video.controls = false;
-                video.style.width = '100%';
-                video.style.height = '100%';
-                video.style.objectFit = 'cover';
+                    // Mostrar contenedor de video
+                    deathVideoContainer.style.display = 'flex';
+                    agonyOverlay.style.display = 'none'; // Quitar overlay blanco/negro del DOM para ver el video
 
-                // Manejar fin del video
-                video.onended = () => {
-                    // 3. FASE 3: GAME OVER MEJORADO
-                    deathVideoContainer.style.display = 'none';
-                    deathVideoContainer.innerHTML = ''; // Limpiar memoria
-                    gameOverScreen.style.display = 'flex';
-                };
+                    const video = document.createElement('video');
+                    video.id = 'death-video-element';
+                    video.src = 'assets/videos/muerte-joziel.mp4';
+                    video.autoplay = true;
+                    video.playsInline = true;
+                    video.controls = false;
+                    video.style.width = '100%';
+                    video.style.height = '100%';
+                    video.style.objectFit = 'cover';
+                    video.style.position = 'relative';
+                    video.style.zIndex = '10001';
 
-                deathVideoContainer.appendChild(video);
+                    video.onended = () => {
+                        // 3. FASE 3: GAME OVER MEJORADO
+                        deathVideoContainer.style.display = 'none';
+                        deathVideoContainer.innerHTML = '';
+                        gameOverScreen.style.display = 'flex';
+                    };
 
-                // Intentar reproducir
-                video.play().catch(e => {
-                    console.error("Error playing death video, skipping:", e);
-                    video.onended(); // Fallback si falla autoplay
-                });
+                    deathVideoContainer.appendChild(video);
 
-            }, 2000);
+                    video.play().catch(e => {
+                        console.error("Error playing death video:", e);
+                        video.onended();
+                    });
+                }
+            }
+
+            requestAnimationFrame(animateDeath);
         }
 
         function handleGamepadInput() {
@@ -1298,9 +1321,25 @@ function triggerDistantThunder() {
                 this.powerBarFill = document.getElementById('power-fill');
             }
 
+            checkHealthStatus() {
+                const pct = this.health / this.maxHealth;
+                if (pct <= 0.2 && this.health > 0) {
+                    // ALERTA DE SALUD BAJA
+                    this.energyBarFill.style.backgroundColor = '#8B0000'; // Rojo Sangre
+                    energyBarContainer.classList.add('low-health-pulse');
+                    playerProfileImage.classList.add('hud-shake');
+                } else {
+                    // ESTADO NORMAL
+                    this.energyBarFill.style.backgroundColor = '#00ff00'; // Verde Original
+                    energyBarContainer.classList.remove('low-health-pulse');
+                    playerProfileImage.classList.remove('hud-shake');
+                }
+            }
+
             restoreHealth(amount) {
                 this.health = Math.min(this.maxHealth, this.health + amount);
                 this.energyBarFill.style.width = `${(this.health / this.maxHealth) * 100}%`;
+                this.checkHealthStatus();
             }
 
             restorePower(amount) {
@@ -1343,6 +1382,7 @@ function triggerDistantThunder() {
 
                 this.applyKnockback(enemy);
                 this.energyBarFill.style.width = `${(this.health / this.maxHealth) * 100}%`;
+                this.checkHealthStatus();
 
                 if (this.health <= 0) {
                     this.health = 0;
