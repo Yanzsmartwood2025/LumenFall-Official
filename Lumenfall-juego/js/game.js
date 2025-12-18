@@ -2448,7 +2448,7 @@ function triggerDistantThunder() {
             // Spawn Enemy X1 in Dungeon 1 (Gate I)
             if (levelId === 'dungeon_1') {
                  if (allEnemiesX1.length === 0) {
-                    // allEnemiesX1.push(new EnemyX1(scene, -40)); // Disabled
+                    allEnemiesX1.push(new EnemyX1(scene, -40));
                 }
 
                 // Spawn WalkingMonster at Gate 2 (x: -30)
