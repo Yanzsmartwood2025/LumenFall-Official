@@ -20,7 +20,9 @@
             menuBackgroundImage: 'assets/ui/menu-principal.jpg',
             animatedEnergyBar: 'assets/ui/barra-de-energia.png',
     enemySprite: 'assets/sprites/enemies/enemigo-1.png?v=2',
-    enemyX1Sprite: 'assets/sprites/enemies/enemigo-x1.png',
+    enemyX1Run: 'assets/sprites/enemies/Ataques-enemigo1/correr-1.png',
+    enemyX1Attack: 'assets/sprites/enemies/Ataques-enemigo1/ataque-1.png',
+    enemyX1Death: 'assets/sprites/enemies/Ataques-enemigo1/muerte-1.png',
     ghostNPCSprite: 'assets/sprites/enemies/enemigo-x.png',
     dustParticle: 'assets/vfx/particles/Polvo.png'
         };
@@ -2919,16 +2921,21 @@ function triggerDistantThunder() {
         class EnemyX1 {
             constructor(scene, initialX) {
                 this.scene = scene;
-                this.texture = textureLoader.load(assetUrls.enemyX1Sprite);
+                // Cargar texturas separadas V11
+                this.runTexture = textureLoader.load(assetUrls.enemyX1Run);
+                this.attackTexture = textureLoader.load(assetUrls.enemyX1Attack);
+                this.deathTexture = textureLoader.load(assetUrls.enemyX1Death);
 
-                // Configurar Grid 8x2
-                this.texture.repeat.set(0.125, 0.5);
+                // Configurar Grid 8x2 para todas
+                this.runTexture.repeat.set(0.125, 0.5);
+                this.attackTexture.repeat.set(0.125, 0.5);
+                this.deathTexture.repeat.set(0.125, 0.5);
 
                 const enemyHeight = 5.6;
-                const enemyWidth = 4.4; // Ajustado al aspect ratio 0.79
+                const enemyWidth = 4.4;
 
                 const enemyMaterial = new THREE.MeshStandardMaterial({
-                    map: this.texture,
+                    map: this.runTexture,
                     transparent: true,
                     alphaTest: 0.1,
                     side: THREE.DoubleSide
@@ -2940,20 +2947,26 @@ function triggerDistantThunder() {
                 this.mesh.frustumCulled = false;
                 this.scene.add(this.mesh);
 
-                this.hitCount = 0;
+                this.maxHealth = 8;
+                this.health = this.maxHealth;
                 this.isAlive = true;
+                this.isDying = false;
 
-                this.state = 'PATROL'; // Inicialmente patrulla
-                this.hasDetectedPlayer = false; // Flag para "siempre seguir"
-                this.detectionRange = 15.0; // Rango inicial de detección
+                this.state = 'PATROL'; // PATROL, PURSUE, ATTACK
+                this.hasDetectedPlayer = false;
+                this.detectionRange = 15.0;
+                this.attackRange = 3.5;
 
                 this.patrolSpeed = 0.03;
-                this.pursueSpeed = 0.05; // Un poco más rápido pero "no tan rápido"
+                this.pursueSpeed = 0.05;
 
                 this.currentFrame = 0;
                 this.lastFrameTime = 0;
                 this.direction = -1;
                 this.patrolRange = { min: initialX - 10, max: initialX + 10 };
+
+                this.attackCooldown = 0;
+                this.attackDuration = 1.0; // aprox 10 frames * 80ms = 800ms -> 1s cooldown
 
                 // Audio System
                 this.stepTimer = 0;
@@ -2967,8 +2980,6 @@ function triggerDistantThunder() {
                 this.growlSource = audioContext.createBufferSource();
                 this.growlSource.buffer = audioBuffers['enemy1_growl'];
                 this.growlSource.loop = true;
-
-                // Efecto "que juegue": Variación aleatoria de pitch inicial y loop
                 this.growlSource.playbackRate.value = 0.9 + Math.random() * 0.2;
 
                 this.growlGain = audioContext.createGain();
@@ -3002,10 +3013,9 @@ function triggerDistantThunder() {
                 source.playbackRate.value = rate;
 
                 const gain = audioContext.createGain();
-                const maxDist = 25; // Distancia para fade completo
+                const maxDist = 25;
                 let vol = 1 - (distance / maxDist);
                 if (vol < 0) vol = 0;
-                // Curva cuadrática para mejor sensación espacial
                 gain.gain.value = baseVolume * vol * vol;
 
                 source.connect(gain).connect(audioContext.destination);
@@ -3013,37 +3023,86 @@ function triggerDistantThunder() {
             }
 
             update(deltaTime) {
-                if (!this.isAlive || !player) return;
+                if (!this.isAlive && !this.isDying) return; // Ya muerto y eliminado
+                if (!player) return;
+
+                // --- ANIMATION LOGIC (V11) ---
+                // Mapeo Frames:
+                // Grid 8x2 -> Cols: 8 (0.125), Rows: 2 (0.5)
+                // Row 1 (Top, UV y=0.5): Frames 0-7
+                // Row 0 (Bottom, UV y=0.0): Frames 8-9
+                const updateAnimation = (totalFrames, texture, isDeath = false) => {
+                    let loopFinished = false;
+                    if (this.mesh.material.map !== texture) {
+                        this.mesh.material.map = texture;
+                    }
+
+                    if (Date.now() - this.lastFrameTime > animationSpeed) {
+                        this.lastFrameTime = Date.now();
+
+                        if (isDeath) {
+                            if (this.currentFrame < totalFrames - 1) {
+                                this.currentFrame++;
+                            } else {
+                                // Fin de muerte
+                                this.finalizeDeath();
+                                return true;
+                            }
+                        } else {
+                            this.currentFrame = (this.currentFrame + 1) % totalFrames;
+                            if (this.currentFrame === 0) loopFinished = true;
+                        }
+
+                        let col, rowY;
+                        if (this.currentFrame < 8) {
+                            col = this.currentFrame;
+                            rowY = 0.5; // Top Row
+                        } else {
+                            col = this.currentFrame - 8;
+                            rowY = 0.0; // Bottom Row
+                        }
+                        texture.offset.set(col * 0.125, rowY);
+                    }
+                    return loopFinished;
+                };
+
+                // --- DEATH STATE ---
+                if (this.isDying) {
+                    updateAnimation(9, this.deathTexture, true);
+                    return; // No movement, no AI
+                }
 
                 const distanceToPlayer = this.mesh.position.distanceTo(player.mesh.position);
 
-                // Update Growl Volume & "Play" Effect
+                // --- ATTACK STATE ---
+                if (this.state === 'ATTACK') {
+                    // Completar animación de ataque (10 frames)
+                    // Usamos un contador basado en frames para salir del estado
+                    const finished = updateAnimation(10, this.attackTexture);
+
+                    if (finished) {
+                        // Fin del ataque (se ha completado el ciclo y vuelto a 0)
+                        this.state = 'PURSUE'; // Volver a perseguir
+                        this.attackCooldown = 1.0;
+                    }
+                    return; // Bloquear movimiento durante ataque
+                }
+
+                if (this.attackCooldown > 0) this.attackCooldown -= deltaTime;
+
+                // --- AI LOGIC ---
+                // Update Audio
                 if (this.growlGain) {
                     const maxDist = 25;
                     let vol = 1 - (distanceToPlayer / maxDist);
                     if (vol < 0) vol = 0;
-
-                    // Si está muy cerca (<3), volumen 100% asegurado
                     if (distanceToPlayer < 3) vol = 1.0;
-
                     this.growlGain.gain.setTargetAtTime(vol, audioContext.currentTime, 0.1);
-
-                    // Modulación sutil del pitch para que "juegue"
                     const time = Date.now() * 0.001;
                     this.growlSource.playbackRate.value = 1.0 + Math.sin(time) * 0.05;
                 }
 
-                // Audio Logic: Steps
-                this.stepTimer -= deltaTime;
-                if (this.stepTimer <= 0) {
-                    // Sincronizado con la animación (~1 paso cada ciclo de caminata o medio ciclo)
-                    // Animación es 80ms * 10 frames = 800ms total.
-                    // Un paso cada 400ms suena bien.
-                    this.playScopedSound('enemy1_step', 1.0, 0.9, distanceToPlayer);
-                    this.stepTimer = 0.4;
-                }
-
-                // AI Logic: Persistent Pursuit
+                // Check Aggro
                 if (!this.hasDetectedPlayer) {
                     if (distanceToPlayer < this.detectionRange) {
                         this.hasDetectedPlayer = true;
@@ -3052,82 +3111,70 @@ function triggerDistantThunder() {
                         this.state = 'PATROL';
                     }
                 } else {
-                    // Una vez detectado, SIEMPRE persigue
                     this.state = 'PURSUE';
                 }
 
-                let currentSpeed = this.patrolSpeed;
+                // Check Attack Trigger
+                if (this.state === 'PURSUE' && distanceToPlayer < this.attackRange && this.attackCooldown <= 0) {
+                    this.state = 'ATTACK';
+                    this.currentFrame = -1; // Reiniciar animación
+                    return;
+                }
 
+                // Movement Logic
+                let currentSpeed = this.patrolSpeed;
                 if (this.state === 'PURSUE') {
                     currentSpeed = this.pursueSpeed;
                     this.direction = (player.mesh.position.x > this.mesh.position.x) ? 1 : -1;
-                } else { // PATROL
-                    if (this.mesh.position.x <= this.patrolRange.min) {
-                        this.direction = 1;
-                    } else if (this.mesh.position.x >= this.patrolRange.max) {
-                        this.direction = -1;
-                    }
+                } else {
+                    if (this.mesh.position.x <= this.patrolRange.min) this.direction = 1;
+                    else if (this.mesh.position.x >= this.patrolRange.max) this.direction = -1;
                 }
 
                 this.mesh.position.x += currentSpeed * this.direction;
-
-                // Rotación: Siempre mira hacia donde camina (o al jugador en persecución)
-                // Ojo: Si el sprite mira a la derecha por defecto:
-                // Mirar derecha (dir 1): scale.x = 1 (o rot.y = 0)
-                // Mirar izquierda (dir -1): scale.x = -1 (o rot.y = PI)
-                // Asumiremos sprite mira derecha.
                 const isMovingLeft = this.direction < 0;
                 this.mesh.rotation.y = isMovingLeft ? Math.PI : 0;
 
-                // Animate the sprite (0-9 loop)
-                if (Date.now() - this.lastFrameTime > animationSpeed) {
-                    this.lastFrameTime = Date.now();
-                    this.currentFrame = (this.currentFrame + 1) % totalEnemyX1Frames;
-
-                    // Mapping Grid 8x2
-                    // Rows: Top (0-7), Bottom (8-9)
-                    let col, row; // row 0 is bottom (y=0), row 1 is top (y=0.5) based on previous ThreeJS logic (UV 0,0 is bottom-left)
-
-                    // Wait, ThreeJS UVs: (0,0) is bottom-left.
-                    // If image has Top Row and Bottom Row.
-                    // Top Row (0-7) corresponds to higher Y (0.5 to 1.0). So offset.y = 0.5.
-                    // Bottom Row (8-9) corresponds to lower Y (0.0 to 0.5). So offset.y = 0.0.
-
-                    if (this.currentFrame < 8) {
-                        // Top Row
-                        col = this.currentFrame;
-                        this.texture.offset.set(col * 0.125, 0.5);
-                    } else {
-                        // Bottom Row (Frames 8, 9) -> Cols 0, 1
-                        col = this.currentFrame - 8;
-                        this.texture.offset.set(col * 0.125, 0.0);
-                    }
+                // Run Animation
+                // Footsteps audio
+                this.stepTimer -= deltaTime;
+                if (this.stepTimer <= 0) {
+                    this.playScopedSound('enemy1_step', 1.0, 0.9, distanceToPlayer);
+                    this.stepTimer = 0.4;
                 }
+
+                updateAnimation(10, this.runTexture);
             }
 
             takeHit() {
-                if (!this.isAlive) return;
-                this.hitCount++;
+                if (!this.isAlive || this.isDying) return;
+                this.health--;
 
-                // Sonido Impacto
                 const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
                 this.playScopedSound('enemy1_impact', 1.0, 1.0, dist);
 
-                if (this.hitCount >= 8) { // Un poco más resistente (8 golpes)
-                    this.isAlive = false;
-                    this.scene.remove(this.mesh);
-                    this.stopAudio(1.0);
+                if (this.health <= 0) {
+                    this.isDying = true;
+                    this.currentFrame = -1; // Reiniciar para muerte
+                    // Stop growl immediately or fade fast
+                    this.stopAudio(0.5);
+                }
+            }
 
-                    if (Math.random() < 0.6) {
-                        const dropPosition = this.mesh.position.clone();
-                        const type = Math.random() < 0.5 ? 'health' : 'power';
-                        allPowerUps.push(new PowerUp(this.scene, dropPosition, type));
-                    }
+            finalizeDeath() {
+                this.isAlive = false;
+                this.scene.remove(this.mesh);
 
-                    const index = allEnemiesX1.indexOf(this);
-                    if (index > -1) {
-                        allEnemiesX1.splice(index, 1);
-                    }
+                // Loot Drop
+                if (Math.random() < 0.6) {
+                    const dropPosition = this.mesh.position.clone();
+                    const type = Math.random() < 0.5 ? 'health' : 'power';
+                    allPowerUps.push(new PowerUp(this.scene, dropPosition, type));
+                }
+
+                const index = allEnemiesX1.indexOf(this);
+                if (index > -1) {
+                    allEnemiesX1.splice(index, 1);
                 }
             }
         }
