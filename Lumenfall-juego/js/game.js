@@ -2743,10 +2743,13 @@ function triggerDistantThunder() {
             constructor(scene, initialX) {
                 this.scene = scene;
                 this.texture = textureLoader.load(assetUrls.enemySprite);
-                this.texture.repeat.x = 1 / totalEnemyFrames;
+                // Configuración de Grilla 8x2
+                this.texture.repeat.set(0.125, 0.5);
+                this.texture.offset.y = 0.5; // Fila Superior (Walk)
 
-                const enemyHeight = 5.6;
-                const enemyWidth = 1.8;
+                // Monstruo Gigante
+                const enemyHeight = 11.5;
+                const enemyWidth = 9.1;
 
                 const enemyMaterial = new THREE.MeshStandardMaterial({
                     map: this.texture,
@@ -2883,11 +2886,13 @@ function triggerDistantThunder() {
                 const isFacingLeft = (player.mesh.position.x < this.mesh.position.x);
                 this.mesh.rotation.y = isFacingLeft ? Math.PI : 0;
 
-                // Animate the sprite
-                if (Date.now() - this.lastFrameTime > animationSpeed) {
+                // Animate the sprite (Slower speed for giant feel)
+                const enemyAnimSpeed = 120;
+                if (Date.now() - this.lastFrameTime > enemyAnimSpeed) {
                     this.lastFrameTime = Date.now();
-                    this.currentFrame = (this.currentFrame + 1) % totalEnemyFrames;
-                    this.texture.offset.x = this.currentFrame / totalEnemyFrames;
+                    // Loop frames 0-7 (Top Row)
+                    this.currentFrame = (this.currentFrame + 1) % 8;
+                    this.texture.offset.x = this.currentFrame * 0.125;
                 }
             }
 
