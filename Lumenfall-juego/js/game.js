@@ -1774,7 +1774,218 @@
             depthWrite: false
         });
 
-        // ... (DustSystem, addDecals, createTorch, AmbientTorchFlame - Kept as is)
+        const floorGeometry = new THREE.PlaneGeometry(playableAreaWidth, roomDepth);
+        const floorMaterial = new THREE.MeshStandardMaterial({
+            map: textureLoader.load(assetUrls.floorTexture),
+            roughness: 0.8,
+            color: 0x888888,
+            side: THREE.DoubleSide
+        });
+        const wallMaterial = new THREE.MeshStandardMaterial({
+            map: textureLoader.load(assetUrls.wallTexture),
+            roughness: 0.9,
+            color: 0x888888,
+            side: THREE.DoubleSide
+        });
+        const doorMaterial = new THREE.MeshStandardMaterial({
+            map: textureLoader.load(assetUrls.doorTexture),
+            transparent: true,
+            alphaTest: 0.5,
+            side: THREE.DoubleSide
+        });
+
+        function generateNoiseTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#000000'; ctx.fillRect(0,0,64,64);
+            for(let i=0; i<200; i++) {
+                ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.1})`;
+                ctx.beginPath();
+                ctx.arc(Math.random()*64, Math.random()*64, Math.random()*2, 0, Math.PI*2);
+                ctx.fill();
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        class FootstepParticle {
+            constructor(scene, x, y, z) {
+                this.scene = scene;
+                this.life = 1.0;
+                const geo = new THREE.PlaneGeometry(0.3, 0.3);
+                const mat = new THREE.MeshBasicMaterial({
+                    color: 0x00ffff,
+                    transparent: true,
+                    opacity: 0.5,
+                    side: THREE.DoubleSide,
+                    depthWrite: false
+                });
+                this.mesh = new THREE.Mesh(geo, mat);
+                this.mesh.position.set(x, y + 0.05, z);
+                this.mesh.rotation.x = -Math.PI/2;
+                this.mesh.frustumCulled = false;
+                scene.add(this.mesh);
+            }
+            update(dt) {
+                this.life -= dt;
+                this.mesh.material.opacity = this.life * 0.5;
+                this.mesh.scale.multiplyScalar(1.02);
+                if(this.life <= 0) {
+                    this.scene.remove(this.mesh);
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        class AmbientTorchFlame {
+            constructor(scene, pos) {
+                this.scene = scene;
+                this.timer = Math.random() * 100;
+                const mat = new THREE.SpriteMaterial({
+                    map: textureLoader.load(assetUrls.flameParticle),
+                    color: 0x00aaff,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                });
+                this.mesh = new THREE.Sprite(mat);
+                this.mesh.position.copy(pos);
+                this.mesh.scale.set(0.8, 0.8, 1);
+                this.baseY = pos.y;
+                this.mesh.frustumCulled = false;
+                scene.add(this.mesh);
+                allFlames.push(this);
+            }
+            update(dt) {
+                this.timer += dt * 5;
+                this.mesh.material.opacity = 0.6 + Math.sin(this.timer)*0.2;
+                this.mesh.scale.setScalar(0.8 + Math.sin(this.timer*1.5)*0.1);
+                this.mesh.position.y = this.baseY + Math.sin(this.timer)*0.05;
+                return true;
+            }
+        }
+
+        class RealisticFlame {
+            constructor(scene, pos, scale=1) {
+                this.scene = scene;
+                this.life = 0.5;
+                const mat = new THREE.SpriteMaterial({
+                    map: textureLoader.load(assetUrls.flameParticle),
+                    color: 0x00aaff,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                });
+                this.mesh = new THREE.Sprite(mat);
+                this.mesh.position.copy(pos);
+                this.mesh.scale.setScalar(scale);
+                this.mesh.frustumCulled = false;
+                scene.add(this.mesh);
+            }
+            update(dt) {
+                this.life -= dt;
+                this.mesh.material.opacity = this.life * 2;
+                this.mesh.scale.multiplyScalar(1.05);
+                if(this.life <= 0) {
+                    this.scene.remove(this.mesh);
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        class DustSystem {
+            constructor(scene) {
+                this.scene = scene;
+                this.particles = [];
+                const tex = textureLoader.load(assetUrls.dustParticle);
+                const mat = new THREE.SpriteMaterial({
+                    map: tex, color: 0xffffff, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false
+                });
+                for(let i=0; i<60; i++) {
+                    const p = new THREE.Sprite(mat);
+                    p.position.set(
+                        (Math.random()-0.5)*120,
+                        Math.random()*15,
+                        camera.position.z - Math.random()*roomDepth
+                    );
+                    p.scale.setScalar(0.2 + Math.random()*0.3);
+                    p.userData = { speed: 0.2 + Math.random()*0.3 };
+                    p.frustumCulled = false;
+                    scene.add(p);
+                    this.particles.push(p);
+                }
+            }
+            update() {
+                this.particles.forEach(p => {
+                    p.position.y -= p.userData.speed * 0.05;
+                    if(p.position.y < 0) p.position.y = 15;
+                });
+            }
+            setLightningState(val) {
+                this.particles.forEach(p => {
+                     p.material.opacity = 0.4 + (val > 0 ? 0.4 : 0);
+                     if(val > 0) p.material.color.setHex(0xaaddff);
+                     else p.material.color.setHex(0xffffff);
+                });
+            }
+        }
+
+        function createTorch(x, y, z, isLit) {
+            const mat = new THREE.SpriteMaterial({ map: textureLoader.load(assetUrls.torchTexture), depthWrite: false });
+            const mesh = new THREE.Sprite(mat);
+            mesh.position.set(x, y, z);
+            mesh.scale.set(1, 2, 1);
+            mesh.frustumCulled = false;
+            scene.add(mesh);
+            if(isLit) {
+                new AmbientTorchFlame(scene, new THREE.Vector3(x, y+0.5, z+0.1));
+                const light = new THREE.PointLight(0x00aaff, 1, 8);
+                light.position.set(x, y, z+0.5);
+                scene.add(light);
+            }
+        }
+
+        function createGodRays(scene) {
+             const geo = new THREE.PlaneGeometry(10, 30);
+             const mat = new THREE.MeshBasicMaterial({
+                 color: 0x00aaff,
+                 transparent: true,
+                 opacity: 0.05,
+                 side: THREE.DoubleSide,
+                 blending: THREE.AdditiveBlending,
+                 depthWrite: false
+             });
+             for(let i=0; i<4; i++) {
+                 const ray = new THREE.Mesh(geo, mat);
+                 ray.position.set((Math.random()-0.5)*80, 10, -5);
+                 ray.rotation.z = 0.2 + Math.random()*0.2;
+                 ray.frustumCulled = false;
+                 scene.add(ray);
+             }
+        }
+
+        function addDecals(scene, levelData) {
+            const decalMat = new THREE.MeshBasicMaterial({
+                map: generateNoiseTexture(),
+                transparent: true,
+                opacity: 0.3,
+                blending: THREE.MultiplyBlending,
+                depthWrite: false,
+                polygonOffset: true, polygonOffsetFactor: -1
+            });
+            for(let i=0; i<10; i++) {
+                const dirt = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), decalMat);
+                dirt.position.set((Math.random()-0.5)*80, Math.random()*10, -14.9);
+                dirt.frustumCulled = false;
+                scene.add(dirt);
+            }
+        }
+        function areAllRoomsComplete() {
+            return completedRooms.room_1 && completedRooms.room_2 && completedRooms.room_3 && completedRooms.room_4 && completedRooms.room_5;
+        }
+
         function clearSceneForLevelLoad() {
             for (let i = scene.children.length - 1; i >= 0; i--) {
                 const obj = scene.children[i];
