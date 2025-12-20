@@ -10,20 +10,20 @@
             attackSprite: 'assets/sprites/Joziel/attack_sprite_sheet_128.png',
             jumpSprite: 'assets/sprites/Joziel/Movimiento/saltar_128.png',
             jumpBackSprite: 'assets/sprites/Joziel/Movimiento-B/saltar-b_128.png',
-            flameParticle: 'assets/vfx/particles/fuego.png',
-            wallTexture: 'assets/environment/dungeon/pared-calabozo.png',
-            doorTexture: 'assets/environment/dungeon/puerta-calabozo.png',
-            floorTexture: 'assets/environment/dungeon/piso-calabozo.png',
-            torchTexture: 'assets/environment/props/antorcha.png',
-            specterTexture: 'assets/sprites/enemies/fantasma.png', // Mantenido para DecorGhost
+            flameParticle: 'assets/sprites/FX/fuego.png',
+            wallTexture: 'assets/sprites/Ambiente/pared-calabozo.png',
+            doorTexture: 'assets/sprites/Ambiente/puerta-calabozo.png',
+            floorTexture: 'assets/sprites/Ambiente/piso-calabozo.png',
+            torchTexture: 'assets/sprites/Ambiente/antorcha.png',
+            specterTexture: 'assets/sprites/Enemigos/fantasma.png', // Mantenido para DecorGhost
             introImage: 'assets/ui/Intro.jpg',
             menuBackgroundImage: 'assets/ui/menu-principal.jpg',
             animatedEnergyBar: 'assets/ui/barra-de-energia.png',
-            enemySprite: 'assets/sprites/enemies/enemigo-1.png?v=2',
-            enemyX1Run: 'assets/sprites/enemies/Ataques-enemigo1/correr-1.png',
-            enemyX1Attack: 'assets/sprites/enemies/Ataques-enemigo1/ataque-1.png',
-            enemyX1Death: 'assets/sprites/enemies/Ataques-enemigo1/muerte-1.png',
-            dustParticle: 'assets/vfx/particles/Polvo.png'
+            enemySprite: 'assets/sprites/Enemigos/enemigo-1.png?v=2',
+            enemyX1Run: 'assets/sprites/Enemigos/Ataques-enemigo1/correr-1.png',
+            enemyX1Attack: 'assets/sprites/Enemigos/Ataques-enemigo1/ataque-1.png',
+            enemyX1Death: 'assets/sprites/Enemigos/Ataques-enemigo1/muerte-1.png',
+            dustParticle: 'assets/sprites/FX/Polvo.png'
         };
 
         const totalRunningFrames = 9;
