@@ -2659,7 +2659,7 @@
                     return false;
                 }
 
-                // Collision with Enemy X1
+                // Collision with simple enemies
                 for (const enemy of allEnemiesX1) {
                     // Height is 5.6, so hit box radius ~2.8
                     if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
