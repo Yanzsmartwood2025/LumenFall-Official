@@ -95,6 +95,76 @@
     <!-- FASE 2: Contenido Principal -->
     <div id="main-content" class="relative z-10 min-h-screen flex flex-col">
         
+        <!-- Language Flags (Always visible) -->
+        <div class="fixed top-4 left-4 z-40 flex space-x-2">
+            <button id="lang-btn-es" class="w-8 h-8 rounded-full overflow-hidden border border-gray-600 hover:border-white transition-colors focus:outline-none opacity-100" title="Español">
+                <img src="https://flagcdn.com/w80/es.png" alt="Español" class="w-full h-full object-cover">
+            </button>
+            <button id="lang-btn-en" class="w-8 h-8 rounded-full overflow-hidden border border-gray-600 hover:border-white transition-colors focus:outline-none opacity-50" title="English">
+                <img src="https://flagcdn.com/w80/us.png" alt="English" class="w-full h-full object-cover">
+            </button>
+        </div>
+
+        <!-- Top Right User UI (Hidden when logged out) -->
+        <div id="user-avatar-container" class="fixed top-4 right-4 z-40 hidden">
+             <div class="relative">
+                <button id="user-avatar-btn" class="w-12 h-12 rounded-full border-2 border-teal-500 overflow-hidden focus:outline-none focus:ring-2 focus:ring-teal-400">
+                    <!-- Default Avatar / User Photo -->
+                    <img id="user-avatar-img" src="assets/imagenes/icono-inicio-web/icono-joziel-2.png" alt="User" class="w-full h-full object-cover bg-gray-800">
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="user-dropdown" class="absolute right-0 mt-2 w-64 bg-gray-900 border border-gray-700 rounded-lg shadow-xl py-2 hidden">
+                    <div class="px-4 py-3 border-b border-gray-700">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider" data-i18n="operator_label">Operador</p>
+                        <p id="menu-user-email" class="text-sm text-white font-bold truncate">user@example.com</p>
+                    </div>
+
+                    <div class="px-4 py-3 bg-black/30">
+                         <p class="text-[10px] text-yellow-500 font-mono mb-1" data-i18n="access_code_label">CÓDIGO DE ACCESO</p>
+                         <p id="menu-game-code" class="text-lg text-white font-mono tracking-widest font-bold">----</p>
+                    </div>
+
+                    <a href="#" id="menu-logout-btn" class="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-800 hover:text-red-300 transition-colors" data-i18n="logout_btn">
+                        Cerrar Sesión
+                    </a>
+                </div>
+             </div>
+        </div>
+
+        <!-- Login Modal (Hidden by default) -->
+        <div id="auth-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div class="bg-gray-900 border border-gray-700 rounded-xl p-8 max-w-sm w-full shadow-2xl relative">
+                <button id="close-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+
+                <h2 class="text-2xl font-bold text-white mb-6 text-center" data-i18n="modal_title">Acceso de Operador</h2>
+
+                <form id="email-auth-form" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-1" data-i18n="email_label">Correo Electrónico</label>
+                        <input type="email" id="modal-email" class="w-full bg-gray-800 border border-gray-600 rounded p-2 text-white focus:border-teal-500 focus:outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-1" data-i18n="password_label">Contraseña</label>
+                        <input type="password" id="modal-password" class="w-full bg-gray-800 border border-gray-600 rounded p-2 text-white focus:border-teal-500 focus:outline-none" required>
+                    </div>
+
+                    <div id="auth-error-msg" class="text-red-500 text-sm text-center hidden"></div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" id="modal-login-btn" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold transition-colors" data-i18n="login_btn">
+                            Iniciar Sesión
+                        </button>
+                        <button type="button" id="modal-register-btn" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded font-semibold transition-colors" data-i18n="register_btn">
+                            Registrarse
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Contenedor del Video de Fondo -->
         <div id="bg-video-container">
             <video id="bg-video" autoplay muted loop playsinline>
@@ -118,39 +188,24 @@
                 
                 <div id="login-buttons" class="space-y-4">
                     
-                    <button id="install-pwa-button" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-teal-500 text-white hover:bg-teal-600 hidden">
+                    <button id="install-pwa-button" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-teal-500 text-white hover:bg-teal-600 hidden" data-i18n="install_app">
                         <svg class="w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                         </svg>
                         Instalar Aplicación
                     </button>
 
-                    <button id="google-login" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-white text-gray-800 hover:bg-gray-200">
+                    <button id="google-login" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-white text-gray-800 hover:bg-gray-200" data-i18n="google_login">
                         <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M43.6111 20.0833H42V20H24V28H35.303C33.6747 32.6596 29.2235 36 24 36C17.373 36 12 30.627 12 24C12 17.373 17.373 12 24 12C26.8543 12 29.4312 13.1118 31.3914 14.888L36.0121 10.2672C32.6393 7.2898 28.5363 5.5 24 5.5C13.797 5.5 5.5 13.797 5.5 24C5.5 34.203 13.797 42.5 24 42.5C34.203 42.5 42.5 34.203 42.5 24C42.5 22.6105 42.3699 21.3533 42.126 20.1388L43.6111 20.0833Z" fill="#FFC107"></path><path d="M43.6111 20.0833H42V20H24V28H35.303C34.5102 30.4187 33.1594 32.5539 31.3914 34.1118L36.0121 38.7328C39.4239 35.034 42.5 29.16 42.5 24C42.5 22.6105 42.3699 21.3533 42.126 20.1388L43.6111 20.0833Z" fill="#FF3D00"></path><path d="M24 5.5C28.5363 5.5 32.6393 7.2898 36.0121 10.2672L31.3914 14.888C29.4312 13.1118 26.8543 12 24 12C20.6974 12 17.817 13.4357 16.0352 15.6961L11.0264 11.8346C14.3315 8.1636 18.892 5.5 24 5.5Z" fill="#4CAF50"></path><path d="M43.6111 20.0833L42.126 20.1388C42.3699 21.3533 42.5 22.6105 42.5 24C42.5 29.16 39.4239 35.034 36.0121 38.7328L31.3914 34.1118C33.1594 32.5539 34.5102 30.4187 35.303 28H24V20H42V20.0833H43.6111Z" fill="#1976D2"></path></svg>
                         Iniciar con Google
                     </button>
-                    <button id="facebook-login" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-blue-600 text-white hover:bg-blue-700">
-                        <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.81C10.44 7.31 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96C18.34 21.21 22 17.06 22 12.06C22 6.53 17.5 2.04 12 2.04Z"></path></svg>
-                        Iniciar con Facebook
+
+                    <button id="open-email-modal" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-gray-700 text-white hover:bg-gray-600" data-i18n="email_login">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        Iniciar con Correo
                     </button>
                 </div>
                 
-                <div id="user-info" class="hidden space-y-4">
-                    <div class="bg-gray-800 p-4 rounded-lg border border-gray-600">
-                        <p class="text-gray-400 text-xs uppercase tracking-widest mb-1">Operador Conectado</p>
-                        <p id="user-email" class="text-white font-bold text-sm break-all mb-4"></p>
-
-                        <!-- Bloque para mostrar el Código de Juego -->
-                        <div id="game-code-block" class="hidden bg-black/50 p-2 rounded border border-yellow-500/30">
-                            <p class="text-yellow-500 text-[10px] font-mono mb-1">CÓDIGO DE ACCESO (NIVEL 1)</p>
-                            <p id="game-code-display" class="text-white font-mono text-xl tracking-[0.2em] font-bold">CARGANDO...</p>
-                        </div>
-                    </div>
-
-                    <button id="logout-button" class="w-full p-3 rounded-lg font-semibold transition-colors duration-200 bg-red-600 text-white hover:bg-red-700">
-                        Cerrar Sesión
-                    </button>
-                </div>
             </section>
 
             <!-- Navegación Principal -->
@@ -280,18 +335,101 @@
     <!-- Cargar el Sistema de Autenticación Central (El Breaker) -->
     <script type="module" src="assets/js/auth-core.js"></script>
 
+    <!-- Lógica de Traducción (i18n) -->
+    <script>
+        const translations = {
+            es: {
+                install_app: "Instalar Aplicación",
+                google_login: "Iniciar con Google",
+                email_login: "Iniciar con Correo",
+                modal_title: "Acceso de Operador",
+                email_label: "Correo Electrónico",
+                password_label: "Contraseña",
+                login_btn: "Iniciar Sesión",
+                register_btn: "Registrarse",
+                operator_label: "Operador",
+                access_code_label: "CÓDIGO DE ACCESO",
+                logout_btn: "Cerrar Sesión",
+
+                // Textos adicionales que pueden necesitar traducción si se usan en JS
+                welcome_alert: "Bienvenido, Operador.",
+                auth_error: "Error de autenticación",
+                credential_error: "Credenciales incorrectas",
+                email_exists_error: "El correo ya está registrado",
+                weak_pass_error: "La contraseña es muy débil"
+            },
+            en: {
+                install_app: "Install App",
+                google_login: "Sign in with Google",
+                email_login: "Sign in with Email",
+                modal_title: "Operator Access",
+                email_label: "Email Address",
+                password_label: "Password",
+                login_btn: "Log In",
+                register_btn: "Sign Up",
+                operator_label: "Operator",
+                access_code_label: "ACCESS CODE",
+                logout_btn: "Sign Out",
+
+                welcome_alert: "Welcome, Operator.",
+                auth_error: "Authentication Error",
+                credential_error: "Invalid Credentials",
+                email_exists_error: "Email already registered",
+                weak_pass_error: "Password is too weak"
+            }
+        };
+
+        let currentLang = 'es';
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const elements = document.querySelectorAll('[data-i18n]');
+
+            elements.forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+
+            // Actualizar opacidad de botones
+            document.getElementById('lang-btn-es').style.opacity = lang === 'es' ? '1' : '0.5';
+            document.getElementById('lang-btn-en').style.opacity = lang === 'en' ? '1' : '0.5';
+        }
+
+        document.getElementById('lang-btn-es').addEventListener('click', () => changeLanguage('es'));
+        document.getElementById('lang-btn-en').addEventListener('click', () => changeLanguage('en'));
+    </script>
+
     <!-- Lógica de UI para Autenticación -->
     <script>
         // Referencias al DOM
         const loginButtons = document.getElementById('login-buttons');
         const userInfo = document.getElementById('user-info');
-        const userEmail = document.getElementById('user-email');
-        const gameCodeBlock = document.getElementById('game-code-block');
-        const gameCodeDisplay = document.getElementById('game-code-display');
         const googleLoginBtn = document.getElementById('google-login');
-        const facebookLoginBtn = document.getElementById('facebook-login');
-        const logoutBtn = document.getElementById('logout-button');
-        const installButton = document.getElementById('install-pwa-button'); 
+        // Removed central logout btn reference
+        const installButton = document.getElementById('install-pwa-button');
+
+        // Modal elements
+        const authModal = document.getElementById('auth-modal');
+        const openEmailModalBtn = document.getElementById('open-email-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalLoginBtn = document.getElementById('modal-login-btn');
+        const modalRegisterBtn = document.getElementById('modal-register-btn');
+        const modalEmail = document.getElementById('modal-email');
+        const modalPassword = document.getElementById('modal-password');
+        const authErrorMsg = document.getElementById('auth-error-msg');
+
+        // Top Right User UI Elements
+        const userAvatarContainer = document.getElementById('user-avatar-container');
+        const userAvatarBtn = document.getElementById('user-avatar-btn');
+        const userAvatarImg = document.getElementById('user-avatar-img');
+        const userDropdown = document.getElementById('user-dropdown');
+        const menuUserEmail = document.getElementById('menu-user-email');
+        const menuGameCode = document.getElementById('menu-game-code');
+        const menuLogoutBtn = document.getElementById('menu-logout-btn');
+        // Auth Container for centering
+        const authContainer = document.getElementById('auth-container');
 
         // Esperar a que el script de auth se cargue y exponga el objeto global
         // Usamos un intervalo simple para chequear la existencia de LumenfallAuth si fuera necesario,
@@ -307,27 +445,118 @@
 
             // Conectar botones
             if(googleLoginBtn) googleLoginBtn.onclick = window.LumenfallAuth.loginWithGoogle;
-            if(facebookLoginBtn) facebookLoginBtn.onclick = window.LumenfallAuth.loginWithFacebook;
-            if(logoutBtn) logoutBtn.onclick = window.LumenfallAuth.logout;
+            // Central logout button removed, using menu logout now
+
+            // Top Right UI Logic
+            if(userAvatarBtn) {
+                userAvatarBtn.onclick = (e) => {
+                    e.stopPropagation(); // Prevent closing immediately
+                    userDropdown.classList.toggle('hidden');
+                };
+            }
+
+            // Close dropdown when clicking outside
+            window.addEventListener('click', () => {
+                if(userDropdown && !userDropdown.classList.contains('hidden')) {
+                    userDropdown.classList.add('hidden');
+                }
+            });
+
+            if(userDropdown) {
+                 userDropdown.addEventListener('click', (e) => e.stopPropagation());
+            }
+
+            if(menuLogoutBtn) menuLogoutBtn.onclick = window.LumenfallAuth.logout;
+
+            // Modal Logic
+            if(openEmailModalBtn) {
+                openEmailModalBtn.onclick = () => {
+                    authModal.classList.remove('hidden');
+                    authErrorMsg.classList.add('hidden');
+                };
+            }
+
+            if(closeModalBtn) {
+                closeModalBtn.onclick = () => {
+                    authModal.classList.add('hidden');
+                };
+            }
+
+            // Close modal when clicking outside
+            if(authModal) {
+                authModal.addEventListener('click', (e) => {
+                    if(e.target === authModal) {
+                        authModal.classList.add('hidden');
+                    }
+                });
+            }
+
+            async function handleEmailAuth(isRegister) {
+                const email = modalEmail.value;
+                const password = modalPassword.value;
+
+                if(!email || !password) {
+                    authErrorMsg.textContent = "Por favor ingresa correo y contraseña";
+                    authErrorMsg.classList.remove('hidden');
+                    return;
+                }
+
+                authErrorMsg.classList.add('hidden');
+
+                let result;
+                if(isRegister) {
+                    result = await window.LumenfallAuth.registerWithEmail(email, password);
+                } else {
+                    result = await window.LumenfallAuth.loginWithEmail(email, password);
+                }
+
+                if(result.success) {
+                    authModal.classList.add('hidden');
+                    // Reset inputs
+                    modalEmail.value = '';
+                    modalPassword.value = '';
+                } else {
+                    console.log(result.error);
+                    let msg = "Error de autenticación";
+                    if(result.error.code === 'auth/invalid-credential' || result.error.code === 'auth/wrong-password') msg = "Credenciales incorrectas";
+                    if(result.error.code === 'auth/email-already-in-use') msg = "El correo ya está registrado";
+                    if(result.error.code === 'auth/weak-password') msg = "La contraseña es muy débil";
+
+                    authErrorMsg.textContent = msg;
+                    authErrorMsg.classList.remove('hidden');
+                }
+            }
+
+            if(modalLoginBtn) modalLoginBtn.onclick = () => handleEmailAuth(false);
+            if(modalRegisterBtn) modalRegisterBtn.onclick = () => handleEmailAuth(true);
+
 
             // Suscribirse a cambios de estado
             window.LumenfallAuth.onStateChanged((user, userData) => {
                 if (user) {
-                    userEmail.textContent = user.email || 'Agente';
-                    loginButtons.classList.add('hidden');
-                    userInfo.classList.remove('hidden');
+                    // Logged In State
+                    authContainer.classList.add('hidden'); // Hide center box
+                    userAvatarContainer.classList.remove('hidden'); // Show top right UI
+
+                    // Update Dropdown Data
+                    menuUserEmail.textContent = user.email || 'Agente';
+                    if(user.photoURL) {
+                        userAvatarImg.src = user.photoURL;
+                    } else {
+                        // Default placeholder if no photo
+                        userAvatarImg.src = "assets/imagenes/icono-inicio-web/icono-joziel-2.png";
+                    }
 
                     if (userData && userData.gameCode) {
-                        gameCodeBlock.classList.remove('hidden');
-                        gameCodeDisplay.textContent = userData.gameCode;
+                        menuGameCode.textContent = userData.gameCode;
                     } else {
-                        gameCodeBlock.classList.add('hidden');
+                        menuGameCode.textContent = "----";
                     }
                 } else {
-                    userEmail.textContent = '';
-                    gameCodeBlock.classList.add('hidden');
+                    // Logged Out State
+                    authContainer.classList.remove('hidden'); // Show center box
+                    userAvatarContainer.classList.add('hidden'); // Hide top right UI
                     loginButtons.classList.remove('hidden');
-                    userInfo.classList.add('hidden');
                 }
             });
         }

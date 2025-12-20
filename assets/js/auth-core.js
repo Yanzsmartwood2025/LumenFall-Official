@@ -4,7 +4,8 @@ import {
     onAuthStateChanged,
     signInWithPopup,
     GoogleAuthProvider,
-    FacebookAuthProvider,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
     signInWithCustomToken,
     signInAnonymously,
     signOut
@@ -119,13 +120,23 @@ window.LumenfallAuth = {
         }
     },
 
-    loginWithFacebook: async () => {
-        const provider = new FacebookAuthProvider();
+    loginWithEmail: async (email, password) => {
         try {
-            await signInWithPopup(auth, provider);
+            await signInWithEmailAndPassword(auth, email, password);
+            return { success: true };
         } catch (error) {
-            console.error("Login Facebook Failed:", error);
-            alert("Error de autenticación con Facebook.");
+            console.error("Login Email Failed:", error);
+            return { success: false, error: error };
+        }
+    },
+
+    registerWithEmail: async (email, password) => {
+        try {
+            await createUserWithEmailAndPassword(auth, email, password);
+            return { success: true };
+        } catch (error) {
+            console.error("Register Email Failed:", error);
+            return { success: false, error: error };
         }
     },
 
