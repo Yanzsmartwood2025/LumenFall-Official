@@ -1,15 +1,15 @@
 // --- src/game.js (Lógica Principal) ---
 
         const assetUrls = {
-            runningSprite: 'assets/sprites/Joziel/Movimiento/Correr-1.png',
-            runningBackSprite: 'assets/sprites/Joziel/Movimiento-B/Movimiento-B-1.png',
-            runningShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Sombra-correr-1.jpg',
-            idleSprite: 'assets/sprites/Joziel/Movimiento/Idle.png',
-            idleBackSprite: 'assets/sprites/Joziel/Movimiento-B/idle-B.png',
-            idleShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Idle-sombra.jpg',
-            attackSprite: 'assets/sprites/Joziel/attack_sprite_sheet.png',
-            jumpSprite: 'assets/sprites/Joziel/Movimiento/saltar.png',
-            jumpBackSprite: 'assets/sprites/Joziel/Movimiento-B/saltar-b.png',
+            runningSprite: 'assets/sprites/Joziel/Movimiento/Correr-1_128.png',
+            runningBackSprite: 'assets/sprites/Joziel/Movimiento-B/Movimiento-B-1_128.png',
+            runningShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Sombra-correr_128.jpg',
+            idleSprite: 'assets/sprites/Joziel/Movimiento/Idle_128.png',
+            idleBackSprite: 'assets/sprites/Joziel/Movimiento-B/idle-B_128.png',
+            idleShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Idle-sombra_128.jpg',
+            attackSprite: 'assets/sprites/Joziel/attack_sprite_sheet_128.png',
+            jumpSprite: 'assets/sprites/Joziel/Movimiento/saltar_128.png',
+            jumpBackSprite: 'assets/sprites/Joziel/Movimiento-B/saltar-b_128.png',
             flameParticle: 'assets/vfx/particles/fuego.png',
             wallTexture: 'assets/environment/dungeon/pared-calabozo.png',
             doorTexture: 'assets/environment/dungeon/puerta-calabozo.png',
@@ -1163,7 +1163,7 @@
                 this.attackTexture.repeat.x = 1 / totalAttackFrames;
 
                 const playerHeight = 4.2;
-                const playerWidth = 2.9;
+                const playerWidth = 4.2;
 
                 const playerGeometry = new THREE.PlaneGeometry(playerWidth, playerHeight);
                 const playerMaterial = new THREE.MeshBasicMaterial({
