@@ -4,10 +4,10 @@ import {
     onAuthStateChanged,
     signInWithPopup,
     GoogleAuthProvider,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signInWithCustomToken,
-    signInAnonymously,
+    GithubAuthProvider,
+    sendSignInLinkToEmail,
+    isSignInWithEmailLink,
+    signInWithEmailLink,
     signOut
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import {
@@ -80,11 +80,12 @@ async function handleUserProfile(user) {
 
             const userData = {
                 email: user.email,
-                displayName: user.displayName || "Agente Desconocido",
+                displayName: user.displayName || user.email.split('@')[0], // Usar parte del email si no hay nombre
+                photoURL: user.photoURL || null,
                 gameCode: newCode,
                 createdAt: serverTimestamp(),
                 lastLogin: serverTimestamp(),
-                roles: ['user'] // Roles futuros: admin, beta-tester, etc.
+                roles: ['user']
             };
 
             await setDoc(userRef, userData);
@@ -107,54 +108,92 @@ window.LumenfallAuth = {
     db: db,
     analytics: analytics,
     currentUser: null,
-    userData: null, // Datos extendidos desde Firestore (incluyendo gameCode)
+    userData: null,
 
-    // Métodos de Login
+    // --- Métodos de Login ---
+
+    // 1. Google
     loginWithGoogle: async () => {
         const provider = new GoogleAuthProvider();
         try {
             await signInWithPopup(auth, provider);
         } catch (error) {
             console.error("Login Google Failed:", error);
-            alert("Error de autenticación con Google.");
+            alert("Error de autenticación con Google: " + error.message);
         }
     },
 
-    loginWithEmail: async (email, password) => {
+    // 2. GitHub
+    loginWithGithub: async () => {
+        const provider = new GithubAuthProvider();
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            await signInWithPopup(auth, provider);
+        } catch (error) {
+            console.error("Login GitHub Failed:", error);
+            alert("Error de autenticación con GitHub: " + error.message);
+        }
+    },
+
+    // 3. Magic Link (Email sin contraseña)
+    sendMagicLink: async (email) => {
+        const actionCodeSettings = {
+            // URL a la que se redirige después de hacer clic.
+            // Debe estar en la lista de dominios autorizados de Firebase Console.
+            url: window.location.href, // Redirige a la misma página donde estaba
+            handleCodeInApp: true
+        };
+
+        try {
+            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+            // Guardar el email localmente para no pedirlo de nuevo al volver
+            window.localStorage.setItem('emailForSignIn', email);
             return { success: true };
         } catch (error) {
-            console.error("Login Email Failed:", error);
+            console.error("Magic Link Failed:", error);
             return { success: false, error: error };
         }
     },
 
-    registerWithEmail: async (email, password) => {
-        try {
-            await createUserWithEmailAndPassword(auth, email, password);
-            return { success: true };
-        } catch (error) {
-            console.error("Register Email Failed:", error);
-            return { success: false, error: error };
+    // 4. Finalizar Login con Magic Link (Llamar al cargar la página)
+    checkAndSignInWithMagicLink: async () => {
+        if (isSignInWithEmailLink(auth, window.location.href)) {
+            let email = window.localStorage.getItem('emailForSignIn');
+
+            // Si el usuario abrió el link en otro dispositivo, pedir el email
+            if (!email) {
+                email = window.prompt('Por favor, confirma tu correo electrónico para iniciar sesión:');
+            }
+
+            if (email) {
+                try {
+                    const result = await signInWithEmailLink(auth, email, window.location.href);
+                    window.localStorage.removeItem('emailForSignIn'); // Limpiar
+                    // Reemplazar la URL para limpiar el hash del link
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    return { success: true, user: result.user };
+                } catch (error) {
+                    console.error("Error finalizando Magic Link:", error);
+                    return { success: false, error: error };
+                }
+            }
         }
+        return { success: false, notLink: true };
     },
 
     logout: async () => {
         try {
             await signOut(auth);
-            window.location.reload(); // Recargar para limpiar estados
+            window.location.reload();
         } catch (error) {
             console.error("Logout Failed:", error);
         }
     },
 
-    // Método para suscribirse a cambios de estado desde otras páginas
+    // Método para suscribirse a cambios de estado
     onStateChanged: (callback) => {
         onAuthStateChanged(auth, async (user) => {
             window.LumenfallAuth.currentUser = user;
             if (user) {
-                // Cargar datos adicionales (código de juego, etc.)
                 const data = await handleUserProfile(user);
                 window.LumenfallAuth.userData = data;
                 callback(user, data);
@@ -165,20 +204,3 @@ window.LumenfallAuth = {
         });
     }
 };
-
-// --- 6. Inicio Automático / Anónimo ---
-(async () => {
-    // Si ya hay usuario, onAuthStateChanged lo manejará.
-    // Si queremos inicio anónimo automático si no hay user:
-    /*
-    if (!auth.currentUser && !initialAuthToken) {
-        try {
-            await signInAnonymously(auth);
-            console.log("👻 Acceso Anónimo Iniciado.");
-        } catch (error) {
-            console.error("Anonymous Auth Failed:", error);
-        }
-    }
-    */
-   // NOTA: Para este requerimiento, preferimos que el usuario se loguee explícitamente para obtener el código.
-})();

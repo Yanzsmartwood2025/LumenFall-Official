@@ -141,27 +141,42 @@
 
                 <h2 class="text-2xl font-bold text-white mb-6 text-center" data-i18n="modal_title">Acceso de Operador</h2>
 
-                <form id="email-auth-form" class="space-y-4">
-                    <div>
-                        <label class="block text-gray-400 text-sm mb-1" data-i18n="email_label">Correo Electrónico</label>
-                        <input type="email" id="modal-email" class="w-full bg-gray-800 border border-gray-600 rounded p-2 text-white focus:border-teal-500 focus:outline-none" required>
-                    </div>
-                    <div>
-                        <label class="block text-gray-400 text-sm mb-1" data-i18n="password_label">Contraseña</label>
-                        <input type="password" id="modal-password" class="w-full bg-gray-800 border border-gray-600 rounded p-2 text-white focus:border-teal-500 focus:outline-none" required>
+                <div class="space-y-4">
+                     <!-- 1. Google Button -->
+                    <button id="modal-google-btn" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-white text-gray-800 hover:bg-gray-200">
+                        <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M43.6111 20.0833H42V20H24V28H35.303C33.6747 32.6596 29.2235 36 24 36C17.373 36 12 30.627 12 24C12 17.373 17.373 12 24 12C26.8543 12 29.4312 13.1118 31.3914 14.888L36.0121 10.2672C32.6393 7.2898 28.5363 5.5 24 5.5C13.797 5.5 5.5 13.797 5.5 24C5.5 34.203 13.797 42.5 24 42.5C34.203 42.5 42.5 34.203 42.5 24C42.5 22.6105 42.3699 21.3533 42.126 20.1388L43.6111 20.0833Z" fill="#FFC107"></path><path d="M43.6111 20.0833H42V20H24V28H35.303C34.5102 30.4187 33.1594 32.5539 31.3914 34.1118L36.0121 38.7328C39.4239 35.034 42.5 29.16 42.5 24C42.5 22.6105 42.3699 21.3533 42.126 20.1388L43.6111 20.0833Z" fill="#FF3D00"></path><path d="M24 5.5C28.5363 5.5 32.6393 7.2898 36.0121 10.2672L31.3914 14.888C29.4312 13.1118 26.8543 12 24 12C20.6974 12 17.817 13.4357 16.0352 15.6961L11.0264 11.8346C14.3315 8.1636 18.892 5.5 24 5.5Z" fill="#4CAF50"></path><path d="M43.6111 20.0833L42.126 20.1388C42.3699 21.3533 42.5 22.6105 42.5 24C42.5 29.16 39.4239 35.034 36.0121 38.7328L31.3914 34.1118C33.1594 32.5539 34.5102 30.4187 35.303 28H24V20H42V20.0833H43.6111Z" fill="#1976D2"></path></svg>
+                        <span data-i18n="google_login">Iniciar con Google</span>
+                    </button>
+
+                     <!-- 2. GitHub Button -->
+                    <button id="modal-github-btn" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-gray-800 text-white hover:bg-black border border-gray-600">
+                        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
+                        <span data-i18n="github_login">Iniciar con GitHub</span>
+                    </button>
+
+                    <div class="relative flex py-2 items-center">
+                        <div class="flex-grow border-t border-gray-600"></div>
+                        <span class="flex-shrink-0 mx-4 text-gray-500 text-xs uppercase" data-i18n="or_email">O usa tu Correo</span>
+                        <div class="flex-grow border-t border-gray-600"></div>
                     </div>
 
-                    <div id="auth-error-msg" class="text-red-500 text-sm text-center hidden"></div>
+                    <form id="email-auth-form" class="space-y-4">
+                        <div>
+                            <!-- <label class="block text-gray-400 text-sm mb-1" data-i18n="email_label">Correo Electrónico</label> -->
+                            <input type="email" id="modal-email" placeholder="nombre@ejemplo.com" class="w-full bg-gray-800 border border-gray-600 rounded p-3 text-white focus:border-teal-500 focus:outline-none text-center" required>
+                        </div>
 
-                    <div class="flex gap-2 pt-2">
-                        <button type="button" id="modal-login-btn" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold transition-colors" data-i18n="login_btn">
-                            Iniciar Sesión
+                        <div id="auth-success-msg" class="text-green-400 text-sm text-center hidden bg-green-900/30 p-2 rounded border border-green-800">
+                             ¡Enlace enviado! Revisa tu correo.
+                        </div>
+
+                        <div id="auth-error-msg" class="text-red-500 text-sm text-center hidden"></div>
+
+                        <button type="button" id="modal-magic-link-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 rounded font-semibold transition-colors" data-i18n="send_magic_link">
+                            Recibir Enlace de Acceso
                         </button>
-                        <button type="button" id="modal-register-btn" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded font-semibold transition-colors" data-i18n="register_btn">
-                            Registrarse
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -405,20 +420,20 @@
     <script>
         // Referencias al DOM
         const loginButtons = document.getElementById('login-buttons');
-        const userInfo = document.getElementById('user-info');
+        // Removed userInfo reference as it wasn't used
         const googleLoginBtn = document.getElementById('google-login');
-        // Removed central logout btn reference
         const installButton = document.getElementById('install-pwa-button');
 
         // Modal elements
         const authModal = document.getElementById('auth-modal');
         const openEmailModalBtn = document.getElementById('open-email-modal');
         const closeModalBtn = document.getElementById('close-modal-btn');
-        const modalLoginBtn = document.getElementById('modal-login-btn');
-        const modalRegisterBtn = document.getElementById('modal-register-btn');
+        const modalGoogleBtn = document.getElementById('modal-google-btn');
+        const modalGithubBtn = document.getElementById('modal-github-btn');
+        const modalMagicLinkBtn = document.getElementById('modal-magic-link-btn');
         const modalEmail = document.getElementById('modal-email');
-        const modalPassword = document.getElementById('modal-password');
         const authErrorMsg = document.getElementById('auth-error-msg');
+        const authSuccessMsg = document.getElementById('auth-success-msg');
 
         // Top Right User UI Elements
         const userAvatarContainer = document.getElementById('user-avatar-container');
@@ -431,11 +446,8 @@
         // Auth Container for centering
         const authContainer = document.getElementById('auth-container');
 
-        // Esperar a que el script de auth se cargue y exponga el objeto global
-        // Usamos un intervalo simple para chequear la existencia de LumenfallAuth si fuera necesario,
-        // pero como es type="module" y este script es diferido (o posterior), usaremos un evento o
-        // confiaremos en que el módulo se ejecute.
-        // La mejor manera con módulos es esperar a que LumenfallAuth esté disponible.
+        // Game Link Gatekeeping
+        const gameLink = document.querySelector('a[href="./Lumenfall-juego/index.html"]');
 
         function initUI() {
             if (!window.LumenfallAuth) {
@@ -443,36 +455,53 @@
                 return;
             }
 
-            // Conectar botones
-            if(googleLoginBtn) googleLoginBtn.onclick = window.LumenfallAuth.loginWithGoogle;
-            // Central logout button removed, using menu logout now
+            // --- 0. Chequeo Inicial: Magic Link Return ---
+            // Si el usuario viene del correo, completamos el login.
+            window.LumenfallAuth.checkAndSignInWithMagicLink().then((result) => {
+                if(result.success) {
+                    console.log("Magic Link Login Success!", result.user);
+                } else if(result.error) {
+                    console.error("Magic Link Error", result.error);
+                    alert("El enlace ha expirado o es inválido.");
+                }
+            });
 
-            // Top Right UI Logic
+            // --- 1. Botones Principales (Centro) ---
+            if(googleLoginBtn) googleLoginBtn.onclick = window.LumenfallAuth.loginWithGoogle;
+
+            // --- 2. Top Right UI Logic ---
             if(userAvatarBtn) {
                 userAvatarBtn.onclick = (e) => {
-                    e.stopPropagation(); // Prevent closing immediately
+                    e.stopPropagation();
                     userDropdown.classList.toggle('hidden');
                 };
             }
 
-            // Close dropdown when clicking outside
             window.addEventListener('click', () => {
                 if(userDropdown && !userDropdown.classList.contains('hidden')) {
                     userDropdown.classList.add('hidden');
                 }
             });
 
-            if(userDropdown) {
-                 userDropdown.addEventListener('click', (e) => e.stopPropagation());
-            }
-
+            if(userDropdown) userDropdown.addEventListener('click', (e) => e.stopPropagation());
             if(menuLogoutBtn) menuLogoutBtn.onclick = window.LumenfallAuth.logout;
 
-            // Modal Logic
-            if(openEmailModalBtn) {
-                openEmailModalBtn.onclick = () => {
-                    authModal.classList.remove('hidden');
-                    authErrorMsg.classList.add('hidden');
+            // --- 3. Modal Logic ---
+            const showModal = () => {
+                authModal.classList.remove('hidden');
+                authErrorMsg.classList.add('hidden');
+                authSuccessMsg.classList.add('hidden');
+            };
+
+            if(openEmailModalBtn) openEmailModalBtn.onclick = showModal;
+
+            // Gatekeeping for Game Link
+            if(gameLink) {
+                gameLink.onclick = (e) => {
+                    if(!window.LumenfallAuth.currentUser) {
+                        e.preventDefault(); // Stop navigation
+                        showModal(); // Open login
+                    }
                 };
             }
 
@@ -482,7 +511,6 @@
                 };
             }
 
-            // Close modal when clicking outside
             if(authModal) {
                 authModal.addEventListener('click', (e) => {
                     if(e.target === authModal) {
@@ -491,47 +519,35 @@
                 });
             }
 
-            async function handleEmailAuth(isRegister) {
-                const email = modalEmail.value;
-                const password = modalPassword.value;
+            // Modal Buttons
+            if(modalGoogleBtn) modalGoogleBtn.onclick = window.LumenfallAuth.loginWithGoogle;
+            if(modalGithubBtn) modalGithubBtn.onclick = window.LumenfallAuth.loginWithGithub;
 
-                if(!email || !password) {
-                    authErrorMsg.textContent = "Por favor ingresa correo y contraseña";
-                    authErrorMsg.classList.remove('hidden');
-                    return;
-                }
+            // Magic Link Logic
+            if(modalMagicLinkBtn) {
+                modalMagicLinkBtn.onclick = async () => {
+                    const email = modalEmail.value;
+                    if(!email || !email.includes('@')) {
+                        authErrorMsg.textContent = "Ingresa un correo válido.";
+                        authErrorMsg.classList.remove('hidden');
+                        return;
+                    }
 
-                authErrorMsg.classList.add('hidden');
+                    authErrorMsg.classList.add('hidden');
 
-                let result;
-                if(isRegister) {
-                    result = await window.LumenfallAuth.registerWithEmail(email, password);
-                } else {
-                    result = await window.LumenfallAuth.loginWithEmail(email, password);
-                }
+                    const result = await window.LumenfallAuth.sendMagicLink(email);
 
-                if(result.success) {
-                    authModal.classList.add('hidden');
-                    // Reset inputs
-                    modalEmail.value = '';
-                    modalPassword.value = '';
-                } else {
-                    console.log(result.error);
-                    let msg = "Error de autenticación";
-                    if(result.error.code === 'auth/invalid-credential' || result.error.code === 'auth/wrong-password') msg = "Credenciales incorrectas";
-                    if(result.error.code === 'auth/email-already-in-use') msg = "El correo ya está registrado";
-                    if(result.error.code === 'auth/weak-password') msg = "La contraseña es muy débil";
-
-                    authErrorMsg.textContent = msg;
-                    authErrorMsg.classList.remove('hidden');
-                }
+                    if(result.success) {
+                         authSuccessMsg.classList.remove('hidden');
+                         modalMagicLinkBtn.textContent = "Reenviar Enlace";
+                    } else {
+                        authErrorMsg.textContent = "Error al enviar: " + result.error.message;
+                        authErrorMsg.classList.remove('hidden');
+                    }
+                };
             }
 
-            if(modalLoginBtn) modalLoginBtn.onclick = () => handleEmailAuth(false);
-            if(modalRegisterBtn) modalRegisterBtn.onclick = () => handleEmailAuth(true);
-
-
-            // Suscribirse a cambios de estado
+            // --- 4. Suscribirse a cambios de estado ---
             window.LumenfallAuth.onStateChanged((user, userData) => {
                 if (user) {
                     // Logged In State
@@ -540,6 +556,7 @@
 
                     // Update Dropdown Data
                     menuUserEmail.textContent = user.email || 'Agente';
+
                     if(user.photoURL) {
                         userAvatarImg.src = user.photoURL;
                     } else {

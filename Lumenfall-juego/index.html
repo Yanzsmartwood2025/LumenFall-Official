@@ -124,8 +124,56 @@
         <button id="continue-button">Continuar</button>
         <button id="quit-button">Salir</button>
     </div>
+
     <!-- Auth Core -->
     <script type="module" src="../assets/js/auth-core.js"></script>
+
+    <!-- In-Game Authentication & UI Update Logic -->
+    <script>
+        // Wait for window load to ensure modules are ready
+        window.addEventListener('load', () => {
+
+            function checkAuth() {
+                // Wait for Auth Core to initialize
+                if (!window.LumenfallAuth) {
+                    requestAnimationFrame(checkAuth);
+                    return;
+                }
+
+                // Subscribe to Auth State
+                window.LumenfallAuth.onStateChanged((user, userData) => {
+                    if (!user) {
+                        // Security Breaker: Redirect if not logged in
+                        console.warn("⚠️ UNAUTHORIZED ACCESS DETECTED. REDIRECTING...");
+                        window.location.href = "../index.html";
+                    } else {
+                        // User Authenticated - Update HUD
+                        console.log("✅ Pilot Authenticated:", user.displayName || user.email);
+
+                        const profileImg = document.getElementById('player-profile-image');
+                        const nameLabel = document.querySelector('.stat-label');
+
+                        // Update Profile Image
+                        if (profileImg && user.photoURL) {
+                            profileImg.src = user.photoURL;
+                        }
+
+                        // Update Name Label
+                        if (nameLabel) {
+                            // Prioritize Display Name, fallback to part of email, fallback to OPERATOR
+                            let displayName = user.displayName;
+                            if(!displayName && user.email) displayName = user.email.split('@')[0];
+                            if(!displayName) displayName = "OPERADOR";
+
+                            nameLabel.textContent = displayName.toUpperCase();
+                        }
+                    }
+                });
+            }
+
+            checkAuth();
+        });
+    </script>
 
     <script src="js/game.js"></script>
 
