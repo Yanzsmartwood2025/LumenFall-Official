@@ -10,20 +10,19 @@
             attackSprite: 'assets/sprites/Joziel/attack_sprite_sheet_128.png',
             jumpSprite: 'assets/sprites/Joziel/Movimiento/saltar_128.png',
             jumpBackSprite: 'assets/sprites/Joziel/Movimiento-B/saltar-b_128.png',
-            flameParticle: 'assets/vfx/particles/fuego.png',
-            wallTexture: 'assets/environment/dungeon/pared-calabozo.png',
-            doorTexture: 'assets/environment/dungeon/puerta-calabozo.png',
-            floorTexture: 'assets/environment/dungeon/piso-calabozo.png',
-            torchTexture: 'assets/environment/props/antorcha.png',
-            specterTexture: 'assets/sprites/enemies/fantasma.png', // Mantenido para DecorGhost
+            flameParticle: 'assets/FX/particles/fuego.png',
+            wallTexture: 'assets/Ambiente/dungeon/pared-calabozo.png',
+            doorTexture: 'assets/Ambiente/dungeon/puerta-calabozo.png',
+            floorTexture: 'assets/Ambiente/dungeon/piso-calabozo.png',
+            torchTexture: 'assets/Ambiente/props/antorcha.png',
+            specterTexture: 'assets/sprites/Enemigos/fantasma.png', // Mantenido para DecorGhost
             introImage: 'assets/ui/Intro.jpg',
             menuBackgroundImage: 'assets/ui/menu-principal.jpg',
             animatedEnergyBar: 'assets/ui/barra-de-energia.png',
-            enemySprite: 'assets/sprites/enemies/enemigo-1.png?v=2',
-            enemyX1Run: 'assets/sprites/enemies/Ataques-enemigo1/correr-1.png',
-            enemyX1Attack: 'assets/sprites/enemies/Ataques-enemigo1/ataque-1.png',
-            enemyX1Death: 'assets/sprites/enemies/Ataques-enemigo1/muerte-1.png',
-            dustParticle: 'assets/vfx/particles/Polvo.png'
+            enemyX1Run: 'assets/sprites/Enemigos/Ataques-enemigo1/correr-1.png',
+            enemyX1Attack: 'assets/sprites/Enemigos/Ataques-enemigo1/ataque-1.png',
+            enemyX1Death: 'assets/sprites/Enemigos/Ataques-enemigo1/muerte-1.png',
+            dustParticle: 'assets/FX/particles/Polvo.png'
         };
 
         const totalRunningFrames = 9;
@@ -105,7 +104,6 @@
         let player;
         const allFlames = [];
         const allFootstepParticles = [];
-        const allSimpleEnemies = [];
         const allEnemiesX1 = [];
         const allDecorGhosts = [];
         window.allEnemiesX1 = allEnemiesX1; // Debug exposure
@@ -349,12 +347,6 @@
                 player.update(deltaTime, { joyVector, attackHeld });
 
                 // Collision detection between player and enemies
-                allSimpleEnemies.forEach(enemy => {
-                    if (!player.isInvincible && player.mesh.position.distanceTo(enemy.mesh.position) < 2) {
-                        player.takeDamage(player.maxHealth * 0.05, enemy);
-                    }
-                });
-
                 allEnemiesX1.forEach(enemy => {
                     if (!player.isInvincible && player.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                         player.takeDamage(player.maxHealth * 0.10, enemy);
@@ -466,7 +458,6 @@
                     allFootstepParticles.splice(i, 1);
                 }
             }
-            allSimpleEnemies.forEach(enemy => enemy.update(deltaTime));
             allEnemiesX1.forEach(enemy => enemy.update(deltaTime));
             allDecorGhosts.forEach(ghost => ghost.update(deltaTime));
             allPuzzles.forEach(puzzle => puzzle.update(deltaTime));
@@ -1996,11 +1987,6 @@
             allFlames.length = 0;
             allFootstepParticles.length = 0;
             // Removed allSpecters.length = 0
-            allSimpleEnemies.forEach(enemy => {
-                 if (enemy.stopAudio) enemy.stopAudio();
-                 scene.remove(enemy.mesh);
-            });
-            allSimpleEnemies.length = 0;
             allEnemiesX1.forEach(enemy => {
                  if (enemy.stopAudio) enemy.stopAudio();
                  scene.remove(enemy.mesh);
@@ -2108,9 +2094,7 @@
             loadLevel(levelData);
 
             if (levelId === 'room_3') {
-                if (allSimpleEnemies.length === 0) {
-                    // allSimpleEnemies.push(new SimpleEnemy(scene, 0)); // Disabled
-                }
+                // Room 3 logic cleaned
             }
 
             if (levelId === 'dungeon_1') {
@@ -2157,162 +2141,6 @@
             },
             boss_room: { id: 'boss_room', name: 'Sala del Jefe', gates: [{ id: 'return_boss', x: 0, destination: 'dungeon_1', numeral: 'VI' }], specters: [] },
         };
-
-        // ... (SimpleEnemy, Specter removed, WalkingMonster removed)
-
-        class SimpleEnemy {
-             // Keeping SimpleEnemy as per request? "Elimina la clase 'WalkingMonster'... Solo debe quedar 'EnemyX1'."
-             // The user didn't explicitly say "Remove SimpleEnemy" (the small one in room 3), but "Elimina la clase 'WalkingMonster'... Solo debe quedar 'EnemyX1'".
-             // WalkingMonster was the 1-strip enemy. SimpleEnemy is the old one.
-             // Usually "Solo debe quedar 'EnemyX1'" implies removing others.
-             // However, checking loadLevelById: SimpleEnemy is commented out in room_3.
-             // I will keep SimpleEnemy for now as it wasn't explicitly targeted like WalkingMonster/Specter, or if it is unused I can leave it.
-             // Actually, the prompt said: "Elimina definitivamente la clase 'WalkingMonster' (el enemigo de una sola franja). Solo debe quedar 'EnemyX1'."
-             // Context implies cleaning up the dungeon.
-             // I will leave SimpleEnemy class definition but it is not instantiated in dungeon_1.
-             constructor(scene, initialX) {
-                this.scene = scene;
-                this.texture = textureLoader.load(assetUrls.enemySprite);
-                this.texture.repeat.x = 1 / totalEnemyFrames;
-                const enemyHeight = 5.6;
-                const enemyWidth = 1.8;
-                const enemyMaterial = new THREE.MeshStandardMaterial({
-                    map: this.texture,
-                    transparent: true,
-                    alphaTest: 0.1,
-                    side: THREE.DoubleSide
-                });
-                const enemyGeometry = new THREE.PlaneGeometry(enemyWidth, enemyHeight);
-                this.mesh = new THREE.Mesh(enemyGeometry, enemyMaterial);
-                this.mesh.position.set(initialX, enemyHeight / 2, 0);
-                this.mesh.castShadow = true;
-                this.mesh.frustumCulled = false;
-                this.scene.add(this.mesh);
-                this.hitCount = 0;
-                this.isAlive = true;
-                this.state = 'PATROL';
-                this.detectionRange = 6.0;
-                this.patrolSpeed = 0.03;
-                this.pursueSpeed = 0.045;
-                this.currentFrame = 0;
-                this.lastFrameTime = 0;
-                this.direction = -1;
-                this.patrolRange = { min: -playableAreaWidth / 2 + 5, max: playableAreaWidth / 2 - 5 };
-                this.mesh.position.x = this.patrolRange.max;
-                this.stepTimer = 0;
-                this.impactTimer = Math.random() * 5 + 3;
-                this.growlSource = null;
-                this.growlGain = null;
-                this.startGrowl();
-            }
-
-            startGrowl() {
-                if (!audioBuffers['enemy1_growl']) return;
-                this.growlSource = audioContext.createBufferSource();
-                this.growlSource.buffer = audioBuffers['enemy1_growl'];
-                this.growlSource.loop = true;
-                this.growlGain = audioContext.createGain();
-                this.growlGain.gain.value = 0;
-                this.growlSource.connect(this.growlGain).connect(audioContext.destination);
-                this.growlSource.start();
-            }
-
-            stopAudio(fadeOutDuration = 0) {
-                if (this.growlSource) {
-                    if (fadeOutDuration > 0 && this.growlGain) {
-                        try {
-                            const now = audioContext.currentTime;
-                            this.growlGain.gain.setValueAtTime(this.growlGain.gain.value, now);
-                            this.growlGain.gain.linearRampToValueAtTime(0, now + fadeOutDuration);
-                            this.growlSource.stop(now + fadeOutDuration);
-                        } catch(e) {
-                             this.growlSource.stop();
-                        }
-                    } else {
-                        try { this.growlSource.stop(); } catch(e) {}
-                    }
-                    this.growlSource = null;
-                }
-            }
-
-            playScopedSound(name, rate, baseVolume, distance) {
-                if (!audioBuffers[name]) return;
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffers[name];
-                source.playbackRate.value = rate;
-                const gain = audioContext.createGain();
-                const maxDist = 30;
-                let vol = 1 - (distance / maxDist);
-                if (vol < 0) vol = 0;
-                gain.gain.value = baseVolume * vol * vol;
-                source.connect(gain).connect(audioContext.destination);
-                source.start();
-            }
-
-            update(deltaTime) {
-                if (!this.isAlive || !player) return;
-                const distanceToPlayer = this.mesh.position.distanceTo(player.mesh.position);
-                if (this.growlGain) {
-                    const maxDist = 30;
-                    let vol = 1 - (distanceToPlayer / maxDist);
-                    if (vol < 0) vol = 0;
-                    this.growlGain.gain.setTargetAtTime(vol * 1.0, audioContext.currentTime, 0.1);
-                }
-                this.stepTimer -= deltaTime;
-                if (this.stepTimer <= 0) {
-                    this.playScopedSound('enemy1_step', 0.7, 0.8, distanceToPlayer);
-                    this.stepTimer = 1.2;
-                }
-                this.impactTimer -= deltaTime;
-                if (this.impactTimer <= 0) {
-                     this.playScopedSound('enemy1_impact', 1.0, 1.0, distanceToPlayer);
-                     this.impactTimer = Math.random() * 6 + 4;
-                }
-                if (distanceToPlayer < this.detectionRange) {
-                    this.state = 'PURSUE';
-                } else {
-                    this.state = 'PATROL';
-                }
-                let currentSpeed = this.patrolSpeed;
-                if (this.state === 'PURSUE') {
-                    currentSpeed = this.pursueSpeed;
-                    this.direction = (player.mesh.position.x > this.mesh.position.x) ? 1 : -1;
-                } else {
-                    if (this.mesh.position.x <= this.patrolRange.min) {
-                        this.direction = 1;
-                    } else if (this.mesh.position.x >= this.patrolRange.max) {
-                        this.direction = -1;
-                    }
-                }
-                this.mesh.position.x += currentSpeed * this.direction;
-                const isFacingLeft = (player.mesh.position.x < this.mesh.position.x);
-                this.mesh.rotation.y = isFacingLeft ? Math.PI : 0;
-                if (Date.now() - this.lastFrameTime > animationSpeed) {
-                    this.lastFrameTime = Date.now();
-                    this.currentFrame = (this.currentFrame + 1) % totalEnemyFrames;
-                    this.texture.offset.x = this.currentFrame / totalEnemyFrames;
-                }
-            }
-
-            takeHit() {
-                if (!this.isAlive) return;
-                this.hitCount++;
-                if (this.hitCount >= 6) {
-                    this.isAlive = false;
-                    this.scene.remove(this.mesh);
-                    this.stopAudio(1.5);
-                    if (Math.random() < 0.5) {
-                        const dropPosition = this.mesh.position.clone();
-                        const type = Math.random() < 0.5 ? 'health' : 'power';
-                        allPowerUps.push(new PowerUp(this.scene, dropPosition, type));
-                    }
-                    const index = allSimpleEnemies.indexOf(this);
-                    if (index > -1) {
-                        allSimpleEnemies.splice(index, 1);
-                    }
-                }
-            }
-        }
 
         class EnemyX1 {
             constructor(scene, initialX) {
@@ -2829,17 +2657,6 @@
                     playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
                     this.lifetime = 0;
                     return false;
-                }
-
-                // Collision with simple enemies
-                for (const enemy of allSimpleEnemies) {
-                    if (this.mesh.position.distanceTo(enemy.mesh.position) < (enemy.mesh.geometry.parameters.height / 2)) {
-                        enemy.takeHit();
-                        allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
-                        playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
-                        this.lifetime = 0; // Mark for removal
-                        return false; // Projectile disappears
-                    }
                 }
 
                 // Collision with Enemy X1
