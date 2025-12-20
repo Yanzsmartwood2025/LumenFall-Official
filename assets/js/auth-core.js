@@ -1,6 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import {
     getAuth,
+    setPersistence,
+    browserLocalPersistence,
     onAuthStateChanged,
     signInWithPopup,
     GoogleAuthProvider,
@@ -47,6 +49,16 @@ let app, auth, db, analytics;
 try {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
+
+    // Configurar Persistencia Local Inmediata
+    setPersistence(auth, browserLocalPersistence)
+        .then(() => {
+             console.log("🔒 Lumenfall System: Session Persistence Enabled.");
+        })
+        .catch((error) => {
+             console.error("⚠️ Lumenfall System: Persistence Warning:", error);
+        });
+
     db = getFirestore(app);
     analytics = getAnalytics(app);
     console.log("⚡ Lumenfall System: Main Breaker Active (Firebase Init).");

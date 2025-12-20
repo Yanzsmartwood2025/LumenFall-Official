@@ -82,6 +82,50 @@
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
         }
+
+        /* --- FASE 3: Autenticación Pro (Visual Identity) --- */
+
+        /* Spinner de carga minimalista */
+        .auth-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #00FFFF; /* Cyan */
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Avatar Místico (CSS Pure) */
+        .mystic-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            /* Radial Gradient: Deep Space Style */
+            background: radial-gradient(circle at center, #1a202c 0%, #000000 100%);
+            /* Borde brillante: Cyan/Fuego */
+            border: 2px solid #00FFFF;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Great Vibes', cursive; /* Firma elegante */
+            font-size: 1.5rem;
+            color: white;
+            text-shadow: 0 0 5px #00FFFF;
+            overflow: hidden;
+        }
+
+        /* Ocultar contenedor de auth por defecto para evitar flicker */
+        #auth-container {
+            display: none;
+        }
+
     </style>
 </head>
 
@@ -199,11 +243,16 @@
             </header>
 
             <!-- Contenedor de Autenticación -->
-            <section id="auth-container" class="w-full max-w-sm mx-auto my-6 text-center">
+            <section class="w-full max-w-sm mx-auto my-6 text-center">
                 
-                <div id="login-buttons" class="space-y-4">
+                <!-- Spinner de Carga (Visible inicialmente) -->
+                <div id="auth-loading-spinner" class="auth-spinner mb-4"></div>
+
+                <div id="auth-container" class="w-full">
                     
-                    <button id="install-pwa-button" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-teal-500 text-white hover:bg-teal-600 hidden" data-i18n="install_app">
+                    <div id="login-buttons" class="space-y-4">
+
+                        <button id="install-pwa-button" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-teal-500 text-white hover:bg-teal-600 hidden" data-i18n="install_app">
                         <svg class="w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                         </svg>
@@ -217,8 +266,9 @@
 
                     <button id="open-email-modal" class="w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200 bg-gray-700 text-white hover:bg-gray-600" data-i18n="email_login">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        Iniciar con Correo
-                    </button>
+                            Iniciar con Correo
+                        </button>
+                    </div>
                 </div>
                 
             </section>
@@ -419,6 +469,7 @@
     <!-- Lógica de UI para Autenticación -->
     <script>
         // Referencias al DOM
+        const authLoadingSpinner = document.getElementById('auth-loading-spinner');
         const loginButtons = document.getElementById('login-buttons');
         // Removed userInfo reference as it wasn't used
         const googleLoginBtn = document.getElementById('google-login');
@@ -549,19 +600,41 @@
 
             // --- 4. Suscribirse a cambios de estado ---
             window.LumenfallAuth.onStateChanged((user, userData) => {
+                // Ocultar Spinner una vez que Firebase responde
+                if(authLoadingSpinner) authLoadingSpinner.style.display = 'none';
+
                 if (user) {
-                    // Logged In State
-                    authContainer.classList.add('hidden'); // Hide center box
-                    userAvatarContainer.classList.remove('hidden'); // Show top right UI
+                    // --- USUARIO LOGUEADO ---
+                    authContainer.style.display = 'none'; // Asegurar oculto
+                    userAvatarContainer.classList.remove('hidden'); // Mostrar UI Top
 
                     // Update Dropdown Data
                     menuUserEmail.textContent = user.email || 'Agente';
 
+                    // Lógica del Avatar (Foto vs Místico)
+                    // Limpiamos contenido previo del botón
+                    userAvatarBtn.innerHTML = '';
+
                     if(user.photoURL) {
-                        userAvatarImg.src = user.photoURL;
+                        // Opción 1: Foto Real (Google/GitHub)
+                        const img = document.createElement('img');
+                        img.src = user.photoURL;
+                        img.alt = "User";
+                        img.className = "w-full h-full object-cover bg-gray-800";
+                        userAvatarBtn.appendChild(img);
+                        // Resetear borde si es foto
+                        userAvatarBtn.className = "w-12 h-12 rounded-full border-2 border-teal-500 overflow-hidden focus:outline-none focus:ring-2 focus:ring-teal-400";
                     } else {
-                        // Default placeholder if no photo
-                        userAvatarImg.src = "assets/imagenes/icono-inicio-web/icono-joziel-2.png";
+                        // Opción 2: Avatar Místico (Email/Sin Foto)
+                        const initial = (user.displayName || user.email || '?').charAt(0).toUpperCase();
+
+                        const mysticDiv = document.createElement('div');
+                        mysticDiv.className = "mystic-avatar";
+                        mysticDiv.textContent = initial;
+
+                        userAvatarBtn.appendChild(mysticDiv);
+                        // Quitar borde externo del botón ya que el mystic-avatar tiene el suyo propio
+                        userAvatarBtn.className = "w-12 h-12 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-teal-400";
                     }
 
                     if (userData && userData.gameCode) {
@@ -570,9 +643,9 @@
                         menuGameCode.textContent = "----";
                     }
                 } else {
-                    // Logged Out State
-                    authContainer.classList.remove('hidden'); // Show center box
-                    userAvatarContainer.classList.add('hidden'); // Hide top right UI
+                    // --- NO USUARIO (LOGIN) ---
+                    authContainer.style.display = 'block'; // Mostrar Login
+                    userAvatarContainer.classList.add('hidden'); // Ocultar UI Top
                     loginButtons.classList.remove('hidden');
                 }
             });
