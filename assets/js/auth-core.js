@@ -17,19 +17,19 @@ import {
     setDoc,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
 // --- 1. Configuración de Firebase ---
 // Esta configuración centralizada actúa como el "Breaker Principal".
-const firebaseConfig = typeof __firebase_config !== 'undefined'
-    ? JSON.parse(__firebase_config)
-    : {
-        apiKey: "TU_API_KEY",
-        authDomain: "TU_AUTH_DOMAIN",
-        projectId: "TU_PROJECT_ID",
-        storageBucket: "TU_STORAGE_BUCKET",
-        messagingSenderId: "TU_SENDER_ID",
-        appId: "TU_APP_ID"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyAsQrihjtpdj8H7D7giKjo9pWz0jIJEp5c",
+  authDomain: "lumenfall-joziel.firebaseapp.com",
+  projectId: "lumenfall-joziel",
+  storageBucket: "lumenfall-joziel.firebasestorage.app",
+  messagingSenderId: "932168644650",
+  appId: "1:932168644650:web:51c4e5fdaf12f8030e2b53",
+  measurementId: "G-DR03GC3VMQ"
+};
 
 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
@@ -41,12 +41,13 @@ try {
 }
 
 // --- 2. Inicialización de Firebase ---
-let app, auth, db;
+let app, auth, db, analytics;
 
 try {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
+    analytics = getAnalytics(app);
     console.log("⚡ Lumenfall System: Main Breaker Active (Firebase Init).");
 } catch (e) {
     console.error("❌ Lumenfall System: Breaker Failure (Firebase Init Error):", e);
@@ -103,6 +104,7 @@ window.LumenfallAuth = {
     app: app,
     auth: auth,
     db: db,
+    analytics: analytics,
     currentUser: null,
     userData: null, // Datos extendidos desde Firestore (incluyendo gameCode)
 
