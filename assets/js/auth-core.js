@@ -195,9 +195,11 @@ window.LumenfallAuth = {
     logout: async () => {
         try {
             await signOut(auth);
-            window.location.reload();
         } catch (error) {
-            console.error("Logout Failed:", error);
+            console.error("Logout Failed (Force Reloading):", error);
+        } finally {
+            // CRITICAL: Force reload to clear all memory state
+            window.location.reload();
         }
     },
 
@@ -210,6 +212,8 @@ window.LumenfallAuth = {
                 window.LumenfallAuth.userData = data;
                 callback(user, data);
             } else {
+                // EXPLICIT CLEANUP for Guest State
+                window.LumenfallAuth.currentUser = null;
                 window.LumenfallAuth.userData = null;
                 callback(null, null);
             }
