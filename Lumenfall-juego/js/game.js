@@ -3236,10 +3236,73 @@
             }
         }
 
+        class ImpactParticleSystem {
+            constructor(scene, position) {
+                this.scene = scene;
+                this.life = 1.0;
+                const particleCount = 25;
+
+                const geometry = new THREE.BufferGeometry();
+                const positions = [];
+                const velocities = [];
+
+                for (let i = 0; i < particleCount; i++) {
+                    positions.push(position.x, position.y, position.z);
+
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.acos(2 * Math.random() - 1);
+                    const speed = 2.0 + Math.random() * 3.0;
+
+                    velocities.push({
+                        x: Math.sin(phi) * Math.cos(theta) * speed,
+                        y: Math.sin(phi) * Math.sin(theta) * speed,
+                        z: Math.cos(phi) * speed
+                    });
+                }
+
+                geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+                const material = new THREE.PointsMaterial({
+                    map: textureLoader.load(assetUrls.flameParticle),
+                    color: 0x00FFFF,
+                    size: 0.3,
+                    transparent: true,
+                    opacity: 1.0,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                });
+
+                this.mesh = new THREE.Points(geometry, material);
+                this.velocities = velocities;
+                this.scene.add(this.mesh);
+            }
+
+            update(deltaTime) {
+                this.life -= deltaTime;
+                if (this.life <= 0) {
+                    this.scene.remove(this.mesh);
+                    return false;
+                }
+
+                const positions = this.mesh.geometry.attributes.position.array;
+                const gravity = 5.0;
+
+                for (let i = 0; i < this.velocities.length; i++) {
+                    this.velocities[i].y -= gravity * deltaTime;
+                    positions[i * 3] += this.velocities[i].x * deltaTime;
+                    positions[i * 3 + 1] += this.velocities[i].y * deltaTime;
+                    positions[i * 3 + 2] += this.velocities[i].z * deltaTime;
+                }
+
+                this.mesh.geometry.attributes.position.needsUpdate = true;
+                this.mesh.material.opacity = this.life;
+                return true;
+            }
+        }
+
         class Projectile {
             constructor(scene, startPosition, direction) {
                 this.scene = scene;
-                this.lifetime = 2;
                 this.speed = 0.5;
 
                 this.texture = textureLoader.load(assetUrls.projectileSprite);
@@ -3250,16 +3313,11 @@
 
                 this.cols = 4;
                 this.rows = 2;
-                this.totalFrames = 8;
                 this.texture.repeat.set(1 / this.cols, 1 / this.rows);
-
-                this.currentFrame = Math.floor(Math.random() * this.totalFrames);
-                this.lastFrameTime = 0;
-                this.animationSpeed = 80;
 
                 const material = new THREE.MeshBasicMaterial({
                     map: this.texture,
-                    color: 0x00aaff, // Blue/Cyan
+                    color: 0x00aaff,
                     transparent: true,
                     blending: THREE.AdditiveBlending,
                     depthWrite: false,
@@ -3272,7 +3330,7 @@
                 this.mesh.position.copy(startPosition);
 
                 this.cylinder = new THREE.Mesh(geometry, material);
-                this.cylinder.rotation.z = -Math.PI / 2; // Orient cylinder horizontally
+                this.cylinder.rotation.z = -Math.PI / 2;
 
                 this.mesh.add(this.cylinder);
                 this.mesh.frustumCulled = false;
@@ -3282,79 +3340,113 @@
 
                 this.velocity = new THREE.Vector3(direction.x, direction.y, 0).multiplyScalar(this.speed);
 
-                this.mesh.scale.set(2.0, 2.0, 2.0);
+                this.targetScale = 2.0;
+                this.mesh.scale.set(0.1, 0.1, 0.1);
 
                 this.scene.add(this.mesh);
-                this.updateFrameUVs();
 
-                this.isDying = false;
-                this.dyingTimer = 0.2;
+                this.state = 'SPAWN';
+                this.frameTimer = 0;
+                this.animationSpeed = 0.08;
+
+                this.frames = {
+                    SPAWN: [0, 1, 2],
+                    FLIGHT: [3, 4],
+                    IMPACT: [5, 6, 7]
+                };
+
+                this.currentSeqIndex = 0;
+                this.isDead = false;
+
+                this.updateFrameUVs(this.frames.SPAWN[0]);
             }
 
-            updateFrameUVs() {
-                const col = this.currentFrame % this.cols;
-                const row = Math.floor(this.currentFrame / this.cols);
+            updateFrameUVs(frameIndex) {
+                const col = frameIndex % this.cols;
+                const row = Math.floor(frameIndex / this.cols);
                 const u = col / this.cols;
                 const v = (this.rows - 1 - row) / this.rows;
                 this.texture.offset.set(u, v);
             }
 
             triggerImpact() {
-                if (this.isDying) return;
-                this.isDying = true;
+                if (this.state === 'IMPACT') return;
+
+                this.state = 'IMPACT';
+                this.currentSeqIndex = 0;
+                this.frameTimer = 0;
+                this.updateFrameUVs(this.frames.IMPACT[0]);
+
                 this.velocity.set(0, 0, 0);
-                allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
+
+                allFlames.push(new ImpactParticleSystem(this.scene, this.mesh.position));
                 playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
             }
 
             update(deltaTime) {
-                if (this.isDying) {
-                    this.dyingTimer -= deltaTime;
-                    if (this.dyingTimer <= 0) {
-                        return false;
+                if (this.isDead) return false;
+
+                this.frameTimer += deltaTime;
+                if (this.frameTimer > this.animationSpeed) {
+                    this.frameTimer = 0;
+
+                    if (this.state === 'SPAWN') {
+                        this.currentSeqIndex++;
+                        if (this.currentSeqIndex >= this.frames.SPAWN.length) {
+                            this.state = 'FLIGHT';
+                            this.currentSeqIndex = 0;
+                            this.updateFrameUVs(this.frames.FLIGHT[0]);
+                            this.mesh.scale.set(this.targetScale, this.targetScale, this.targetScale);
+                        } else {
+                            this.updateFrameUVs(this.frames.SPAWN[this.currentSeqIndex]);
+                        }
                     }
-                    const opacity = Math.max(0, this.dyingTimer / 0.2);
-                    this.cylinder.material.opacity = opacity;
-                    this.mesh.scale.multiplyScalar(0.9);
-                    return true;
-                }
-
-                this.lifetime -= deltaTime;
-                if (this.lifetime <= 0) {
-                    this.triggerImpact();
-                    return true;
-                }
-
-                // Drill Effect: Spin around longitudinal axis (Y of cylinder)
-                this.cylinder.rotation.y += 15.0 * deltaTime;
-
-                if (Date.now() - this.lastFrameTime > this.animationSpeed) {
-                    this.lastFrameTime = Date.now();
-                    this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
-                    this.updateFrameUVs();
-                }
-
-                this.mesh.position.x += this.velocity.x;
-                this.mesh.position.y += this.velocity.y;
-
-                if (this.mesh.position.x < player.minPlayerX || this.mesh.position.x > player.maxPlayerX) {
-                    this.triggerImpact();
-                    return true;
-                }
-
-                for (const enemy of allSimpleEnemies) {
-                    if (this.mesh.position.distanceTo(enemy.mesh.position) < (enemy.mesh.geometry.parameters.height / 2)) {
-                        enemy.takeHit();
-                        this.triggerImpact();
-                        return true;
+                    else if (this.state === 'FLIGHT') {
+                         this.currentSeqIndex = (this.currentSeqIndex + 1) % this.frames.FLIGHT.length;
+                         this.updateFrameUVs(this.frames.FLIGHT[this.currentSeqIndex]);
+                    }
+                    else if (this.state === 'IMPACT') {
+                         this.currentSeqIndex++;
+                         if (this.currentSeqIndex >= this.frames.IMPACT.length) {
+                             this.scene.remove(this.mesh);
+                             this.isDead = true;
+                             return false;
+                         } else {
+                             this.updateFrameUVs(this.frames.IMPACT[this.currentSeqIndex]);
+                         }
                     }
                 }
 
-                for (const enemy of allEnemiesX1) {
-                    if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
-                        enemy.takeHit();
+                if (this.state === 'SPAWN') {
+                    const growthSpeed = 10.0 * deltaTime;
+                    this.mesh.scale.addScalar(growthSpeed);
+                    if (this.mesh.scale.x > this.targetScale) this.mesh.scale.setScalar(this.targetScale);
+                    this.mesh.position.add(this.velocity);
+                }
+
+                if (this.state === 'FLIGHT') {
+                    this.cylinder.rotation.y += 15.0 * deltaTime;
+                    this.mesh.position.add(this.velocity);
+
+                     if (this.mesh.position.x < player.minPlayerX || this.mesh.position.x > player.maxPlayerX) {
                         this.triggerImpact();
                         return true;
+                    }
+
+                    for (const enemy of allSimpleEnemies) {
+                        if (this.mesh.position.distanceTo(enemy.mesh.position) < (enemy.mesh.geometry.parameters.height / 2)) {
+                            enemy.takeHit();
+                            this.triggerImpact();
+                            return true;
+                        }
+                    }
+
+                    for (const enemy of allEnemiesX1) {
+                        if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
+                            enemy.takeHit();
+                            this.triggerImpact();
+                            return true;
+                        }
                     }
                 }
 
