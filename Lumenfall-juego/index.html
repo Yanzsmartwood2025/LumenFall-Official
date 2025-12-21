@@ -147,26 +147,9 @@
                         console.warn("⚠️ UNAUTHORIZED ACCESS DETECTED. REDIRECTING...");
                         window.location.href = "../index.html";
                     } else {
-                        // User Authenticated - Update HUD
+                        // User Authenticated - Store Data for Game Logic (Nightmare Mode)
                         console.log("✅ Pilot Authenticated:", user.displayName || user.email);
-
-                        const profileImg = document.getElementById('player-profile-image');
-                        const nameLabel = document.querySelector('.stat-label');
-
-                        // Update Profile Image
-                        if (profileImg && user.photoURL) {
-                            profileImg.src = user.photoURL;
-                        }
-
-                        // Update Name Label
-                        if (nameLabel) {
-                            // Prioritize Display Name, fallback to part of email, fallback to OPERATOR
-                            let displayName = user.displayName;
-                            if(!displayName && user.email) displayName = user.email.split('@')[0];
-                            if(!displayName) displayName = "OPERADOR";
-
-                            nameLabel.textContent = displayName.toUpperCase();
-                        }
+                        window.currentUserData = user;
                     }
                 });
             }
