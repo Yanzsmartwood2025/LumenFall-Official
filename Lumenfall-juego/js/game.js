@@ -25,7 +25,8 @@
             enemyX1Death: 'assets/sprites/Enemigos/Ataques-enemigo1/muerte-1.png',
             dustParticle: 'assets/sprites/FX/Polvo.png',
             projectileSprite: 'assets/sprites/Joziel/Sombras-efectos/efectos/proyectil-1.jpg',
-            chargeSprite: 'assets/sprites/Joziel/Sombras-efectos/efectos/carga.jpg'
+            chargeSprite: 'assets/sprites/Joziel/Sombras-efectos/efectos/carga.jpg',
+            blueFire: 'assets/sprites/FX/fuego-antorcha.jpg'
         };
 
         const PIXELS_PER_UNIT = 64;
@@ -141,6 +142,7 @@
         let stormTimerDistant = Math.random() * 7 + 8; // 8-15s initial
         let isLightningActive = false;
 
+        let firstFlameTriggered = false; // Evento La Primera Llama
         const completedRooms = { room_1: false, room_2: false, room_3: false, room_4: false, room_5: false };
 
         let isGamepadModeActive = false;
@@ -333,10 +335,140 @@
             }, 150); // Slightly longer fade for distant flicker
         }
 
+        // --- FIRST FLAME EVENT (INTRO) ---
+        function triggerFirstFlameEvent() {
+            if (firstFlameTriggered) return;
+            firstFlameTriggered = true;
+
+            // 1. Disable Input
+            isPaused = true; // Temporary pause logic update loop?
+            // Actually, we want to animate camera, but stop player/enemy updates.
+            // isPaused stops animate() loop entirely, which is bad for camera pan.
+            // We need a new flag "isCinematic" or manipulate inputs.
+            // Let's use a specialized cinematic state.
+            window.isCinematic = true;
+
+            // 2. Camera Pan to Gate #1 (x: -50)
+            const startCamPos = camera.position.clone();
+            const targetCamPos = new THREE.Vector3(-50, 4, startCamPos.z - 5); // Zoom in slightly?
+
+            let progress = 0;
+            const durationPan = 1500; // 1.5s
+            const startTime = Date.now();
+
+            function animateEvent() {
+                const now = Date.now();
+                const elapsed = now - startTime;
+
+                if (elapsed < durationPan) {
+                    // Pan Phase
+                    const t = elapsed / durationPan;
+                    const smoothT = t * t * (3 - 2 * t); // EaseInOut
+                    camera.position.lerpVectors(startCamPos, targetCamPos, smoothT);
+                    requestAnimationFrame(animateEvent);
+                } else if (elapsed < durationPan + 1000) {
+                    // Activate Phase (Instant ON)
+                    if (camera.position.x !== targetCamPos.x) {
+                        camera.position.copy(targetCamPos); // Snap finish
+
+                        // Turn ON Torches at Gate 1
+                        // We need reference to gate_1 torches.
+                        // We can search allFlames or query the gate structure.
+                        // Gate 1 is at x: -50.
+                        // Torches are at x-6 and x+6 relative to gate?
+                        // In createTorch call: gateData.x - 6 ...
+                        // Gate 1 x=-50. Torches at -56 and -44.
+
+                        // Hack: Turn ON all torches near Gate 1
+                        allFlames.forEach(flame => {
+                             if (Math.abs(flame.mesh.position.x - (-50)) < 10) {
+                                 // This includes the ambient flames.
+                                 // We need to enable the POINT LIGHT associated with them if it was off?
+                                 // createTorch adds a PointLight if isLit=true.
+                                 // If isLit=false initially, PointLight is NOT created.
+                                 // We need to create it now.
+
+                                 // Wait, AmbientTorchFlame class creates a visual mesh.
+                                 // createTorch creates Sprite + AmbientTorchFlame + PointLight (if lit).
+                                 // If unlit, only Sprite is created (the stick? No, "antorcha.png" sprite).
+                                 // AmbientTorchFlame is the FIRE.
+                                 // createTorch:
+                                 // if(isLit) { new AmbientTorchFlame...; new PointLight... }
+
+                                 // So if unlit, NO FIRE MESH exists.
+                                 // We need to spawn fire.
+                            }
+                        });
+
+                        // Better: Re-call createTorch logic or manually spawn.
+                        // Let's manually spawn fire and light at Gate 1 positions.
+                        // Gate 1: x=-50. z = camera.position.z - roomDepth + 0.5.
+                        // Torches: x = -56, x = -44. y=3.2.
+                        const z = camera.position.z - roomDepth + 0.5;
+
+                        // Fwoosh sound
+                        playAudio('fireball_cast', false, 0.5);
+
+                        // Spawn Fire Left
+                        new AmbientTorchFlame(scene, new THREE.Vector3(-56, 3.2+0.5, z+0.1));
+                        const l1 = new THREE.PointLight(0x00aaff, 1, 15);
+                        l1.position.set(-56, 3.2, z+0.5);
+                        scene.add(l1);
+
+                        // Spawn Fire Right
+                        new AmbientTorchFlame(scene, new THREE.Vector3(-44, 3.2+0.5, z+0.1));
+                        const l2 = new THREE.PointLight(0x00aaff, 1, 15);
+                        l2.position.set(-44, 3.2, z+0.5);
+                        scene.add(l2);
+
+                        // Open Gate Logic?
+                        // Just unlock it effectively.
+                    }
+                    requestAnimationFrame(animateEvent);
+                } else if (elapsed < durationPan + 1000 + 1500) {
+                    // Pan Back Phase
+                    const panBackStart = durationPan + 1000;
+                    const t = (elapsed - panBackStart) / 1500;
+                    const smoothT = t * t * (3 - 2 * t);
+
+                    // Target is player position (which might have moved? No, input disabled).
+                    // We need player pos.
+                    const pPos = player.mesh.position.clone();
+                    pPos.y += 1.9; // Camera offset
+                    pPos.z = 8; // Default Z
+
+                    camera.position.lerpVectors(targetCamPos, pPos, smoothT);
+                    requestAnimationFrame(animateEvent);
+                } else {
+                    // Finish
+                    window.isCinematic = false;
+                    // Resume game loop if we paused it?
+                    // We need to ensure animate() runs but doesn't update physics if cinematic.
+                    // We will modify animate() to respect isCinematic.
+                }
+            }
+            animateEvent();
+        }
+
         function animate() {
-            if (isPaused) return;
+            if (isPaused && !window.isCinematic) return; // Allow cinematic to run
             animationFrameId = requestAnimationFrame(animate);
             const deltaTime = clock.getDelta();
+
+            // Cinematic Mode: Skip updates, only render
+            if (window.isCinematic) {
+                // Update specific cinematic elements if needed?
+                // For now, just render scene.
+                // The animateEvent loop handles camera.
+                // But we still want flames to flicker?
+                for (let i = allFlames.length - 1; i >= 0; i--) {
+                    if (!allFlames[i].update(deltaTime)) {
+                        allFlames.splice(i, 1);
+                    }
+                }
+                renderer.render(scene, camera);
+                return;
+            }
 
             if (!isPaused) {
                 // Storm Logic
@@ -362,6 +494,34 @@
                 const attackHeld = isAttackButtonPressed && (Date.now() - attackPressStartTime > 200);
                 player.update(deltaTime, { joyVector, attackHeld });
 
+                // --- NIGHTMARE LOGIC: Check Room Clear ---
+                if (currentLevelId !== 'dungeon_1' && currentLevelId !== 'boss_room') {
+                    const enemiesRemaining = allSimpleEnemies.length + allEnemiesX1.length;
+                    if (enemiesRemaining === 0) {
+                        // Activate Exit Torches (Nightmare Victory)
+                        // Exit torch is typically at x=0 (return gate).
+                        // Check if we already Lit them?
+                        // We can just iterate flames. If none at x=0, spawn them.
+                        // Or check specific flag.
+                        if (!completedRooms[currentLevelId + "_cleared"]) {
+                             completedRooms[currentLevelId + "_cleared"] = true;
+                             // Spawn Torches at Exit (x=0)
+                             const z = camera.position.z - roomDepth + 0.5;
+                             new AmbientTorchFlame(scene, new THREE.Vector3(-6, 3.2+0.5, z+0.1));
+                             const l1 = new THREE.PointLight(0x00aaff, 1, 15);
+                             l1.position.set(-6, 3.2, z+0.5);
+                             scene.add(l1);
+
+                             new AmbientTorchFlame(scene, new THREE.Vector3(6, 3.2+0.5, z+0.1));
+                             const l2 = new THREE.PointLight(0x00aaff, 1, 15);
+                             l2.position.set(6, 3.2, z+0.5);
+                             scene.add(l2);
+
+                             playAudio('puerta'); // Success sound
+                        }
+                    }
+                }
+
                 // Collision detection between player and enemies
                 allSimpleEnemies.forEach(enemy => {
                     if (!player.isInvincible && player.mesh.position.distanceTo(enemy.mesh.position) < 2) {
@@ -372,6 +532,11 @@
                 allEnemiesX1.forEach(enemy => {
                     if (!player.isInvincible && player.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                         player.takeDamage(player.maxHealth * 0.10, enemy);
+                    }
+
+                    // Trigger First Flame Event on specific enemy death
+                    if (!enemy.isAlive && !firstFlameTriggered && enemy.mesh.position.x === -40) {
+                        triggerFirstFlameEvent();
                     }
                 });
 
@@ -1378,14 +1543,36 @@
                 const flameLight = new THREE.PointLight(0x00aaff, 1.5, 4);
                 flameLight.castShadow = true;
                 flameGroup.add(flameLight);
-                const attackFlameMaterial = new THREE.MeshBasicMaterial({ map: textureLoader.load(assetUrls.flameParticle), color: 0xaaddff, transparent: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-                const flameCore = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), attackFlameMaterial);
+
+                // Use new Blue Fire logic
+                const texture = textureLoader.load(assetUrls.blueFire);
+                texture.repeat.set(1/8, 0.5);
+
+                const attackFlameMaterial = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    color: 0xaaddff,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    side: THREE.DoubleSide
+                });
+
+                const flameCore = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), attackFlameMaterial);
                 flameCore.frustumCulled = false;
+                // Add metadata for animation
+                flameCore.userData = { currentFrame: 0, frameTimer: 0 };
+
                 flameGroup.add(flameCore);
                 flameGroup.visible = false;
                 this.mesh.add(flameGroup);
                 this.rightHandFlame = flameGroup;
                 this.rightHandFlame.position.set(-0.6, 0.3, 0.3);
+
+                // Clone for Left Hand (Material is shared, so UV animation will sync unless cloned)
+                // We want independent animation? Shared is fine for hands.
+                // But clone() shallow copies mesh. Material is shared.
+                // If we want different frames, we need unique materials.
+                // For performance, shared material is better, they will flicker in sync. Acceptable.
+
                 const leftHandFlame = flameGroup.clone();
                 this.mesh.add(leftHandFlame);
                 this.leftHandFlame = leftHandFlame;
@@ -1454,9 +1641,30 @@
                     const light = flame.children[0];
                     const core = flame.children[1];
                     light.intensity = 1.0 + Math.random() * 0.5;
-                    const scale = 0.8 + Math.random() * 0.4;
-                    core.scale.set(scale, scale, scale);
-                    core.rotation.z += 0.1;
+
+                    // Animate texture (Shared Material affects both if sharing, but let's try to animate logic)
+                    // If shared material, offset affects both immediately.
+                    // But we want it to look animated.
+                    // Assuming shared material:
+
+                    const dt = 0.016; // Approx
+                    core.userData.frameTimer += dt;
+                    if(core.userData.frameTimer > 0.05) {
+                         core.userData.frameTimer = 0;
+                         core.userData.currentFrame = (core.userData.currentFrame + 1) % 16;
+
+                         const col = core.userData.currentFrame % 8;
+                         const row = Math.floor(core.userData.currentFrame / 8);
+
+                         if (core.material.map) {
+                             core.material.map.offset.x = col / 8;
+                             core.material.map.offset.y = (1 - row) * 0.5;
+                         }
+                    }
+
+                    // core.rotation.z += 0.1; // Grid sprites usually don't rotate Z unless abstract
+                    // Keep billboard? It's attached to hand.
+                    core.lookAt(camera.position);
                 });
             }
 
@@ -1871,27 +2079,53 @@
         class AmbientTorchFlame {
             constructor(scene, pos) {
                 this.scene = scene;
-                this.timer = Math.random() * 100;
-                const mat = new THREE.SpriteMaterial({
-                    map: textureLoader.load(assetUrls.flameParticle),
+                this.texture = textureLoader.load(assetUrls.blueFire);
+                this.texture.repeat.set(1/8, 0.5); // 8 cols, 2 rows
+
+                // Additive Blending to remove black background
+                const mat = new THREE.MeshBasicMaterial({
+                    map: this.texture,
                     color: 0x00aaff,
                     transparent: true,
                     blending: THREE.AdditiveBlending,
-                    depthWrite: false
+                    depthWrite: false,
+                    side: THREE.DoubleSide
                 });
-                this.mesh = new THREE.Sprite(mat);
+
+                // Use Mesh (Plane) instead of Sprite for correct UV Grid Animation
+                this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
                 this.mesh.position.copy(pos);
-                this.mesh.scale.set(0.8, 0.8, 1);
-                this.baseY = pos.y;
+                // Adjust scale slightly to match visual
+                this.mesh.scale.set(1.2, 1.2, 1);
+
                 this.mesh.frustumCulled = false;
                 scene.add(this.mesh);
                 allFlames.push(this);
+
+                this.currentFrame = Math.floor(Math.random() * 16);
+                this.frameTimer = 0;
+                this.totalFrames = 16;
+                this.cols = 8;
+                this.rows = 2;
             }
             update(dt) {
-                this.timer += dt * 5;
-                this.mesh.material.opacity = 0.6 + Math.sin(this.timer)*0.2;
-                this.mesh.scale.setScalar(0.8 + Math.sin(this.timer*1.5)*0.1);
-                this.mesh.position.y = this.baseY + Math.sin(this.timer)*0.05;
+                // Face camera (Billboarding)
+                this.mesh.lookAt(camera.position);
+
+                this.frameTimer += dt;
+                if(this.frameTimer > 0.05) { // ~20 FPS
+                    this.frameTimer = 0;
+                    this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
+
+                    const col = this.currentFrame % this.cols;
+                    const row = Math.floor(this.currentFrame / this.cols); // 0 (top) or 1 (bottom)
+
+                    // Grid 8x2 Calculation
+                    // Row 0 (Top): v=0.5
+                    // Row 1 (Bottom): v=0.0
+                    this.texture.offset.x = col / this.cols;
+                    this.texture.offset.y = (this.rows - 1 - row) * 0.5;
+                }
                 return true;
             }
         }
@@ -1900,23 +2134,50 @@
             constructor(scene, pos, scale=1) {
                 this.scene = scene;
                 this.life = 0.5;
-                const mat = new THREE.SpriteMaterial({
-                    map: textureLoader.load(assetUrls.flameParticle),
+
+                this.texture = textureLoader.load(assetUrls.blueFire);
+                this.texture.repeat.set(1/8, 0.5);
+
+                const mat = new THREE.MeshBasicMaterial({
+                    map: this.texture,
                     color: 0x00aaff,
                     transparent: true,
                     blending: THREE.AdditiveBlending,
-                    depthWrite: false
+                    depthWrite: false,
+                    side: THREE.DoubleSide
                 });
-                this.mesh = new THREE.Sprite(mat);
+
+                this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
                 this.mesh.position.copy(pos);
                 this.mesh.scale.setScalar(scale);
                 this.mesh.frustumCulled = false;
                 scene.add(this.mesh);
+
+                this.currentFrame = 0;
+                this.frameTimer = 0;
             }
             update(dt) {
                 this.life -= dt;
-                this.mesh.material.opacity = this.life * 2;
-                this.mesh.scale.multiplyScalar(1.05);
+
+                // Fade out
+                this.mesh.material.opacity = Math.max(0, this.life * 2);
+
+                // Face camera
+                this.mesh.lookAt(camera.position);
+
+                // Animate
+                this.frameTimer += dt;
+                if(this.frameTimer > 0.05) {
+                    this.frameTimer = 0;
+                    this.currentFrame = (this.currentFrame + 1) % 16;
+
+                    const col = this.currentFrame % 8;
+                    const row = Math.floor(this.currentFrame / 8);
+
+                    this.texture.offset.x = col / 8;
+                    this.texture.offset.y = (1 - row) * 0.5;
+                }
+
                 if(this.life <= 0) {
                     this.scene.remove(this.mesh);
                     return false;
@@ -2135,7 +2396,68 @@
             if (!levelData) return;
             currentLevelId = levelId;
             clearSceneForLevelLoad();
-            loadLevel(levelData);
+
+            // --- NIGHTMARE LOGIC START ---
+            // If room_1 to room_5 (Nightmare Mode)
+            const isNightmareRoom = ['room_1','room_2','room_3','room_4','room_5'].includes(levelId);
+
+            if (isNightmareRoom) {
+                // Penumbra
+                ambientLight.intensity = 0.3; // Darker
+
+                // Update UI with REAL USER DATA
+                if (window.currentUserData) {
+                     const profileImg = document.getElementById('player-profile-image');
+                     const nameLabel = document.querySelector('.stat-label');
+
+                     if (profileImg && window.currentUserData.photoURL) {
+                         profileImg.src = window.currentUserData.photoURL;
+                     }
+                     if (nameLabel && window.currentUserData.displayName) {
+                         nameLabel.textContent = window.currentUserData.displayName.toUpperCase();
+                     }
+                }
+
+                // Force exit torches OFF (createTorch in loadLevel will create them unlit if we hack completedRooms temporarily?)
+                // loadLevel uses completedRooms[gateData.destination] to determine if lit.
+                // The exit gate destination is 'dungeon_1'. completedRooms['dungeon_1'] is undefined/false usually.
+                // But in loadLevel: "if (levelData.id !== 'dungeon_1') { isLit = true; }"
+                // This forces all torches inside rooms to be LIT by default.
+                // We need to disable this for Nightmare rooms UNLESS cleared.
+
+                // We can patch loadLevel logic or just remove them after loadLevel.
+                // But loadLevel creates AmbientTorchFlame/Light.
+                // We want them OFF.
+
+                // Let's modify loadLevel to respect Nightmare rules?
+                // Or override here.
+            } else {
+                ambientLight.intensity = 0.8; // Normal
+                // Reset UI to Default? (Optional, user didn't specify revert)
+            }
+            // --- NIGHTMARE LOGIC END ---
+
+            loadLevel(levelData); // This calls createTorch.
+
+            if (isNightmareRoom) {
+                // Remove the default lit torches at the exit (x=0) if not cleared.
+                if (!completedRooms[levelId + "_cleared"]) {
+                    // We need to find and remove flames near x=0
+                    // Exit gate is at x=0. Torches at +/- 6.
+                    for (let i = allFlames.length - 1; i >= 0; i--) {
+                        if (Math.abs(allFlames[i].mesh.position.x) < 10) {
+                             scene.remove(allFlames[i].mesh);
+                             allFlames.splice(i, 1);
+                        }
+                    }
+                    // Also remove point lights?
+                    scene.children.forEach(child => {
+                        if (child instanceof THREE.PointLight && Math.abs(child.position.x) < 10 && child.position.z < 0) {
+                            child.intensity = 0; // Turn off
+                        }
+                    });
+                }
+            }
 
             if (levelId === 'room_3') {
                 if (allSimpleEnemies.length === 0) {
@@ -2147,6 +2469,24 @@
                  if (allEnemiesX1.length === 0) {
                     allEnemiesX1.push(new EnemyX1(scene, -40));
                 }
+
+                // Intro Logic: If First Flame not triggered, force Gate 1 torches OFF.
+                if (!firstFlameTriggered) {
+                     // Gate 1 is at x=-50. Torches at -56, -44.
+                     for (let i = allFlames.length - 1; i >= 0; i--) {
+                        if (Math.abs(allFlames[i].mesh.position.x - (-50)) < 10) {
+                             scene.remove(allFlames[i].mesh);
+                             allFlames.splice(i, 1);
+                        }
+                    }
+                    // Remove lights
+                    scene.children.forEach(child => {
+                        if (child instanceof THREE.PointLight && Math.abs(child.position.x - (-50)) < 10) {
+                            child.intensity = 0;
+                        }
+                    });
+                }
+
                 // Removed WalkingMonster spawn
                 if (allDecorGhosts.length === 0) {
                     allDecorGhosts.push(new DecorGhost(scene, 0));
@@ -2826,7 +3166,7 @@
 
                 const material = new THREE.MeshBasicMaterial({
                     map: this.texture,
-                    color: 0xffffff,
+                    color: 0x00aaff, // Blue/Cyan
                     transparent: true,
                     blending: THREE.AdditiveBlending,
                     depthWrite: false,
@@ -2839,12 +3179,12 @@
                 this.mesh.frustumCulled = false;
 
                 const angle = Math.atan2(direction.y, direction.x);
-            this.mesh.rotation.z = angle; // Rotación directa
+                this.mesh.rotation.z = angle; // Rotación directa (sin +90)
 
                 this.velocity = new THREE.Vector3(direction.x, direction.y, 0).multiplyScalar(this.speed);
 
-            // Fixed scale logic
-            this.mesh.scale.set(1.5, 1.5, 1);
+                // Fixed scale logic (Requested: 2.0)
+                this.mesh.scale.set(2.0, 2.0, 1);
 
                 this.scene.add(this.mesh);
                 this.updateFrameUVs();
