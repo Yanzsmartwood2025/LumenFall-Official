@@ -338,6 +338,9 @@
             if (firstFlameTriggered) return;
             firstFlameTriggered = true;
 
+            // Hide interact prompt to prevent visual dragging
+            doorPromptFlame.style.display = 'none';
+
             // 1. Disable Input
             isPaused = true;
             window.isCinematic = true;
@@ -2041,6 +2044,9 @@
                 scene.add(this.mesh);
             }
             update(dt) {
+                // Optimization: Sleep if off-screen
+                if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return true;
+
                 this.life -= dt;
                 this.mesh.material.opacity = this.life * 0.5;
                 this.mesh.scale.multiplyScalar(1.02);
@@ -2084,6 +2090,9 @@
                 this.rows = 2;
             }
             update(dt) {
+                // Optimization: Sleep if off-screen
+                if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return true;
+
                 // Face camera (Billboarding)
                 this.mesh.lookAt(camera.position);
 
@@ -2767,6 +2776,9 @@
             }
 
             update(deltaTime) {
+                // Optimization: Sleep if off-screen (and not already dead/static)
+                if (this.isAlive && Math.abs(this.mesh.position.x - camera.position.x) > 35) return;
+
                 // Si está muerto y completó la animación (no isDying, ya que isDying es true mientras anima la muerte),
                 // pero queremos que se quede fijo.
                 if (!this.isAlive && !this.isDying) return; // Si ya fue "finalizado" (aunque ahora no lo removemos del todo)
@@ -2981,6 +2993,9 @@
             }
 
             update(deltaTime) {
+                // Optimization: Sleep if off-screen
+                if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return;
+
                 if (Date.now() - this.lastFrameTime > specterAnimationSpeed) {
                     this.lastFrameTime = Date.now();
                     this.currentFrame = (this.currentFrame + 1) % totalSpecterFrames;
