@@ -23,8 +23,22 @@
             enemyX1Run: 'assets/sprites/Enemigos/Ataques-enemigo1/correr-1.png',
             enemyX1Attack: 'assets/sprites/Enemigos/Ataques-enemigo1/ataque-1.png',
             enemyX1Death: 'assets/sprites/Enemigos/Ataques-enemigo1/muerte-1.png',
-            dustParticle: 'assets/sprites/FX/Polvo.png'
+            dustParticle: 'assets/sprites/FX/Polvo.png',
+            projectileSprite: 'assets/sprites/Joziel/Sombras-efectos/efectos/proyectil-1.jpg',
+            chargeSprite: 'assets/sprites/Joziel/Sombras-efectos/efectos/carga.jpg'
         };
+
+        const PIXELS_PER_UNIT = 64;
+
+        function calculateFrameSize(texture, cols, rows) {
+            if (!texture.image) return { width: 1, height: 1 };
+            const frameWidth = texture.image.width / cols;
+            const frameHeight = texture.image.height / rows;
+            return {
+                width: frameWidth / PIXELS_PER_UNIT,
+                height: frameHeight / PIXELS_PER_UNIT
+            };
+        }
 
         const totalRunningFrames = 9;
         const totalIdleFrames = 5;
@@ -1380,43 +1394,55 @@
             }
 
             createAura() {
-                this.auraGroup = new THREE.Group();
-                const auraTexture = textureLoader.load(assetUrls.flameParticle);
+                this.auraTexture = textureLoader.load(assetUrls.chargeSprite);
+                this.auraTexture.wrapS = THREE.RepeatWrapping;
+                this.auraTexture.wrapT = THREE.RepeatWrapping;
+
+                this.auraCols = 5;
+                this.auraRows = 2;
+                this.auraTotalFrames = 10;
+                this.auraTexture.repeat.set(1 / this.auraCols, 1 / this.auraRows);
+
                 const auraMaterial = new THREE.MeshBasicMaterial({
-                    map: auraTexture,
-                    color: 0x00ffff,
+                    map: this.auraTexture,
+                    color: 0xffffff,
                     transparent: true,
                     blending: THREE.AdditiveBlending,
-                    opacity: 0.6,
+                    depthWrite: false,
                     side: THREE.DoubleSide
                 });
-                for (let i = 0; i < 6; i++) {
-                    const sprite = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 6.0), auraMaterial);
-                    sprite.frustumCulled = false;
-                    const angle = (i / 6) * Math.PI * 2;
-                    sprite.position.set(Math.cos(angle) * 1.5, -0.5 + Math.random(), Math.sin(angle) * 0.5);
-                    sprite.userData = {
-                        angle: angle,
-                        speed: 2.0 + Math.random(),
-                        yOffset: Math.random() * 2,
-                        initialY: 0.0
-                    };
-                    this.auraGroup.add(sprite);
-                }
-                this.auraGroup.visible = false;
-                this.mesh.add(this.auraGroup);
+
+                const geometry = new THREE.PlaneGeometry(1, 1);
+                this.auraMesh = new THREE.Mesh(geometry, auraMaterial);
+                this.auraMesh.position.set(0, 0, 0.1);
+                this.auraMesh.visible = false;
+                this.mesh.add(this.auraMesh);
+
+                this.auraCurrentFrame = 0;
+                this.auraLastFrameTime = 0;
+                this.auraAnimationSpeed = 80;
             }
 
             updateAura(deltaTime) {
-                if (!this.auraGroup.visible) return;
-                this.auraGroup.rotation.y += 2.0 * deltaTime;
-                this.auraGroup.children.forEach(p => {
-                     const time = Date.now() * 0.005;
-                     const scale = 1.0 + Math.sin(time * p.userData.speed) * 0.3;
-                     p.scale.set(scale, scale, scale);
-                     p.position.y = p.userData.initialY + Math.sin(time + p.userData.angle) * 0.5;
-                     p.lookAt(camera.position);
-                });
+                if (!this.auraMesh.visible) return;
+
+                if (this.auraTexture.image && this.auraTexture.image.width > 0 && !this.auraSizeSet) {
+                     const size = calculateFrameSize(this.auraTexture, this.auraCols, this.auraRows);
+                     this.auraMesh.scale.set(size.width, size.height, 1);
+                     this.auraSizeSet = true;
+                }
+
+                if (Date.now() - this.auraLastFrameTime > this.auraAnimationSpeed) {
+                    this.auraLastFrameTime = Date.now();
+                    this.auraCurrentFrame = (this.auraCurrentFrame + 1) % this.auraTotalFrames;
+
+                    const col = this.auraCurrentFrame % this.auraCols;
+                    const row = Math.floor(this.auraCurrentFrame / this.auraCols);
+                    const u = col / this.auraCols;
+                    const v = (this.auraRows - 1 - row) / this.auraRows;
+
+                    this.auraTexture.offset.set(u, v);
+                }
             }
 
             updateAttackFlames() {
@@ -1545,7 +1571,7 @@
                 const isAttacking = this.currentState === 'attacking';
                 this.rightHandFlame.visible = isAttacking;
                 this.leftHandFlame.visible = isAttacking;
-                this.auraGroup.visible = isAttacking;
+                this.auraMesh.visible = isAttacking;
                 if (isAttacking) {
                     this.updateAttackFlames();
                     this.updateAura(deltaTime);
@@ -2775,38 +2801,54 @@
             }
         }
 
-        let sharedProjectileMaterial = null;
-
         class Projectile {
             constructor(scene, startPosition, direction) {
                 this.scene = scene;
                 this.lifetime = 2;
                 this.speed = 0.5;
 
-                if (!sharedProjectileMaterial) {
-                    sharedProjectileMaterial = new THREE.MeshBasicMaterial({
-                        map: textureLoader.load(assetUrls.flameParticle),
-                        color: 0xaaddff,
-                        transparent: true,
-                        blending: THREE.AdditiveBlending,
-                    });
-                }
+                this.texture = textureLoader.load(assetUrls.projectileSprite);
+                this.texture.wrapS = THREE.RepeatWrapping;
+                this.texture.wrapT = THREE.RepeatWrapping;
 
-                const geometry = new THREE.PlaneGeometry(1.0, 1.0);
-                this.mesh = new THREE.Mesh(geometry, sharedProjectileMaterial);
+                this.cols = 4;
+                this.rows = 2;
+                this.totalFrames = 8;
+                this.texture.repeat.set(1 / this.cols, 1 / this.rows);
+
+                this.currentFrame = Math.floor(Math.random() * this.totalFrames);
+                this.lastFrameTime = 0;
+                this.animationSpeed = 80;
+
+                const material = new THREE.MeshBasicMaterial({
+                    map: this.texture,
+                    color: 0xffffff,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    side: THREE.DoubleSide
+                });
+
+                const geometry = new THREE.PlaneGeometry(1, 1);
+                this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.copy(startPosition);
-                this.mesh.frustumCulled = false; // Optimization
+                this.mesh.frustumCulled = false;
 
-                // Rotar el proyectil según la dirección para que la cola quede atrás
-                // Asumiendo que el sprite original apunta hacia arriba (como una flama normal),
-                // restamos 90 grados (PI/2) para que "Arriba" apunte a "Derecha" si el ángulo es 0.
                 const angle = Math.atan2(direction.y, direction.x);
-                // Ajustado: angle + Math.PI / 2 para invertir la dirección (180 grados extra) porque la bola salía "al revés"
                 this.mesh.rotation.z = angle + Math.PI / 2;
 
                 this.velocity = new THREE.Vector3(direction.x, direction.y, 0).multiplyScalar(this.speed);
 
                 this.scene.add(this.mesh);
+                this.updateFrameUVs();
+            }
+
+            updateFrameUVs() {
+                const col = this.currentFrame % this.cols;
+                const row = Math.floor(this.currentFrame / this.cols);
+                const u = col / this.cols;
+                const v = (this.rows - 1 - row) / this.rows;
+                this.texture.offset.set(u, v);
             }
 
             update(deltaTime) {
@@ -2816,14 +2858,21 @@
                     return false;
                 }
 
-                // Efecto de latido (pulsing) suave: "chiquito un poquito grande"
-                const pulse = 1.0 + Math.sin((2.0 - this.lifetime) * 15) * 0.2;
-                this.mesh.scale.set(pulse, pulse, 1);
+                if (Date.now() - this.lastFrameTime > this.animationSpeed) {
+                    this.lastFrameTime = Date.now();
+                    this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
+                    this.updateFrameUVs();
+                }
+
+                if (this.texture.image && this.texture.image.width > 0 && !this.sizeSet) {
+                     const size = calculateFrameSize(this.texture, this.cols, this.rows);
+                     this.mesh.scale.set(size.width, size.height, 1);
+                     this.sizeSet = true;
+                }
 
                 this.mesh.position.x += this.velocity.x;
                 this.mesh.position.y += this.velocity.y;
 
-                // Wall collision
                 if (this.mesh.position.x < player.minPlayerX || this.mesh.position.x > player.maxPlayerX) {
                     allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
                     playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
@@ -2831,20 +2880,17 @@
                     return false;
                 }
 
-                // Collision with simple enemies
                 for (const enemy of allSimpleEnemies) {
                     if (this.mesh.position.distanceTo(enemy.mesh.position) < (enemy.mesh.geometry.parameters.height / 2)) {
                         enemy.takeHit();
                         allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
                         playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
-                        this.lifetime = 0; // Mark for removal
-                        return false; // Projectile disappears
+                        this.lifetime = 0;
+                        return false;
                     }
                 }
 
-                // Collision with Enemy X1
                 for (const enemy of allEnemiesX1) {
-                    // Height is 5.6, so hit box radius ~2.8
                     if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                         enemy.takeHit();
                         allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
