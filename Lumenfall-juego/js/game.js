@@ -129,6 +129,10 @@
         const allPowerUps = [];
         let dustSystem;
 
+        // Expose for debugging/verification
+        window.allProjectiles = allProjectiles;
+        window.allFlames = allFlames;
+
         let currentLevelId = 'dungeon_1';
         let isPaused = false;
         let isTransitioning = false;
@@ -804,6 +808,7 @@
                 controlsContainer.style.opacity = '1';
                 controlsContainer.style.pointerEvents = 'auto';
                 player = new Player();
+                window.player = player; // Expose for verification
                 loadLevelById(currentLevelId);
                 animate();
             };
@@ -1567,47 +1572,89 @@
                 this.auraRows = 2;
                 this.auraTotalFrames = 10;
 
-                // 1. Main Cylinder
+                // Shader logic for Fade Out Top
+                const vertexShader = `
+                    varying vec2 vUv;
+                    varying vec2 vOriginalUv; // For gradient
+                    uniform vec2 offset;
+                    uniform vec2 repeat;
+                    void main() {
+                        vOriginalUv = uv; // Store 0..1 UV
+                        vUv = uv * repeat + offset; // Transform for sprite sheet
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `;
+
+                const fragmentShader = `
+                    uniform sampler2D map;
+                    varying vec2 vUv;
+                    varying vec2 vOriginalUv;
+                    void main() {
+                        vec4 texColor = texture2D(map, vUv);
+                        // Gradient: Fade out as y approaches 1.0 (top)
+                        float alphaFade = 1.0 - smoothstep(0.6, 1.0, vOriginalUv.y);
+                        gl_FragColor = vec4(texColor.rgb, texColor.a * alphaFade);
+                    }
+                `;
+
+                // 1. Main Cylinder (Tripled Size: ~2.4 radius, ~7.5 height, centered)
                 this.auraTextureMain = textureLoader.load(chargeUrl);
                 this.auraTextureMain.wrapS = THREE.RepeatWrapping;
                 this.auraTextureMain.wrapT = THREE.RepeatWrapping;
                 this.auraTextureMain.magFilter = THREE.NearestFilter;
                 this.auraTextureMain.minFilter = THREE.NearestFilter;
-                this.auraTextureMain.repeat.set(1 / this.auraCols, 1 / this.auraRows);
 
-                const mainMat = new THREE.MeshBasicMaterial({
-                    map: this.auraTextureMain,
-                    color: 0xffffff,
+                const mainUniforms = {
+                    map: { value: this.auraTextureMain },
+                    offset: { value: new THREE.Vector2(0, 0) },
+                    repeat: { value: new THREE.Vector2(1 / this.auraCols, 1 / this.auraRows) }
+                };
+
+                const mainMat = new THREE.ShaderMaterial({
+                    uniforms: mainUniforms,
+                    vertexShader: vertexShader,
+                    fragmentShader: fragmentShader,
                     transparent: true,
                     blending: THREE.AdditiveBlending,
                     depthWrite: false,
                     side: THREE.DoubleSide
                 });
 
-                const mainGeo = new THREE.CylinderGeometry(0.8, 0.8, 2.5, 16, 1, true);
+                // Radius ~2.4, Height ~7.0
+                const mainGeo = new THREE.CylinderGeometry(2.4, 2.4, 7.0, 32, 1, true);
                 this.mainCylinder = new THREE.Mesh(mainGeo, mainMat);
+                // Center vertically relative to player center.
+                // Player mesh height is 4.2. Pivot is at center.
+                this.mainCylinder.position.set(0, 0, 0);
                 this.auraGroup.add(this.mainCylinder);
 
-                // 2. Base Cylinder
+                // 2. Base Cylinder (Wider base effect)
                 this.auraTextureBase = textureLoader.load(chargeUrl);
                 this.auraTextureBase.wrapS = THREE.RepeatWrapping;
                 this.auraTextureBase.wrapT = THREE.RepeatWrapping;
                 this.auraTextureBase.magFilter = THREE.NearestFilter;
                 this.auraTextureBase.minFilter = THREE.NearestFilter;
-                this.auraTextureBase.repeat.set(1 / this.auraCols, 1 / this.auraRows);
 
-                const baseMat = new THREE.MeshBasicMaterial({
-                    map: this.auraTextureBase,
-                    color: 0xffffff,
+                 const baseUniforms = {
+                    map: { value: this.auraTextureBase },
+                    offset: { value: new THREE.Vector2(0, 0) },
+                    repeat: { value: new THREE.Vector2(1 / this.auraCols, 1 / this.auraRows) }
+                };
+
+                const baseMat = new THREE.ShaderMaterial({
+                    uniforms: baseUniforms,
+                    vertexShader: vertexShader,
+                    fragmentShader: fragmentShader,
                     transparent: true,
                     blending: THREE.AdditiveBlending,
                     depthWrite: false,
                     side: THREE.DoubleSide
                 });
 
-                const baseGeo = new THREE.CylinderGeometry(1.0, 1.0, 0.4, 16, 1, true);
+                // Wider base
+                const baseGeo = new THREE.CylinderGeometry(3.0, 3.0, 1.2, 32, 1, true);
                 this.baseCylinder = new THREE.Mesh(baseGeo, baseMat);
-                this.baseCylinder.position.set(0, -1.8, 0);
+                this.baseCylinder.position.set(0, -3.0, 0); // Near bottom
                 this.auraGroup.add(this.baseCylinder);
 
                 this.auraCurrentFrameMain = 0;
@@ -1631,14 +1678,26 @@
                     this.auraCurrentFrameMain = (this.auraCurrentFrameMain + 1) % this.auraTotalFrames;
                     const colM = this.auraCurrentFrameMain % this.auraCols;
                     const rowM = Math.floor(this.auraCurrentFrameMain / this.auraCols);
-                    this.auraTextureMain.offset.set(colM / this.auraCols, (this.auraRows - 1 - rowM) / this.auraRows);
+                    // Standard offset calculation
+                    const uOff = colM / this.auraCols;
+                    const vOff = (this.auraRows - 1 - rowM) / this.auraRows;
+
+                    if (this.mainCylinder.material.uniforms) {
+                        this.mainCylinder.material.uniforms.offset.value.set(uOff, vOff);
+                    }
 
                     // Update Base
                     this.baseLoopIndex = (this.baseLoopIndex + 1) % this.baseLoopFrames.length;
                     const frameBase = this.baseLoopFrames[this.baseLoopIndex];
                     const colB = frameBase % this.auraCols;
                     const rowB = Math.floor(frameBase / this.auraCols);
-                    this.auraTextureBase.offset.set(colB / this.auraCols, (this.auraRows - 1 - rowB) / this.auraRows);
+
+                    const uOffB = colB / this.auraCols;
+                    const vOffB = (this.auraRows - 1 - rowB) / this.auraRows;
+
+                    if (this.baseCylinder.material.uniforms) {
+                        this.baseCylinder.material.uniforms.offset.value.set(uOffB, vOffB);
+                    }
                 }
             }
 
@@ -3175,15 +3234,12 @@
 
                 this.mesh = new THREE.Group();
                 this.mesh.position.copy(startPosition);
- refactor-vfx-cylinders-7341864911271380566
 
                 this.cylinder = new THREE.Mesh(geometry, material);
-                this.cylinder.rotation.z = -Math.PI / 2;
+                this.cylinder.rotation.z = -Math.PI / 2; // Orient cylinder horizontally
 
                 this.mesh.add(this.cylinder);
                 this.mesh.frustumCulled = false;
-
- main
 
                 const angle = Math.atan2(direction.y, direction.x);
                 this.mesh.rotation.z = angle;
