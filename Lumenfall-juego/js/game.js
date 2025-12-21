@@ -226,7 +226,6 @@
                 this.glowMesh = new THREE.Mesh(glowGeo, glowMat);
                 this.mesh.add(this.glowMesh);
 
-                this.mesh.frustumCulled = false;
                 this.scene.add(this.mesh);
             }
 
@@ -269,7 +268,10 @@
             const endPos = new THREE.Vector3(strikeX, 0, 2);   // Caer al piso, cerca del plano Z del jugador (Z=0 aprox)
 
             // Instanciar el Rayo Visual 3D
-            allFlames.push(new LightningBolt(scene, startPos, endPos)); // Usamos el array de updates genérico
+                const bolt = new LightningBolt(scene, startPos, endPos);
+                // Asegurar que el rayo no desaparezca prematuramente si el bounding sphere no es perfecto, pero intentamos culling
+                bolt.mesh.frustumCulled = false; // Mantener false para el rayo dinámico para evitar parpadeos
+                allFlames.push(bolt);
 
             // Posicionar la Luz Global (Directional) para el flash general
             lightningLight.position.x = strikeX;
@@ -375,13 +377,13 @@
                         playAudio('fireball_cast', false, 0.5);
 
                         // Spawn Fire Left
-                        new AmbientTorchFlame(scene, new THREE.Vector3(-56, 3.2+0.5, z+0.1));
+                        new AmbientTorchFlame(scene, new THREE.Vector3(-56, 3.2+1.8, z+0.1));
                         const l1 = new THREE.PointLight(0x00aaff, 1, 15);
                         l1.position.set(-56, 3.2, z+0.5);
                         scene.add(l1);
 
                         // Spawn Fire Right
-                        new AmbientTorchFlame(scene, new THREE.Vector3(-44, 3.2+0.5, z+0.1));
+                        new AmbientTorchFlame(scene, new THREE.Vector3(-44, 3.2+1.8, z+0.1));
                         const l2 = new THREE.PointLight(0x00aaff, 1, 15);
                         l2.position.set(-44, 3.2, z+0.5);
                         scene.add(l2);
@@ -416,6 +418,18 @@
             animateEvent();
         }
 
+        function updateGateNumerals() {
+            allGates.forEach(gate => {
+                const screenPosition = gate.mesh.position.clone();
+                screenPosition.y += 6.8;
+                const vector = screenPosition.project(camera);
+                const x = (vector.x * 0.5 + 0.5) * renderer.domElement.clientWidth;
+                const y = (-vector.y * 0.5 + 0.5) * renderer.domElement.clientHeight;
+                gate.numeralElement.style.left = `${x}px`;
+                gate.numeralElement.style.top = `${y}px`;
+            });
+        }
+
         function animate() {
             if (isPaused && !window.isCinematic) return; // Allow cinematic to run
             animationFrameId = requestAnimationFrame(animate);
@@ -432,6 +446,7 @@
                         allFlames.splice(i, 1);
                     }
                 }
+                updateGateNumerals();
                 renderer.render(scene, camera);
                 return;
             }
@@ -469,12 +484,12 @@
                              completedRooms[currentLevelId] = true;
                              // Spawn Torches at Exit (x=0)
                              const z = camera.position.z - roomDepth + 0.5;
-                             new AmbientTorchFlame(scene, new THREE.Vector3(-6, 3.2+0.5, z+0.1));
+                             new AmbientTorchFlame(scene, new THREE.Vector3(-6, 3.2+1.8, z+0.1));
                              const l1 = new THREE.PointLight(0x00aaff, 1, 15);
                              l1.position.set(-6, 3.2, z+0.5);
                              scene.add(l1);
 
-                             new AmbientTorchFlame(scene, new THREE.Vector3(6, 3.2+0.5, z+0.1));
+                             new AmbientTorchFlame(scene, new THREE.Vector3(6, 3.2+1.8, z+0.1));
                              const l2 = new THREE.PointLight(0x00aaff, 1, 15);
                              l2.position.set(6, 3.2, z+0.5);
                              scene.add(l2);
@@ -527,14 +542,8 @@
                         isNearInteractable = true;
                         interactableObject = {type: 'gate', object: gate};
                     }
-                    const screenPosition = gate.mesh.position.clone();
-                    screenPosition.y += 6.8;
-                    const vector = screenPosition.project(camera);
-                    const x = (vector.x * 0.5 + 0.5) * renderer.domElement.clientWidth;
-                    const y = (-vector.y * 0.5 + 0.5) * renderer.domElement.clientHeight;
-                    gate.numeralElement.style.left = `${x}px`;
-                    gate.numeralElement.style.top = `${y}px`;
                 });
+                updateGateNumerals();
 
                 allPuzzles.forEach(puzzle => {
                     if (!puzzle.isSolved) {
@@ -1526,7 +1535,6 @@
                 });
 
                 const flameCore = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), attackFlameMaterial);
-                flameCore.frustumCulled = false;
                 // Add metadata for animation
                 flameCore.userData = { currentFrame: 0, frameTimer: 0 };
 
@@ -2059,7 +2067,6 @@
                 this.mesh = new THREE.Mesh(geo, mat);
                 this.mesh.position.set(x, y + 0.05, z);
                 this.mesh.rotation.x = -Math.PI/2;
-                this.mesh.frustumCulled = false;
                 scene.add(this.mesh);
             }
             update(dt) {
@@ -2096,7 +2103,6 @@
                 // Adjust scale slightly to match visual
                 this.mesh.scale.set(3.6, 3.6, 1);
 
-                this.mesh.frustumCulled = false;
                 scene.add(this.mesh);
                 allFlames.push(this);
 
@@ -2148,7 +2154,6 @@
                 this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
                 this.mesh.position.copy(pos);
                 this.mesh.scale.setScalar(scale);
-                this.mesh.frustumCulled = false;
                 scene.add(this.mesh);
 
                 this.currentFrame = 0;
@@ -2201,7 +2206,6 @@
                     );
                     p.scale.setScalar(0.2 + Math.random()*0.3);
                     p.userData = { speed: 0.2 + Math.random()*0.3 };
-                    p.frustumCulled = false;
                     scene.add(p);
                     this.particles.push(p);
                 }
@@ -2226,10 +2230,9 @@
             const mesh = new THREE.Sprite(mat);
             mesh.position.set(x, y, z);
             mesh.scale.set(1, 2, 1);
-            mesh.frustumCulled = false;
             scene.add(mesh);
             if(isLit) {
-                new AmbientTorchFlame(scene, new THREE.Vector3(x, y+0.5, z+0.1));
+                new AmbientTorchFlame(scene, new THREE.Vector3(x, y+1.8, z+0.1));
                 const light = new THREE.PointLight(0x00aaff, 1, 8);
                 light.position.set(x, y, z+0.5);
                 scene.add(light);
@@ -2250,7 +2253,6 @@
                  const ray = new THREE.Mesh(geo, mat);
                  ray.position.set((Math.random()-0.5)*80, 10, -5);
                  ray.rotation.z = 0.2 + Math.random()*0.2;
-                 ray.frustumCulled = false;
                  scene.add(ray);
              }
         }
@@ -2267,7 +2269,6 @@
             for(let i=0; i<10; i++) {
                 const dirt = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), decalMat);
                 dirt.position.set((Math.random()-0.5)*80, Math.random()*10, -14.9);
-                dirt.frustumCulled = false;
                 scene.add(dirt);
             }
         }
@@ -2313,24 +2314,20 @@
             floor.rotation.x = -Math.PI / 2;
             floor.position.z = camera.position.z - (roomDepth / 2);
             floor.receiveShadow = true;
-            floor.frustumCulled = false;
             scene.add(floor);
 
             const wall = new THREE.Mesh(new THREE.PlaneGeometry(playableAreaWidth, 20), wallMaterial);
             wall.position.set(0, 10, camera.position.z - roomDepth);
-            wall.frustumCulled = false;
             scene.add(wall);
 
             const sideWallGeometry = new THREE.PlaneGeometry(roomDepth, 20);
             const leftSideWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
             leftSideWall.rotation.y = Math.PI / 2;
             leftSideWall.position.set(-playableAreaWidth / 2, 10, camera.position.z - roomDepth / 2);
-            leftSideWall.frustumCulled = false;
             scene.add(leftSideWall);
             const rightSideWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
             rightSideWall.rotation.y = -Math.PI / 2;
             rightSideWall.position.set(playableAreaWidth / 2, 10, camera.position.z - roomDepth / 2);
-            rightSideWall.frustumCulled = false;
             scene.add(rightSideWall);
 
             levelData.gates.forEach(gateData => {
@@ -2340,12 +2337,10 @@
                 const gateGroup = new THREE.Group();
                 const gateMesh = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), doorMaterial.clone());
                 gateMesh.position.set(0, 4, 0.3);
-                gateMesh.frustumCulled = false;
                 gateGroup.add(gateMesh);
                 const shadowMesh = new THREE.Mesh(new THREE.PlaneGeometry(10, 3), doorShadowMaterial);
                 shadowMesh.rotation.x = -Math.PI / 2;
                 shadowMesh.position.set(0, 0.1, 1.0);
-                shadowMesh.frustumCulled = false;
                 gateGroup.add(shadowMesh);
                 gateGroup.position.x = gateData.x;
                 gateGroup.position.z = camera.position.z - roomDepth;
@@ -2563,7 +2558,6 @@
                 this.mesh = new THREE.Mesh(enemyGeometry, enemyMaterial);
                 this.mesh.position.set(initialX, enemyHeight / 2, 0);
                 this.mesh.castShadow = true;
-                this.mesh.frustumCulled = false;
                 this.scene.add(this.mesh);
                 this.hitCount = 0;
                 this.isAlive = true;
@@ -2725,7 +2719,6 @@
                 this.mesh = new THREE.Mesh(enemyGeometry, enemyMaterial);
                 this.mesh.position.set(initialX, enemyHeight / 2, 0);
                 this.mesh.castShadow = true;
-                this.mesh.frustumCulled = false;
                 this.scene.add(this.mesh);
 
                 this.maxHealth = 8;
@@ -2986,7 +2979,6 @@
                 const geometry = new THREE.PlaneGeometry(4.2, 4.2);
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.set(x, this.initialY, 0);
-                this.mesh.frustumCulled = false;
                 this.scene.add(this.mesh);
 
                 this.currentFrame = 0;
@@ -3052,7 +3044,6 @@
                 const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
                 this.table = new THREE.Mesh(tableGeometry, tableMaterial);
                 this.table.position.set(x, 1, camera.position.z - roomDepth + 4);
-                this.table.frustumCulled = false; // Optimization
                 this.scene.add(this.table);
 
                 if (this.isSolved) {
@@ -3085,7 +3076,6 @@
                     const piece = new THREE.Mesh(new THREE.PlaneGeometry(pieceSize, pieceSize), material);
                     piece.position.copy(initialPositions[i]).add(new THREE.Vector3(x, 4, this.table.position.z + 2.1));
                     piece.userData.targetPosition = correctPositions[i].clone().add(new THREE.Vector3(x, 4, this.table.position.z + 2.1));
-                    piece.frustumCulled = false; // Optimization
                     this.pieces.push(piece);
                     this.scene.add(piece);
                 }
@@ -3134,7 +3124,6 @@
                 const geometry = new THREE.SphereGeometry(0.5, 32, 32);
                 this.mesh = new THREE.Mesh(geometry, this.isActive ? this.activeMaterial : this.inactiveMaterial);
                 this.mesh.position.set(x, y, camera.position.z - roomDepth + 3);
-                this.mesh.frustumCulled = false; // Optimization
                 scene.add(this.mesh);
 
                 this.light = new THREE.PointLight(0xffffff, 1, 10);
@@ -3186,12 +3175,15 @@
 
                 this.mesh = new THREE.Group();
                 this.mesh.position.copy(startPosition);
+ refactor-vfx-cylinders-7341864911271380566
 
                 this.cylinder = new THREE.Mesh(geometry, material);
                 this.cylinder.rotation.z = -Math.PI / 2;
 
                 this.mesh.add(this.cylinder);
                 this.mesh.frustumCulled = false;
+
+ main
 
                 const angle = Math.atan2(direction.y, direction.x);
                 this.mesh.rotation.z = angle;
@@ -3292,7 +3284,6 @@
                 const geometry = new THREE.PlaneGeometry(6, 6);
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.set(x, y, z);
-                this.mesh.frustumCulled = false; // Optimization
                 this.scene.add(this.mesh);
             }
 
@@ -3333,7 +3324,6 @@
 
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.copy(position);
-                this.mesh.frustumCulled = false; // Optimization
                 this.scene.add(this.mesh);
 
                 this.lifetime = 10; // El power-up desaparece después de 10 segundos
