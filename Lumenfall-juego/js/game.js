@@ -111,9 +111,7 @@
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        window.camera = camera; // Debug exposure
         const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: true, alpha: true });
-        window.renderer = renderer; // Debug exposure
         const textureLoader = new THREE.TextureLoader();
         const clock = new THREE.Clock();
 
@@ -123,7 +121,6 @@
         const allSimpleEnemies = [];
         const allEnemiesX1 = [];
         const allDecorGhosts = [];
-        window.allEnemiesX1 = allEnemiesX1; // Debug exposure
         const allGates = [];
         const allStatues = [];
         const allOrbs = [];
@@ -166,7 +163,6 @@
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
         scene.fog = null;
         scene.add(ambientLight);
-        window.scene = scene; // Debug exposure
         const directionalLight = new THREE.DirectionalLight(0xaaaaaa, 0.5);
         directionalLight.position.set(5, 10, 5);
         directionalLight.castShadow = true;
@@ -341,20 +337,19 @@
             firstFlameTriggered = true;
 
             // 1. Disable Input
-            isPaused = true; // Temporary pause logic update loop?
-            // Actually, we want to animate camera, but stop player/enemy updates.
-            // isPaused stops animate() loop entirely, which is bad for camera pan.
-            // We need a new flag "isCinematic" or manipulate inputs.
-            // Let's use a specialized cinematic state.
+            isPaused = true;
             window.isCinematic = true;
 
             // 2. Camera Pan to Gate #1 (x: -50)
             const startCamPos = camera.position.clone();
             const targetCamPos = new THREE.Vector3(-50, 4, startCamPos.z - 5); // Zoom in slightly?
 
-            let progress = 0;
             const durationPan = 1500; // 1.5s
+            const durationHold = 3000; // 3s
+            const durationReturn = 1500; // 1.5s
+
             const startTime = Date.now();
+            let torchesIgnited = false;
 
             function animateEvent() {
                 const now = Date.now();
@@ -366,45 +361,15 @@
                     const smoothT = t * t * (3 - 2 * t); // EaseInOut
                     camera.position.lerpVectors(startCamPos, targetCamPos, smoothT);
                     requestAnimationFrame(animateEvent);
-                } else if (elapsed < durationPan + 1000) {
-                    // Activate Phase (Instant ON)
-                    if (camera.position.x !== targetCamPos.x) {
-                        camera.position.copy(targetCamPos); // Snap finish
+                } else if (elapsed < durationPan + durationHold) {
+                    // Hold Phase
+                    camera.position.copy(targetCamPos);
 
-                        // Turn ON Torches at Gate 1
-                        // We need reference to gate_1 torches.
-                        // We can search allFlames or query the gate structure.
-                        // Gate 1 is at x: -50.
-                        // Torches are at x-6 and x+6 relative to gate?
-                        // In createTorch call: gateData.x - 6 ...
-                        // Gate 1 x=-50. Torches at -56 and -44.
+                    if (!torchesIgnited) {
+                        torchesIgnited = true;
 
-                        // Hack: Turn ON all torches near Gate 1
-                        allFlames.forEach(flame => {
-                             if (Math.abs(flame.mesh.position.x - (-50)) < 10) {
-                                 // This includes the ambient flames.
-                                 // We need to enable the POINT LIGHT associated with them if it was off?
-                                 // createTorch adds a PointLight if isLit=true.
-                                 // If isLit=false initially, PointLight is NOT created.
-                                 // We need to create it now.
-
-                                 // Wait, AmbientTorchFlame class creates a visual mesh.
-                                 // createTorch creates Sprite + AmbientTorchFlame + PointLight (if lit).
-                                 // If unlit, only Sprite is created (the stick? No, "antorcha.png" sprite).
-                                 // AmbientTorchFlame is the FIRE.
-                                 // createTorch:
-                                 // if(isLit) { new AmbientTorchFlame...; new PointLight... }
-
-                                 // So if unlit, NO FIRE MESH exists.
-                                 // We need to spawn fire.
-                            }
-                        });
-
-                        // Better: Re-call createTorch logic or manually spawn.
-                        // Let's manually spawn fire and light at Gate 1 positions.
-                        // Gate 1: x=-50. z = camera.position.z - roomDepth + 0.5.
-                        // Torches: x = -56, x = -44. y=3.2.
-                        const z = camera.position.z - roomDepth + 0.5;
+                        // Spawn Fire Logic (Gate 1)
+                        const z = startCamPos.z - roomDepth + 0.5;
 
                         // Fwoosh sound
                         playAudio('fireball_cast', false, 0.5);
@@ -420,19 +385,14 @@
                         const l2 = new THREE.PointLight(0x00aaff, 1, 15);
                         l2.position.set(-44, 3.2, z+0.5);
                         scene.add(l2);
-
-                        // Open Gate Logic?
-                        // Just unlock it effectively.
                     }
                     requestAnimationFrame(animateEvent);
-                } else if (elapsed < durationPan + 1000 + 1500) {
-                    // Pan Back Phase
-                    const panBackStart = durationPan + 1000;
-                    const t = (elapsed - panBackStart) / 1500;
+                } else if (elapsed < durationPan + durationHold + durationReturn) {
+                    // Return Phase
+                    const panBackStart = durationPan + durationHold;
+                    const t = (elapsed - panBackStart) / durationReturn;
                     const smoothT = t * t * (3 - 2 * t);
 
-                    // Target is player position (which might have moved? No, input disabled).
-                    // We need player pos.
                     const pPos = player.mesh.position.clone();
                     pPos.y += 1.9; // Camera offset
                     pPos.z = 8; // Default Z
@@ -442,9 +402,15 @@
                 } else {
                     // Finish
                     window.isCinematic = false;
-                    // Resume game loop if we paused it?
-                    // We need to ensure animate() runs but doesn't update physics if cinematic.
-                    // We will modify animate() to respect isCinematic.
+                    isPaused = false; // Resume game loop
+                    if (player) {
+                        // Ensure camera is perfectly centered on player
+                        camera.position.x = player.mesh.position.x;
+                        const targetCameraY = player.mesh.position.y + 1.9;
+                        camera.position.y = targetCameraY;
+                        camera.position.z = 8;
+                    }
+                    animate(); // Ensure loop continues
                 }
             }
             animateEvent();
@@ -499,12 +465,8 @@
                     const enemiesRemaining = allSimpleEnemies.length + allEnemiesX1.length;
                     if (enemiesRemaining === 0) {
                         // Activate Exit Torches (Nightmare Victory)
-                        // Exit torch is typically at x=0 (return gate).
-                        // Check if we already Lit them?
-                        // We can just iterate flames. If none at x=0, spawn them.
-                        // Or check specific flag.
-                        if (!completedRooms[currentLevelId + "_cleared"]) {
-                             completedRooms[currentLevelId + "_cleared"] = true;
+                        if (!completedRooms[currentLevelId]) {
+                             completedRooms[currentLevelId] = true;
                              // Spawn Torches at Exit (x=0)
                              const z = camera.position.z - roomDepth + 0.5;
                              new AmbientTorchFlame(scene, new THREE.Vector3(-6, 3.2+0.5, z+0.1));
@@ -518,6 +480,7 @@
                              scene.add(l2);
 
                              playAudio('puerta'); // Success sound
+                             showDialogue('PUERTA DESBLOQUEADA', 2000);
                         }
                     }
                 }
@@ -534,8 +497,8 @@
                         player.takeDamage(player.maxHealth * 0.10, enemy);
                     }
 
-                    // Trigger First Flame Event on specific enemy death
-                    if (!enemy.isAlive && !firstFlameTriggered && enemy.mesh.position.x === -40) {
+                    // Trigger First Flame Event on specific enemy death (Gatekeeper)
+                    if (!enemy.isAlive && !firstFlameTriggered && enemy.isGatekeeper) {
                         triggerFirstFlameEvent();
                     }
                 });
@@ -604,6 +567,13 @@
                     if (interactPressed) {
                         if (interactableObject.type === 'gate') {
                             const gate = interactableObject.object;
+
+                            // Guard: If inside a room and not cleared, cannot exit
+                            if (currentLevelId !== 'dungeon_1' && !completedRooms[currentLevelId]) {
+                                showDialogue("PUERTA BLOQUEADA", 1000);
+                                return; // Block interaction
+                            }
+
                             const destinationId = gate.destination;
                             let spawnX = null;
                             if (destinationId === 'dungeon_1') {
@@ -825,7 +795,6 @@
                 controlsContainer.style.opacity = '1';
                 controlsContainer.style.pointerEvents = 'auto';
                 player = new Player();
-                window.player = player; // Debug exposure
                 loadLevelById(currentLevelId);
                 animate();
             };
@@ -2096,7 +2065,7 @@
                 this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
                 this.mesh.position.copy(pos);
                 // Adjust scale slightly to match visual
-                this.mesh.scale.set(1.2, 1.2, 1);
+                this.mesh.scale.set(3.6, 3.6, 1);
 
                 this.mesh.frustumCulled = false;
                 scene.add(this.mesh);
@@ -2357,7 +2326,8 @@
                 numeralElement.textContent = gateData.numeral;
                 let isLit = completedRooms[gateData.destination];
                 if (levelData.id !== 'dungeon_1') {
-                    isLit = true;
+                    // Inside a room, the torches reflect if the current room is cleared
+                    isLit = completedRooms[levelData.id];
                 }
                 if (!isLit) {
                     numeralElement.classList.add('off');
@@ -2459,6 +2429,12 @@
                 }
             }
 
+            if (levelId === 'room_1') {
+                if (allEnemiesX1.length === 0 && !completedRooms['room_1']) {
+                    allEnemiesX1.push(new EnemyX1(scene, 0));
+                }
+            }
+
             if (levelId === 'room_3') {
                 if (allSimpleEnemies.length === 0) {
                     // allSimpleEnemies.push(new SimpleEnemy(scene, 0)); // Disabled
@@ -2467,7 +2443,9 @@
 
             if (levelId === 'dungeon_1') {
                  if (allEnemiesX1.length === 0) {
-                    allEnemiesX1.push(new EnemyX1(scene, -40));
+                    const gateKeeper = new EnemyX1(scene, -40);
+                    gateKeeper.isGatekeeper = true;
+                    allEnemiesX1.push(gateKeeper);
                 }
 
                 // Intro Logic: If First Flame not triggered, force Gate 1 torches OFF.
