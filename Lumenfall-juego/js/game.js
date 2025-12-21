@@ -1558,21 +1558,25 @@
             }
 
             createAura() {
-                this.auraTexture = textureLoader.load(assetUrls.chargeSprite);
-                this.auraTexture.wrapS = THREE.RepeatWrapping;
-                this.auraTexture.wrapT = THREE.RepeatWrapping;
+                this.auraGroup = new THREE.Group();
+                this.mesh.add(this.auraGroup);
+                this.auraGroup.visible = false;
 
-                // Enforce NearestFilter to avoid blurring and edge artifacts
-                this.auraTexture.magFilter = THREE.NearestFilter;
-                this.auraTexture.minFilter = THREE.NearestFilter;
-
+                const chargeUrl = assetUrls.chargeSprite;
                 this.auraCols = 5;
                 this.auraRows = 2;
                 this.auraTotalFrames = 10;
-                this.auraTexture.repeat.set(1 / this.auraCols, 1 / this.auraRows);
 
-                const auraMaterial = new THREE.MeshBasicMaterial({
-                    map: this.auraTexture,
+                // 1. Main Cylinder
+                this.auraTextureMain = textureLoader.load(chargeUrl);
+                this.auraTextureMain.wrapS = THREE.RepeatWrapping;
+                this.auraTextureMain.wrapT = THREE.RepeatWrapping;
+                this.auraTextureMain.magFilter = THREE.NearestFilter;
+                this.auraTextureMain.minFilter = THREE.NearestFilter;
+                this.auraTextureMain.repeat.set(1 / this.auraCols, 1 / this.auraRows);
+
+                const mainMat = new THREE.MeshBasicMaterial({
+                    map: this.auraTextureMain,
                     color: 0xffffff,
                     transparent: true,
                     blending: THREE.AdditiveBlending,
@@ -1580,36 +1584,61 @@
                     side: THREE.DoubleSide
                 });
 
-                const geometry = new THREE.PlaneGeometry(1, 1);
-                this.auraMesh = new THREE.Mesh(geometry, auraMaterial);
-                this.auraMesh.position.set(0, 0, 0.1);
-                this.auraMesh.visible = false;
-                this.mesh.add(this.auraMesh);
+                const mainGeo = new THREE.CylinderGeometry(0.8, 0.8, 2.5, 16, 1, true);
+                this.mainCylinder = new THREE.Mesh(mainGeo, mainMat);
+                this.auraGroup.add(this.mainCylinder);
 
-                this.auraCurrentFrame = 0;
+                // 2. Base Cylinder
+                this.auraTextureBase = textureLoader.load(chargeUrl);
+                this.auraTextureBase.wrapS = THREE.RepeatWrapping;
+                this.auraTextureBase.wrapT = THREE.RepeatWrapping;
+                this.auraTextureBase.magFilter = THREE.NearestFilter;
+                this.auraTextureBase.minFilter = THREE.NearestFilter;
+                this.auraTextureBase.repeat.set(1 / this.auraCols, 1 / this.auraRows);
+
+                const baseMat = new THREE.MeshBasicMaterial({
+                    map: this.auraTextureBase,
+                    color: 0xffffff,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    side: THREE.DoubleSide
+                });
+
+                const baseGeo = new THREE.CylinderGeometry(1.0, 1.0, 0.4, 16, 1, true);
+                this.baseCylinder = new THREE.Mesh(baseGeo, baseMat);
+                this.baseCylinder.position.set(0, -1.8, 0);
+                this.auraGroup.add(this.baseCylinder);
+
+                this.auraCurrentFrameMain = 0;
+                this.baseLoopFrames = [1, 2];
+                this.baseLoopIndex = 0;
                 this.auraLastFrameTime = 0;
                 this.auraAnimationSpeed = 80;
             }
 
             updateAura(deltaTime) {
-                if (!this.auraMesh.visible) return;
+                if (!this.auraGroup.visible) return;
 
-                if (this.auraTexture.image && this.auraTexture.image.width > 0 && !this.auraSizeSet) {
-                     const size = calculateFrameSize(this.auraTexture, this.auraCols, this.auraRows);
-                     this.auraMesh.scale.set(size.width, size.height, 1);
-                     this.auraSizeSet = true;
-                }
+                const rotationSpeed = 5.0 * deltaTime;
+                this.mainCylinder.rotation.y -= rotationSpeed;
+                this.baseCylinder.rotation.y += rotationSpeed;
 
                 if (Date.now() - this.auraLastFrameTime > this.auraAnimationSpeed) {
                     this.auraLastFrameTime = Date.now();
-                    this.auraCurrentFrame = (this.auraCurrentFrame + 1) % this.auraTotalFrames;
 
-                    const col = this.auraCurrentFrame % this.auraCols;
-                    const row = Math.floor(this.auraCurrentFrame / this.auraCols);
-                    const u = col / this.auraCols;
-                    const v = (this.auraRows - 1 - row) / this.auraRows;
+                    // Update Main
+                    this.auraCurrentFrameMain = (this.auraCurrentFrameMain + 1) % this.auraTotalFrames;
+                    const colM = this.auraCurrentFrameMain % this.auraCols;
+                    const rowM = Math.floor(this.auraCurrentFrameMain / this.auraCols);
+                    this.auraTextureMain.offset.set(colM / this.auraCols, (this.auraRows - 1 - rowM) / this.auraRows);
 
-                    this.auraTexture.offset.set(u, v);
+                    // Update Base
+                    this.baseLoopIndex = (this.baseLoopIndex + 1) % this.baseLoopFrames.length;
+                    const frameBase = this.baseLoopFrames[this.baseLoopIndex];
+                    const colB = frameBase % this.auraCols;
+                    const rowB = Math.floor(frameBase / this.auraCols);
+                    this.auraTextureBase.offset.set(colB / this.auraCols, (this.auraRows - 1 - rowB) / this.auraRows);
                 }
             }
 
@@ -1760,7 +1789,7 @@
                 const isAttacking = this.currentState === 'attacking';
                 this.rightHandFlame.visible = isAttacking;
                 this.leftHandFlame.visible = isAttacking;
-                this.auraMesh.visible = isAttacking;
+                this.auraGroup.visible = isAttacking;
                 if (isAttacking) {
                     this.updateAttackFlames();
                     this.updateAura(deltaTime);
@@ -3121,6 +3150,8 @@
                 this.texture = textureLoader.load(assetUrls.projectileSprite);
                 this.texture.wrapS = THREE.RepeatWrapping;
                 this.texture.wrapT = THREE.RepeatWrapping;
+                this.texture.magFilter = THREE.NearestFilter;
+                this.texture.minFilter = THREE.NearestFilter;
 
                 this.cols = 4;
                 this.rows = 2;
@@ -3140,23 +3171,32 @@
                     side: THREE.DoubleSide
                 });
 
-                const geometry = new THREE.PlaneGeometry(1, 1);
-                this.mesh = new THREE.Mesh(geometry, material);
+                const geometry = new THREE.CylinderGeometry(0.2, 0.2, 1.0, 8, 1, true);
+
+                this.mesh = new THREE.Group();
                 this.mesh.position.copy(startPosition);
+ refactor-vfx-cylinders-7341864911271380566
+
+                this.cylinder = new THREE.Mesh(geometry, material);
+                this.cylinder.rotation.z = -Math.PI / 2;
+
+                this.mesh.add(this.cylinder);
+                this.mesh.frustumCulled = false;
+
+ main
 
                 const angle = Math.atan2(direction.y, direction.x);
-                this.mesh.rotation.z = angle; // Rotación directa (sin +90)
+                this.mesh.rotation.z = angle;
 
                 this.velocity = new THREE.Vector3(direction.x, direction.y, 0).multiplyScalar(this.speed);
 
-                // Fixed scale logic (Requested: 2.0)
-                this.mesh.scale.set(2.0, 2.0, 1);
+                this.mesh.scale.set(2.0, 2.0, 2.0);
 
                 this.scene.add(this.mesh);
                 this.updateFrameUVs();
 
-            this.isDying = false;
-            this.dyingTimer = 0.2; // 0.2s fade out
+                this.isDying = false;
+                this.dyingTimer = 0.2;
             }
 
             updateFrameUVs() {
@@ -3167,31 +3207,34 @@
                 this.texture.offset.set(u, v);
             }
 
-        triggerImpact() {
-            if (this.isDying) return;
-            this.isDying = true;
-            this.velocity.set(0, 0, 0); // Stop movement
-            allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
-            playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
-        }
+            triggerImpact() {
+                if (this.isDying) return;
+                this.isDying = true;
+                this.velocity.set(0, 0, 0);
+                allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
+                playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
+            }
 
             update(deltaTime) {
-            if (this.isDying) {
-                this.dyingTimer -= deltaTime;
-                if (this.dyingTimer <= 0) {
-                    return false; // Remove from scene
+                if (this.isDying) {
+                    this.dyingTimer -= deltaTime;
+                    if (this.dyingTimer <= 0) {
+                        return false;
+                    }
+                    const opacity = Math.max(0, this.dyingTimer / 0.2);
+                    this.cylinder.material.opacity = opacity;
+                    this.mesh.scale.multiplyScalar(0.9);
+                    return true;
                 }
-                const opacity = Math.max(0, this.dyingTimer / 0.2);
-                this.mesh.material.opacity = opacity;
-                this.mesh.scale.multiplyScalar(0.9); // Shrink slightly
-                return true;
-            }
 
                 this.lifetime -= deltaTime;
                 if (this.lifetime <= 0) {
-                this.triggerImpact();
-                return true; // Wait for fade out
+                    this.triggerImpact();
+                    return true;
                 }
+
+                // Drill Effect: Spin around longitudinal axis (Y of cylinder)
+                this.cylinder.rotation.y += 15.0 * deltaTime;
 
                 if (Date.now() - this.lastFrameTime > this.animationSpeed) {
                     this.lastFrameTime = Date.now();
@@ -3199,29 +3242,27 @@
                     this.updateFrameUVs();
                 }
 
-            // Fixed scale logic applied in constructor, no update needed here
-
                 this.mesh.position.x += this.velocity.x;
                 this.mesh.position.y += this.velocity.y;
 
                 if (this.mesh.position.x < player.minPlayerX || this.mesh.position.x > player.maxPlayerX) {
-                this.triggerImpact();
-                return true;
+                    this.triggerImpact();
+                    return true;
                 }
 
                 for (const enemy of allSimpleEnemies) {
                     if (this.mesh.position.distanceTo(enemy.mesh.position) < (enemy.mesh.geometry.parameters.height / 2)) {
                         enemy.takeHit();
-                    this.triggerImpact();
-                    return true;
+                        this.triggerImpact();
+                        return true;
                     }
                 }
 
                 for (const enemy of allEnemiesX1) {
                     if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                         enemy.takeHit();
-                    this.triggerImpact();
-                    return true;
+                        this.triggerImpact();
+                        return true;
                     }
                 }
 
