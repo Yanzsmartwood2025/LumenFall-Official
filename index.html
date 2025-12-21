@@ -34,6 +34,12 @@
                         'sans': ['Inter', 'sans-serif'],
                         'display': ['Impact', 'Arial Black', 'sans-serif'], // Fuente dramática
                     },
+                    colors: {
+                        cyan: {
+                            DEFAULT: '#00ffff',
+                            400: '#22d3ee', // Tailwind default fallback
+                        }
+                    }
                 },
             },
         };
@@ -69,18 +75,34 @@
             height: 100%;
             z-index: -1;
             overflow: hidden;
+            background-color: black;
         }
         
-        #bg-video {
+        .bg-video-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            filter: blur(8px) brightness(0.4); 
+            /* Eliminado el blur para nitidez cinematográfica */
         }
         
         #main-content {
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
+        }
+
+        /* Efectos de Texto Neón */
+        .neon-hover:hover {
+            color: #00ffff;
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+        }
+
+        .neon-active:active {
+            color: #ffffff;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 1), 0 0 30px rgba(0, 255, 255, 0.8);
+            transform: scale(0.98);
         }
 
         /* --- FASE 3: Autenticación Pro (Visual Identity) --- */
@@ -206,7 +228,6 @@
 
                     <form id="email-auth-form" class="space-y-4">
                         <div>
-                            <!-- <label class="block text-gray-400 text-sm mb-1" data-i18n="email_label">Correo Electrónico</label> -->
                             <input type="email" id="modal-email" placeholder="nombre@ejemplo.com" class="w-full bg-gray-800 border border-gray-600 rounded p-3 text-white focus:border-teal-500 focus:outline-none text-center" required>
                         </div>
 
@@ -224,26 +245,35 @@
             </div>
         </div>
 
-        <!-- Contenedor del Video de Fondo -->
+        <!-- MOTOR DE VIDEO "CINE" (BACKGROUND) -->
         <div id="bg-video-container">
-            <video id="bg-video" autoplay muted loop playsinline>
-                <source src="assets/flama-bg.mp4" type="video/mp4">
-                Tu navegador no soporta el video de fondo.
+            <!-- Capa 1: Video Activo -->
+            <video id="bg-video-1" class="bg-video-layer transition-opacity duration-1000 opacity-100" muted playsinline>
+                <!-- JS insertará el source -->
             </video>
+
+            <!-- Capa 2: Video Buffer (para transiciones) -->
+            <video id="bg-video-2" class="bg-video-layer transition-opacity duration-1000 opacity-0" muted playsinline>
+                <!-- Buffer -->
+            </video>
+
+            <!-- Capa Oscura (Overlay) para legibilidad del texto -->
+            <div class="absolute top-0 left-0 w-full h-full bg-black/60 z-10 pointer-events-none"></div>
         </div>
 
         <!-- Contenido de la página -->
-        <div class="flex-grow flex flex-col items-center justify-center p-4 sm:p-8">
+        <!-- Justify Start + Padding Top para ubicar el logo en el tercio superior -->
+        <div class="flex-grow flex flex-col items-center justify-start pt-[15vh] p-6 sm:p-8">
 
             <!-- Encabezado con el Título -->
-            <header class="text-center my-8 sm:my-10">
-                <h1 class="text-6xl sm:text-7xl md:text-9xl">
-                    <img src="assets/imagenes/Icono-inicio.png" alt="Lumenfall Logo" class="mx-auto w-full max-w-lg md:max-w-2xl h-auto">
+            <header class="text-center mb-8 sm:mb-10 w-full flex justify-center">
+                <h1 class="w-full max-w-[85vw] sm:max-w-lg md:max-w-2xl">
+                    <img src="assets/imagenes/Icono-inicio.png" alt="Lumenfall Logo" class="w-full h-auto object-contain">
                 </h1>
             </header>
 
             <!-- Contenedor de Autenticación -->
-            <section class="w-full max-w-sm mx-auto my-6 text-center">
+            <section class="w-full max-w-sm mx-auto my-6 text-center z-20">
                 
                 <!-- Spinner de Carga (Visible inicialmente) -->
                 <div id="auth-loading-spinner" class="auth-spinner mb-4"></div>
@@ -274,28 +304,27 @@
             </section>
 
             <!-- Navegación Principal -->
-            <nav class="w-full max-w-4xl mx-auto my-8 sm:my-10">
+            <nav class="w-full max-w-4xl mx-auto my-8 sm:my-10 z-20 px-4 sm:px-0">
                 <div class="flex flex-col sm:grid sm:grid-cols-2 sm:gap-6 space-y-6 sm:space-y-0">
                     
-                    <a href="./Lumenfall-juego/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
-                        <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">JUGAR EL DEMO</span>
-                        <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(La Experiencia Interactiva)</span>
+                    <a href="./Lumenfall-juego/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1 neon-active">
+                        <span class="block text-2xl sm:text-4xl font-display uppercase text-white neon-hover transition-all duration-300 tracking-wider">JUGAR EL DEMO</span>
+                        <span class="block text-sm text-gray-400 group-hover:text-cyan-200 transition-colors duration-300">(La Experiencia Interactiva)</span>
                     </a>
                     
-                    <a href="./Lumenfall-libro/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
-                        <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">LEER EL LORE</span>
-                        <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(El Grimorio / El Diario)</span>
+                    <a href="./Lumenfall-libro/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1 neon-active">
+                        <span class="block text-2xl sm:text-4xl font-display uppercase text-white neon-hover transition-all duration-300 tracking-wider">LEER EL LORE</span>
+                        <span class="block text-sm text-gray-400 group-hover:text-cyan-200 transition-colors duration-300">(El Grimorio / El Diario)</span>
                     </a>
                     
-                    <!-- *** CAMBIO AQUÍ: Apuntando a la carpeta correcta 'Armeria' *** -->
-                    <a href="./Armeria/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1">
-                        <span class="block text-3xl sm:text-4xl font-display uppercase text-white group-hover:text-red-400 transition-colors duration-300 tracking-wider">LA ARMERÍA</span>
-                        <span class="block text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">(Camisetas y Accesorios)</span>
+                    <a href="./Armeria/index.html" class="group block p-4 text-center transition-all duration-300 transform hover:-translate-y-1 neon-active">
+                        <span class="block text-2xl sm:text-4xl font-display uppercase text-white neon-hover transition-all duration-300 tracking-wider">LA ARMERÍA</span>
+                        <span class="block text-sm text-gray-400 group-hover:text-cyan-200 transition-colors duration-300">(Camisetas y Accesorios)</span>
                     </a>
                     
                     <a href="./Musica/index.html" class="group block p-6 sm:p-8 text-center bg-white rounded-lg transition-all duration-300 hover:bg-gray-200 hover:shadow-lg transform hover:-translate-y-1">
-                        <span class="block text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-red-500 transition-colors duration-300">LA BANDA SONORA</span>
-                        <span class="block text-sm text-gray-600 group-hover:text-red-500 transition-colors duration-300">(Escuchar 'MY TEMPO')</span>
+                        <span class="block text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-cyan-600 transition-colors duration-300">LA BANDA SONORA</span>
+                        <span class="block text-sm text-gray-600 group-hover:text-cyan-600 transition-colors duration-300">(Escuchar 'MY TEMPO')</span>
                     </a>
 
                 </div>
@@ -304,7 +333,7 @@
         </div>
 
         <!-- Footer -->
-        <footer class="w-full text-center p-6 mt-auto">
+        <footer class="w-full text-center p-6 mt-auto z-20">
             <!-- Iconos de redes sociales -->
             <div class="flex justify-center space-x-8 mb-4">
                 
@@ -397,6 +426,72 @@
         });
     </script>
 
+    <!-- LÓGICA DE VIDEO PLAYLIST CON CROSS-FADE -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const playlist = [
+                'assets/videos/video-libro.mp4',
+                'assets/videos/video-juego.mp4',
+                'assets/videos/video-musica.mp4',
+                'assets/videos/video-ropa.mp4'
+            ];
+
+            let currentIndex = 0;
+            const video1 = document.getElementById('bg-video-1');
+            const video2 = document.getElementById('bg-video-2');
+            let activeVideo = video1; // Empieza con el 1
+            let nextVideo = video2;
+
+            // Iniciar el primer video
+            video1.src = playlist[0];
+
+            // Al terminar un video, reproducir el siguiente con transición
+            function setupNextVideo(endedVideoElement) {
+                // Determinar el índice del siguiente
+                currentIndex = (currentIndex + 1) % playlist.length;
+                const nextSource = playlist[currentIndex];
+
+                // El video que no se está viendo actualmente será el "nextVideo"
+                // Si el que terminó es video1, el siguiente (que vamos a mostrar) será video2
+                if (endedVideoElement === video1) {
+                    activeVideo = video2;
+                    nextVideo = video1;
+                } else {
+                    activeVideo = video1;
+                    nextVideo = video2;
+                }
+
+                // Preparar el nuevo video activo
+                activeVideo.src = nextSource;
+                activeVideo.load();
+
+                // Cuando esté listo para reproducirse
+                activeVideo.oncanplay = () => {
+                    activeVideo.play()
+                        .then(() => {
+                            // TRANSICIÓN: Hacer visible el nuevo, invisible el viejo
+                            activeVideo.classList.remove('opacity-0');
+                            activeVideo.classList.add('opacity-100');
+
+                            nextVideo.classList.remove('opacity-100');
+                            nextVideo.classList.add('opacity-0');
+
+                            // Importante: Eliminar listener del anterior para evitar duplicados
+                            nextVideo.onended = null;
+                            activeVideo.onended = () => setupNextVideo(activeVideo);
+                        })
+                        .catch(err => console.error("Error reproduciendo video:", err));
+                };
+            }
+
+            // Iniciar la cadena
+            video1.onended = () => setupNextVideo(video1);
+
+            // Manejo de errores de autoplay
+            video1.play().catch(e => console.log("Autoplay prevenido por el navegador", e));
+        });
+    </script>
+
     <!-- Cargar el Sistema de Autenticación Central (El Breaker) -->
     <script type="module" src="assets/js/auth-core.js"></script>
 
@@ -415,8 +510,6 @@
                 operator_label: "Operador",
                 access_code_label: "CÓDIGO DE ACCESO",
                 logout_btn: "Cerrar Sesión",
-
-                // Textos adicionales que pueden necesitar traducción si se usan en JS
                 welcome_alert: "Bienvenido, Operador.",
                 auth_error: "Error de autenticación",
                 credential_error: "Credenciales incorrectas",
@@ -435,7 +528,6 @@
                 operator_label: "Operator",
                 access_code_label: "ACCESS CODE",
                 logout_btn: "Sign Out",
-
                 welcome_alert: "Welcome, Operator.",
                 auth_error: "Authentication Error",
                 credential_error: "Invalid Credentials",
@@ -471,7 +563,6 @@
         // Referencias al DOM
         const authLoadingSpinner = document.getElementById('auth-loading-spinner');
         const loginButtons = document.getElementById('login-buttons');
-        // Removed userInfo reference as it wasn't used
         const googleLoginBtn = document.getElementById('google-login');
         const installButton = document.getElementById('install-pwa-button');
 
@@ -507,7 +598,6 @@
             }
 
             // --- 0. Chequeo Inicial: Magic Link Return ---
-            // Si el usuario viene del correo, completamos el login.
             window.LumenfallAuth.checkAndSignInWithMagicLink().then((result) => {
                 if(result.success) {
                     console.log("Magic Link Login Success!", result.user);
@@ -612,20 +702,16 @@
                     menuUserEmail.textContent = user.email || 'Agente';
 
                     // Lógica del Avatar (Foto vs Místico)
-                    // Limpiamos contenido previo del botón
                     userAvatarBtn.innerHTML = '';
 
                     if(user.photoURL) {
-                        // Opción 1: Foto Real (Google/GitHub)
                         const img = document.createElement('img');
                         img.src = user.photoURL;
                         img.alt = "User";
                         img.className = "w-full h-full object-cover bg-gray-800";
                         userAvatarBtn.appendChild(img);
-                        // Resetear borde si es foto
                         userAvatarBtn.className = "w-12 h-12 rounded-full border-2 border-teal-500 overflow-hidden focus:outline-none focus:ring-2 focus:ring-teal-400";
                     } else {
-                        // Opción 2: Avatar Místico (Email/Sin Foto)
                         const initial = (user.displayName || user.email || '?').charAt(0).toUpperCase();
 
                         const mysticDiv = document.createElement('div');
@@ -633,7 +719,6 @@
                         mysticDiv.textContent = initial;
 
                         userAvatarBtn.appendChild(mysticDiv);
-                        // Quitar borde externo del botón ya que el mystic-avatar tiene el suyo propio
                         userAvatarBtn.className = "w-12 h-12 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-teal-400";
                     }
 
@@ -654,7 +739,7 @@
         // Iniciar
         initUI();
 
-        // Prompt de Instalación PWA (Mantenido igual)
+        // Prompt de Instalación PWA
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
