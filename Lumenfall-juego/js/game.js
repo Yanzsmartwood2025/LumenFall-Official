@@ -867,6 +867,10 @@
         pauseLanguageSelect.addEventListener('change', handleLanguageChange);
 
         playButton.addEventListener('click', startGame);
+        playButton.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent double firing
+            startGame();
+        }, { passive: false });
         jozielHalo.addEventListener('click', pauseGame);
         resumeButton.addEventListener('click', resumeGame);
         gamepadToggleButton.addEventListener('click', toggleGamepadMode);
@@ -1096,12 +1100,24 @@
             startButtonContainer.style.display = 'none';
             introImage.src = assetUrls.introImage;
             introScreen.style.opacity = 0;
-            introScreen.addEventListener('transitionend', () => {
+            introScreen.style.pointerEvents = 'none'; // Prevent blocking
+
+            const onIntroTransitionEnd = () => {
                 introScreen.style.display = 'none';
                 menuScreen.style.backgroundImage = `url('${assetUrls.menuBackgroundImage}')`;
                 menuScreen.style.display = 'flex';
                 setTimeout(() => menuScreen.style.opacity = 1, 10);
-            }, { once: true });
+            };
+
+            introScreen.addEventListener('transitionend', onIntroTransitionEnd, { once: true });
+
+            // Fallback in case transitionend fails
+            setTimeout(() => {
+                if (introScreen.style.display !== 'none') {
+                    introScreen.removeEventListener('transitionend', onIntroTransitionEnd);
+                    onIntroTransitionEnd();
+                }
+            }, 1100);
         });
 
         function handleResize() {
