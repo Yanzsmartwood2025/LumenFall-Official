@@ -1594,9 +1594,10 @@
                     varying vec2 vOriginalUv;
                     void main() {
                         vec4 texColor = texture2D(map, vUv);
-                        // Gradient: Fade out as y approaches 1.0 (top)
-                        float alphaFade = 1.0 - smoothstep(0.6, 1.0, vOriginalUv.y);
-                        gl_FragColor = vec4(texColor.rgb, texColor.a * alphaFade);
+                        // Gradient: Fade out as y approaches 1.0 (top) and approaches 0.0 (bottom)
+                        float alphaFadeTop = 1.0 - smoothstep(0.6, 1.0, vOriginalUv.y);
+                        float alphaFadeBottom = smoothstep(0.0, 0.3, vOriginalUv.y);
+                        gl_FragColor = vec4(texColor.rgb, texColor.a * alphaFadeTop * alphaFadeBottom);
                     }
                 `;
 
@@ -1628,7 +1629,7 @@
                 this.mainCylinder = new THREE.Mesh(mainGeo, mainMat);
                 // Center vertically relative to player center.
                 // Player mesh height is 4.2. Pivot is at center.
-                this.mainCylinder.position.set(0, 0, 0);
+                this.mainCylinder.position.set(0, -0.5, 0); // Lower slightly to cover shoes
                 this.auraGroup.add(this.mainCylinder);
 
                 // 2. Base Cylinder (Wider base effect)
@@ -1661,7 +1662,7 @@
                 this.auraGroup.add(this.baseCylinder);
 
                 this.auraCurrentFrameMain = 0;
-                this.baseLoopFrames = [1, 2];
+                this.baseLoopFrames = [1, 3];
                 this.baseLoopIndex = 0;
                 this.auraLastFrameTime = 0;
                 this.auraAnimationSpeed = 80;
@@ -1673,6 +1674,10 @@
                 const rotationSpeed = 5.0 * deltaTime;
                 this.mainCylinder.rotation.y -= rotationSpeed;
                 this.baseCylinder.rotation.y += rotationSpeed;
+
+                // Pulsing effect for base ring (Wind/Breathing)
+                const pulse = 1.0 + Math.sin(Date.now() * 0.008) * 0.15;
+                this.baseCylinder.scale.set(pulse, 1, pulse);
 
                 if (Date.now() - this.auraLastFrameTime > this.auraAnimationSpeed) {
                     this.auraLastFrameTime = Date.now();
