@@ -1,39 +1,15 @@
-127.0.0.1 - - [20/Dec/2025 19:53:19] "GET /index.html HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:53:19] "GET /assets/imagenes/icono-inicio-web/icono-joziel-2.png HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:53:19] "GET /assets/js/auth-core.js HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:53:19] "GET /assets/imagenes/Icono-inicio.png HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:53:19] "GET /assets/imagenes/icono-redes-sociales/instagram.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:53:19] "GET /assets/imagenes/icono-redes-sociales/facebook.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:53:19] "GET /assets/imagenes/icono-redes-sociales/x.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:53:19] "GET /assets/imagenes/icono-redes-sociales/tik-tok.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:53:19] "GET /assets/imagenes/icono-redes-sociales/you-tube.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:53:20] code 404, message File not found
-127.0.0.1 - - [20/Dec/2025 19:53:20] "GET /assets/flama-bg.mp4 HTTP/1.1" 404 -
-127.0.0.1 - - [20/Dec/2025 19:53:20] code 404, message File not found
-127.0.0.1 - - [20/Dec/2025 19:53:20] "GET /sw.js HTTP/1.1" 404 -
-127.0.0.1 - - [20/Dec/2025 19:54:14] "GET /index.html HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:54:14] "GET /assets/js/auth-core.js HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:54:14] "GET /assets/imagenes/icono-inicio-web/icono-joziel-2.png HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:54:14] "GET /assets/imagenes/Icono-inicio.png HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:54:14] "GET /assets/imagenes/icono-redes-sociales/instagram.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:54:14] "GET /assets/imagenes/icono-redes-sociales/facebook.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:54:14] "GET /assets/imagenes/icono-redes-sociales/x.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:54:14] "GET /assets/imagenes/icono-redes-sociales/tik-tok.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:54:14] "GET /assets/imagenes/icono-redes-sociales/you-tube.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:54:14] code 404, message File not found
-127.0.0.1 - - [20/Dec/2025 19:54:14] "GET /assets/flama-bg.mp4 HTTP/1.1" 404 -
-127.0.0.1 - - [20/Dec/2025 19:54:14] code 404, message File not found
-127.0.0.1 - - [20/Dec/2025 19:54:14] "GET /sw.js HTTP/1.1" 404 -
-127.0.0.1 - - [20/Dec/2025 19:55:04] "GET /index.html HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:55:04] "GET /assets/js/auth-core.js HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:55:04] "GET /assets/imagenes/icono-inicio-web/icono-joziel-2.png HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:55:04] "GET /assets/imagenes/Icono-inicio.png HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:55:04] "GET /assets/imagenes/icono-redes-sociales/instagram.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:55:04] "GET /assets/imagenes/icono-redes-sociales/facebook.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:55:04] "GET /assets/imagenes/icono-redes-sociales/x.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:55:04] "GET /assets/imagenes/icono-redes-sociales/tik-tok.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:55:04] "GET /assets/imagenes/icono-redes-sociales/you-tube.png?v=1 HTTP/1.1" 200 -
-127.0.0.1 - - [20/Dec/2025 19:55:04] code 404, message File not found
-127.0.0.1 - - [20/Dec/2025 19:55:04] "GET /assets/flama-bg.mp4 HTTP/1.1" 404 -
-127.0.0.1 - - [20/Dec/2025 19:55:04] code 404, message File not found
-127.0.0.1 - - [20/Dec/2025 19:55:04] "GET /sw.js HTTP/1.1" 404 -
+127.0.0.1 - - [21/Dec/2025 01:52:37] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [21/Dec/2025 01:52:37] "GET /assets/js/auth-core.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Dec/2025 01:52:37] "GET /assets/imagenes/icono-inicio-web/icono-joziel-2.png HTTP/1.1" 200 -
+127.0.0.1 - - [21/Dec/2025 01:52:37] "GET /assets/imagenes/Icono-inicio.png HTTP/1.1" 200 -
+127.0.0.1 - - [21/Dec/2025 01:52:37] "GET /assets/imagenes/icono-redes-sociales/instagram.png?v=1 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Dec/2025 01:52:37] "GET /assets/imagenes/icono-redes-sociales/facebook.png?v=1 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Dec/2025 01:52:37] "GET /assets/imagenes/icono-redes-sociales/x.png?v=1 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Dec/2025 01:52:37] "GET /assets/imagenes/icono-redes-sociales/tik-tok.png?v=1 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Dec/2025 01:52:37] "GET /assets/imagenes/icono-redes-sociales/you-tube.png?v=1 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Dec/2025 01:52:38] "GET /assets/videos/video-libro.mp4 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Dec/2025 01:52:39] code 404, message File not found
+127.0.0.1 - - [21/Dec/2025 01:52:39] "GET /sw.js HTTP/1.1" 404 -
+127.0.0.1 - - [21/Dec/2025 01:52:39] "GET /index.html HTTP/1.1" 304 -
+127.0.0.1 - - [21/Dec/2025 01:52:39] code 404, message File not found
+127.0.0.1 - - [21/Dec/2025 01:52:39] "GET /sw.js HTTP/1.1" 404 -
