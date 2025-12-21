@@ -1398,6 +1398,10 @@
                 this.auraTexture.wrapS = THREE.RepeatWrapping;
                 this.auraTexture.wrapT = THREE.RepeatWrapping;
 
+                // Enforce NearestFilter to avoid blurring and edge artifacts
+                this.auraTexture.magFilter = THREE.NearestFilter;
+                this.auraTexture.minFilter = THREE.NearestFilter;
+
                 this.auraCols = 5;
                 this.auraRows = 2;
                 this.auraTotalFrames = 10;
@@ -2835,12 +2839,18 @@
                 this.mesh.frustumCulled = false;
 
                 const angle = Math.atan2(direction.y, direction.x);
-                this.mesh.rotation.z = angle + Math.PI / 2;
+            this.mesh.rotation.z = angle; // Rotación directa
 
                 this.velocity = new THREE.Vector3(direction.x, direction.y, 0).multiplyScalar(this.speed);
 
+            // Fixed scale logic
+            this.mesh.scale.set(1.5, 1.5, 1);
+
                 this.scene.add(this.mesh);
                 this.updateFrameUVs();
+
+            this.isDying = false;
+            this.dyingTimer = 0.2; // 0.2s fade out
             }
 
             updateFrameUVs() {
@@ -2851,11 +2861,30 @@
                 this.texture.offset.set(u, v);
             }
 
+        triggerImpact() {
+            if (this.isDying) return;
+            this.isDying = true;
+            this.velocity.set(0, 0, 0); // Stop movement
+            allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
+            playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
+        }
+
             update(deltaTime) {
+            if (this.isDying) {
+                this.dyingTimer -= deltaTime;
+                if (this.dyingTimer <= 0) {
+                    return false; // Remove from scene
+                }
+                const opacity = Math.max(0, this.dyingTimer / 0.2);
+                this.mesh.material.opacity = opacity;
+                this.mesh.scale.multiplyScalar(0.9); // Shrink slightly
+                return true;
+            }
+
                 this.lifetime -= deltaTime;
                 if (this.lifetime <= 0) {
-                    allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
-                    return false;
+                this.triggerImpact();
+                return true; // Wait for fade out
                 }
 
                 if (Date.now() - this.lastFrameTime > this.animationSpeed) {
@@ -2864,39 +2893,29 @@
                     this.updateFrameUVs();
                 }
 
-                if (this.texture.image && this.texture.image.width > 0 && !this.sizeSet) {
-                     const size = calculateFrameSize(this.texture, this.cols, this.rows);
-                     this.mesh.scale.set(size.width, size.height, 1);
-                     this.sizeSet = true;
-                }
+            // Fixed scale logic applied in constructor, no update needed here
 
                 this.mesh.position.x += this.velocity.x;
                 this.mesh.position.y += this.velocity.y;
 
                 if (this.mesh.position.x < player.minPlayerX || this.mesh.position.x > player.maxPlayerX) {
-                    allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
-                    playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
-                    this.lifetime = 0;
-                    return false;
+                this.triggerImpact();
+                return true;
                 }
 
                 for (const enemy of allSimpleEnemies) {
                     if (this.mesh.position.distanceTo(enemy.mesh.position) < (enemy.mesh.geometry.parameters.height / 2)) {
                         enemy.takeHit();
-                        allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
-                        playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
-                        this.lifetime = 0;
-                        return false;
+                    this.triggerImpact();
+                    return true;
                     }
                 }
 
                 for (const enemy of allEnemiesX1) {
                     if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                         enemy.takeHit();
-                        allFlames.push(new RealisticFlame(this.scene, this.mesh.position, 3));
-                        playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
-                        this.lifetime = 0;
-                        return false;
+                    this.triggerImpact();
+                    return true;
                     }
                 }
 
