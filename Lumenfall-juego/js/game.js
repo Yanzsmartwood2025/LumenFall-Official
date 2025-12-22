@@ -1385,6 +1385,45 @@
                     alphaTest: 0.5,
                     depthWrite: false
                 });
+                this.standardMaterial = playerMaterial;
+
+                // Custom Shader for Green Screen Removal (Chroma Key)
+                this.chargingMaterial = new THREE.ShaderMaterial({
+                    uniforms: {
+                        uTexture: { value: this.chargingTexture },
+                        uKeyColor: { value: new THREE.Vector3(0.0, 1.0, 0.0) }, // Pure Green
+                        uThreshold: { value: 0.45 }, // Tolerance to remove green background
+                        uRepeat: { value: new THREE.Vector2(0.25, 0.25) },
+                        uOffset: { value: new THREE.Vector2(0, 0) }
+                    },
+                    vertexShader: `
+                        varying vec2 vUv;
+                        uniform vec2 uRepeat;
+                        uniform vec2 uOffset;
+                        void main() {
+                            vUv = uv * uRepeat + uOffset;
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform sampler2D uTexture;
+                        uniform vec3 uKeyColor;
+                        uniform float uThreshold;
+                        varying vec2 vUv;
+                        void main() {
+                            vec4 texColor = texture2D(uTexture, vUv);
+                            float dist = distance(texColor.rgb, uKeyColor);
+                            if (dist < uThreshold) {
+                                discard;
+                            }
+                            gl_FragColor = texColor;
+                        }
+                    `,
+                    transparent: true,
+                    side: THREE.DoubleSide,
+                    depthWrite: false
+                });
+
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
                 this.mesh.position.y = playerHeight / 2;
                 this.mesh.scale.set(1.65, 1.65, 1);
@@ -1989,8 +2028,24 @@
                             break;
                     }
 
+                    // Material Swapping Logic for Charging State
+                    if (this.currentState === 'charging') {
+                        if (this.mesh.material !== this.chargingMaterial) {
+                            this.mesh.material = this.chargingMaterial;
+                        }
+                        // Sync Uniforms with Texture Updates
+                        this.chargingMaterial.uniforms.uRepeat.value.copy(this.chargingTexture.repeat);
+                        this.chargingMaterial.uniforms.uOffset.value.copy(this.chargingTexture.offset);
+                    } else {
+                        if (this.mesh.material !== this.standardMaterial) {
+                            this.mesh.material = this.standardMaterial;
+                        }
+                    }
+
                     if (currentTexture) {
-                        this.mesh.material.map = currentTexture;
+                        if (this.mesh.material === this.standardMaterial) {
+                            this.mesh.material.map = currentTexture;
+                        }
                         if (isGridSprite) {
                             let frameMap = this.runningFrameMap;
                             if (this.isFacingLeft && this.currentState === 'running') {

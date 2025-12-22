@@ -273,6 +273,7 @@ html, body {
             height: 75%;
             object-fit: contain;
             mix-blend-mode: screen; /* Quitar fondo negro manteniendo chispas */
+            filter: contrast(1.5) brightness(1.2); /* Potenciar el fuego y asegurar negro puro */
         }
 
         /* Estilos para el anillo de 5 flamas (Reload/Attack) */
@@ -292,6 +293,7 @@ html, body {
             left: 50%;
             transform-origin: center center;
             mix-blend-mode: screen !important; /* Quitar fondo negro manteniendo chispas */
+            filter: contrast(1.5) brightness(1.2); /* Potenciar el fuego */
         }
 
         /* Posicionamiento circular de las 5 flamas */
