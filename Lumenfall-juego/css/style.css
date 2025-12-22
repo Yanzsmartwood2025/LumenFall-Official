@@ -857,3 +857,22 @@ html, body {
     background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.7) 90%);
     z-index: 5; /* Above canvas (usually 0-1) but below UI (usually 10+) */
 }
+
+/* --- UI Icon Fixes --- */
+.ui-icon-sprite {
+    width: 50px;
+    height: 50px;
+    background-image: url('../assets/sprites/Joziel/Sombras-efectos/efectos/proyectil-1.jpg');
+    background-size: 400% 200%;
+    background-position: 100% 0%; /* Sprite #4 (Col 3, Row 0) */
+    display: inline-block;
+    border-radius: 50%; /* Optional: make it circular like typical icons */
+}
+
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
+.spin-infinite {
+    animation: spin 2s linear infinite;
+}
