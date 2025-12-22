@@ -7,7 +7,7 @@
             idleSprite: 'assets/sprites/Joziel/Movimiento/Idle_128.png',
             idleBackSprite: 'assets/sprites/Joziel/Movimiento-B/idle-B_128.png',
             idleShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Idle-sombra_128.jpg',
-            attackSprite: 'assets/sprites/Joziel/attack_sprite_sheet_128.png',
+            attackSprite: 'assets/sprites/Joziel/Movimiento/disparo-derecha-1.png',
             jumpSprite: 'assets/sprites/Joziel/Movimiento/saltar_128.png',
             jumpBackSprite: 'assets/sprites/Joziel/Movimiento-B/saltar-b_128.png',
             sparkParticle: 'assets/sprites/FX/chispa.jpg',
@@ -1372,7 +1372,7 @@
                 for (let i = 0; i < 3; i++) this.jumpFrameMap.push({ x: i * (1/3), y: 0.5 });
                 for (let i = 0; i < 3; i++) this.jumpFrameMap.push({ x: i * (1/3), y: 0.0 });
 
-                this.attackTexture.repeat.x = 1 / totalAttackFrames;
+                this.attackTexture.repeat.set(0.25, 0.5); // 4 cols, 2 rows
 
                 const playerHeight = 4.2;
                 const playerWidth = 4.2;
@@ -1612,7 +1612,7 @@
                 allProjectiles.push(new Projectile(scene, startPosition, direction));
                 this.shootCooldown = this.shootCooldownDuration;
                 this.currentState = 'shooting';
-                this.shootingTimer = 0.2;
+                this.currentFrame = -1; // Will start at 0 next update
             }
 
             create3DProxy() {
@@ -1674,12 +1674,8 @@
                 if (this.shootCooldown > 0) {
                     this.shootCooldown -= deltaTime;
                 }
-                if (this.shootingTimer > 0) {
-                    this.shootingTimer -= deltaTime;
-                    if (this.shootingTimer <= 0) {
-                        this.currentState = 'idle';
-                    }
-                }
+                // Shooting state is now controlled by animation completion, not timer
+                // if (this.shootingTimer > 0) { ... }
 
                 const joyX = controls.joyVector.x;
                 const joyY = controls.joyVector.y;
@@ -1850,8 +1846,28 @@
 
                     switch (this.currentState) {
                         case 'shooting':
-                            [totalFrames, currentTexture, shadowTexture] = [totalAttackFrames, this.attackTexture, null];
-                            this.currentFrame = 2;
+                            currentTexture = this.attackTexture;
+                            shadowTexture = null;
+                            isGridSprite = false;
+                            isManualUV = true;
+                            currentAnimSpeed = 40; // Fast shot
+
+                            if (this.currentFrame < 7) {
+                                this.currentFrame++;
+                            } else {
+                                this.currentState = 'idle';
+                            }
+
+                            // UV Mapping for 4x2 grid (Frames 0-7)
+                            // Row 0 (Top): Frames 0-3
+                            // Row 1 (Bottom): Frames 4-7
+                            const sFrame = this.currentFrame;
+                            const sCol = sFrame % 4;
+                            const sRow = Math.floor(sFrame / 4);
+
+                            currentTexture.offset.x = sCol * 0.25;
+                            // Invert row for V: Row 0 -> V=0.5, Row 1 -> V=0.0
+                            currentTexture.offset.y = (1 - sRow) * 0.5;
                             break;
                     case 'charging':
                         currentTexture = this.chargingTexture;
@@ -1875,7 +1891,7 @@
                             if (this.currentChargeFrame > 11) this.currentChargeFrame = 4;
                         } else if (this.chargingState === 'end') {
                             speed = 80;
-                            if (this.currentChargeFrame < 14) {
+                            if (this.currentChargeFrame < 13) {
                                 this.currentChargeFrame++;
                             } else {
                                 this.chargingState = 'none';
