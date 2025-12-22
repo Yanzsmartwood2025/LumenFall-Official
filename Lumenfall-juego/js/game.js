@@ -10,7 +10,7 @@
             attackSprite: 'assets/sprites/Joziel/attack_sprite_sheet_128.png',
             jumpSprite: 'assets/sprites/Joziel/Movimiento/saltar_128.png',
             jumpBackSprite: 'assets/sprites/Joziel/Movimiento-B/saltar-b_128.png',
-            flameParticle: 'assets/sprites/FX/fuego.png',
+            sparkParticle: 'assets/sprites/FX/chispa.jpg',
             wallTexture: 'assets/sprites/Ambiente/pared-calabozo.png',
             doorTexture: 'assets/sprites/Ambiente/puerta-calabozo.png',
             floorTexture: 'assets/sprites/Ambiente/piso-calabozo.png',
@@ -25,7 +25,7 @@
             enemyX1Death: 'assets/sprites/Enemigos/Ataques-enemigo1/muerte-1.png',
             dustParticle: 'assets/sprites/FX/Polvo.png',
             projectileSprite: 'assets/sprites/Joziel/Sombras-efectos/efectos/proyectil-1.jpg',
-            chargeSprite: 'assets/sprites/Joziel/Sombras-efectos/efectos/carga.jpg',
+            chargingSprite: 'assets/sprites/Joziel/Movimiento/carga-de-energia.jpg',
             blueFire: 'assets/sprites/FX/fuego-antorcha.jpg'
         };
 
@@ -1323,6 +1323,14 @@
                 this.jumpTexture.repeat.set(1/3, 0.5);
                 this.jumpBackTexture.repeat.set(0.125, 1);
 
+            // Carga
+            this.chargingTexture = textureLoader.load(assetUrls.chargingSprite);
+            this.chargingTexture.wrapS = THREE.RepeatWrapping;
+            this.chargingTexture.wrapT = THREE.RepeatWrapping;
+            this.chargingTexture.magFilter = THREE.NearestFilter;
+            this.chargingTexture.minFilter = THREE.NearestFilter;
+            this.chargingTexture.repeat.set(0.25, 0.25); // 4x4 Grid
+
                 this.runningFrameMap = [];
                 for (let i = 0; i < 8; i++) {
                     this.runningFrameMap.push({ x: i * 0.125, y: 0.5 });
@@ -1383,8 +1391,18 @@
                 this.floorLight.position.set(0, -2.0, 0);
                 this.mesh.add(this.floorLight);
 
-                this.createAttackFlame();
                 this.create3DProxy();
+
+            // Charging State Variables
+            this.chargingState = 'none'; // 'none', 'start', 'loop', 'end'
+            this.chargingTimer = 0;
+            this.currentChargeFrame = 0;
+
+            // Suction Particles for Loop Phase
+            this.suctionParticles = new ImpactParticleSystem(scene, this.mesh.position); // Reusing logic or creating simplified?
+            // Actually ImpactParticleSystem is an explosion. We need implosion.
+            // Let's create a custom particle group for suction using the spark texture.
+            this.createSuctionParticles();
 
                 this.currentState = 'idle';
                 this.currentFrame = 0;
@@ -1416,6 +1434,72 @@
                 this.power = this.maxPower;
                 this.powerBarFill = document.getElementById('power-fill');
             }
+
+        createSuctionParticles() {
+            const count = 20;
+            const geo = new THREE.BufferGeometry();
+            const positions = new Float32Array(count * 3);
+            for(let i=0; i<count * 3; i++) positions[i] = 0;
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            const mat = new THREE.PointsMaterial({
+                map: textureLoader.load(assetUrls.sparkParticle),
+                color: 0x00FFFF,
+                size: 0.5,
+                transparent: true,
+                opacity: 0,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+
+            this.suctionPoints = new THREE.Points(geo, mat);
+            this.suctionPoints.visible = false;
+            this.mesh.add(this.suctionPoints); // Attach to player
+
+            this.suctionData = [];
+            for(let i=0; i<count; i++) {
+                this.suctionData.push({
+                    x: 0, y: 0, z: 0,
+                    speed: 0,
+                    angle: 0,
+                    radius: 0
+                });
+            }
+        }
+
+        updateSuctionParticles(deltaTime) {
+            if (this.chargingState !== 'loop') {
+                this.suctionPoints.visible = false;
+                return;
+            }
+            this.suctionPoints.visible = true;
+            this.suctionPoints.material.opacity = 1.0;
+
+            const positions = this.suctionPoints.geometry.attributes.position.array;
+
+            for(let i=0; i<this.suctionData.length; i++) {
+                let p = this.suctionData[i];
+                if (p.radius <= 0.1) {
+                    // Reset to outer rim
+                    p.radius = 2.0 + Math.random() * 1.5;
+                    p.angle = Math.random() * Math.PI * 2;
+                    p.speed = 3.0 + Math.random() * 2.0;
+                    // Random height relative to player center
+                    p.y = (Math.random() - 0.5) * 3.0;
+                }
+
+                p.radius -= p.speed * deltaTime;
+
+                const x = Math.cos(p.angle) * p.radius;
+                const z = Math.sin(p.angle) * p.radius;
+
+                positions[i*3] = x;
+                positions[i*3+1] = p.y; // Keep Y relatively stable or spiral?
+                positions[i*3+2] = z;
+            }
+            this.suctionPoints.geometry.attributes.position.needsUpdate = true;
+            this.suctionPoints.rotation.y += 5.0 * deltaTime; // Rotate whole system
+        }
 
             checkHealthStatus() {
                 const pct = this.health / this.maxHealth;
@@ -1540,299 +1624,6 @@
                 this.mesh.add(this.proxyGroup);
             }
 
-            createAttackFlame() {
-                const flameGroup = new THREE.Group();
-                const flameLight = new THREE.PointLight(0x00aaff, 1.5, 4);
-                flameLight.castShadow = true;
-                flameGroup.add(flameLight);
-
-                // Use new Blue Fire logic
-                const texture = textureLoader.load(assetUrls.blueFire);
-                texture.repeat.set(1/8, 0.5);
-
-                const attackFlameMaterial = new THREE.MeshBasicMaterial({
-                    map: texture,
-                    color: 0xaaddff,
-                    transparent: true,
-                    blending: THREE.AdditiveBlending,
-                    side: THREE.DoubleSide
-                });
-
-                const flameCore = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), attackFlameMaterial);
-                // Add metadata for animation
-                flameCore.userData = { currentFrame: 0, frameTimer: 0 };
-
-                flameGroup.add(flameCore);
-                flameGroup.visible = false;
-                this.mesh.add(flameGroup);
-                this.rightHandFlame = flameGroup;
-                this.rightHandFlame.position.set(-0.6, 0.3, 0.3);
-
-                // Clone for Left Hand (Material is shared, so UV animation will sync unless cloned)
-                // We want independent animation? Shared is fine for hands.
-                // But clone() shallow copies mesh. Material is shared.
-                // If we want different frames, we need unique materials.
-                // For performance, shared material is better, they will flicker in sync. Acceptable.
-
-                const leftHandFlame = flameGroup.clone();
-                this.mesh.add(leftHandFlame);
-                this.leftHandFlame = leftHandFlame;
-                this.leftHandFlame.position.set(0.6, 0.3, 0.3);
-                this.createAura();
-            }
-
-            createAura() {
-                this.auraGroup = new THREE.Group();
-                this.mesh.add(this.auraGroup);
-                this.auraGroup.visible = false;
-
-                const chargeUrl = assetUrls.chargeSprite;
-                this.auraCols = 5;
-                this.auraRows = 2;
-                this.auraTotalFrames = 10;
-
-                // 1. REPARACIÓN VISUAL: UV Padding para evitar bleeding
-                this.auraPadding = 0.98; // Usar el 98% del tile
-                const repeatX = (1 / this.auraCols) * this.auraPadding;
-                const repeatY = (1 / this.auraRows) * this.auraPadding;
-
-                // Shader logic for Fade Out Top
-                const vertexShader = `
-                    varying vec2 vUv;
-                    varying vec2 vOriginalUv; // For gradient
-                    uniform vec2 offset;
-                    uniform vec2 repeat;
-                    void main() {
-                        vOriginalUv = uv; // Store 0..1 UV
-                        vUv = uv * repeat + offset; // Transform for sprite sheet
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                    }
-                `;
-
-                const fragmentShader = `
-                    uniform sampler2D map;
-                    varying vec2 vUv;
-                    varying vec2 vOriginalUv;
-                    void main() {
-                        vec4 texColor = texture2D(map, vUv);
-                        // Gradient: Fade out as y approaches 1.0 (top) and approaches 0.0 (bottom)
-                        float alphaFadeTop = 1.0 - smoothstep(0.6, 1.0, vOriginalUv.y);
-                        float alphaFadeBottom = smoothstep(0.0, 0.3, vOriginalUv.y);
-                        gl_FragColor = vec4(texColor.rgb, texColor.a * alphaFadeTop * alphaFadeBottom);
-                    }
-                `;
-
-                // 1. Main Cylinder (Tripled Size: ~2.4 radius, ~7.5 height, centered)
-                this.auraTextureMain = textureLoader.load(chargeUrl);
-                this.auraTextureMain.wrapS = THREE.RepeatWrapping;
-                this.auraTextureMain.wrapT = THREE.RepeatWrapping;
-                this.auraTextureMain.magFilter = THREE.NearestFilter;
-                this.auraTextureMain.minFilter = THREE.NearestFilter;
-
-                const mainUniforms = {
-                    map: { value: this.auraTextureMain },
-                    offset: { value: new THREE.Vector2(0, 0) },
-                    repeat: { value: new THREE.Vector2(repeatX, repeatY) }
-                };
-
-                const mainMat = new THREE.ShaderMaterial({
-                    uniforms: mainUniforms,
-                    vertexShader: vertexShader,
-                    fragmentShader: fragmentShader,
-                    transparent: true,
-                    blending: THREE.AdditiveBlending,
-                    depthWrite: false,
-                    side: THREE.DoubleSide
-                });
-
-                // Radius ~2.4, Height ~7.0
-                const mainGeo = new THREE.CylinderGeometry(2.4, 2.4, 7.0, 32, 1, true);
-                this.mainCylinder = new THREE.Mesh(mainGeo, mainMat);
-                // Center vertically relative to player center.
-                this.mainCylinder.position.set(0, -0.5, 0);
-                this.auraGroup.add(this.mainCylinder);
-
-                // 2. Base Cylinder (Wider base effect)
-                this.auraTextureBase = textureLoader.load(chargeUrl);
-                this.auraTextureBase.wrapS = THREE.RepeatWrapping;
-                this.auraTextureBase.wrapT = THREE.RepeatWrapping;
-                this.auraTextureBase.magFilter = THREE.NearestFilter;
-                this.auraTextureBase.minFilter = THREE.NearestFilter;
-
-                 const baseUniforms = {
-                    map: { value: this.auraTextureBase },
-                    offset: { value: new THREE.Vector2(0, 0) },
-                    repeat: { value: new THREE.Vector2(repeatX, repeatY) }
-                };
-
-                const baseMat = new THREE.ShaderMaterial({
-                    uniforms: baseUniforms,
-                    vertexShader: vertexShader,
-                    fragmentShader: fragmentShader,
-                    transparent: true,
-                    blending: THREE.AdditiveBlending,
-                    depthWrite: false,
-                    side: THREE.DoubleSide
-                });
-
-                // Wider base
-                const baseGeo = new THREE.CylinderGeometry(3.0, 3.0, 1.2, 32, 1, true);
-                this.baseCylinder = new THREE.Mesh(baseGeo, baseMat);
-                this.baseCylinder.position.set(0, -3.0, 0);
-                this.auraGroup.add(this.baseCylinder);
-
-                // 3. MEJORA "NEXT-GEN": Sistema de Partículas de Implosión
-                const particleCount = 20;
-                const particlesGeo = new THREE.BufferGeometry();
-                const positions = new Float32Array(particleCount * 3);
-
-                // Initialize positions outside
-                for (let i = 0; i < particleCount; i++) {
-                    this.resetParticle(positions, i);
-                }
-
-                particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-                const particlesMat = new THREE.PointsMaterial({
-                    color: 0x00FFFF,
-                    size: 0.2,
-                    transparent: true,
-                    opacity: 0.8,
-                    blending: THREE.AdditiveBlending,
-                    depthWrite: false
-                });
-
-                this.implosionParticles = new THREE.Points(particlesGeo, particlesMat);
-                this.implosionParticles.position.set(0, -0.5, 0); // Align with main cylinder center
-                this.auraGroup.add(this.implosionParticles);
-
-                this.auraCurrentFrameMain = 0;
-                this.baseLoopFrames = [1, 3];
-                this.baseLoopIndex = 0;
-                this.auraLastFrameTime = 0;
-                this.auraAnimationSpeed = 80;
-            }
-
-            resetParticle(positions, i) {
-                 // Spawn en un radio exterior (1.5x de 2.4 ~= 3.6)
-                 const radius = 3.5 + Math.random() * 1.5;
-                 const angle = Math.random() * Math.PI * 2;
-                 const height = (Math.random() - 0.5) * 7.0; // Distribuir en la altura del cilindro
-
-                 positions[i*3] = Math.cos(angle) * radius;
-                 positions[i*3+1] = height;
-                 positions[i*3+2] = Math.sin(angle) * radius;
-            }
-
-            updateAura(deltaTime) {
-                if (!this.auraGroup.visible) return;
-
-                const rotationSpeed = 5.0 * deltaTime;
-                this.mainCylinder.rotation.y -= rotationSpeed;
-                this.baseCylinder.rotation.y += rotationSpeed;
-
-                // Rotar partículas opuesto
-                this.implosionParticles.rotation.y += rotationSpeed * 0.5;
-
-                // Pulsing effect for base ring
-                const pulse = 1.0 + Math.sin(Date.now() * 0.008) * 0.15;
-                this.baseCylinder.scale.set(pulse, 1, pulse);
-
-                // Update Implosion Particles
-                const positions = this.implosionParticles.geometry.attributes.position.array;
-                const suctionSpeed = 10.0 * deltaTime;
-
-                for(let i=0; i<20; i++) {
-                    const idx = i * 3;
-                    let x = positions[idx];
-                    let y = positions[idx+1];
-                    let z = positions[idx+2];
-
-                    // Move towards local 0,0,0
-                    const distSq = x*x + y*y + z*z;
-
-                    if(distSq < 0.1) { // reached center
-                        this.resetParticle(positions, i);
-                    } else {
-                        const dist = Math.sqrt(distSq);
-                        const factor = suctionSpeed / dist; // Normalize and scale
-                        // Simple linear move is enough, but suction effect usually accelerates.
-                        // Constant speed towards center:
-                        positions[idx] -= x * factor;
-                        positions[idx+1] -= y * factor;
-                        positions[idx+2] -= z * factor;
-                    }
-                }
-                this.implosionParticles.geometry.attributes.position.needsUpdate = true;
-
-                if (Date.now() - this.auraLastFrameTime > this.auraAnimationSpeed) {
-                    this.auraLastFrameTime = Date.now();
-
-                    const frameWidth = 1 / this.auraCols;
-                    const frameHeight = 1 / this.auraRows;
-                    // Margin calculation for centering the crop
-                    const marginX = (frameWidth * (1 - this.auraPadding)) / 2;
-                    const marginY = (frameHeight * (1 - this.auraPadding)) / 2;
-
-                    // Update Main
-                    this.auraCurrentFrameMain = (this.auraCurrentFrameMain + 1) % this.auraTotalFrames;
-                    const colM = this.auraCurrentFrameMain % this.auraCols;
-                    const rowM = Math.floor(this.auraCurrentFrameMain / this.auraCols);
-
-                    // Padded offset
-                    const uOff = (colM * frameWidth) + marginX;
-                    const vOff = ((this.auraRows - 1 - rowM) * frameHeight) + marginY;
-
-                    if (this.mainCylinder.material.uniforms) {
-                        this.mainCylinder.material.uniforms.offset.value.set(uOff, vOff);
-                    }
-
-                    // Update Base
-                    this.baseLoopIndex = (this.baseLoopIndex + 1) % this.baseLoopFrames.length;
-                    const frameBase = this.baseLoopFrames[this.baseLoopIndex];
-                    const colB = frameBase % this.auraCols;
-                    const rowB = Math.floor(frameBase / this.auraCols);
-
-                    const uOffB = (colB * frameWidth) + marginX;
-                    const vOffB = ((this.auraRows - 1 - rowB) * frameHeight) + marginY;
-
-                    if (this.baseCylinder.material.uniforms) {
-                        this.baseCylinder.material.uniforms.offset.value.set(uOffB, vOffB);
-                    }
-                }
-            }
-
-            updateAttackFlames() {
-                [this.rightHandFlame, this.leftHandFlame].forEach(flame => {
-                    const light = flame.children[0];
-                    const core = flame.children[1];
-                    light.intensity = 1.0 + Math.random() * 0.5;
-
-                    // Animate texture (Shared Material affects both if sharing, but let's try to animate logic)
-                    // If shared material, offset affects both immediately.
-                    // But we want it to look animated.
-                    // Assuming shared material:
-
-                    const dt = 0.016; // Approx
-                    core.userData.frameTimer += dt;
-                    if(core.userData.frameTimer > 0.05) {
-                         core.userData.frameTimer = 0;
-                         core.userData.currentFrame = (core.userData.currentFrame + 1) % 16;
-
-                         const col = core.userData.currentFrame % 8;
-                         const row = Math.floor(core.userData.currentFrame / 8);
-
-                         if (core.material.map) {
-                             core.material.map.offset.x = col / 8;
-                             core.material.map.offset.y = (1 - row) * 0.5;
-                         }
-                    }
-
-                    // core.rotation.z += 0.1; // Grid sprites usually don't rotate Z unless abstract
-                    // Keep billboard? It's attached to hand.
-                    core.lookAt(camera.position);
-                });
-            }
 
             update(deltaTime, controls) {
                 const wasFacingLeft = this.isFacingLeft;
@@ -1873,20 +1664,38 @@
                     const isJumpingInput = joyY > 0.5;
                     const isMovingInput = Math.abs(joyX) > 0.1;
 
+                // CHARGING LOGIC
                     if (controls.attackHeld && !isMovingInput && !isJumpingInput) {
-                        if (this.currentState !== 'attacking') {
-                            vibrateGamepad(100, 0.8, 0.8);
+                    this.currentState = 'charging';
+                    if (this.chargingState === 'none' || this.chargingState === 'end') {
+                        this.chargingState = 'start';
+                        this.currentChargeFrame = 0;
                             playAudio('charge', true, 0.9 + Math.random() * 0.2, 4.0);
+                        vibrateGamepad(100, 0.8, 0.8);
                         }
-                        this.currentState = 'attacking';
+                    // Power Regen during Loop
+                    if (this.chargingState === 'loop') {
                         if (this.power < this.maxPower) {
                             this.power += 10 * deltaTime;
                             if (this.power > this.maxPower) this.power = this.maxPower;
                             this.powerBarFill.style.width = `${(this.power / this.maxPower) * 100}%`;
                         }
-
+                        }
                     } else {
-                        if (audioSources['charge']) stopAudio('charge');
+                    // Released button or moving
+                    if (this.chargingState === 'start' || this.chargingState === 'loop') {
+                        this.chargingState = 'end';
+                        this.currentChargeFrame = 12; // Start of end sequence
+                        stopAudio('charge');
+                    } else if (this.chargingState === 'end') {
+                        // Let it play out, but allow movement physics below
+                    } else {
+                        this.chargingState = 'none';
+                        stopAudio('charge');
+                        }
+
+                    if (this.chargingState === 'none') {
+                        // Normal Movement Logic
                         if (isJumpingInput && this.isGrounded && !this.jumpInputReceived) {
                             this.isJumping = true;
                             this.isGrounded = false;
@@ -1898,14 +1707,23 @@
                             vibrateGamepad(100, 0.5, 0.5);
                         } else if (!isJumpingInput) {
                             this.jumpInputReceived = false;
-                        }
+                            }
                         if (isMoving && !this.isJumping) {
                             this.currentState = 'running';
                             if (Math.random() < 0.3) {
-                                 allFootstepParticles.push(new FootstepParticle(scene, this.mesh.position.x, 0.2, this.mesh.position.z));
+                                allFootstepParticles.push(new FootstepParticle(scene, this.mesh.position.x, 0.2, this.mesh.position.z));
                             }
                         } else if (!this.isJumping && this.currentState !== 'landing') {
                             this.currentState = 'idle';
+                        }
+                    } else {
+                        // In 'end' phase, we override state to 'charging' to play animation, but allow movement
+                        this.currentState = 'charging';
+                        // Allow movement inputs to affect velocity even if animation is finishing discharge
+                        if (isMoving) {
+                             this.velocity.x = moveSpeed * joyX;
+                             this.isFacingLeft = joyX < 0;
+                        }
                         }
                     }
                 } else {
@@ -1937,6 +1755,7 @@
                 if (isMovementState) {
                      this.mesh.rotation.y = 0;
                 } else {
+                 // Charging and Shooting flip with rotation
                      this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
                 }
 
@@ -1945,15 +1764,10 @@
                 camera.position.y += (targetCameraY - camera.position.y) * 0.05;
                 this.playerLight.position.set(this.mesh.position.x, this.mesh.position.y + 1, this.mesh.position.z + 2);
 
-                if (this.currentState !== previousState) this.currentFrame = -1;
-                const isAttacking = this.currentState === 'attacking';
-                this.rightHandFlame.visible = isAttacking;
-                this.leftHandFlame.visible = isAttacking;
-                this.auraGroup.visible = isAttacking;
-                if (isAttacking) {
-                    this.updateAttackFlames();
-                    this.updateAura(deltaTime);
-                }
+            if (this.currentState !== previousState && this.currentState !== 'charging') this.currentFrame = -1;
+
+            // Update Suction Particles
+            this.updateSuctionParticles(deltaTime);
 
                 let currentAnimSpeed = animationSpeed;
                 if (this.currentState === 'idle') {
@@ -2005,10 +1819,63 @@
                             [totalFrames, currentTexture, shadowTexture] = [totalAttackFrames, this.attackTexture, null];
                             this.currentFrame = 2;
                             break;
-                        case 'attacking':
-                            [totalFrames, currentTexture, shadowTexture] = [totalAttackFrames, this.attackTexture, null];
-                            if (this.currentFrame < totalFrames - 1) this.currentFrame++;
+                    case 'charging':
+                        currentTexture = this.chargingTexture;
+                        shadowTexture = null;
+                        isGridSprite = false;
+
+                        // Custom Animation Logic for Charging
+                        let speed = 100; // default start
+                        if (this.chargingState === 'start') {
+                            speed = 100;
+                            if (this.currentChargeFrame < 3) {
+                                this.currentChargeFrame++;
+                            } else {
+                                this.chargingState = 'loop';
+                                this.currentChargeFrame = 4;
+                            }
+                        } else if (this.chargingState === 'loop') {
+                            speed = 40; // Extreme speed
+                            this.currentChargeFrame++;
+                            if (this.currentChargeFrame > 11) this.currentChargeFrame = 4;
+                        } else if (this.chargingState === 'end') {
+                            speed = 80;
+                            if (this.currentChargeFrame < 15) {
+                                this.currentChargeFrame++;
+                            } else {
+                                this.chargingState = 'none';
+                                this.currentState = 'idle'; // Reset to idle
+                            }
+                        }
+
+                        // Override automatic timing with custom speed check?
+                        // The outer loop runs at `currentAnimSpeed`. We need to dynamically adjust it.
+                        // But we are inside the 'if' that already checked time.
+                        // For precise control, we might need a separate timer, but reusing the loop is easier.
+                        // We can just update the UVs here based on currentChargeFrame.
+
+                        // NOTE: The main loop uses `currentAnimSpeed` set ABOVE.
+                        // We need to set it BEFORE this switch to affect the NEXT frame, or accept slight jitter.
+                        // Actually, the check `Date.now() - this.lastFrameTime > currentAnimSpeed` happens before this switch.
+                        // So changing speed inside switch affects next frame.
+
+                        // 4x4 Grid UV Mapping
+                        // Frame 0-15.
+                        // Col = Frame % 4
+                        // Row = Floor(Frame / 4)
+                        // V needs to be inverted: Row 0 is Top (0.75), Row 3 is Bottom (0.0)
+
+                        const cFrame = this.currentChargeFrame;
+                        const cCol = cFrame % 4;
+                        const cRow = Math.floor(cFrame / 4);
+
+                        currentTexture.offset.x = cCol * 0.25;
+                        currentTexture.offset.y = (3 - cRow) * 0.25;
+
+                        // Set speed for next frame
+                        currentAnimSpeed = speed;
                             break;
+
                         case 'running':
                             if (this.isFacingLeft) {
                                 totalFrames = 11;
@@ -3377,7 +3244,7 @@
                 geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
 
                 const material = new THREE.PointsMaterial({
-                    map: textureLoader.load(assetUrls.flameParticle),
+                    map: textureLoader.load(assetUrls.sparkParticle),
                     color: 0x00FFFF,
                     size: 0.3,
                     transparent: true,
@@ -3604,7 +3471,7 @@
 
                 // 3. Sparks (Legacy optimization)
                 this.sparks = [];
-                this.sparkTexture = textureLoader.load(assetUrls.flameParticle);
+                this.sparkTexture = textureLoader.load(assetUrls.sparkParticle);
                 this.sparkTimer = 0;
 
                 // 4. Flash
@@ -3834,7 +3701,7 @@
 
                 if (!sharedHealthMaterial) {
                     sharedHealthMaterial = new THREE.MeshBasicMaterial({
-                        map: textureLoader.load(assetUrls.flameParticle),
+                        map: textureLoader.load(assetUrls.sparkParticle),
                         color: 0x00ff00, // Verde para salud
                         transparent: true,
                         blending: THREE.AdditiveBlending,
@@ -3844,7 +3711,7 @@
 
                 if (!sharedPowerMaterial) {
                     sharedPowerMaterial = new THREE.MeshBasicMaterial({
-                        map: textureLoader.load(assetUrls.flameParticle),
+                        map: textureLoader.load(assetUrls.sparkParticle),
                         color: 0x00aaff, // Azul para poder
                         transparent: true,
                         blending: THREE.AdditiveBlending,
