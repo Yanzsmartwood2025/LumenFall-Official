@@ -1392,7 +1392,7 @@
                     uniforms: {
                         uTexture: { value: this.chargingTexture },
                         uKeyColor: { value: new THREE.Vector3(0.0, 1.0, 0.0) }, // Pure Green
-                        uThreshold: { value: 0.45 }, // Tolerance to remove green background
+                        uThreshold: { value: 0.60 }, // Tolerance to remove green background
                         uRepeat: { value: new THREE.Vector2(0.25, 0.25) },
                         uOffset: { value: new THREE.Vector2(0, 0) }
                     },
@@ -1813,7 +1813,7 @@
                 }
                 this.mesh.position.x = Math.max(this.minPlayerX, Math.min(this.maxPlayerX, this.mesh.position.x));
 
-                const isMovementState = ['idle', 'running', 'jumping', 'landing'].includes(this.currentState);
+                const isMovementState = ['idle', 'running', 'jumping', 'landing', 'charging'].includes(this.currentState);
                 if (isMovementState) {
                      this.mesh.rotation.y = 0;
                 } else {
@@ -1902,7 +1902,7 @@
                             if (this.currentChargeFrame > 11) this.currentChargeFrame = 4;
                         } else if (this.chargingState === 'end') {
                             speed = 80;
-                            if (this.currentChargeFrame < 15) {
+                            if (this.currentChargeFrame < 14) {
                                 this.currentChargeFrame++;
                             } else {
                                 this.chargingState = 'none';
