@@ -3324,35 +3324,32 @@
                     side: THREE.DoubleSide
                 });
 
-                const geometry = new THREE.CylinderGeometry(0.2, 0.2, 1.0, 8, 1, true);
-
-                this.mesh = new THREE.Group();
+                // Base size for Scale 1.0 (Approx 2.5 units)
+                this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), material);
                 this.mesh.position.copy(startPosition);
-
-                this.cylinder = new THREE.Mesh(geometry, material);
-                this.cylinder.rotation.z = -Math.PI / 2;
-
-                this.mesh.add(this.cylinder);
-                this.mesh.frustumCulled = false;
-
-                const angle = Math.atan2(direction.y, direction.x);
-                this.mesh.rotation.z = angle;
-
-                this.velocity = new THREE.Vector3(direction.x, direction.y, 0).multiplyScalar(this.speed);
-
-                this.targetScale = 2.0;
-                this.mesh.scale.set(0.1, 0.1, 0.1);
+                this.mesh.scale.set(0.2, 0.2, 0.2); // Start small
 
                 this.scene.add(this.mesh);
 
+                this.velocity = new THREE.Vector3(direction.x, direction.y, 0).multiplyScalar(this.speed);
+                this.rotationAngle = Math.atan2(direction.y, direction.x);
+
                 this.state = 'SPAWN';
                 this.frameTimer = 0;
-                this.animationSpeed = 0.08;
+
+                this.spawnTimer = 0;
+                this.spawnDuration = 0.1;
 
                 this.frames = {
-                    SPAWN: [0, 1, 2],
-                    FLIGHT: [3, 4],
+                    SPAWN: [0, 1],
+                    FLIGHT: [2, 3, 4],
                     IMPACT: [5, 6, 7]
+                };
+
+                this.frameDurations = {
+                    SPAWN: 0.05,
+                    FLIGHT: 0.09,
+                    IMPACT: 0.06
                 };
 
                 this.currentSeqIndex = 0;
@@ -3386,8 +3383,14 @@
             update(deltaTime) {
                 if (this.isDead) return false;
 
+                // Billboard & Rotation Logic
+                this.mesh.lookAt(camera.position);
+                this.mesh.rotation.z = this.rotationAngle;
+
                 this.frameTimer += deltaTime;
-                if (this.frameTimer > this.animationSpeed) {
+                const animSpeed = this.frameDurations[this.state];
+
+                if (this.frameTimer > animSpeed) {
                     this.frameTimer = 0;
 
                     if (this.state === 'SPAWN') {
@@ -3396,7 +3399,6 @@
                             this.state = 'FLIGHT';
                             this.currentSeqIndex = 0;
                             this.updateFrameUVs(this.frames.FLIGHT[0]);
-                            this.mesh.scale.set(this.targetScale, this.targetScale, this.targetScale);
                         } else {
                             this.updateFrameUVs(this.frames.SPAWN[this.currentSeqIndex]);
                         }
@@ -3418,15 +3420,20 @@
                 }
 
                 if (this.state === 'SPAWN') {
-                    const growthSpeed = 10.0 * deltaTime;
-                    this.mesh.scale.addScalar(growthSpeed);
-                    if (this.mesh.scale.x > this.targetScale) this.mesh.scale.setScalar(this.targetScale);
+                    this.spawnTimer += deltaTime;
+                    const progress = Math.min(this.spawnTimer / this.spawnDuration, 1.0);
+                    const currentScale = 0.2 + (0.8 * progress);
+                    this.mesh.scale.setScalar(currentScale);
+
                     this.mesh.position.add(this.velocity);
                 }
 
                 if (this.state === 'FLIGHT') {
-                    this.cylinder.rotation.y += 15.0 * deltaTime;
                     this.mesh.position.add(this.velocity);
+                    // Update rotation angle if velocity changes
+                    if (this.velocity.lengthSq() > 0.001) {
+                         this.rotationAngle = Math.atan2(this.velocity.y, this.velocity.x);
+                    }
 
                      if (this.mesh.position.x < player.minPlayerX || this.mesh.position.x > player.maxPlayerX) {
                         this.triggerImpact();
