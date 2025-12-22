@@ -149,6 +149,7 @@
         let isGamepadModeActive = false;
         let vibrationLevel = 1; // 0: Off, 1: Soft, 2: Strong
         let isAttackButtonPressed = false;
+        let isGameStarting = false;
         let attackPressStartTime = 0;
         let interactPressed = false;
         let joyVector = new THREE.Vector2(0, 0);
@@ -775,9 +776,21 @@
         }
 
         async function startGame() {
+            if (isGameStarting) return;
+            isGameStarting = true;
+
+            // UX Immediate Feedback
             if (audioContext.state === 'suspended') {
                 audioContext.resume();
             }
+            if (navigator.vibrate) {
+                navigator.vibrate(20);
+            }
+
+            playButton.textContent = translations[currentLanguage].loading;
+            playButton.style.opacity = '0.5';
+            playButton.style.pointerEvents = 'none';
+
             try {
                 await Promise.all([
                     loadAudio('pasos', 'assets/audio/characters/joziel/pasos-joziel.mp3'),
@@ -866,9 +879,19 @@
         languageSelect.addEventListener('change', handleLanguageChange);
         pauseLanguageSelect.addEventListener('change', handleLanguageChange);
 
-        playButton.addEventListener('click', startGame);
+        playButton.addEventListener('click', (e) => {
+            // Ensure audio context is resumed inside user interaction
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            startGame();
+        });
         playButton.addEventListener('touchstart', (e) => {
             e.preventDefault(); // Prevent double firing
+            // Ensure audio context is resumed inside user interaction
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
             startGame();
         }, { passive: false });
         jozielHalo.addEventListener('click', pauseGame);
