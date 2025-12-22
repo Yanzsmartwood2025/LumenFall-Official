@@ -1,16 +1,18 @@
 // --- src/game.js (Lógica Principal) ---
 
+        const PLAYER_SCALE = 1.15;
+
         const assetUrls = {
-            runningSprite: 'assets/sprites/Joziel/Movimiento/Correr-1_128.png',
-            runningBackSprite: 'assets/sprites/Joziel/Movimiento-B/Movimiento-B-1_128.png',
+            runningSprite: 'assets/sprites/Joziel/Movimiento/Correr-1.png',
+            runningBackSprite: 'assets/sprites/Joziel/Movimiento-B/Movimiento-B-1.png',
             runningShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Sombra-correr_128.jpg',
-            idleSprite: 'assets/sprites/Joziel/Movimiento/Idle_128.png',
-            idleBackSprite: 'assets/sprites/Joziel/Movimiento-B/idle-B_128.png',
+            idleSprite: 'assets/sprites/Joziel/Movimiento/Idle.png',
+            idleBackSprite: 'assets/sprites/Joziel/Movimiento-B/idle-B.png',
             idleShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Idle-sombra_128.jpg',
             attackSprite: 'assets/sprites/Joziel/Movimiento/disparo-derecha-1.png',
-            attackBackSprite: 'assets/sprites/Joziel/Movimiento/disparo-izquierda-1_128.png',
-            jumpSprite: 'assets/sprites/Joziel/Movimiento/saltar_128.png',
-            jumpBackSprite: 'assets/sprites/Joziel/Movimiento-B/saltar-b_128.png',
+            attackBackSprite: 'assets/sprites/Joziel/Movimiento/disparo-izquierda-1.png',
+            jumpSprite: 'assets/sprites/Joziel/Movimiento/saltar.png',
+            jumpBackSprite: 'assets/sprites/Joziel/Movimiento-B/saltar-b.png',
             sparkParticle: 'assets/sprites/FX/chispa.jpg',
             wallTexture: 'assets/sprites/Ambiente/pared-calabozo.png',
             doorTexture: 'assets/sprites/Ambiente/puerta-calabozo.png',
@@ -1014,7 +1016,7 @@
                     }
                 }
             }
-        }, { passive: false });
+        });
 
         document.addEventListener('touchend', (e) => {
             if (isDraggingJoystick && joystickTouchId !== null && !isGamepadModeActive) {
@@ -1206,7 +1208,7 @@
             player.energyBarFill.style.width = '100%';
             player.checkHealthStatus();
             player.mesh.position.set(0, player.mesh.geometry.parameters.height / 2, 0);
-            player.mesh.scale.set(1.65, 1.65, 1);
+            player.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
             player.mesh.visible = true;
             gameOverScreen.style.display = 'none';
             isPaused = false;
@@ -1338,16 +1340,33 @@
                 this.jumpTexture = textureLoader.load(assetUrls.jumpSprite);
                 this.jumpBackTexture = textureLoader.load(assetUrls.jumpBackSprite);
 
+                // Configuración de Repetición (Grid/Strip)
+                // 1. Run (Right): 8x2 Grid (1011x371)
                 this.runningTexture.repeat.set(0.125, 0.5);
+                // 2. Run (Left): 8x2 Grid (1006x364)
                 this.runningBackTexture.repeat.set(0.125, 0.5);
+
+                // Shadows (Legacy _128 format usually) - assuming they match main sprite logic or handle separately
                 this.runningShadowTexture.repeat.set(0.125, 0.5);
 
-                this.idleTexture.repeat.set(1 / totalIdleFrames, 1);
-                this.idleBackTexture.repeat.set(1 / totalIdleBackFrames, 1);
-                this.idleShadowTexture.repeat.set(1 / totalIdleFrames, 1);
+                // 3. Idle (Right): 3x2 Grid (1319x720) - 5 frames used
+                this.idleTexture.repeat.set(1/3, 0.5); // 3 cols, 2 rows
+                // 4. Idle (Left): 6x1 Strip (3016x868)
+                this.idleBackTexture.repeat.set(1 / 6, 1);
 
+                this.idleShadowTexture.repeat.set(1 / totalIdleFrames, 1); // Legacy shadow?
+
+                // 5. Jump (Right): 3x2 Grid (664x1014)
                 this.jumpTexture.repeat.set(1/3, 0.5);
+                // 6. Jump (Left): 8x1 Strip (1600x297)
                 this.jumpBackTexture.repeat.set(0.125, 1);
+
+                // 7. Attack (Right): 4x2 Grid (943x490)
+                this.attackTexture.repeat.set(0.25, 0.5);
+                // 8. Attack (Left): 6x1 Strip (1600x506) - NOW A STRIP
+                this.attackBackTexture.magFilter = THREE.NearestFilter;
+                this.attackBackTexture.minFilter = THREE.NearestFilter;
+                this.attackBackTexture.repeat.set(1/6, 1);
 
             // Carga
             this.chargingTexture = textureLoader.load(assetUrls.chargingSprite);
@@ -1357,29 +1376,34 @@
             this.chargingTexture.minFilter = THREE.NearestFilter;
             this.chargingTexture.repeat.set(0.25, 0.25); // 4x4 Grid
 
+                // RUN FRAMEMAPS (GRID 8x2)
+                // Convention: Top Row (y=0.5) is frames 0-7, Bottom (y=0) is frame 8+
                 this.runningFrameMap = [];
                 for (let i = 0; i < 8; i++) {
                     this.runningFrameMap.push({ x: i * 0.125, y: 0.5 });
                 }
-                this.runningFrameMap.push({ x: 0, y: 0 });
+                this.runningFrameMap.push({ x: 0, y: 0 }); // Frame 8
 
                 this.runningBackFrameMap = [];
                 for (let i = 0; i < 8; i++) {
                     this.runningBackFrameMap.push({ x: i * 0.125, y: 0.5 });
                 }
                 for (let i = 0; i < 3; i++) {
-                    this.runningBackFrameMap.push({ x: i * 0.125, y: 0 });
+                    this.runningBackFrameMap.push({ x: i * 0.125, y: 0 }); // Frames 8,9,10
                 }
+
+                // IDLE RIGHT FRAMEMAP (GRID 3x2)
+                // Frames 0,1,2 on Top (y=0.5)
+                // Frames 3,4 on Bottom (y=0.0)
+                this.idleFrameMap = [];
+                for (let i = 0; i < 3; i++) this.idleFrameMap.push({ x: i * (1/3), y: 0.5 });
+                for (let i = 0; i < 2; i++) this.idleFrameMap.push({ x: i * (1/3), y: 0.0 });
+
 
                 this.jumpFrameMap = [];
                 for (let i = 0; i < 3; i++) this.jumpFrameMap.push({ x: i * (1/3), y: 0.5 });
                 for (let i = 0; i < 3; i++) this.jumpFrameMap.push({ x: i * (1/3), y: 0.0 });
 
-                this.attackTexture.repeat.set(0.25, 0.5); // 4 cols, 2 rows
-                // Configure Left Attack Texture (Nearest Filter for Sharpness)
-                this.attackBackTexture.magFilter = THREE.NearestFilter;
-                this.attackBackTexture.minFilter = THREE.NearestFilter;
-                this.attackBackTexture.repeat.set(1/6, 1); // 6 cols, 1 row
 
                 const playerHeight = 4.2;
                 const playerWidth = 4.2;
@@ -1404,7 +1428,7 @@
 
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
                 this.mesh.position.y = playerHeight / 2;
-                this.mesh.scale.set(1.65, 1.65, 1);
+                this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
                 this.mesh.castShadow = true;
                 this.mesh.frustumCulled = false;
                 this.mesh.renderOrder = 0;
@@ -1827,19 +1851,10 @@
                      this.hasPlayedIdleIntro = false;
                 }
 
-                if (!this.isFacingLeft) {
-                    if (this.currentState === 'idle') {
-                        this.mesh.scale.set(1.65, 1.65, 1);
-                    } else {
-                        this.mesh.scale.set(1.15, 1.15, 1);
-                    }
-                } else {
-                    if (this.currentState === 'idle') {
-                        this.mesh.scale.set(1.32, 1.32, 1);
-                    } else {
-                        this.mesh.scale.set(1.15, 1.15, 1);
-                    }
-                }
+                // --- UNIFIED SCALING LOGIC ---
+                // Applies globally to ALL states (Idle, Run, Jump, etc.)
+                this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
+
 
                 if (stateChanged || directionChanged) {
                     this.currentFrame = -1;
@@ -1854,16 +1869,17 @@
                     let totalFrames, currentTexture, shadowTexture;
                     let isGridSprite = false;
                     let isJumpSprite = false;
+                    let isIdleSprite = false;
                     let isManualUV = false;
 
                     switch (this.currentState) {
                         case 'shooting':
                             if (this.isFacingLeft) {
-                                // Specific Left-Side Attack (Standardized 6 frames)
+                                // Specific Left-Side Attack (Strip 6 frames)
                                 currentTexture = this.attackBackTexture;
                                 shadowTexture = null;
                                 isGridSprite = false;
-                                isManualUV = false; // Use simple offset logic
+                                isManualUV = false; // It's a strip now!
                                 totalFrames = 6;
                                 currentAnimSpeed = 40;
 
@@ -1872,16 +1888,8 @@
                                 } else {
                                     this.currentState = 'idle';
                                 }
-
-                                // Linear Strip Logic (1 row) handled by default block below if !isManualUV
-                                // But we set isManualUV=false, so it falls through to standard offset calc.
-                                // NOTE: The standard block assumes 'totalFrames' for divisor.
-                                // We set totalFrames = 6.
-                                // But wait, standard logic: uOffset = this.currentFrame / totalFrames.
-                                // And 'framesInStrip'.
-                                // We need to ensure framesInStrip uses 6.
                             } else {
-                                // Right-Side Attack (Legacy 4x2 Grid)
+                                // Right-Side Attack (Grid 4x2)
                                 currentTexture = this.attackTexture;
                                 shadowTexture = null;
                                 isGridSprite = false;
@@ -1931,23 +1939,6 @@
                             }
                         }
 
-                        // Override automatic timing with custom speed check?
-                        // The outer loop runs at `currentAnimSpeed`. We need to dynamically adjust it.
-                        // But we are inside the 'if' that already checked time.
-                        // For precise control, we might need a separate timer, but reusing the loop is easier.
-                        // We can just update the UVs here based on currentChargeFrame.
-
-                        // NOTE: The main loop uses `currentAnimSpeed` set ABOVE.
-                        // We need to set it BEFORE this switch to affect the NEXT frame, or accept slight jitter.
-                        // Actually, the check `Date.now() - this.lastFrameTime > currentAnimSpeed` happens before this switch.
-                        // So changing speed inside switch affects next frame.
-
-                        // 4x4 Grid UV Mapping
-                        // Frame 0-15.
-                        // Col = Frame % 4
-                        // Row = Floor(Frame / 4)
-                        // V needs to be inverted: Row 0 is Top (0.75), Row 3 is Bottom (0.0)
-
                         const cFrame = this.currentChargeFrame;
                         const cCol = cFrame % 4;
                         const cRow = Math.floor(cFrame / 4);
@@ -1980,6 +1971,7 @@
                             break;
                         case 'jumping':
                              if (this.isFacingLeft) {
+                                // Left Jump: Strip 8 frames
                                 currentTexture = this.jumpBackTexture;
                                 shadowTexture = this.runningShadowTexture;
                                 if (this.velocity.y > 0) {
@@ -1991,6 +1983,7 @@
                                     this.currentFrame = 5;
                                 }
                              } else {
+                                // Right Jump: Grid 3x2
                                 currentTexture = this.jumpTexture;
                                 shadowTexture = this.runningShadowTexture;
                                 isJumpSprite = true;
@@ -2027,6 +2020,7 @@
                             break;
                         case 'idle':
                             if (this.isFacingLeft) {
+                                // Left Idle: Strip 6 frames
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleBackFrames, this.idleBackTexture, this.idleShadowTexture];
                                 if (this.currentFrame === -1) {
                                     this.currentFrame = 5;
@@ -2039,13 +2033,16 @@
                                     this.hasPlayedIdleIntro = true;
                                 }
                             } else {
+                                // Right Idle: Grid 3x2 (5 frames used)
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
                                 this.currentFrame = (this.currentFrame + 1) % totalFrames;
+                                isIdleSprite = true;
                             }
                             break;
                         default:
                             [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
                             this.currentFrame = 0;
+                            isIdleSprite = true;
                             break;
                     }
 
@@ -2078,10 +2075,18 @@
                              if (frameData) {
                                  currentTexture.offset.set(frameData.x, frameData.y);
                              }
+                        } else if (isIdleSprite) {
+                            // NEW: Idle is now a grid (3x2)
+                            const frameData = this.idleFrameMap[this.currentFrame];
+                            if (frameData) {
+                                currentTexture.offset.set(frameData.x, frameData.y);
+                            }
                         } else if (!isManualUV) {
+                            // Strip Logic
                             let framesInStrip = totalFrames;
                             if (currentTexture === this.jumpBackTexture) framesInStrip = 8;
                             if (currentTexture === this.attackBackTexture) framesInStrip = 6;
+                            if (currentTexture === this.idleBackTexture) framesInStrip = 6;
 
                             const uOffset = this.currentFrame / framesInStrip;
                             currentTexture.offset.x = uOffset;
@@ -2124,7 +2129,6 @@
         }
 
         // ... (Environment & Decor - Kept as is)
-        // (Removed createShadowTexture logic if it was duplicate, but it's okay)
         function createShadowTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 128;
@@ -2578,22 +2582,8 @@
                      }
                 }
 
-                // Force exit torches OFF (createTorch in loadLevel will create them unlit if we hack completedRooms temporarily?)
-                // loadLevel uses completedRooms[gateData.destination] to determine if lit.
-                // The exit gate destination is 'dungeon_1'. completedRooms['dungeon_1'] is undefined/false usually.
-                // But in loadLevel: "if (levelData.id !== 'dungeon_1') { isLit = true; }"
-                // This forces all torches inside rooms to be LIT by default.
-                // We need to disable this for Nightmare rooms UNLESS cleared.
-
-                // We can patch loadLevel logic or just remove them after loadLevel.
-                // But loadLevel creates AmbientTorchFlame/Light.
-                // We want them OFF.
-
-                // Let's modify loadLevel to respect Nightmare rules?
-                // Or override here.
             } else {
                 ambientLight.intensity = 0.8; // Normal
-                // Reset UI to Default? (Optional, user didn't specify revert)
             }
             // --- NIGHTMARE LOGIC END ---
 
@@ -2655,7 +2645,6 @@
                     });
                 }
 
-                // Removed WalkingMonster spawn
                 if (allDecorGhosts.length === 0) {
                     allDecorGhosts.push(new DecorGhost(scene, 0));
                 }
@@ -2696,18 +2685,8 @@
             boss_room: { id: 'boss_room', name: 'Sala del Jefe', gates: [{ id: 'return_boss', x: 0, destination: 'dungeon_1', numeral: 'VI' }], specters: [] },
         };
 
-        // ... (SimpleEnemy, Specter removed, WalkingMonster removed)
 
         class SimpleEnemy {
-             // Keeping SimpleEnemy as per request? "Elimina la clase 'WalkingMonster'... Solo debe quedar 'EnemyX1'."
-             // The user didn't explicitly say "Remove SimpleEnemy" (the small one in room 3), but "Elimina la clase 'WalkingMonster'... Solo debe quedar 'EnemyX1'".
-             // WalkingMonster was the 1-strip enemy. SimpleEnemy is the old one.
-             // Usually "Solo debe quedar 'EnemyX1'" implies removing others.
-             // However, checking loadLevelById: SimpleEnemy is commented out in room_3.
-             // I will keep SimpleEnemy for now as it wasn't explicitly targeted like WalkingMonster/Specter, or if it is unused I can leave it.
-             // Actually, the prompt said: "Elimina definitivamente la clase 'WalkingMonster' (el enemigo de una sola franja). Solo debe quedar 'EnemyX1'."
-             // Context implies cleaning up the dungeon.
-             // I will leave SimpleEnemy class definition but it is not instantiated in dungeon_1.
              constructor(scene, initialX) {
                 this.scene = scene;
                 this.texture = textureLoader.load(assetUrls.enemySprite);
@@ -2968,13 +2947,7 @@
                 // Optimization: Sleep if off-screen (and not already dead/static)
                 if (this.isAlive && Math.abs(this.mesh.position.x - camera.position.x) > 35) return;
 
-                // Si está muerto y completó la animación (no isDying, ya que isDying es true mientras anima la muerte),
-                // pero queremos que se quede fijo.
-                if (!this.isAlive && !this.isDying) return; // Si ya fue "finalizado" (aunque ahora no lo removemos del todo)
-                // Espera, si cambiamos logic para dejarlo como cadáver, isAlive será false, isDying false, pero mesh visible.
-                // En takeHit -> si muere -> isAlive=false, isDying=true.
-                // En loop muerte -> cuando acaba -> isDying=false.
-                // Entonces si !isAlive && !isDying, no hacemos update. Correcto.
+                if (!this.isAlive && !this.isDying) return;
 
                 if (!player) return;
 
@@ -2992,8 +2965,7 @@
                             if (this.currentFrame < totalFrames - 1) {
                                 this.currentFrame++; // 0 to 8
                             } else {
-                                // Se queda en frame 8
-                                this.finalizeDeath(); // Marca isDying = false
+                                this.finalizeDeath();
                                 return true;
                             }
                         } else {
@@ -3001,9 +2973,6 @@
                             if (this.currentFrame === 0) loopFinished = true;
                         }
 
-                        // Grid 8x2 Calculation
-                        // Row 1 (Top, y=0.5): Frames 0-7
-                        // Row 0 (Bottom, y=0.0): Frames 8+
                         let col = this.currentFrame % 8;
                         let rowY = (this.currentFrame < 8) ? 0.5 : 0.0;
 
@@ -3027,7 +2996,6 @@
                 if (this.growlGain) {
                     const maxDist = 25;
                     const vol = calculateLogVolume(distanceToPlayer, maxDist);
-                    // Base volume 1.0
                     this.growlGain.gain.setTargetAtTime(vol, audioContext.currentTime, 0.1);
                 }
 
@@ -3079,7 +3047,6 @@
                 // Footsteps
                 this.stepTimer -= deltaTime;
                 if (this.stepTimer <= 0) {
-                    // Base Volume 1.0 used in playScopedSound
                     this.playScopedSound('enemy1_step', 1.0, 1.0, distanceToPlayer);
                     this.stepTimer = 0.4;
                 }
@@ -3095,8 +3062,8 @@
                 this.playScopedSound('enemy1_impact', 1.0, 1.0, dist);
 
                 if (this.health <= 0) {
-                    this.isAlive = false; // "Muerto" lógicamente
-                    this.isDying = true;  // "Muriendo" visualmente
+                    this.isAlive = false;
+                    this.isDying = true;
                     this.currentFrame = -1;
                     this.stopAudio(0.5);
                 }
@@ -3104,28 +3071,15 @@
 
             finalizeDeath() {
                 this.isDying = false;
-                // NO removemos el mesh: this.scene.remove(this.mesh);
-
-                // Loot Drop
                 if (Math.random() < 0.6) {
                     const dropPosition = this.mesh.position.clone();
                     const type = Math.random() < 0.5 ? 'health' : 'power';
                     allPowerUps.push(new PowerUp(this.scene, dropPosition, type));
                 }
-
-                // No removemos del array allEnemiesX1 para que se siga renderizando,
-                // pero como !isAlive && !isDying, el update() saldrá inmediatamente.
-                // Sin embargo, si lo dejamos en el array, collision checks seguirán ocurriendo.
-                // Debemos quitarlo del array allEnemiesX1 para optimización y evitar daño por contacto con cadáver.
-                // Pero si lo quitamos, el renderer principal lo perderá si no está en scene.
-                // El renderer renderiza toda la escena. Mientras el mesh esté en scene.add(), se ve.
-                // El array allEnemiesX1 es para updates de lógica.
-
                 const index = allEnemiesX1.indexOf(this);
                 if (index > -1) {
                     allEnemiesX1.splice(index, 1);
                 }
-                // Mesh se queda en scene.
             }
         }
 
@@ -3196,9 +3150,7 @@
                 if (player && this.voiceGain) {
                     const dist = this.mesh.position.distanceTo(player.mesh.position);
                     const maxDist = 20;
-                    // Logarithmic volume, base 1.0
                     const vol = calculateLogVolume(dist, maxDist);
-                    // Adjust max volume slightly lower for ambiance if needed, but user said "base 100%"
                     this.voiceGain.gain.setTargetAtTime(vol * 1.0, audioContext.currentTime, 0.1);
                 }
             }
