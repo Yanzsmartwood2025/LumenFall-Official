@@ -2821,6 +2821,9 @@
             }
 
             update(deltaTime) {
+                // Sleep Mode
+                if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return;
+
                 if (!this.isAlive || !player) return;
                 const distanceToPlayer = this.mesh.position.distanceTo(player.mesh.position);
                 if (this.growlGain) {
@@ -3766,6 +3769,9 @@
                     }
 
                     for (const enemy of allSimpleEnemies) {
+                        // Optimization: Skip collision check if enemy is far
+                        if (Math.abs(enemy.mesh.position.x - player.mesh.position.x) > 40) continue;
+
                         if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                             enemy.takeHit();
                             this.triggerImpact();
@@ -3773,6 +3779,9 @@
                     }
 
                     for (const enemy of allEnemiesX1) {
+                        // Optimization: Skip collision check if enemy is far
+                        if (Math.abs(enemy.mesh.position.x - player.mesh.position.x) > 40) continue;
+
                         if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                             enemy.takeHit();
                             this.triggerImpact();
@@ -3855,6 +3864,9 @@
             }
 
             update(deltaTime) {
+                // Sleep Mode
+                if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return;
+
                 this.lifetime -= deltaTime;
                 if (this.lifetime <= 0) {
                     this.scene.remove(this.mesh);
