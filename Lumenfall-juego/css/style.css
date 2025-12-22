@@ -272,7 +272,7 @@ html, body {
             width: 75%;
             height: 75%;
             object-fit: contain;
-            /* Eliminado mix-blend-mode para evitar el recuadro si el PNG es transparente */
+            mix-blend-mode: screen; /* Quitar fondo negro manteniendo chispas */
         }
 
         /* Estilos para el anillo de 5 flamas (Reload/Attack) */
@@ -291,7 +291,7 @@ html, body {
             top: 50%;
             left: 50%;
             transform-origin: center center;
-            mix-blend-mode: normal !important; /* Asegurar transparencia */
+            mix-blend-mode: screen !important; /* Quitar fondo negro manteniendo chispas */
         }
 
         /* Posicionamiento circular de las 5 flamas */
