@@ -8,6 +8,7 @@
             idleBackSprite: 'assets/sprites/Joziel/Movimiento-B/idle-B_128.png',
             idleShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Idle-sombra_128.jpg',
             attackSprite: 'assets/sprites/Joziel/Movimiento/disparo-derecha-1.png',
+            attackBackSprite: 'assets/sprites/Joziel/Movimiento/disparo-izquierda-1_128.png',
             jumpSprite: 'assets/sprites/Joziel/Movimiento/saltar_128.png',
             jumpBackSprite: 'assets/sprites/Joziel/Movimiento-B/saltar-b_128.png',
             sparkParticle: 'assets/sprites/FX/chispa.jpg',
@@ -45,6 +46,7 @@
         const totalIdleFrames = 5;
         const totalIdleBackFrames = 6;
         const totalAttackFrames = 6;
+        const totalAttackBackFrames = 6;
         const totalJumpFrames = 7;
         const totalSpecterFrames = 5; // Usado por DecorGhost
         const totalEnemyFrames = 10;
@@ -1332,6 +1334,7 @@
                 this.idleBackTexture = textureLoader.load(assetUrls.idleBackSprite);
                 this.idleShadowTexture = textureLoader.load(assetUrls.idleShadowSprite);
                 this.attackTexture = textureLoader.load(assetUrls.attackSprite);
+                this.attackBackTexture = textureLoader.load(assetUrls.attackBackSprite);
                 this.jumpTexture = textureLoader.load(assetUrls.jumpSprite);
                 this.jumpBackTexture = textureLoader.load(assetUrls.jumpBackSprite);
 
@@ -1373,6 +1376,10 @@
                 for (let i = 0; i < 3; i++) this.jumpFrameMap.push({ x: i * (1/3), y: 0.0 });
 
                 this.attackTexture.repeat.set(0.25, 0.5); // 4 cols, 2 rows
+                // Configure Left Attack Texture (Nearest Filter for Sharpness)
+                this.attackBackTexture.magFilter = THREE.NearestFilter;
+                this.attackBackTexture.minFilter = THREE.NearestFilter;
+                this.attackBackTexture.repeat.set(1/6, 1); // 6 cols, 1 row
 
                 const playerHeight = 4.2;
                 const playerWidth = 4.2;
@@ -1784,8 +1791,13 @@
                 if (isMovementState) {
                      this.mesh.rotation.y = 0;
                 } else {
-                 // Charging and Shooting flip with rotation
-                     this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
+                     // Charging and Shooting flip with rotation
+                     // EXCEPTION: Left Shooting uses a pre-drawn left sprite, so DO NOT rotate (mirror) it.
+                     if (this.currentState === 'shooting' && this.isFacingLeft) {
+                         this.mesh.rotation.y = 0;
+                     } else {
+                         this.mesh.rotation.y = this.isFacingLeft ? Math.PI : 0;
+                     }
                 }
 
                 camera.position.x = this.mesh.position.x;
@@ -1846,28 +1858,48 @@
 
                     switch (this.currentState) {
                         case 'shooting':
-                            currentTexture = this.attackTexture;
-                            shadowTexture = null;
-                            isGridSprite = false;
-                            isManualUV = true;
-                            currentAnimSpeed = 40; // Fast shot
+                            if (this.isFacingLeft) {
+                                // Specific Left-Side Attack (Standardized 6 frames)
+                                currentTexture = this.attackBackTexture;
+                                shadowTexture = null;
+                                isGridSprite = false;
+                                isManualUV = false; // Use simple offset logic
+                                totalFrames = 6;
+                                currentAnimSpeed = 40;
 
-                            if (this.currentFrame < 7) {
-                                this.currentFrame++;
+                                if (this.currentFrame < 5) {
+                                    this.currentFrame++;
+                                } else {
+                                    this.currentState = 'idle';
+                                }
+
+                                // Linear Strip Logic (1 row) handled by default block below if !isManualUV
+                                // But we set isManualUV=false, so it falls through to standard offset calc.
+                                // NOTE: The standard block assumes 'totalFrames' for divisor.
+                                // We set totalFrames = 6.
+                                // But wait, standard logic: uOffset = this.currentFrame / totalFrames.
+                                // And 'framesInStrip'.
+                                // We need to ensure framesInStrip uses 6.
                             } else {
-                                this.currentState = 'idle';
+                                // Right-Side Attack (Legacy 4x2 Grid)
+                                currentTexture = this.attackTexture;
+                                shadowTexture = null;
+                                isGridSprite = false;
+                                isManualUV = true;
+                                currentAnimSpeed = 40;
+
+                                if (this.currentFrame < 7) {
+                                    this.currentFrame++;
+                                } else {
+                                    this.currentState = 'idle';
+                                }
+
+                                const sFrame = this.currentFrame;
+                                const sCol = sFrame % 4;
+                                const sRow = Math.floor(sFrame / 4);
+                                currentTexture.offset.x = sCol * 0.25;
+                                currentTexture.offset.y = (1 - sRow) * 0.5;
                             }
-
-                            // UV Mapping for 4x2 grid (Frames 0-7)
-                            // Row 0 (Top): Frames 0-3
-                            // Row 1 (Bottom): Frames 4-7
-                            const sFrame = this.currentFrame;
-                            const sCol = sFrame % 4;
-                            const sRow = Math.floor(sFrame / 4);
-
-                            currentTexture.offset.x = sCol * 0.25;
-                            // Invert row for V: Row 0 -> V=0.5, Row 1 -> V=0.0
-                            currentTexture.offset.y = (1 - sRow) * 0.5;
                             break;
                     case 'charging':
                         currentTexture = this.chargingTexture;
@@ -2047,7 +2079,10 @@
                                  currentTexture.offset.set(frameData.x, frameData.y);
                              }
                         } else if (!isManualUV) {
-                            const framesInStrip = (currentTexture === this.jumpBackTexture) ? 8 : totalFrames;
+                            let framesInStrip = totalFrames;
+                            if (currentTexture === this.jumpBackTexture) framesInStrip = 8;
+                            if (currentTexture === this.attackBackTexture) framesInStrip = 6;
+
                             const uOffset = this.currentFrame / framesInStrip;
                             currentTexture.offset.x = uOffset;
                             currentTexture.offset.y = 0;
