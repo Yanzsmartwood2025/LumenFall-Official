@@ -25,7 +25,7 @@
             enemyX1Death: 'assets/sprites/Enemigos/Ataques-enemigo1/muerte-1.png',
             dustParticle: 'assets/sprites/FX/Polvo.png',
             projectileSprite: 'assets/sprites/Joziel/Sombras-efectos/efectos/proyectil-1.jpg',
-            chargingSprite: 'assets/sprites/Joziel/Movimiento/carga-de-energia.jpg',
+            chargingSprite: 'assets/sprites/Joziel/Movimiento/carga-de-energia-1.png',
             blueFire: 'assets/sprites/FX/fuego-antorcha.jpg'
         };
 
@@ -1387,38 +1387,9 @@
                 });
                 this.standardMaterial = playerMaterial;
 
-                // Custom Shader for Green Screen Removal (Chroma Key)
-                this.chargingMaterial = new THREE.ShaderMaterial({
-                    uniforms: {
-                        uTexture: { value: this.chargingTexture },
-                        uKeyColor: { value: new THREE.Vector3(0.0, 1.0, 0.0) }, // Pure Green
-                        uThreshold: { value: 0.60 }, // Tolerance to remove green background
-                        uRepeat: { value: new THREE.Vector2(0.25, 0.25) },
-                        uOffset: { value: new THREE.Vector2(0, 0) }
-                    },
-                    vertexShader: `
-                        varying vec2 vUv;
-                        uniform vec2 uRepeat;
-                        uniform vec2 uOffset;
-                        void main() {
-                            vUv = uv * uRepeat + uOffset;
-                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                        }
-                    `,
-                    fragmentShader: `
-                        uniform sampler2D uTexture;
-                        uniform vec3 uKeyColor;
-                        uniform float uThreshold;
-                        varying vec2 vUv;
-                        void main() {
-                            vec4 texColor = texture2D(uTexture, vUv);
-                            float dist = distance(texColor.rgb, uKeyColor);
-                            if (dist < uThreshold) {
-                                discard;
-                            }
-                            gl_FragColor = texColor;
-                        }
-                    `,
+                // Material básico con transparencia PNG para carga de energía
+                this.chargingMaterial = new THREE.MeshBasicMaterial({
+                    map: this.chargingTexture,
                     transparent: true,
                     side: THREE.DoubleSide,
                     depthWrite: false
@@ -2033,9 +2004,6 @@
                         if (this.mesh.material !== this.chargingMaterial) {
                             this.mesh.material = this.chargingMaterial;
                         }
-                        // Sync Uniforms with Texture Updates
-                        this.chargingMaterial.uniforms.uRepeat.value.copy(this.chargingTexture.repeat);
-                        this.chargingMaterial.uniforms.uOffset.value.copy(this.chargingTexture.offset);
                     } else {
                         if (this.mesh.material !== this.standardMaterial) {
                             this.mesh.material = this.standardMaterial;
