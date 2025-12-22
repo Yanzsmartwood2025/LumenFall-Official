@@ -2212,6 +2212,40 @@
             return new THREE.CanvasTexture(canvas);
         }
 
+        function generateElectricTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const cx = 32; const cy = 32;
+
+            // Clear
+            ctx.clearRect(0, 0, 64, 64);
+
+            // Glow Gradient
+            const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 32);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 1)'); // Core White
+            grad.addColorStop(0.3, 'rgba(0, 255, 255, 0.8)'); // Cyan Inner
+            grad.addColorStop(0.6, 'rgba(0, 200, 255, 0.2)'); // Blueish Outer
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)'); // Transparent
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 64, 64);
+
+            // "Lightning" Starburst lines
+            ctx.strokeStyle = 'rgba(200, 255, 255, 0.8)';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const len = 10 + Math.random() * 15;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(angle) * len, cy + Math.sin(angle) * len);
+                ctx.stroke();
+            }
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
         class FootstepParticle {
             constructor(scene, x, y, z) {
                 this.scene = scene;
@@ -3378,7 +3412,7 @@
         }
 
         class TrailRenderer {
-            constructor(scene, width, length, maxAlpha = 0.8) {
+            constructor(scene, width, length, maxAlpha = 0.6) {
                 this.scene = scene;
                 this.width = width;
                 this.length = length;
@@ -3427,28 +3461,44 @@
 
                 for (let i = 0; i < this.history.length; i++) {
                     const pt = this.history[i];
-                    const pct = i / (this.history.length - 1);
+                    const pct = i / (this.history.length - 1); // 0 (Head) to 1 (Tail)
                     const nx = -Math.sin(pt.angle);
                     const ny = Math.cos(pt.angle);
 
+                    // --- Tapering Logic ---
+                    // Shape: Thin Head (0.2) -> Wide Middle (1.0) -> Thin Tail (0.0)
+                    // Use sine wave for smooth expansion and contraction
+                    const widthScale = 0.2 + 0.8 * Math.sin(pct * Math.PI);
+                    const currentWidth = this.width * widthScale;
+
                     // Vertex 1 (Top/Left)
-                    positions[vIdx++] = pt.pos.x + nx * this.width * 0.5;
-                    positions[vIdx++] = pt.pos.y + ny * this.width * 0.5;
+                    positions[vIdx++] = pt.pos.x + nx * currentWidth * 0.5;
+                    positions[vIdx++] = pt.pos.y + ny * currentWidth * 0.5;
                     positions[vIdx++] = pt.pos.z;
 
                     // Vertex 2 (Bottom/Right)
-                    positions[vIdx++] = pt.pos.x - nx * this.width * 0.5;
-                    positions[vIdx++] = pt.pos.y - ny * this.width * 0.5;
+                    positions[vIdx++] = pt.pos.x - nx * currentWidth * 0.5;
+                    positions[vIdx++] = pt.pos.y - ny * currentWidth * 0.5;
                     positions[vIdx++] = pt.pos.z;
 
-                    // Gradient: White (1,1,1) -> Cyan (0,1,1)
-                    const r = 1.0 - pct; // Fade Red out to get Cyan
+                    // --- Alpha Gradient & Color Mixing ---
+                    // Alpha: Fade IN fast at head (0.0 -> 1.0), then Fade OUT to tail (1.0 -> 0.0)
+                    let alpha = this.maxAlpha;
+                    if (pct < 0.1) {
+                         alpha *= (pct / 0.1); // Fade In
+                    } else {
+                         alpha *= (1.0 - pct); // Fade Out
+                    }
+
+                    // Color: Predominantly Cyan (R=0, G=1, B=1).
+                    // Add White only at the very head/core (pct < 0.5)
+                    const whiteAmt = Math.max(0, 0.5 - pct);
+                    const r = whiteAmt * 0.5; // Reduced Red -> Mostly Cyan
                     const g = 1.0;
                     const b = 1.0;
-                    const a = (1.0 - pct) * this.maxAlpha;
 
-                    colors[cIdx++] = r; colors[cIdx++] = g; colors[cIdx++] = b; colors[cIdx++] = a;
-                    colors[cIdx++] = r; colors[cIdx++] = g; colors[cIdx++] = b; colors[cIdx++] = a;
+                    colors[cIdx++] = r; colors[cIdx++] = g; colors[cIdx++] = b; colors[cIdx++] = alpha;
+                    colors[cIdx++] = r; colors[cIdx++] = g; colors[cIdx++] = b; colors[cIdx++] = alpha;
                 }
 
                 this.geometry.setDrawRange(0, (this.history.length - 1) * 6);
@@ -3462,6 +3512,10 @@
                 this.material.dispose();
             }
         }
+
+        // Global variables for shared resources to improve performance
+        let sharedElectricTexture = null;
+        let sharedCoreMaterial = null;
 
         class Projectile {
             constructor(scene, startPosition, direction) {
@@ -3516,16 +3570,41 @@
                 this.mesh.scale.set(0.2, 0.2, 0.2);
                 this.updateFrameUVs(this.frames.SPAWN[0]);
 
-                // --- NEW ELEMENTS ---
-                // 1. Trail
+                // --- NEW ELEMENTS & VISUAL POLISH ---
+
+                // 1. Plasma Core (Motor Interno)
+                // Performance Optimization: Singleton Texture & Material
+                if (!sharedElectricTexture) {
+                    sharedElectricTexture = generateElectricTexture();
+                }
+                if (!sharedCoreMaterial) {
+                    sharedCoreMaterial = new THREE.SpriteMaterial({
+                        map: sharedElectricTexture,
+                        color: 0x00FFFF,
+                        transparent: true,
+                        blending: THREE.AdditiveBlending,
+                        depthWrite: false
+                    });
+                }
+
+                this.plasmaCore = new THREE.Sprite(sharedCoreMaterial);
+                // Slightly smaller than main projectile
+                this.plasmaCore.scale.set(0.8, 0.8, 1);
+                this.scene.add(this.plasmaCore);
+
+                // Offset Z: Core behind Sprite
+                this.zOffset = -0.1;
+
+                // 2. Trail (Improved)
+                // Width 0.5 (Base), Length 12, MaxAlpha 0.6
                 this.trail = new TrailRenderer(this.scene, 0.5, 12, 0.6);
 
-                // 2. Sparks
+                // 3. Sparks (Legacy optimization)
                 this.sparks = [];
                 this.sparkTexture = textureLoader.load(assetUrls.flameParticle);
                 this.sparkTimer = 0;
 
-                // 3. Flash
+                // 4. Flash
                 this.flashMesh = null;
             }
 
@@ -3564,40 +3643,40 @@
             }
 
             updateSparks(deltaTime) {
-                 for (let i = this.sparks.length - 1; i >= 0; i--) {
-                     const s = this.sparks[i];
-                     s.life -= deltaTime;
-                     s.mesh.position.add(s.velocity);
-                     s.mesh.material.opacity = s.life * 2.0;
-                     if (s.life <= 0) {
-                         this.scene.remove(s.mesh);
-                         this.sparks.splice(i, 1);
-                     }
-                 }
+                for (let i = this.sparks.length - 1; i >= 0; i--) {
+                    const s = this.sparks[i];
+                    s.life -= deltaTime;
+                    s.mesh.position.add(s.velocity);
+                    s.mesh.material.opacity = s.life * 2.0;
+                    if (s.life <= 0) {
+                        this.scene.remove(s.mesh);
+                        this.sparks.splice(i, 1);
+                    }
+                }
 
-                 if (this.state !== 'FLIGHT') return;
+                if (this.state !== 'FLIGHT') return;
 
-                 if (this.sparks.length < 10) {
-                     const dir = new THREE.Vector3(Math.cos(this.angle), Math.sin(this.angle), 0);
-                     const spawnPos = this.mesh.position.clone().sub(dir.multiplyScalar(0.8));
-                     spawnPos.x += (Math.random() - 0.5) * 0.2;
-                     spawnPos.y += (Math.random() - 0.5) * 0.2;
+                if (this.sparks.length < 10) {
+                    const dir = new THREE.Vector3(Math.cos(this.angle), Math.sin(this.angle), 0);
+                    const spawnPos = this.mesh.position.clone().sub(dir.multiplyScalar(0.8));
+                    spawnPos.x += (Math.random() - 0.5) * 0.2;
+                    spawnPos.y += (Math.random() - 0.5) * 0.2;
 
-                     const sparkMat = new THREE.SpriteMaterial({
-                         map: this.sparkTexture,
-                         color: 0x00FFFF,
-                         transparent: true,
-                         opacity: 1.0,
-                         blending: THREE.AdditiveBlending,
-                         depthWrite: false
-                     });
-                     const spark = new THREE.Sprite(sparkMat);
-                     spark.position.copy(spawnPos);
-                     spark.scale.set(0.3, 0.3, 1);
-                     const drift = new THREE.Vector3((Math.random()-0.5)*0.1, (Math.random()-0.5)*0.1, 0);
-                     this.scene.add(spark);
-                     this.sparks.push({ mesh: spark, life: 0.4 + Math.random()*0.2, velocity: drift });
-                 }
+                    const sparkMat = new THREE.SpriteMaterial({
+                        map: this.sparkTexture,
+                        color: 0x00FFFF,
+                        transparent: true,
+                        opacity: 1.0,
+                        blending: THREE.AdditiveBlending,
+                        depthWrite: false
+                    });
+                    const spark = new THREE.Sprite(sparkMat);
+                    spark.position.copy(spawnPos);
+                    spark.scale.set(0.3, 0.3, 1);
+                    const drift = new THREE.Vector3((Math.random() - 0.5) * 0.1, (Math.random() - 0.5) * 0.1, 0);
+                    this.scene.add(spark);
+                    this.sparks.push({ mesh: spark, life: 0.4 + Math.random() * 0.2, velocity: drift });
+                }
             }
 
             triggerImpact() {
@@ -3619,8 +3698,19 @@
             update(deltaTime) {
                 if (this.isDead) return false;
 
+                // --- Update Visual Components ---
+                // Plasma Core & Trail follow mesh but offset in Z
+                if (this.plasmaCore) {
+                     this.plasmaCore.position.copy(this.mesh.position);
+                     this.plasmaCore.position.z += this.zOffset;
+                     this.plasmaCore.material.rotation += 10.0 * deltaTime; // Spin!
+                     this.plasmaCore.visible = (this.state !== 'IMPACT'); // Hide on impact
+                }
+
                 if (this.state === 'FLIGHT' || this.state === 'SPAWN') {
-                    this.trail.update(this.mesh.position, this.angle);
+                    const trailPos = this.mesh.position.clone();
+                    trailPos.z += this.zOffset;
+                    this.trail.update(trailPos, this.angle);
                 }
                 this.updateSparks(deltaTime);
                 this.updateFlash(deltaTime);
@@ -3644,20 +3734,18 @@
                         } else {
                             frameToSet = this.frames.SPAWN[this.currentSeqIndex];
                         }
-                    }
-                    else if (this.state === 'FLIGHT') {
-                         this.currentSeqIndex = (this.currentSeqIndex + 1) % this.frames.FLIGHT.length;
-                         frameToSet = this.frames.FLIGHT[this.currentSeqIndex];
-                    }
-                    else if (this.state === 'IMPACT') {
-                         this.currentSeqIndex++;
-                         if (this.currentSeqIndex >= this.frames.IMPACT.length) {
-                             this.cleanup();
-                             this.isDead = true;
-                             return false;
-                         } else {
-                             frameToSet = this.frames.IMPACT[this.currentSeqIndex];
-                         }
+                    } else if (this.state === 'FLIGHT') {
+                        this.currentSeqIndex = (this.currentSeqIndex + 1) % this.frames.FLIGHT.length;
+                        frameToSet = this.frames.FLIGHT[this.currentSeqIndex];
+                    } else if (this.state === 'IMPACT') {
+                        this.currentSeqIndex++;
+                        if (this.currentSeqIndex >= this.frames.IMPACT.length) {
+                            this.cleanup();
+                            this.isDead = true;
+                            return false;
+                        } else {
+                            frameToSet = this.frames.IMPACT[this.currentSeqIndex];
+                        }
                     }
 
                     if (frameToSet !== -1) {
@@ -3673,7 +3761,7 @@
                 if (this.state !== 'IMPACT') {
                     this.mesh.position.add(this.velocity);
 
-                     if (this.mesh.position.x < player.minPlayerX || this.mesh.position.x > player.maxPlayerX) {
+                    if (this.mesh.position.x < player.minPlayerX || this.mesh.position.x > player.maxPlayerX) {
                         this.triggerImpact();
                     }
 
@@ -3697,6 +3785,7 @@
 
             cleanup() {
                 this.scene.remove(this.mesh);
+                if (this.plasmaCore) this.scene.remove(this.plasmaCore);
                 this.trail.dispose();
                 this.sparks.forEach(s => this.scene.remove(s.mesh));
                 this.sparks = [];
