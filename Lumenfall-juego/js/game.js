@@ -1349,8 +1349,8 @@
                 // Shadows (Legacy _128 format usually) - assuming they match main sprite logic or handle separately
                 this.runningShadowTexture.repeat.set(0.125, 0.5);
 
-                // 3. Idle (Right): 3x2 Grid (1319x720) - 5 frames used
-                this.idleTexture.repeat.set(1/3, 0.5); // 3 cols, 2 rows
+                // 3. Idle (Right): 5x1 Strip (Horizontal)
+                this.idleTexture.repeat.set(0.2, 1); // 5 cols, 1 row
                 // 4. Idle (Left): 6x1 Strip (3016x868)
                 this.idleBackTexture.repeat.set(1 / 6, 1);
 
@@ -1363,7 +1363,7 @@
 
                 // 7. Attack (Right): 4x2 Grid (943x490)
                 this.attackTexture.repeat.set(0.25, 0.5);
-                // 8. Attack (Left): 6x1 Strip (1600x506) - NOW A STRIP
+                // 8. Attack (Left): 6x1 Strip (Horizontal) - 1 Row Confirmed
                 this.attackBackTexture.magFilter = THREE.NearestFilter;
                 this.attackBackTexture.minFilter = THREE.NearestFilter;
                 this.attackBackTexture.repeat.set(1/6, 1);
@@ -1391,14 +1391,6 @@
                 for (let i = 0; i < 3; i++) {
                     this.runningBackFrameMap.push({ x: i * 0.125, y: 0 }); // Frames 8,9,10
                 }
-
-                // IDLE RIGHT FRAMEMAP (GRID 3x2)
-                // Frames 0,1,2 on Top (y=0.5)
-                // Frames 3,4 on Bottom (y=0.0)
-                this.idleFrameMap = [];
-                for (let i = 0; i < 3; i++) this.idleFrameMap.push({ x: i * (1/3), y: 0.5 });
-                for (let i = 0; i < 2; i++) this.idleFrameMap.push({ x: i * (1/3), y: 0.0 });
-
 
                 this.jumpFrameMap = [];
                 for (let i = 0; i < 3; i++) this.jumpFrameMap.push({ x: i * (1/3), y: 0.5 });
@@ -2033,10 +2025,10 @@
                                     this.hasPlayedIdleIntro = true;
                                 }
                             } else {
-                                // Right Idle: Grid 3x2 (5 frames used)
+                                // Right Idle: Strip 5x1
                                 [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
                                 this.currentFrame = (this.currentFrame + 1) % totalFrames;
-                                isIdleSprite = true;
+                                isIdleSprite = false;
                             }
                             break;
                         default:
