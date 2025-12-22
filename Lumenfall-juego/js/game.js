@@ -3377,6 +3377,92 @@
             }
         }
 
+        class TrailRenderer {
+            constructor(scene, width, length, maxAlpha = 0.8) {
+                this.scene = scene;
+                this.width = width;
+                this.length = length;
+                this.history = [];
+                this.maxAlpha = maxAlpha;
+
+                this.geometry = new THREE.BufferGeometry();
+                const maxVertices = length * 2;
+                const positions = new Float32Array(maxVertices * 3);
+                const colors = new Float32Array(maxVertices * 4);
+
+                this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 4));
+
+                const indices = [];
+                for (let i = 0; i < length - 1; i++) {
+                    const v = i * 2;
+                    indices.push(v, v + 1, v + 2);
+                    indices.push(v + 1, v + 3, v + 2);
+                }
+                this.geometry.setIndex(indices);
+
+                this.material = new THREE.MeshBasicMaterial({
+                    vertexColors: true,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    side: THREE.DoubleSide
+                });
+
+                this.mesh = new THREE.Mesh(this.geometry, this.material);
+                this.mesh.frustumCulled = false;
+                this.scene.add(this.mesh);
+            }
+
+            update(currentPos, angle) {
+                this.history.unshift({ pos: currentPos.clone(), angle: angle });
+                if (this.history.length > this.length) this.history.pop();
+
+                if (this.history.length < 2) return;
+
+                const positions = this.geometry.attributes.position.array;
+                const colors = this.geometry.attributes.color.array;
+                let vIdx = 0;
+                let cIdx = 0;
+
+                for (let i = 0; i < this.history.length; i++) {
+                    const pt = this.history[i];
+                    const pct = i / (this.history.length - 1);
+                    const nx = -Math.sin(pt.angle);
+                    const ny = Math.cos(pt.angle);
+
+                    // Vertex 1 (Top/Left)
+                    positions[vIdx++] = pt.pos.x + nx * this.width * 0.5;
+                    positions[vIdx++] = pt.pos.y + ny * this.width * 0.5;
+                    positions[vIdx++] = pt.pos.z;
+
+                    // Vertex 2 (Bottom/Right)
+                    positions[vIdx++] = pt.pos.x - nx * this.width * 0.5;
+                    positions[vIdx++] = pt.pos.y - ny * this.width * 0.5;
+                    positions[vIdx++] = pt.pos.z;
+
+                    // Gradient: White (1,1,1) -> Cyan (0,1,1)
+                    const r = 1.0 - pct; // Fade Red out to get Cyan
+                    const g = 1.0;
+                    const b = 1.0;
+                    const a = (1.0 - pct) * this.maxAlpha;
+
+                    colors[cIdx++] = r; colors[cIdx++] = g; colors[cIdx++] = b; colors[cIdx++] = a;
+                    colors[cIdx++] = r; colors[cIdx++] = g; colors[cIdx++] = b; colors[cIdx++] = a;
+                }
+
+                this.geometry.setDrawRange(0, (this.history.length - 1) * 6);
+                this.geometry.attributes.position.needsUpdate = true;
+                this.geometry.attributes.color.needsUpdate = true;
+            }
+
+            dispose() {
+                this.scene.remove(this.mesh);
+                this.geometry.dispose();
+                this.material.dispose();
+            }
+        }
+
         class Projectile {
             constructor(scene, startPosition, direction) {
                 this.scene = scene;
@@ -3416,7 +3502,7 @@
 
                 this.state = 'SPAWN';
                 this.frameTimer = 0;
-                this.animationSpeed = 0.08;
+                this.animationSpeed = 0.04;
 
                 this.frames = {
                     SPAWN: [0, 1],
@@ -3429,6 +3515,18 @@
 
                 this.mesh.scale.set(0.2, 0.2, 0.2);
                 this.updateFrameUVs(this.frames.SPAWN[0]);
+
+                // --- NEW ELEMENTS ---
+                // 1. Trail
+                this.trail = new TrailRenderer(this.scene, 0.5, 12, 0.6);
+
+                // 2. Sparks
+                this.sparks = [];
+                this.sparkTexture = textureLoader.load(assetUrls.flameParticle);
+                this.sparkTimer = 0;
+
+                // 3. Flash
+                this.flashMesh = null;
             }
 
             updateFrameUVs(frameIndex) {
@@ -3437,6 +3535,69 @@
                 const u = col / this.cols;
                 const v = (this.rows - 1 - row) * 0.5;
                 this.texture.offset.set(u, v);
+            }
+
+            createFlash() {
+                const geo = new THREE.SphereGeometry(1, 16, 16);
+                const mat = new THREE.MeshBasicMaterial({
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.8,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                });
+                this.flashMesh = new THREE.Mesh(geo, mat);
+                this.flashMesh.position.copy(this.mesh.position);
+                this.flashMesh.scale.set(0, 0, 0);
+                this.scene.add(this.flashMesh);
+            }
+
+            updateFlash(deltaTime) {
+                if (!this.flashMesh) return;
+                const expansionSpeed = 20.0 * deltaTime;
+                this.flashMesh.scale.addScalar(expansionSpeed);
+                this.flashMesh.material.opacity -= 5.0 * deltaTime;
+                if (this.flashMesh.material.opacity <= 0) {
+                    this.scene.remove(this.flashMesh);
+                    this.flashMesh = null;
+                }
+            }
+
+            updateSparks(deltaTime) {
+                 for (let i = this.sparks.length - 1; i >= 0; i--) {
+                     const s = this.sparks[i];
+                     s.life -= deltaTime;
+                     s.mesh.position.add(s.velocity);
+                     s.mesh.material.opacity = s.life * 2.0;
+                     if (s.life <= 0) {
+                         this.scene.remove(s.mesh);
+                         this.sparks.splice(i, 1);
+                     }
+                 }
+
+                 if (this.state !== 'FLIGHT') return;
+
+                 if (this.sparks.length < 10) {
+                     const dir = new THREE.Vector3(Math.cos(this.angle), Math.sin(this.angle), 0);
+                     const spawnPos = this.mesh.position.clone().sub(dir.multiplyScalar(0.8));
+                     spawnPos.x += (Math.random() - 0.5) * 0.2;
+                     spawnPos.y += (Math.random() - 0.5) * 0.2;
+
+                     const sparkMat = new THREE.SpriteMaterial({
+                         map: this.sparkTexture,
+                         color: 0x00FFFF,
+                         transparent: true,
+                         opacity: 1.0,
+                         blending: THREE.AdditiveBlending,
+                         depthWrite: false
+                     });
+                     const spark = new THREE.Sprite(sparkMat);
+                     spark.position.copy(spawnPos);
+                     spark.scale.set(0.3, 0.3, 1);
+                     const drift = new THREE.Vector3((Math.random()-0.5)*0.1, (Math.random()-0.5)*0.1, 0);
+                     this.scene.add(spark);
+                     this.sparks.push({ mesh: spark, life: 0.4 + Math.random()*0.2, velocity: drift });
+                 }
             }
 
             triggerImpact() {
@@ -3449,13 +3610,21 @@
 
                 this.velocity.set(0, 0, 0);
                 allFlames.push(new ImpactParticleSystem(this.scene, this.mesh.position));
+
+                this.createFlash();
+
                 playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
             }
 
             update(deltaTime) {
                 if (this.isDead) return false;
 
-                // Billboard: Mirar a cámara y mantener rotación Z de dirección
+                if (this.state === 'FLIGHT' || this.state === 'SPAWN') {
+                    this.trail.update(this.mesh.position, this.angle);
+                }
+                this.updateSparks(deltaTime);
+                this.updateFlash(deltaTime);
+
                 this.mesh.lookAt(camera.position);
                 this.mesh.rotation.z = this.angle;
 
@@ -3483,7 +3652,7 @@
                     else if (this.state === 'IMPACT') {
                          this.currentSeqIndex++;
                          if (this.currentSeqIndex >= this.frames.IMPACT.length) {
-                             this.scene.remove(this.mesh);
+                             this.cleanup();
                              this.isDead = true;
                              return false;
                          } else {
@@ -3524,6 +3693,14 @@
                 }
 
                 return true;
+            }
+
+            cleanup() {
+                this.scene.remove(this.mesh);
+                this.trail.dispose();
+                this.sparks.forEach(s => this.scene.remove(s.mesh));
+                this.sparks = [];
+                if (this.flashMesh) this.scene.remove(this.flashMesh);
             }
         }
 
