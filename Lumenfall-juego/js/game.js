@@ -1591,6 +1591,11 @@
                 this.auraRows = 2;
                 this.auraTotalFrames = 10;
 
+                // 1. REPARACIÓN VISUAL: UV Padding para evitar bleeding
+                this.auraPadding = 0.98; // Usar el 98% del tile
+                const repeatX = (1 / this.auraCols) * this.auraPadding;
+                const repeatY = (1 / this.auraRows) * this.auraPadding;
+
                 // Shader logic for Fade Out Top
                 const vertexShader = `
                     varying vec2 vUv;
@@ -1627,7 +1632,7 @@
                 const mainUniforms = {
                     map: { value: this.auraTextureMain },
                     offset: { value: new THREE.Vector2(0, 0) },
-                    repeat: { value: new THREE.Vector2(1 / this.auraCols, 1 / this.auraRows) }
+                    repeat: { value: new THREE.Vector2(repeatX, repeatY) }
                 };
 
                 const mainMat = new THREE.ShaderMaterial({
@@ -1644,8 +1649,7 @@
                 const mainGeo = new THREE.CylinderGeometry(2.4, 2.4, 7.0, 32, 1, true);
                 this.mainCylinder = new THREE.Mesh(mainGeo, mainMat);
                 // Center vertically relative to player center.
-                // Player mesh height is 4.2. Pivot is at center.
-                this.mainCylinder.position.set(0, -0.5, 0); // Lower slightly to cover shoes
+                this.mainCylinder.position.set(0, -0.5, 0);
                 this.auraGroup.add(this.mainCylinder);
 
                 // 2. Base Cylinder (Wider base effect)
@@ -1658,7 +1662,7 @@
                  const baseUniforms = {
                     map: { value: this.auraTextureBase },
                     offset: { value: new THREE.Vector2(0, 0) },
-                    repeat: { value: new THREE.Vector2(1 / this.auraCols, 1 / this.auraRows) }
+                    repeat: { value: new THREE.Vector2(repeatX, repeatY) }
                 };
 
                 const baseMat = new THREE.ShaderMaterial({
@@ -1674,14 +1678,50 @@
                 // Wider base
                 const baseGeo = new THREE.CylinderGeometry(3.0, 3.0, 1.2, 32, 1, true);
                 this.baseCylinder = new THREE.Mesh(baseGeo, baseMat);
-                this.baseCylinder.position.set(0, -3.0, 0); // Near bottom
+                this.baseCylinder.position.set(0, -3.0, 0);
                 this.auraGroup.add(this.baseCylinder);
+
+                // 3. MEJORA "NEXT-GEN": Sistema de Partículas de Implosión
+                const particleCount = 20;
+                const particlesGeo = new THREE.BufferGeometry();
+                const positions = new Float32Array(particleCount * 3);
+
+                // Initialize positions outside
+                for (let i = 0; i < particleCount; i++) {
+                    this.resetParticle(positions, i);
+                }
+
+                particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+                const particlesMat = new THREE.PointsMaterial({
+                    color: 0x00FFFF,
+                    size: 0.2,
+                    transparent: true,
+                    opacity: 0.8,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                });
+
+                this.implosionParticles = new THREE.Points(particlesGeo, particlesMat);
+                this.implosionParticles.position.set(0, -0.5, 0); // Align with main cylinder center
+                this.auraGroup.add(this.implosionParticles);
 
                 this.auraCurrentFrameMain = 0;
                 this.baseLoopFrames = [1, 3];
                 this.baseLoopIndex = 0;
                 this.auraLastFrameTime = 0;
                 this.auraAnimationSpeed = 80;
+            }
+
+            resetParticle(positions, i) {
+                 // Spawn en un radio exterior (1.5x de 2.4 ~= 3.6)
+                 const radius = 3.5 + Math.random() * 1.5;
+                 const angle = Math.random() * Math.PI * 2;
+                 const height = (Math.random() - 0.5) * 7.0; // Distribuir en la altura del cilindro
+
+                 positions[i*3] = Math.cos(angle) * radius;
+                 positions[i*3+1] = height;
+                 positions[i*3+2] = Math.sin(angle) * radius;
             }
 
             updateAura(deltaTime) {
@@ -1691,20 +1731,57 @@
                 this.mainCylinder.rotation.y -= rotationSpeed;
                 this.baseCylinder.rotation.y += rotationSpeed;
 
-                // Pulsing effect for base ring (Wind/Breathing)
+                // Rotar partículas opuesto
+                this.implosionParticles.rotation.y += rotationSpeed * 0.5;
+
+                // Pulsing effect for base ring
                 const pulse = 1.0 + Math.sin(Date.now() * 0.008) * 0.15;
                 this.baseCylinder.scale.set(pulse, 1, pulse);
 
+                // Update Implosion Particles
+                const positions = this.implosionParticles.geometry.attributes.position.array;
+                const suctionSpeed = 10.0 * deltaTime;
+
+                for(let i=0; i<20; i++) {
+                    const idx = i * 3;
+                    let x = positions[idx];
+                    let y = positions[idx+1];
+                    let z = positions[idx+2];
+
+                    // Move towards local 0,0,0
+                    const distSq = x*x + y*y + z*z;
+
+                    if(distSq < 0.1) { // reached center
+                        this.resetParticle(positions, i);
+                    } else {
+                        const dist = Math.sqrt(distSq);
+                        const factor = suctionSpeed / dist; // Normalize and scale
+                        // Simple linear move is enough, but suction effect usually accelerates.
+                        // Constant speed towards center:
+                        positions[idx] -= x * factor;
+                        positions[idx+1] -= y * factor;
+                        positions[idx+2] -= z * factor;
+                    }
+                }
+                this.implosionParticles.geometry.attributes.position.needsUpdate = true;
+
                 if (Date.now() - this.auraLastFrameTime > this.auraAnimationSpeed) {
                     this.auraLastFrameTime = Date.now();
+
+                    const frameWidth = 1 / this.auraCols;
+                    const frameHeight = 1 / this.auraRows;
+                    // Margin calculation for centering the crop
+                    const marginX = (frameWidth * (1 - this.auraPadding)) / 2;
+                    const marginY = (frameHeight * (1 - this.auraPadding)) / 2;
 
                     // Update Main
                     this.auraCurrentFrameMain = (this.auraCurrentFrameMain + 1) % this.auraTotalFrames;
                     const colM = this.auraCurrentFrameMain % this.auraCols;
                     const rowM = Math.floor(this.auraCurrentFrameMain / this.auraCols);
-                    // Standard offset calculation
-                    const uOff = colM / this.auraCols;
-                    const vOff = (this.auraRows - 1 - rowM) / this.auraRows;
+
+                    // Padded offset
+                    const uOff = (colM * frameWidth) + marginX;
+                    const vOff = ((this.auraRows - 1 - rowM) * frameHeight) + marginY;
 
                     if (this.mainCylinder.material.uniforms) {
                         this.mainCylinder.material.uniforms.offset.value.set(uOff, vOff);
@@ -1716,8 +1793,8 @@
                     const colB = frameBase % this.auraCols;
                     const rowB = Math.floor(frameBase / this.auraCols);
 
-                    const uOffB = colB / this.auraCols;
-                    const vOffB = (this.auraRows - 1 - rowB) / this.auraRows;
+                    const uOffB = (colB * frameWidth) + marginX;
+                    const vOffB = ((this.auraRows - 1 - rowB) * frameHeight) + marginY;
 
                     if (this.baseCylinder.material.uniforms) {
                         this.baseCylinder.material.uniforms.offset.value.set(uOffB, vOffB);
