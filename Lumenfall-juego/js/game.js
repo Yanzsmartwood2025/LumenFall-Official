@@ -3317,31 +3317,23 @@
 
                 const material = new THREE.MeshBasicMaterial({
                     map: this.texture,
-                    color: 0x00aaff,
+                    color: 0xffffff,
                     transparent: true,
                     blending: THREE.AdditiveBlending,
                     depthWrite: false,
                     side: THREE.DoubleSide
                 });
 
-                const geometry = new THREE.CylinderGeometry(0.2, 0.2, 1.0, 8, 1, true);
+                const geometry = new THREE.PlaneGeometry(2.0, 2.0);
 
-                this.mesh = new THREE.Group();
+                this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.copy(startPosition);
+                this.mesh.renderOrder = 10;
 
-                this.cylinder = new THREE.Mesh(geometry, material);
-                this.cylinder.rotation.z = -Math.PI / 2;
-
-                this.mesh.add(this.cylinder);
-                this.mesh.frustumCulled = false;
-
-                const angle = Math.atan2(direction.y, direction.x);
-                this.mesh.rotation.z = angle;
+                this.angle = Math.atan2(direction.y, direction.x);
+                this.mesh.rotation.z = this.angle;
 
                 this.velocity = new THREE.Vector3(direction.x, direction.y, 0).multiplyScalar(this.speed);
-
-                this.targetScale = 2.0;
-                this.mesh.scale.set(0.1, 0.1, 0.1);
 
                 this.scene.add(this.mesh);
 
@@ -3350,14 +3342,15 @@
                 this.animationSpeed = 0.08;
 
                 this.frames = {
-                    SPAWN: [0, 1, 2],
-                    FLIGHT: [3, 4],
+                    SPAWN: [0, 1],
+                    FLIGHT: [2, 3, 4],
                     IMPACT: [5, 6, 7]
                 };
 
                 this.currentSeqIndex = 0;
                 this.isDead = false;
 
+                this.mesh.scale.set(0.2, 0.2, 0.2);
                 this.updateFrameUVs(this.frames.SPAWN[0]);
             }
 
@@ -3365,7 +3358,7 @@
                 const col = frameIndex % this.cols;
                 const row = Math.floor(frameIndex / this.cols);
                 const u = col / this.cols;
-                const v = (this.rows - 1 - row) / this.rows;
+                const v = (this.rows - 1 - row) * 0.5;
                 this.texture.offset.set(u, v);
             }
 
@@ -3378,7 +3371,6 @@
                 this.updateFrameUVs(this.frames.IMPACT[0]);
 
                 this.velocity.set(0, 0, 0);
-
                 allFlames.push(new ImpactParticleSystem(this.scene, this.mesh.position));
                 playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
             }
@@ -3386,7 +3378,13 @@
             update(deltaTime) {
                 if (this.isDead) return false;
 
+                // Billboard: Mirar a cámara y mantener rotación Z de dirección
+                this.mesh.lookAt(camera.position);
+                this.mesh.rotation.z = this.angle;
+
                 this.frameTimer += deltaTime;
+                let frameToSet = -1;
+
                 if (this.frameTimer > this.animationSpeed) {
                     this.frameTimer = 0;
 
@@ -3395,15 +3393,15 @@
                         if (this.currentSeqIndex >= this.frames.SPAWN.length) {
                             this.state = 'FLIGHT';
                             this.currentSeqIndex = 0;
-                            this.updateFrameUVs(this.frames.FLIGHT[0]);
-                            this.mesh.scale.set(this.targetScale, this.targetScale, this.targetScale);
+                            frameToSet = this.frames.FLIGHT[0];
+                            this.mesh.scale.set(1.0, 1.0, 1.0);
                         } else {
-                            this.updateFrameUVs(this.frames.SPAWN[this.currentSeqIndex]);
+                            frameToSet = this.frames.SPAWN[this.currentSeqIndex];
                         }
                     }
                     else if (this.state === 'FLIGHT') {
                          this.currentSeqIndex = (this.currentSeqIndex + 1) % this.frames.FLIGHT.length;
-                         this.updateFrameUVs(this.frames.FLIGHT[this.currentSeqIndex]);
+                         frameToSet = this.frames.FLIGHT[this.currentSeqIndex];
                     }
                     else if (this.state === 'IMPACT') {
                          this.currentSeqIndex++;
@@ -3412,32 +3410,31 @@
                              this.isDead = true;
                              return false;
                          } else {
-                             this.updateFrameUVs(this.frames.IMPACT[this.currentSeqIndex]);
+                             frameToSet = this.frames.IMPACT[this.currentSeqIndex];
                          }
+                    }
+
+                    if (frameToSet !== -1) {
+                        this.updateFrameUVs(frameToSet);
                     }
                 }
 
                 if (this.state === 'SPAWN') {
-                    const growthSpeed = 10.0 * deltaTime;
-                    this.mesh.scale.addScalar(growthSpeed);
-                    if (this.mesh.scale.x > this.targetScale) this.mesh.scale.setScalar(this.targetScale);
-                    this.mesh.position.add(this.velocity);
+                    const lerpFactor = 5.0 * deltaTime;
+                    this.mesh.scale.lerp(new THREE.Vector3(1, 1, 1), lerpFactor);
                 }
 
-                if (this.state === 'FLIGHT') {
-                    this.cylinder.rotation.y += 15.0 * deltaTime;
+                if (this.state !== 'IMPACT') {
                     this.mesh.position.add(this.velocity);
 
                      if (this.mesh.position.x < player.minPlayerX || this.mesh.position.x > player.maxPlayerX) {
                         this.triggerImpact();
-                        return true;
                     }
 
                     for (const enemy of allSimpleEnemies) {
-                        if (this.mesh.position.distanceTo(enemy.mesh.position) < (enemy.mesh.geometry.parameters.height / 2)) {
+                        if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                             enemy.takeHit();
                             this.triggerImpact();
-                            return true;
                         }
                     }
 
@@ -3445,7 +3442,6 @@
                         if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                             enemy.takeHit();
                             this.triggerImpact();
-                            return true;
                         }
                     }
                 }
