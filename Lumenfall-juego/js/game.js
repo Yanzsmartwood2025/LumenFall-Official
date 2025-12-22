@@ -1846,6 +1846,7 @@
                     let totalFrames, currentTexture, shadowTexture;
                     let isGridSprite = false;
                     let isJumpSprite = false;
+                    let isManualUV = false;
 
                     switch (this.currentState) {
                         case 'shooting':
@@ -1856,6 +1857,7 @@
                         currentTexture = this.chargingTexture;
                         shadowTexture = null;
                         isGridSprite = false;
+                        isManualUV = true;
 
                         // Custom Animation Logic for Charging
                         let speed = 100; // default start
@@ -2028,7 +2030,7 @@
                              if (frameData) {
                                  currentTexture.offset.set(frameData.x, frameData.y);
                              }
-                        } else {
+                        } else if (!isManualUV) {
                             const framesInStrip = (currentTexture === this.jumpBackTexture) ? 8 : totalFrames;
                             const uOffset = this.currentFrame / framesInStrip;
                             currentTexture.offset.x = uOffset;
