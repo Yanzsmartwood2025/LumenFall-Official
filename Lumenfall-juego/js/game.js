@@ -1219,7 +1219,7 @@
             player.health = player.maxHealth;
             player.energyBarFill.style.width = '100%';
             player.checkHealthStatus();
-            player.mesh.position.set(0, player.mesh.geometry.parameters.height / 2, 0);
+            player.mesh.position.set(0, 0, 0); // Reset to feet at 0
             player.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
             player.mesh.visible = true;
             gameOverScreen.style.display = 'none';
@@ -1412,6 +1412,8 @@
                 const playerWidth = 4.2;
 
                 const playerGeometry = new THREE.PlaneGeometry(playerWidth, playerHeight);
+        playerGeometry.translate(0, playerHeight / 2, 0); // Pivot at feet
+
                 const playerMaterial = new THREE.MeshBasicMaterial({
                     map: this.runningTexture,
                     transparent: true,
@@ -1430,7 +1432,7 @@
                 });
 
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
-                this.mesh.position.y = playerHeight / 2;
+        this.mesh.position.y = 0; // Feet at 0
                 this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
                 this.mesh.castShadow = true;
                 this.mesh.frustumCulled = false;
@@ -1455,7 +1457,7 @@
                 scene.add(this.playerLight);
 
                 this.floorLight = new THREE.PointLight(0x00FFFF, 2.0, 15);
-                this.floorLight.position.set(0, -2.0, 0);
+        this.floorLight.position.set(0, 0.1, 0); // Relative to feet (0)
                 this.mesh.add(this.floorLight);
 
                 this.create3DProxy();
@@ -1641,7 +1643,11 @@
                 vibrateGamepad(50, 0.5, 0.5);
                 playAudio('fireball_cast', false, 0.9 + Math.random() * 0.2, 0.5, 0.4);
                 playAudio('attack_voice', false, 0.9 + Math.random() * 0.2);
-                const startPosition = this.mesh.position.clone().add(new THREE.Vector3(0, 0.2, 0.5));
+
+        const spawnX = this.isFacingLeft ? -1.5 : 1.5;
+        const spawnY = 2.8; // Hand height from feet
+        const startPosition = this.mesh.position.clone().add(new THREE.Vector3(spawnX, spawnY, 0)); // Z=0
+
                 let direction = new THREE.Vector2(this.isFacingLeft ? -1 : 1, 0);
                 if (Math.abs(aimVector.y) > 0.3) {
                     direction.y = aimVector.y;
@@ -1669,24 +1675,24 @@
                     depthPacking: THREE.RGBADepthPacking
                 });
                 const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 2.0, 8), material);
-                torso.position.y = -0.2;
+        torso.position.y = 1.9; // Shifted +2.1
                 torso.castShadow = true;
                 torso.customDepthMaterial = shadowMaterial;
                 this.proxyGroup.add(torso);
                 const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), material);
-                head.position.y = 1.2;
+        head.position.y = 3.3; // Shifted +2.1
                 head.castShadow = true;
                 head.customDepthMaterial = shadowMaterial;
                 this.proxyGroup.add(head);
                 const armGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.2, 8);
                 const leftArm = new THREE.Mesh(armGeo, material);
-                leftArm.position.set(-0.35, 0.4, 0);
+        leftArm.position.set(-0.35, 2.5, 0); // Shifted +2.1
                 leftArm.rotation.z = Math.PI / 6;
                 leftArm.castShadow = true;
                 leftArm.customDepthMaterial = shadowMaterial;
                 this.proxyGroup.add(leftArm);
                 const rightArm = new THREE.Mesh(armGeo, material);
-                rightArm.position.set(0.35, 0.4, 0);
+        rightArm.position.set(0.35, 2.5, 0); // Shifted +2.1
                 rightArm.rotation.z = -Math.PI / 6;
                 rightArm.castShadow = true;
                 rightArm.customDepthMaterial = shadowMaterial;
@@ -1800,8 +1806,8 @@
                 if (!this.isGrounded) this.velocity.y += this.gravity;
                 this.mesh.position.y += this.velocity.y;
                 this.mesh.position.x += this.velocity.x;
-                if (this.mesh.position.y <= this.mesh.geometry.parameters.height / 2) {
-                    this.mesh.position.y = this.mesh.geometry.parameters.height / 2;
+        if (this.mesh.position.y <= 0) { // Check against floor
+            this.mesh.position.y = 0; // Reset to floor
                     if (!this.isGrounded) {
                         this.isGrounded = true;
                         this.isJumping = false;
@@ -2681,7 +2687,7 @@
 
             if (player) {
                 player.mesh.position.x = spawnX !== null ? spawnX : 0;
-                player.mesh.position.y = player.mesh.geometry.parameters.height / 2;
+                player.mesh.position.y = 0; // Feet at 0
                 player.mesh.position.z = 0;
                 camera.position.x = player.mesh.position.x;
             }
@@ -3527,7 +3533,7 @@
                 this.currentSeqIndex = 0;
                 this.isDead = false;
 
-                this.mesh.scale.set(0.2, 0.2, 0.2);
+        this.mesh.scale.set(1.2, 1.2, 1.0); // Start Full Size
                 this.updateFrameUVs(this.frames.SPAWN[0]);
 
                 // --- NEW ELEMENTS & VISUAL POLISH ---
@@ -3711,11 +3717,6 @@
                     if (frameToSet !== -1) {
                         this.updateFrameUVs(frameToSet);
                     }
-                }
-
-                if (this.state === 'SPAWN') {
-                    const lerpFactor = 5.0 * deltaTime;
-                    this.mesh.scale.lerp(new THREE.Vector3(1, 1, 1), lerpFactor);
                 }
 
                 if (this.state !== 'IMPACT') {
