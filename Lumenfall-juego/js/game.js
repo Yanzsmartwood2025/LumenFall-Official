@@ -2060,6 +2060,12 @@
                         case 'idle':
                             // Unified Frontal Idle System (5 cols x 2 rows = 10 frames)
                             [totalFrames, currentTexture, shadowTexture] = [10, this.idleTexture, null]; // Shadows disabled for now or use null
+
+                            // FORZAR CONFIGURACIÓN CORRECTA (User Request)
+                            this.idleTexture.repeat.set(1/5, 1/2);
+                            this.idleTexture.magFilter = THREE.NearestFilter;
+                            this.idleTexture.minFilter = THREE.NearestFilter;
+
                             isIdleSprite = true; // Use Grid logic
 
                             if (this.isPlayingSpecialIdle) {
