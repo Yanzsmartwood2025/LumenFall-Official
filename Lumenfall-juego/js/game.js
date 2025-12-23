@@ -6,8 +6,8 @@
             runningSprite: 'assets/sprites/Joziel/Movimiento/Correr-1.png',
             runningBackSprite: 'assets/sprites/Joziel/Movimiento-B/Movimiento-B-1.png',
             runningShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Sombra-correr_128.jpg',
-            idleSprite: 'assets/sprites/Joziel/Movimiento/idle-movimiento.png',
-            idleBackSprite: 'assets/sprites/Joziel/Movimiento/idle-movimiento.png',
+    idleSprite: 'assets/sprites/Joziel/Movimiento/Picsart_25-12-22_22-53-52-012.png',
+    idleBackSprite: 'assets/sprites/Joziel/Movimiento/Picsart_25-12-22_22-53-52-012.png',
             idleShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Idle-sombra_128.jpg',
             attackSprite: 'assets/sprites/Joziel/Movimiento/disparo-derecha-1.png',
             attackBackSprite: 'assets/sprites/Joziel/Movimiento/disparo-izquierda-1.png',
@@ -171,8 +171,8 @@
         let joyVector = new THREE.Vector2(0, 0);
         let prevGamepadButtons = {};
 
-        camera.position.set(0, 4, 8);
-        camera.lookAt(0, 2, 0);
+        camera.position.set(0, 6, 14);
+        camera.lookAt(0, 3, 0);
         camera.far = roomDepth + 50;
         camera.updateProjectionMatrix();
 
@@ -420,8 +420,8 @@
                     const smoothT = t * t * (3 - 2 * t);
 
                     const pPos = player.mesh.position.clone();
-                    pPos.y += 1.9; // Camera offset
-                    pPos.z = 8; // Default Z
+                    pPos.y += 6; // Camera offset
+                    pPos.z = 14; // Default Z
 
                     camera.position.lerpVectors(targetCamPos, pPos, smoothT);
                     requestAnimationFrame(animateEvent);
@@ -432,9 +432,9 @@
                     if (player) {
                         // Ensure camera is perfectly centered on player
                         camera.position.x = player.mesh.position.x;
-                        const targetCameraY = player.mesh.position.y + 1.9;
+                        const targetCameraY = player.mesh.position.y + 6;
                         camera.position.y = targetCameraY;
-                        camera.position.z = 8;
+                        camera.position.z = 14;
                     }
                     animate(); // Ensure loop continues
                 }
@@ -1412,7 +1412,7 @@
                 const playerWidth = 4.2;
 
                 const playerGeometry = new THREE.PlaneGeometry(playerWidth, playerHeight);
-        playerGeometry.translate(0, playerHeight / 2, 0); // Pivot at feet
+        playerGeometry.translate(0, (playerHeight / 2) - 0.8, 0); // Pivot at feet (Visual offset -0.8)
 
                 const playerMaterial = new THREE.MeshBasicMaterial({
                     map: this.runningTexture,
@@ -1844,7 +1844,7 @@
                 }
 
                 camera.position.x = this.mesh.position.x;
-                const targetCameraY = this.mesh.position.y + 1.9;
+                const targetCameraY = this.mesh.position.y + 6;
                 camera.position.y += (targetCameraY - camera.position.y) * 0.05;
                 this.playerLight.position.set(this.mesh.position.x, this.mesh.position.y + 1, this.mesh.position.z + 2);
 
@@ -1875,7 +1875,11 @@
                 // Folder-Based Logic applied to Player (All assets in Joziel -> 1.15)
                 // We remove specific state overrides to ensure consistency.
                 const currentScale = getScaleFromPath('assets/sprites/Joziel/');
-                this.mesh.scale.set(currentScale, currentScale, 1);
+                if (this.currentState === 'shooting') {
+                    this.mesh.scale.set(currentScale * 1.35, currentScale * 1.35, 1);
+                } else {
+                    this.mesh.scale.set(currentScale, currentScale, 1);
+                }
 
 
                 if (stateChanged || directionChanged) {
@@ -3520,12 +3524,11 @@
 
                 this.scene.add(this.mesh);
 
-                this.state = 'SPAWN';
+                this.state = 'FLIGHT';
                 this.frameTimer = 0;
                 this.animationSpeed = 0.04;
 
                 this.frames = {
-                    SPAWN: [0, 1],
                     FLIGHT: [2, 3, 4],
                     IMPACT: [5, 6, 7]
                 };
@@ -3533,8 +3536,8 @@
                 this.currentSeqIndex = 0;
                 this.isDead = false;
 
-        this.mesh.scale.set(1.2, 1.2, 1.0); // Start Full Size
-                this.updateFrameUVs(this.frames.SPAWN[0]);
+        this.mesh.scale.set(1.5, 1.5, 1.0); // Fixed Scale 1.5
+                this.updateFrameUVs(this.frames.FLIGHT[0]);
 
                 // --- NEW ELEMENTS & VISUAL POLISH ---
 
@@ -3690,17 +3693,7 @@
                 if (this.frameTimer > this.animationSpeed) {
                     this.frameTimer = 0;
 
-                    if (this.state === 'SPAWN') {
-                        this.currentSeqIndex++;
-                        if (this.currentSeqIndex >= this.frames.SPAWN.length) {
-                            this.state = 'FLIGHT';
-                            this.currentSeqIndex = 0;
-                            frameToSet = this.frames.FLIGHT[0];
-                            this.mesh.scale.set(1.0, 1.0, 1.0);
-                        } else {
-                            frameToSet = this.frames.SPAWN[this.currentSeqIndex];
-                        }
-                    } else if (this.state === 'FLIGHT') {
+                    if (this.state === 'FLIGHT') {
                         this.currentSeqIndex = (this.currentSeqIndex + 1) % this.frames.FLIGHT.length;
                         frameToSet = this.frames.FLIGHT[this.currentSeqIndex];
                     } else if (this.state === 'IMPACT') {
