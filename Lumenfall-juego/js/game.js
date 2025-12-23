@@ -70,7 +70,7 @@
         const specterAnimationSpeed = 120;
         const moveSpeed = 0.2;
         const playableAreaWidth = 120;
-        const roomDepth = 15;
+        const roomDepth = 19;
 
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const audioBuffers = {};
@@ -1219,7 +1219,7 @@
             player.health = player.maxHealth;
             player.energyBarFill.style.width = '100%';
             player.checkHealthStatus();
-            player.mesh.position.set(0, 0, 0); // Reset to feet at 0
+            player.mesh.position.set(0, -0.2, 0); // Reset to feet at -0.2
             player.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
             player.mesh.visible = true;
             gameOverScreen.style.display = 'none';
@@ -1361,9 +1361,9 @@
                 // Shadows (Legacy _128 format usually) - assuming they match main sprite logic or handle separately
                 this.runningShadowTexture.repeat.set(0.125, 0.5);
 
-                // 3. Idle (Frontal): 3x4 Grid (Unified)
-                this.idleTexture.repeat.set(1/3, 1/4);
-                this.idleBackTexture.repeat.set(1/3, 1/4); // Same asset
+                // 3. Idle (Frontal): 5x2 Grid (10 frames)
+                this.idleTexture.repeat.set(1/5, 1/2);
+                this.idleBackTexture.repeat.set(1/5, 1/2); // Same asset
 
                 this.idleShadowTexture.repeat.set(1 / totalIdleFrames, 1); // Legacy shadow?
 
@@ -1432,7 +1432,7 @@
                 });
 
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
-        this.mesh.position.y = 0; // Feet at 0
+        this.mesh.position.y = -0.2; // Feet at -0.2
                 this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
                 this.mesh.castShadow = true;
                 this.mesh.frustumCulled = false;
@@ -1806,8 +1806,10 @@
                 if (!this.isGrounded) this.velocity.y += this.gravity;
                 this.mesh.position.y += this.velocity.y;
                 this.mesh.position.x += this.velocity.x;
-        if (this.mesh.position.y <= 0) { // Check against floor
-            this.mesh.position.y = 0; // Reset to floor
+                this.mesh.position.z = 0; // Force Z 0
+
+        if (this.mesh.position.y <= -0.2) { // Check against floor (-0.2)
+            this.mesh.position.y = -0.2; // Reset to floor
                     if (!this.isGrounded) {
                         this.isGrounded = true;
                         this.isJumping = false;
@@ -1876,7 +1878,11 @@
                 // We remove specific state overrides to ensure consistency.
                 const currentScale = getScaleFromPath('assets/sprites/Joziel/');
                 if (this.currentState === 'shooting') {
-                    this.mesh.scale.set(currentScale * 1.35, currentScale * 1.35, 1);
+                    if (this.isFacingLeft) {
+                        this.mesh.scale.set(currentScale * 1.7, currentScale * 1.7, 1);
+                    } else {
+                        this.mesh.scale.set(currentScale * 1.35, currentScale * 1.35, 1);
+                    }
                 } else {
                     this.mesh.scale.set(currentScale, currentScale, 1);
                 }
@@ -2045,15 +2051,15 @@
                             }
                             break;
                         case 'idle':
-                            // Unified Frontal Idle System
-                            [totalFrames, currentTexture, shadowTexture] = [11, this.idleTexture, null]; // Shadows disabled for now or use null
+                            // Unified Frontal Idle System (5 cols x 2 rows = 10 frames)
+                            [totalFrames, currentTexture, shadowTexture] = [10, this.idleTexture, null]; // Shadows disabled for now or use null
                             isIdleSprite = true; // Use Grid logic
 
                             if (this.isPlayingSpecialIdle) {
-                                // Phase 2: Special Animation (Frames 3-10)
+                                // Phase 2: Special Animation (Frames 3-9)
                                 if (this.currentFrame < 3) this.currentFrame = 3; // Safety
 
-                                if (this.currentFrame < 10) {
+                                if (this.currentFrame < 9) {
                                     this.currentFrame++;
                                 } else {
                                     // Finished Special
@@ -2111,9 +2117,9 @@
                                  currentTexture.offset.set(frameData.x, frameData.y);
                              }
                         } else if (isIdleSprite) {
-                            // NEW: Idle 3x4 Grid (Frames 0-10)
-                            const cols = 3;
-                            const rows = 4;
+                            // NEW: Idle 5x2 Grid (Frames 0-9)
+                            const cols = 5;
+                            const rows = 2;
                             const col = this.currentFrame % cols;
                             const row = Math.floor(this.currentFrame / cols);
 
@@ -2691,7 +2697,7 @@
 
             if (player) {
                 player.mesh.position.x = spawnX !== null ? spawnX : 0;
-                player.mesh.position.y = 0; // Feet at 0
+                player.mesh.position.y = -0.2; // Feet at -0.2
                 player.mesh.position.z = 0;
                 camera.position.x = player.mesh.position.x;
             }
