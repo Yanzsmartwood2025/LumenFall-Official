@@ -1843,9 +1843,16 @@
                      this.hasPlayedIdleIntro = false;
                 }
 
-                // --- UNIFIED SCALING LOGIC ---
-                // Applies globally to ALL states (Idle, Run, Jump, etc.)
-                this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
+                // --- DYNAMIC SCALING LOGIC ---
+                let currentScale = PLAYER_SCALE; // Default 1.15 (Walk, Jump, etc.)
+
+                if (this.currentState === 'idle') {
+                    currentScale = 4.47; // Correction for 720px High-Res Idle
+                } else if (this.currentState === 'shooting' && this.isFacingLeft) {
+                    currentScale = 3.14; // Correction for 506px High-Res Shoot Left
+                }
+
+                this.mesh.scale.set(currentScale, currentScale, 1);
 
 
                 if (stateChanged || directionChanged) {
