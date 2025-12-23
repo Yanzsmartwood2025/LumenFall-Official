@@ -6,8 +6,8 @@
             runningSprite: 'assets/sprites/Joziel/Movimiento/Correr-1.png',
             runningBackSprite: 'assets/sprites/Joziel/Movimiento-B/Movimiento-B-1.png',
             runningShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Sombra-correr_128.jpg',
-            idleSprite: 'assets/sprites/Joziel/Movimiento/Idle.png',
-            idleBackSprite: 'assets/sprites/Joziel/Movimiento-B/idle-B.png',
+            idleSprite: 'assets/sprites/Joziel/Movimiento/idle-movimiento.png',
+            idleBackSprite: 'assets/sprites/Joziel/Movimiento/idle-movimiento.png',
             idleShadowSprite: 'assets/sprites/Joziel/Sombras-efectos/Idle-sombra_128.jpg',
             attackSprite: 'assets/sprites/Joziel/Movimiento/disparo-derecha-1.png',
             attackBackSprite: 'assets/sprites/Joziel/Movimiento/disparo-izquierda-1.png',
@@ -1349,10 +1349,9 @@
                 // Shadows (Legacy _128 format usually) - assuming they match main sprite logic or handle separately
                 this.runningShadowTexture.repeat.set(0.125, 0.5);
 
-                // 3. Idle (Right): 5x1 Strip (Horizontal)
-                this.idleTexture.repeat.set(0.2, 1); // 5 cols, 1 row
-                // 4. Idle (Left): 6x1 Strip (3016x868)
-                this.idleBackTexture.repeat.set(1 / 6, 1);
+                // 3. Idle (Frontal): 3x4 Grid (Unified)
+                this.idleTexture.repeat.set(1/3, 1/4);
+                this.idleBackTexture.repeat.set(1/3, 1/4); // Same asset
 
                 this.idleShadowTexture.repeat.set(1 / totalIdleFrames, 1); // Legacy shadow?
 
@@ -1453,6 +1452,10 @@
             this.chargingState = 'none'; // 'none', 'start', 'loop', 'end'
             this.chargingTimer = 0;
             this.currentChargeFrame = 0;
+
+            // Idle State Variables
+            this.idleTimer = 0;
+            this.isPlayingSpecialIdle = false;
 
             // Suction Particles for Loop Phase
             this.suctionParticles = new ImpactParticleSystem(scene, this.mesh.position); // Reusing logic or creating simplified?
@@ -1816,22 +1819,29 @@
                      }
                 }
 
+                // FORCE NO MIRROR FOR NEW IDLE
+                if (this.currentState === 'idle') {
+                    this.mesh.rotation.y = 0;
+                    this.idleTimer += Math.min(deltaTime, 0.1); // Cap to prevent lag spikes triggering anim
+                }
+
                 camera.position.x = this.mesh.position.x;
                 const targetCameraY = this.mesh.position.y + 1.9;
                 camera.position.y += (targetCameraY - camera.position.y) * 0.05;
                 this.playerLight.position.set(this.mesh.position.x, this.mesh.position.y + 1, this.mesh.position.z + 2);
 
             if (this.currentState !== previousState && this.currentState !== 'charging') this.currentFrame = -1;
+            if (this.currentState !== 'idle') {
+                this.idleTimer = 0;
+                this.isPlayingSpecialIdle = false;
+            }
 
             // Update Suction Particles
             this.updateSuctionParticles(deltaTime);
 
                 let currentAnimSpeed = animationSpeed;
                 if (this.currentState === 'idle') {
-                    currentAnimSpeed = idleAnimationSpeed;
-                    if (this.isFacingLeft && this.hasPlayedIdleIntro) {
-                        currentAnimSpeed = 350;
-                    }
+                    currentAnimSpeed = 150; // Standard breathing speed
                 }
                 if ((this.currentState === 'jumping' || this.currentState === 'landing') && this.isFacingLeft) {
                     currentAnimSpeed = 60;
@@ -1847,7 +1857,7 @@
                 let currentScale = PLAYER_SCALE; // Default 1.15 (Walk, Jump, etc.)
 
                 if (this.currentState === 'idle') {
-                    currentScale = 4.47; // Correction for 720px High-Res Idle
+                    currentScale = 4.0; // New HD Idle scale
                 } else if (this.currentState === 'shooting' && this.isFacingLeft) {
                     currentScale = 3.14; // Correction for 506px High-Res Shoot Left
                 }
@@ -2018,24 +2028,33 @@
                             }
                             break;
                         case 'idle':
-                            if (this.isFacingLeft) {
-                                // Left Idle: Strip 6 frames
-                                [totalFrames, currentTexture, shadowTexture] = [totalIdleBackFrames, this.idleBackTexture, this.idleShadowTexture];
-                                if (this.currentFrame === -1) {
-                                    this.currentFrame = 5;
-                                } else if (this.currentFrame === 5) {
-                                    this.currentFrame = 0;
-                                } else if (this.currentFrame < 4) {
+                            // Unified Frontal Idle System
+                            [totalFrames, currentTexture, shadowTexture] = [11, this.idleTexture, null]; // Shadows disabled for now or use null
+                            isIdleSprite = true; // Use Grid logic
+
+                            if (this.isPlayingSpecialIdle) {
+                                // Phase 2: Special Animation (Frames 3-10)
+                                if (this.currentFrame < 3) this.currentFrame = 3; // Safety
+
+                                if (this.currentFrame < 10) {
                                     this.currentFrame++;
                                 } else {
-                                    this.currentFrame = 4;
-                                    this.hasPlayedIdleIntro = true;
+                                    // Finished Special
+                                    this.isPlayingSpecialIdle = false;
+                                    this.idleTimer = 0;
+                                    this.currentFrame = 0; // Return to breathe
                                 }
                             } else {
-                                // Right Idle: Strip 5x1
-                                [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
-                                this.currentFrame = (this.currentFrame + 1) % totalFrames;
-                                isIdleSprite = false;
+                                // Phase 1: Breathing (Frames 0-1-2)
+                                this.currentFrame++;
+                                if (this.currentFrame > 2) this.currentFrame = 0;
+
+                                // Trigger Special
+                                if (this.idleTimer > 3.0) {
+                                    this.isPlayingSpecialIdle = true;
+                                    this.currentFrame = 3;
+                                    this.idleTimer = 0; // Optional reset or just rely on state
+                                }
                             }
                             break;
                         default:
@@ -2075,17 +2094,21 @@
                                  currentTexture.offset.set(frameData.x, frameData.y);
                              }
                         } else if (isIdleSprite) {
-                            // NEW: Idle is now a grid (3x2)
-                            const frameData = this.idleFrameMap[this.currentFrame];
-                            if (frameData) {
-                                currentTexture.offset.set(frameData.x, frameData.y);
-                            }
+                            // NEW: Idle 3x4 Grid (Frames 0-10)
+                            const cols = 3;
+                            const rows = 4;
+                            const col = this.currentFrame % cols;
+                            const row = Math.floor(this.currentFrame / cols);
+
+                            currentTexture.offset.x = col / cols;
+                            currentTexture.offset.y = (rows - 1 - row) / rows;
+
                         } else if (!isManualUV) {
                             // Strip Logic
                             let framesInStrip = totalFrames;
                             if (currentTexture === this.jumpBackTexture) framesInStrip = 8;
                             if (currentTexture === this.attackBackTexture) framesInStrip = 6;
-                            if (currentTexture === this.idleBackTexture) framesInStrip = 6;
+                            // idleBackTexture removed from strip logic as it uses grid now
 
                             const uOffset = this.currentFrame / framesInStrip;
                             currentTexture.offset.x = uOffset;
