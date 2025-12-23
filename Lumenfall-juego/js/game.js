@@ -1,6 +1,6 @@
 // --- src/game.js (Lógica Principal) ---
 
-        const PLAYER_SCALE = 1.15;
+        const PLAYER_SCALE = 1.35;
 
         const assetUrls = {
             runningSprite: 'assets/sprites/Joziel/Movimiento/Correr-1.png',
@@ -1219,7 +1219,7 @@
             player.health = player.maxHealth;
             player.energyBarFill.style.width = '100%';
             player.checkHealthStatus();
-            player.mesh.position.set(0, -0.2, 0); // Reset to feet at -0.2
+            player.mesh.position.set(0, 0.8, 0); // Reset to feet at 0.8
             player.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
             player.mesh.visible = true;
             gameOverScreen.style.display = 'none';
@@ -1352,6 +1352,13 @@
                 this.jumpTexture = textureLoader.load(assetUrls.jumpSprite);
                 this.jumpBackTexture = textureLoader.load(assetUrls.jumpBackSprite);
 
+                // Configuración de Filtros (Pixel Art)
+                [this.runningTexture, this.runningBackTexture, this.idleTexture, this.idleBackTexture,
+                 this.attackTexture, this.jumpTexture, this.jumpBackTexture].forEach(tex => {
+                    tex.magFilter = THREE.NearestFilter;
+                    tex.minFilter = THREE.NearestFilter;
+                });
+
                 // Configuración de Repetición (Grid/Strip)
                 // 1. Run (Right): 8x2 Grid (1011x371)
                 this.runningTexture.repeat.set(0.125, 0.5);
@@ -1432,7 +1439,7 @@
                 });
 
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
-        this.mesh.position.y = -0.2; // Feet at -0.2
+        this.mesh.position.y = 0.8; // Feet at 0.8
                 this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
                 this.mesh.castShadow = true;
                 this.mesh.frustumCulled = false;
@@ -1808,8 +1815,8 @@
                 this.mesh.position.x += this.velocity.x;
                 this.mesh.position.z = 0; // Force Z 0
 
-        if (this.mesh.position.y <= -0.2) { // Check against floor (-0.2)
-            this.mesh.position.y = -0.2; // Reset to floor
+        if (this.mesh.position.y <= 0.8) { // Check against floor (0.8)
+            this.mesh.position.y = 0.8; // Reset to floor
                     if (!this.isGrounded) {
                         this.isGrounded = true;
                         this.isJumping = false;
@@ -2697,7 +2704,7 @@
 
             if (player) {
                 player.mesh.position.x = spawnX !== null ? spawnX : 0;
-                player.mesh.position.y = -0.2; // Feet at -0.2
+                player.mesh.position.y = 0.8; // Feet at 0.8
                 player.mesh.position.z = 0;
                 camera.position.x = player.mesh.position.x;
             }
