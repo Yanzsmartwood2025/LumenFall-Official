@@ -37,10 +37,12 @@
         // --- NEW FOLDER-BASED SCALING LOGIC ---
         function getScaleFromPath(path) {
             if (!path) return PLAYER_SCALE;
-            if (path.includes('/Enemigos/Jefes/')) return PLAYER_SCALE * 3.0;
+            if (path.includes('/Joziel/')) return PLAYER_SCALE; // x1.0
+            if (path.includes('/Enemigos/Comunes/')) return PLAYER_SCALE; // x1.0
             if (path.includes('/Enemigos/Elites/')) return PLAYER_SCALE * 2.0;
-            if (path.includes('/Items/')) return 0.6;
-            // Default for Joziel and Common Enemies
+            if (path.includes('/Enemigos/Jefes/')) return PLAYER_SCALE * 3.5;
+            if (path.includes('/Items/')) return PLAYER_SCALE * 0.6;
+            // Default for any other path (e.g., initial or uncategorized enemies)
             return PLAYER_SCALE;
         }
 
