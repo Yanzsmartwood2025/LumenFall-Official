@@ -34,6 +34,16 @@
 
         const PIXELS_PER_UNIT = 64;
 
+        // --- NEW FOLDER-BASED SCALING LOGIC ---
+        function getScaleFromPath(path) {
+            if (!path) return PLAYER_SCALE;
+            if (path.includes('/Enemigos/Jefes/')) return PLAYER_SCALE * 3.0;
+            if (path.includes('/Enemigos/Elites/')) return PLAYER_SCALE * 2.0;
+            if (path.includes('/Items/')) return 0.6;
+            // Default for Joziel and Common Enemies
+            return PLAYER_SCALE;
+        }
+
         function calculateFrameSize(texture, cols, rows) {
             if (!texture.image) return { width: 1, height: 1 };
             const frameWidth = texture.image.width / cols;
@@ -1854,14 +1864,9 @@
                 }
 
                 // --- DYNAMIC SCALING LOGIC ---
-                let currentScale = PLAYER_SCALE; // Default 1.15 (Walk, Jump, etc.)
-
-                if (this.currentState === 'idle') {
-                    currentScale = 4.0; // New HD Idle scale
-                } else if (this.currentState === 'shooting' && this.isFacingLeft) {
-                    currentScale = 3.14; // Correction for 506px High-Res Shoot Left
-                }
-
+                // Folder-Based Logic applied to Player (All assets in Joziel -> 1.15)
+                // We remove specific state overrides to ensure consistency.
+                const currentScale = getScaleFromPath('assets/sprites/Joziel/');
                 this.mesh.scale.set(currentScale, currentScale, 1);
 
 
@@ -2723,6 +2728,11 @@
                 });
                 const enemyGeometry = new THREE.PlaneGeometry(enemyWidth, enemyHeight);
                 this.mesh = new THREE.Mesh(enemyGeometry, enemyMaterial);
+
+                // Scale Logic
+                const scale = getScaleFromPath(assetUrls.enemySprite);
+                this.mesh.scale.set(scale, scale, 1);
+
                 this.mesh.position.set(initialX, enemyHeight / 2, 0);
                 this.mesh.castShadow = true;
                 this.scene.add(this.mesh);
@@ -2887,6 +2897,11 @@
                 });
                 const enemyGeometry = new THREE.PlaneGeometry(enemyWidth, enemyHeight);
                 this.mesh = new THREE.Mesh(enemyGeometry, enemyMaterial);
+
+                // Scale Logic (Using Run texture as reference)
+                const scale = getScaleFromPath(assetUrls.enemyX1Run);
+                this.mesh.scale.set(scale, scale, 1);
+
                 this.mesh.position.set(initialX, enemyHeight / 2, 0);
                 this.mesh.castShadow = true;
                 this.scene.add(this.mesh);
