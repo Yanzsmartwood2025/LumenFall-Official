@@ -1884,7 +1884,9 @@
                 // Folder-Based Logic applied to Player (All assets in Joziel -> 1.15)
                 // We remove specific state overrides to ensure consistency.
                 const currentScale = getScaleFromPath('assets/sprites/Joziel/');
-                if (this.currentState === 'shooting') {
+                if (this.currentState === 'idle') {
+                    this.mesh.scale.set(PLAYER_SCALE * 0.85, PLAYER_SCALE, 1);
+                } else if (this.currentState === 'shooting') {
                     if (this.isFacingLeft) {
                         this.mesh.scale.set(currentScale * 1.7, currentScale * 1.7, 1);
                     } else {
@@ -2062,7 +2064,7 @@
                             [totalFrames, currentTexture, shadowTexture] = [10, this.idleTexture, null]; // Shadows disabled for now or use null
 
                             // FORZAR CONFIGURACIÓN CORRECTA (User Request)
-                            this.idleTexture.repeat.set(1/5, 1/2);
+                            this.idleTexture.repeat.set(0.2, 0.5);
                             this.idleTexture.magFilter = THREE.NearestFilter;
                             this.idleTexture.minFilter = THREE.NearestFilter;
 
