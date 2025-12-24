@@ -1873,7 +1873,7 @@
 
                 let currentAnimSpeed = animationSpeed;
                 if (this.currentState === 'idle') {
-                    currentAnimSpeed = 100; // Check faster to support 8 FPS (125ms) logic
+            currentAnimSpeed = 125; // 8 FPS exactly
                 }
                 if ((this.currentState === 'jumping' || this.currentState === 'landing') && this.isFacingLeft) {
                     currentAnimSpeed = 60;
@@ -2076,8 +2076,8 @@
                             isIdleSprite = true;
 
                             // Stepped Animation Logic (8 FPS)
-                            // Loop through all 10 frames (0-9)
-                            this.currentFrame = Math.floor(this.idleAnimTimer * 8) % 10;
+                    // Simple Accumulator: Just increment, NO interpolation or math tricks
+                    this.currentFrame = (this.currentFrame + 1) % 10;
                             break;
                         default:
                             [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
