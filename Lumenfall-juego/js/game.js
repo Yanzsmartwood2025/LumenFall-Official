@@ -1476,6 +1476,7 @@
 
             // Idle State Variables
             this.idleTimer = 0;
+            this.idleAnimTimer = 0;
             this.isPlayingSpecialIdle = false;
 
             // Suction Particles for Loop Phase
@@ -1850,6 +1851,9 @@
                 if (this.currentState === 'idle') {
                     this.mesh.rotation.y = 0;
                     this.idleTimer += Math.min(deltaTime, 0.1); // Cap to prevent lag spikes triggering anim
+                    this.idleAnimTimer += deltaTime;
+                } else {
+                    this.idleAnimTimer = 0;
                 }
 
                 camera.position.x = this.mesh.position.x;
@@ -1860,6 +1864,7 @@
             if (this.currentState !== previousState && this.currentState !== 'charging') this.currentFrame = -1;
             if (this.currentState !== 'idle') {
                 this.idleTimer = 0;
+                this.idleAnimTimer = 0;
                 this.isPlayingSpecialIdle = false;
             }
 
@@ -1868,7 +1873,7 @@
 
                 let currentAnimSpeed = animationSpeed;
                 if (this.currentState === 'idle') {
-                    currentAnimSpeed = 150; // Standard breathing speed
+                    currentAnimSpeed = 100; // Check faster to support 8 FPS (125ms) logic
                 }
                 if ((this.currentState === 'jumping' || this.currentState === 'landing') && this.isFacingLeft) {
                     currentAnimSpeed = 60;
@@ -2061,39 +2066,18 @@
                             break;
                         case 'idle':
                             // Unified Frontal Idle System (5 cols x 2 rows = 10 frames)
-                            [totalFrames, currentTexture, shadowTexture] = [10, this.idleTexture, null]; // Shadows disabled for now or use null
+                            [totalFrames, currentTexture, shadowTexture] = [10, this.idleTexture, null];
 
-                            // FORZAR CONFIGURACIÓN CORRECTA (User Request)
-                            this.idleTexture.repeat.set(0.15, 0.5); // Reducido drásticamente a 0.15 para eliminar ghosting
+                            // Option B: Maintain ghosting fix with discrete steps
+                            this.idleTexture.repeat.set(0.15, 0.5);
                             this.idleTexture.magFilter = THREE.NearestFilter;
                             this.idleTexture.minFilter = THREE.NearestFilter;
 
-                            isIdleSprite = true; // Use Grid logic
+                            isIdleSprite = true;
 
-                            if (this.isPlayingSpecialIdle) {
-                                // Phase 2: Special Animation (Frames 3-9)
-                                if (this.currentFrame < 3) this.currentFrame = 3; // Safety
-
-                                if (this.currentFrame < 9) {
-                                    this.currentFrame++;
-                                } else {
-                                    // Finished Special
-                                    this.isPlayingSpecialIdle = false;
-                                    this.idleTimer = 0;
-                                    this.currentFrame = 0; // Return to breathe
-                                }
-                            } else {
-                                // Phase 1: Breathing (Frames 0-1-2)
-                                this.currentFrame++;
-                                if (this.currentFrame > 2) this.currentFrame = 0;
-
-                                // Trigger Special
-                                if (this.idleTimer > 3.0) {
-                                    this.isPlayingSpecialIdle = true;
-                                    this.currentFrame = 3;
-                                    this.idleTimer = 0; // Optional reset or just rely on state
-                                }
-                            }
+                            // Stepped Animation Logic (8 FPS)
+                            // Loop through all 10 frames (0-9)
+                            this.currentFrame = Math.floor(this.idleAnimTimer * 8) % 10;
                             break;
                         default:
                             [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
@@ -2138,9 +2122,9 @@
                             const col = this.currentFrame % cols;
                             const row = Math.floor(this.currentFrame / cols);
 
-                            // Ajuste de Offset: Centrar ventana 0.15 en slot 0.20
-                            // (0.20 - 0.15) / 2 = 0.025 de margen a la izquierda
-                            currentTexture.offset.x = (col / cols) + 0.025;
+                            // Option B: Exact stepped calculation + centering offset
+                            // Slot width = 0.2. View width = 0.15. Offset = 0.025.
+                            currentTexture.offset.x = (col * 0.2) + 0.025;
                             currentTexture.offset.y = (rows - 1 - row) / rows;
 
                         } else if (!isManualUV) {
