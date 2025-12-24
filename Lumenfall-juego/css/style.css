@@ -1,6 +1,6 @@
 html, body {
     width: 100%;
-    height: 100%;
+    height: 100dvh;
     margin: 0;
     padding: 0;
     overflow: hidden; /* ¡Muy importante! */
@@ -25,7 +25,7 @@ html, body {
     width: 100%;
     height: 100%;
     z-index: 9999; /* Lo pone delante del canvas y la viñeta */
-    display: flex;
+    display: none;
     flex-direction: column;
     justify-content: space-between;
     pointer-events: none; /* Permite que los clics "atraviesen" la capa */
@@ -449,26 +449,6 @@ html, body {
             box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
         }
 
-        #door-prompt-flame {
-            position: absolute;
-            width: 30px;
-            height: 45px;
-            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(200,225,255,0.8) 40%, rgba(150,200,255,0) 70%);
-            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-            box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #00aaff;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            display: none;
-            z-index: 10;
-            pointer-events: auto;
-            cursor: pointer;
-            animation: pulse 1.5s infinite ease-in-out;
-        }
-
-        @keyframes pulse {
-            0% { transform: translate(-50%, -50%) rotate(-45deg) scale(1); opacity: 0.8; }
-            50% { transform: translate(-50%, -50%) rotate(-45deg) scale(1.1); opacity: 1; }
-            100% { transform: translate(-50%, -50%) rotate(-45deg) scale(1); opacity: 0.8; }
-        }
 
 
         #start-button-container {
@@ -663,33 +643,6 @@ html, body {
             text-shadow: 2px 2px 5px black;
         }
 
-        #numerals-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 5;
-        }
-
-        .door-numeral {
-            position: absolute;
-            transform: translate(-50%, -100%);
-            font-family: 'Cinzel', serif;
-            color: #fff;
-            font-size: 2em;
-            font-weight: 700;
-            pointer-events: none;
-            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #00aaff, 0 0 30px #00aaff;
-            display: block;
-            transition: color 0.5s, text-shadow 0.5s;
-        }
-
-        .door-numeral.off {
-            color: #555;
-            text-shadow: 1px 1px 2px #000;
-        }
 
         #dialogue-box {
             position: fixed;
