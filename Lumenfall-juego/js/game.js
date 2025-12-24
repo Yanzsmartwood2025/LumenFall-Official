@@ -1369,8 +1369,8 @@
                 this.runningShadowTexture.repeat.set(0.125, 0.5);
 
                 // 3. Idle (Frontal): 5x2 Grid (10 frames)
-                this.idleTexture.repeat.set(1/5, 1/2);
-                this.idleBackTexture.repeat.set(1/5, 1/2); // Same asset
+                this.idleTexture.repeat.set(0.18, 0.5); // CORRECCIÓN: 0.18 para evitar ghosting
+                this.idleBackTexture.repeat.set(0.18, 0.5); // Same asset
 
                 this.idleShadowTexture.repeat.set(1 / totalIdleFrames, 1); // Legacy shadow?
 
@@ -2064,7 +2064,7 @@
                             [totalFrames, currentTexture, shadowTexture] = [10, this.idleTexture, null]; // Shadows disabled for now or use null
 
                             // FORZAR CONFIGURACIÓN CORRECTA (User Request)
-                            this.idleTexture.repeat.set(0.2, 0.5);
+                            this.idleTexture.repeat.set(0.18, 0.5); // Reducido de 0.2 a 0.18 (Safety Margin)
                             this.idleTexture.magFilter = THREE.NearestFilter;
                             this.idleTexture.minFilter = THREE.NearestFilter;
 
@@ -2138,7 +2138,9 @@
                             const col = this.currentFrame % cols;
                             const row = Math.floor(this.currentFrame / cols);
 
-                            currentTexture.offset.x = col / cols;
+                            // Ajuste de Offset: Centrar ventana 0.18 en slot 0.20
+                            // (0.20 - 0.18) / 2 = 0.01 de margen a la izquierda
+                            currentTexture.offset.x = (col / cols) + 0.01;
                             currentTexture.offset.y = (rows - 1 - row) / rows;
 
                         } else if (!isManualUV) {
