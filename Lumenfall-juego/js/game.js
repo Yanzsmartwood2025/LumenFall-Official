@@ -919,11 +919,17 @@
 
             menuScreen.style.opacity = 0;
             const onTransitionEnd = () => {
-                menuScreen.style.display = 'none';
-                document.getElementById('bg-canvas').style.display = 'block';
-                document.getElementById('ui-container').style.display = 'flex';
-                controlsContainer.style.opacity = '1';
-                controlsContainer.style.pointerEvents = 'auto';
+                if (menuScreen) menuScreen.style.display = 'none';
+                const bgCanvas = document.getElementById('bg-canvas');
+                if (bgCanvas) bgCanvas.style.display = 'block';
+
+                const uiContainer = document.getElementById('ui-container');
+                if (uiContainer) uiContainer.style.display = 'flex';
+
+                if (controlsContainer) {
+                    controlsContainer.style.opacity = '1';
+                    controlsContainer.style.pointerEvents = 'auto';
+                }
 
                 // Initialize Global Interaction Prompt Here
                 createInteractionPrompt();
@@ -981,38 +987,40 @@
             updateUIText();
         }
 
-        languageSelect.addEventListener('change', handleLanguageChange);
-        pauseLanguageSelect.addEventListener('change', handleLanguageChange);
+        if (languageSelect) languageSelect.addEventListener('change', handleLanguageChange);
+        if (pauseLanguageSelect) pauseLanguageSelect.addEventListener('change', handleLanguageChange);
 
-        playButton.addEventListener('click', (e) => {
-            // Ensure audio context is resumed inside user interaction
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-            startGame();
-        });
-        playButton.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevent double firing
-            // Ensure audio context is resumed inside user interaction
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-            startGame();
-        }, { passive: false });
-        jozielHalo.addEventListener('click', pauseGame);
-        resumeButton.addEventListener('click', resumeGame);
-        gamepadToggleButton.addEventListener('click', toggleGamepadMode);
-        vibrationToggleButton.addEventListener('click', toggleVibration);
-        musicVolumeSlider.addEventListener('input', (e) => setAudioVolume('ambiente', e.target.value));
-        sfxVolumeSlider.addEventListener('input', (e) => setAudioVolume('pasos', e.target.value));
+        if (playButton) {
+            playButton.addEventListener('click', (e) => {
+                // Ensure audio context is resumed inside user interaction
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                startGame();
+            });
+            playButton.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // Prevent double firing
+                // Ensure audio context is resumed inside user interaction
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                startGame();
+            }, { passive: false });
+        }
+        if (jozielHalo) jozielHalo.addEventListener('click', pauseGame);
+        if (resumeButton) resumeButton.addEventListener('click', resumeGame);
+        if (gamepadToggleButton) gamepadToggleButton.addEventListener('click', toggleGamepadMode);
+        if (vibrationToggleButton) vibrationToggleButton.addEventListener('click', toggleVibration);
+        if (musicVolumeSlider) musicVolumeSlider.addEventListener('input', (e) => setAudioVolume('ambiente', e.target.value));
+        if (sfxVolumeSlider) sfxVolumeSlider.addEventListener('input', (e) => setAudioVolume('pasos', e.target.value));
 
-        continueButton.addEventListener('click', restartLevel);
+        if (continueButton) continueButton.addEventListener('click', restartLevel);
 
-        quitButton.addEventListener('click', () => {
+        if (quitButton) quitButton.addEventListener('click', () => {
             location.reload();
         });
 
-        musicToggleButton.addEventListener('click', () => {
+        if (musicToggleButton) musicToggleButton.addEventListener('click', () => {
             if (audioSources['ambiente']) {
                 stopAudio('ambiente');
                 musicToggleButton.textContent = '▶';
@@ -1021,7 +1029,7 @@
                 musicToggleButton.textContent = '❚❚';
             }
         });
-        sfxToggleButton.addEventListener('click', () => {
+        if (sfxToggleButton) sfxToggleButton.addEventListener('click', () => {
             if (audioSources['pasos']) {
                 stopAudio('pasos');
                 sfxToggleButton.textContent = '▶';
@@ -1072,14 +1080,16 @@
             joyVector.set(0, 0);
         }
 
-        joystickContainer.addEventListener('mousedown', (e) => {
-            if (!isPaused && !isGamepadModeActive) {
-                isDraggingJoystick = true;
-                joystickKnob.style.transition = 'none';
-                updateJoystickDimensions();
-                moveJoystick(e.clientX, e.clientY);
-            }
-        });
+        if (joystickContainer) {
+            joystickContainer.addEventListener('mousedown', (e) => {
+                if (!isPaused && !isGamepadModeActive) {
+                    isDraggingJoystick = true;
+                    joystickKnob.style.transition = 'none';
+                    updateJoystickDimensions();
+                    moveJoystick(e.clientX, e.clientY);
+                }
+            });
+        }
 
         document.addEventListener('mousemove', (e) => {
             if (isDraggingJoystick && joystickTouchId === null && !isGamepadModeActive) {
@@ -1094,17 +1104,19 @@
             }
         });
 
-        joystickContainer.addEventListener('touchstart', (e) => {
-            if (!isPaused && !isGamepadModeActive && joystickTouchId === null) {
-                e.preventDefault();
-                const touch = e.changedTouches[0];
-                joystickTouchId = touch.identifier;
-                isDraggingJoystick = true;
-                joystickKnob.style.transition = 'none';
-                updateJoystickDimensions();
-                moveJoystick(touch.clientX, touch.clientY);
-            }
-        }, { passive: false });
+        if (joystickContainer) {
+            joystickContainer.addEventListener('touchstart', (e) => {
+                if (!isPaused && !isGamepadModeActive && joystickTouchId === null) {
+                    e.preventDefault();
+                    const touch = e.changedTouches[0];
+                    joystickTouchId = touch.identifier;
+                    isDraggingJoystick = true;
+                    joystickKnob.style.transition = 'none';
+                    updateJoystickDimensions();
+                    moveJoystick(touch.clientX, touch.clientY);
+                }
+            }, { passive: false });
+        }
 
         document.addEventListener('touchmove', (e) => {
             if (isDraggingJoystick && joystickTouchId !== null && !isGamepadModeActive) {
@@ -1151,99 +1163,124 @@
             if (isPaused) return;
             isAttackButtonPressed = true;
             attackPressStartTime = Date.now();
-            btnAttack.classList.add('button-active-aura');
-            btnAttack.classList.add('pressed');
+            if (btnAttack) {
+                btnAttack.classList.add('button-active-aura');
+                btnAttack.classList.add('pressed');
+            }
             triggerMobileVibration(200);
         }
         function handleAttackPressEnd() {
             if (isPaused) return;
             isAttackButtonPressed = false;
-            btnAttack.classList.remove('button-active-aura');
-            btnAttack.classList.remove('pressed');
+            if (btnAttack) {
+                btnAttack.classList.remove('button-active-aura');
+                btnAttack.classList.remove('pressed');
+            }
         }
 
-        btnAttack.addEventListener('mousedown', () => {
-             if (!isGamepadModeActive) {
-                 handleAttackPressStart();
-                 triggerMobileVibration(100);
-             }
-        });
-        btnAttack.addEventListener('mouseup', () => !isGamepadModeActive && handleAttackPressEnd());
-        btnAttack.addEventListener('mouseleave', () => !isGamepadModeActive && handleAttackPressEnd());
+        if (btnAttack) {
+            btnAttack.addEventListener('mousedown', () => {
+                if (!isGamepadModeActive) {
+                    handleAttackPressStart();
+                    triggerMobileVibration(100);
+                }
+            });
+            btnAttack.addEventListener('mouseup', () => !isGamepadModeActive && handleAttackPressEnd());
+            btnAttack.addEventListener('mouseleave', () => !isGamepadModeActive && handleAttackPressEnd());
 
-        btnAttack.addEventListener('touchstart', (e) => {
-             if(!isGamepadModeActive) {
-                 e.preventDefault();
-                 handleAttackPressStart();
-                 triggerMobileVibration(100);
-             }
-        }, { passive: false });
-        btnAttack.addEventListener('touchend', () => !isGamepadModeActive && handleAttackPressEnd());
+            btnAttack.addEventListener('touchstart', (e) => {
+                if(!isGamepadModeActive) {
+                    e.preventDefault();
+                    handleAttackPressStart();
+                    triggerMobileVibration(100);
+                }
+            }, { passive: false });
+            btnAttack.addEventListener('touchend', () => !isGamepadModeActive && handleAttackPressEnd());
+        }
 
-        btnShoot.addEventListener('mousedown', () => {
-             if(!isPaused && !isGamepadModeActive) {
-                 player.shoot(joyVector);
-                 btnShoot.classList.add('button-active-aura');
-                 btnShoot.classList.add('pressed');
-                 triggerMobileVibration(50);
-                 setTimeout(() => {
-                     btnShoot.classList.remove('button-active-aura');
-                     btnShoot.classList.remove('pressed');
-                 }, 200);
-             }
-        });
+        if (btnShoot) {
+            btnShoot.addEventListener('mousedown', () => {
+                if(!isPaused && !isGamepadModeActive) {
+                    player.shoot(joyVector);
+                    btnShoot.classList.add('button-active-aura');
+                    btnShoot.classList.add('pressed');
+                    triggerMobileVibration(50);
+                    setTimeout(() => {
+                        if (btnShoot) {
+                            btnShoot.classList.remove('button-active-aura');
+                            btnShoot.classList.remove('pressed');
+                        }
+                    }, 200);
+                }
+            });
 
-        btnShoot.addEventListener('touchstart', (e) => {
-             if(!isPaused && !isGamepadModeActive) {
-                 e.preventDefault();
-                 player.shoot(joyVector);
-                 btnShoot.classList.add('button-active-aura');
-                 btnShoot.classList.add('pressed');
-                 triggerMobileVibration(50);
-                 setTimeout(() => {
-                     btnShoot.classList.remove('button-active-aura');
-                     btnShoot.classList.remove('pressed');
-                 }, 200);
-             }
-        }, { passive: false });
+            btnShoot.addEventListener('touchstart', (e) => {
+                if(!isPaused && !isGamepadModeActive) {
+                    e.preventDefault();
+                    player.shoot(joyVector);
+                    btnShoot.classList.add('button-active-aura');
+                    btnShoot.classList.add('pressed');
+                    triggerMobileVibration(50);
+                    setTimeout(() => {
+                        if (btnShoot) {
+                            btnShoot.classList.remove('button-active-aura');
+                            btnShoot.classList.remove('pressed');
+                        }
+                    }, 200);
+                }
+            }, { passive: false });
+        }
 
 
-        startButton.addEventListener('click', () => {
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-            (async () => {
+        if (startButton) {
+            startButton.addEventListener('click', () => {
+                // FORCE FULLSCREEN ON START
                 try {
-                    if (screen.orientation && typeof screen.orientation.lock === 'function') {
-                        await screen.orientation.lock('landscape');
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log("Fullscreen blocked or not supported:", err);
+                    });
+                } catch (e) { console.log(e); }
+
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                (async () => {
+                    try {
+                        if (screen.orientation && typeof screen.orientation.lock === 'function') {
+                            await screen.orientation.lock('landscape');
+                        }
+                    } catch (err) {
+                        console.error('Could not lock orientation:', err);
                     }
-                } catch (err) {
-                    console.error('Could not lock orientation:', err);
+                })();
+
+                if (startButtonContainer) startButtonContainer.style.display = 'none';
+                if (introImage) introImage.src = assetUrls.introImage;
+                if (introScreen) {
+                    introScreen.style.opacity = 0;
+                    introScreen.style.pointerEvents = 'none'; // Prevent blocking
+
+                    const onIntroTransitionEnd = () => {
+                        introScreen.style.display = 'none';
+                        if (menuScreen) {
+                            menuScreen.style.backgroundImage = `url('${assetUrls.menuBackgroundImage}')`;
+                            menuScreen.style.display = 'flex';
+                            setTimeout(() => menuScreen.style.opacity = 1, 10);
+                        }
+                    };
+
+                    introScreen.addEventListener('transitionend', onIntroTransitionEnd, { once: true });
+
+                    // Fallback in case transitionend fails
+                    setTimeout(() => {
+                        if (introScreen.style.display !== 'none') {
+                            introScreen.removeEventListener('transitionend', onIntroTransitionEnd);
+                            onIntroTransitionEnd();
+                        }
+                    }, 1100);
                 }
-            })();
-
-            startButtonContainer.style.display = 'none';
-            introImage.src = assetUrls.introImage;
-            introScreen.style.opacity = 0;
-            introScreen.style.pointerEvents = 'none'; // Prevent blocking
-
-            const onIntroTransitionEnd = () => {
-                introScreen.style.display = 'none';
-                menuScreen.style.backgroundImage = `url('${assetUrls.menuBackgroundImage}')`;
-                menuScreen.style.display = 'flex';
-                setTimeout(() => menuScreen.style.opacity = 1, 10);
-            };
-
-            introScreen.addEventListener('transitionend', onIntroTransitionEnd, { once: true });
-
-            // Fallback in case transitionend fails
-            setTimeout(() => {
-                if (introScreen.style.display !== 'none') {
-                    introScreen.removeEventListener('transitionend', onIntroTransitionEnd);
-                    onIntroTransitionEnd();
-                }
-            }, 1100);
-        });
+            });
+        }
 
         function handleResize() {
             updateJoystickDimensions();
