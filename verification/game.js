@@ -173,7 +173,6 @@
         // Expose for debugging/verification
         window.allProjectiles = allProjectiles;
         window.allFlames = allFlames;
-        // window.HUDProjectile & window.spawnLoot moved to end of file to avoid ReferenceError
 
         let currentLevelId = 'dungeon_1';
         let isPaused = false;
@@ -2299,7 +2298,9 @@
         }
 
         // Expose classes to global scope for testing/verification
-        // Moved to end of file to prevent ReferenceError
+        window.LootItem = LootItem;
+        window.spawnLoot = spawnLoot;
+        window.HUDProjectile = HUDProjectile;
 
         // ... (Environment & Decor - Kept as is)
         function createShadowTexture() {
@@ -4184,9 +4185,3 @@
                 }
             }
         }
-
-        // Global Assignments (Safe Location)
-        window.HUDProjectile = HUDProjectile;
-        window.spawnLoot = spawnLoot;
-        window.LootItem = LootItem;
-        window.PowerUp = LootItem; // Alias for legacy code
