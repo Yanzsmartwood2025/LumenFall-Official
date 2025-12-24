@@ -1873,7 +1873,13 @@
 
                 let currentAnimSpeed = animationSpeed;
                 if (this.currentState === 'idle') {
-            currentAnimSpeed = 125; // 8 FPS exactly
+                    // Frame 0: Pause for 3 seconds (breathing)
+                    if (this.currentFrame === 0) {
+                        currentAnimSpeed = 3000;
+                    } else {
+                        // Frames 1-10: Slow animation (5 FPS)
+                        currentAnimSpeed = 200;
+                    }
                 }
                 if ((this.currentState === 'jumping' || this.currentState === 'landing') && this.isFacingLeft) {
                     currentAnimSpeed = 60;
