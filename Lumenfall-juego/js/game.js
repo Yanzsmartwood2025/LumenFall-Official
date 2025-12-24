@@ -2297,6 +2297,11 @@
             }
         }
 
+        // Expose classes to global scope for testing/verification
+        window.LootItem = LootItem;
+        window.spawnLoot = spawnLoot;
+        window.HUDProjectile = HUDProjectile;
+
         // ... (Environment & Decor - Kept as is)
         function createShadowTexture() {
             const canvas = document.createElement('canvas');
@@ -3919,89 +3924,121 @@
             }
         }
 
-        class PowerUp {
+        class LootItem {
             constructor(scene, position, type) {
                 this.scene = scene;
-                this.type = type; // 'health' or 'power'
+                this.type = type; // 'soul', 'health', 'power'
 
-                const geometry = new THREE.PlaneGeometry(0.8, 1.2); // Flama pequeña
+                let textureUrl;
+                if (type === 'health') textureUrl = assetUrls.healthEssence;
+                else if (type === 'power') textureUrl = assetUrls.energyEssence;
+                else textureUrl = assetUrls.soulFragment;
 
-                if (!sharedHealthMaterial) {
-                    sharedHealthMaterial = new THREE.MeshBasicMaterial({
-                        map: textureLoader.load(assetUrls.sparkParticle),
-                        color: 0x00ff00, // Verde para salud
-                        transparent: true,
-                        blending: THREE.AdditiveBlending,
-                        side: THREE.DoubleSide
-                    });
-                }
+                this.texture = textureLoader.load(textureUrl);
+                this.texture.magFilter = THREE.NearestFilter;
+                this.texture.minFilter = THREE.NearestFilter;
 
-                if (!sharedPowerMaterial) {
-                    sharedPowerMaterial = new THREE.MeshBasicMaterial({
-                        map: textureLoader.load(assetUrls.sparkParticle),
-                        color: 0x00aaff, // Azul para poder
-                        transparent: true,
-                        blending: THREE.AdditiveBlending,
-                        side: THREE.DoubleSide
-                    });
-                }
+                // 6 cols, 2 rows
+                this.cols = 6;
+                this.rows = 2;
+                this.totalFrames = 11;
+                this.texture.repeat.set(1 / this.cols, 1 / this.rows);
 
-                const material = (this.type === 'health') ? sharedHealthMaterial : sharedPowerMaterial;
+                const material = new THREE.MeshBasicMaterial({
+                    map: this.texture,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    side: THREE.DoubleSide
+                });
+
+                const geometry = new THREE.PlaneGeometry(1.5, 1.5);
 
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.copy(position);
                 this.scene.add(this.mesh);
 
-                this.lifetime = 10; // El power-up desaparece después de 10 segundos
-                this.bobbingAngle = Math.random() * Math.PI * 2;
-                this.velocity = new THREE.Vector3((Math.random() - 0.5) * 0.04, 0, 0); // Movimiento lateral lento
+                this.state = 'IDLE';
+                this.bobOffset = Math.random() * Math.PI * 2;
+                this.currentFrame = Math.floor(Math.random() * this.totalFrames);
+                this.frameTimer = 0;
+
+                // Physics for attraction
+                this.noiseSeed = Math.random() * 100;
             }
 
             update(deltaTime) {
-                // Sleep Mode
-                if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return;
+                // Sleep optimization
+                if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return true;
 
-                this.lifetime -= deltaTime;
-                if (this.lifetime <= 0) {
-                    this.scene.remove(this.mesh);
-                    const index = allPowerUps.indexOf(this);
-                    if (index > -1) allPowerUps.splice(index, 1);
-                    return;
+                // Animation
+                this.frameTimer += deltaTime;
+                if (this.frameTimer > 0.1) { // 10 FPS
+                    this.frameTimer = 0;
+                    this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
+
+                    const col = this.currentFrame % this.cols;
+                    const row = Math.floor(this.currentFrame / this.cols);
+                    // Row 0 is top (v=0.5), Row 1 is bottom (v=0)
+                    this.texture.offset.x = col / this.cols;
+                    this.texture.offset.y = (this.rows - 1 - row) * 0.5;
                 }
 
-                // Animación simple de la flama (escalado pulsante)
-                const pulse = 1.0 + Math.sin(Date.now() * 0.01) * 0.2;
-                this.mesh.scale.set(pulse, pulse, 1);
-
-                if (player && player.isAbsorbing) {
-                    const direction = player.mesh.position.clone().sub(this.mesh.position).normalize();
-                    const absorptionSpeed = 0.2; // Un poco más rápido al absorber
-                    this.velocity.lerp(direction.multiplyScalar(absorptionSpeed), 0.1);
-                }
-
-                this.mesh.position.add(this.velocity);
-
-                if (!player.isAbsorbing && (this.mesh.position.x < -playableAreaWidth / 2 + 2 || this.mesh.position.x > playableAreaWidth / 2 - 2)) {
-                    this.velocity.x *= -1; // Rebotar en los bordes solo si no se está absorbiendo
-                }
-
-                // Efecto de flotación
-                this.bobbingAngle += 0.05;
-                this.mesh.position.y += Math.sin(this.bobbingAngle) * 0.01;
-                // Billboard: mirar siempre a la cámara
                 this.mesh.lookAt(camera.position);
 
-                // Comprobar colisión con el jugador
-                if (player && this.mesh.position.distanceTo(player.mesh.position) < 1.5) {
-                    if (this.type === 'health') {
-                        player.restoreHealth(player.maxHealth * 0.10); // Restaura 10% salud
-                    } else if (this.type === 'power') {
-                        player.restorePower(player.maxPower * 0.15); // Restaura 15% poder
-                    }
+                // Logic
+                const distToPlayer = player ? this.mesh.position.distanceTo(player.mesh.position) : 999;
+                const isAbsorbing = player && player.isAbsorbing;
 
-                    this.scene.remove(this.mesh);
-                    const index = allPowerUps.indexOf(this);
-                    if (index > -1) allPowerUps.splice(index, 1);
+                if (this.state === 'IDLE') {
+                    // Bobbing
+                    this.bobOffset += deltaTime * 2;
+                    this.mesh.position.y += Math.sin(this.bobOffset) * 0.005;
+
+                    // Trigger Attraction
+                    if (isAbsorbing && distToPlayer < 15) {
+                        this.state = 'ATTRACTED';
+                    }
+                } else if (this.state === 'ATTRACTED') {
+                    if (!isAbsorbing) {
+                        this.state = 'IDLE'; // Drop if button released
+                    } else {
+                        // Move to player (Chest Height)
+                        const targetPos = player.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0));
+                        const direction = new THREE.Vector3().subVectors(targetPos, this.mesh.position);
+                        const dist = direction.length();
+                        direction.normalize();
+
+                        // Speed increases as distance decreases
+                        const speed = 5.0 + (15 - dist);
+
+                        // Turbulence
+                        this.noiseSeed += deltaTime * 5;
+                        const perp = new THREE.Vector3(-direction.y, direction.x, 0); // Simple 2D perp
+                        const noise = Math.sin(this.noiseSeed) * Math.min(dist * 0.5, 2.0); // Less noise when very close
+
+                        this.mesh.position.add(direction.multiplyScalar(speed * deltaTime));
+                        this.mesh.position.add(perp.multiplyScalar(noise * deltaTime));
+
+                        if (dist < 1.0) {
+                            this.collect();
+                            return false; // Remove from array
+                        }
+                    }
+                }
+                return true;
+            }
+
+            collect() {
+                this.scene.remove(this.mesh);
+                const index = allPowerUps.indexOf(this);
+                if (index > -1) allPowerUps.splice(index, 1);
+
+                if (typeof HUDProjectile !== 'undefined') {
+                    allProjectiles.push(new HUDProjectile(this.scene, this.mesh.position, this.type));
+                } else {
+                    if (this.type === 'health') player.restoreHealth(10);
+                    if (this.type === 'power') player.restorePower(15);
                 }
             }
         }
