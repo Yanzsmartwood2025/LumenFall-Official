@@ -272,8 +272,6 @@ html, body {
             width: 75%;
             height: 75%;
             object-fit: contain;
-            mix-blend-mode: screen; /* Quitar fondo negro manteniendo chispas */
-            filter: contrast(1.5) brightness(1.2); /* Potenciar el fuego y asegurar negro puro */
         }
 
         /* Estilos para el anillo de 5 flamas (Reload/Attack) */
@@ -292,17 +290,15 @@ html, body {
             top: 50%;
             left: 50%;
             transform-origin: center center;
-            mix-blend-mode: screen !important; /* Quitar fondo negro manteniendo chispas */
-            filter: contrast(1.5) brightness(1.2); /* Potenciar el fuego */
         }
 
         /* Posicionamiento circular de las 5 flamas */
         /* Rotamos 90 grados adicionales para que se vean "horizontales" (tangentes al círculo) */
-        .flame-ring img:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg) translate(0, -100%) rotate(-90deg); }
-        .flame-ring img:nth-child(2) { transform: translate(-50%, -50%) rotate(72deg) translate(0, -100%) rotate(-90deg); }
-        .flame-ring img:nth-child(3) { transform: translate(-50%, -50%) rotate(144deg) translate(0, -100%) rotate(-90deg); }
-        .flame-ring img:nth-child(4) { transform: translate(-50%, -50%) rotate(216deg) translate(0, -100%) rotate(-90deg); }
-        .flame-ring img:nth-child(5) { transform: translate(-50%, -50%) rotate(288deg) translate(0, -100%) rotate(-90deg); }
+        .flame-ring img:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg) translate(0, -100%); }
+        .flame-ring img:nth-child(2) { transform: translate(-50%, -50%) rotate(72deg) translate(0, -100%); }
+        .flame-ring img:nth-child(3) { transform: translate(-50%, -50%) rotate(144deg) translate(0, -100%); }
+        .flame-ring img:nth-child(4) { transform: translate(-50%, -50%) rotate(216deg) translate(0, -100%); }
+        .flame-ring img:nth-child(5) { transform: translate(-50%, -50%) rotate(288deg) translate(0, -100%); }
 
         @keyframes rotate-ring {
             from { transform: rotate(0deg); }
