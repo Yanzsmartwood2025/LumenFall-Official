@@ -13,7 +13,7 @@
             attackBackSprite: 'assets/sprites/Joziel/Movimiento/disparo-izquierda-1.png',
             jumpSprite: 'assets/sprites/Joziel/Movimiento/saltar.png',
             jumpBackSprite: 'assets/sprites/Joziel/Movimiento-B/saltar-b.png',
-            sparkParticle: 'assets/sprites/FX/chispa.jpg',
+            sparkParticle: 'assets/textures/vfx/chispa.jpg',
             wallTexture: 'assets/sprites/Ambiente/pared-calabozo.png',
             doorTexture: 'assets/sprites/Ambiente/puerta-calabozo.png',
             floorTexture: 'assets/sprites/Ambiente/piso-calabozo.png',
@@ -26,10 +26,10 @@
             enemyX1Run: 'assets/sprites/Enemigos/Ataques-enemigo1/correr-1.png',
             enemyX1Attack: 'assets/sprites/Enemigos/Ataques-enemigo1/ataque-1.png',
             enemyX1Death: 'assets/sprites/Enemigos/Ataques-enemigo1/muerte-1.png',
-            dustParticle: 'assets/sprites/FX/Polvo.png',
+            dustParticle: 'assets/textures/vfx/Polvo.png',
             projectileSprite: 'assets/sprites/Joziel/Sombras-efectos/efectos/proyectil-1.jpg',
             chargingSprite: 'assets/sprites/Joziel/Movimiento/carga-de-energia-1.png',
-            blueFire: 'assets/sprites/FX/fuego-antorcha.jpg'
+            blueFire: 'assets/textures/vfx/fuego-antorcha.jpg'
         };
 
         const PIXELS_PER_UNIT = 64;
@@ -1367,7 +1367,7 @@
                     agonyOverlay.style.display = 'none';
                     const video = document.createElement('video');
                     video.id = 'death-video-element';
-                    video.src = 'assets/videos/muerte-joziel.mp4';
+                    video.src = 'assets/video/muerte-joziel.mp4';
                     video.autoplay = true;
                     video.playsInline = true;
                     video.controls = false;
