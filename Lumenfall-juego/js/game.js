@@ -37,6 +37,7 @@
         // --- NEW FOLDER-BASED SCALING LOGIC ---
         function getScaleFromPath(path) {
             if (!path) return PLAYER_SCALE;
+            if (path.includes('/ui/')) return 1.0; // UI must not be scaled
             if (path.includes('/Joziel/')) return PLAYER_SCALE; // x1.0
             if (path.includes('/Enemigos/Comunes/')) return PLAYER_SCALE; // x1.0
             if (path.includes('/Enemigos/Elites/')) return PLAYER_SCALE * 2.0;
