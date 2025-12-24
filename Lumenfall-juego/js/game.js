@@ -46,6 +46,30 @@
             return PLAYER_SCALE;
         }
 
+        function updateSizeFromAspectRatio(mesh, targetHeight) {
+            if (!mesh || !mesh.material || !mesh.material.map || !mesh.material.map.image) {
+                // Si no hay textura cargada aún, aplicar altura por defecto
+                if (mesh) mesh.scale.y = targetHeight;
+                return;
+            }
+
+            const texture = mesh.material.map;
+            if (texture.image.width === 0 || texture.image.height === 0) return;
+
+            // Calcular dimensiones efectivas del FRAME (no de la hoja completa)
+            // repeat.x = 1/cols, repeat.y = 1/rows
+            const frameWidth = texture.image.width * Math.abs(texture.repeat.x);
+            const frameHeight = texture.image.height * Math.abs(texture.repeat.y);
+
+            if (frameHeight === 0) return;
+
+            const ratio = frameWidth / frameHeight;
+
+            mesh.scale.y = targetHeight;
+            mesh.scale.x = targetHeight * ratio;
+            mesh.scale.z = 1;
+        }
+
         function calculateFrameSize(texture, cols, rows) {
             if (!texture.image) return { width: 1, height: 1 };
             const frameWidth = texture.image.width / cols;
@@ -1893,19 +1917,10 @@
 
                 // --- DYNAMIC SCALING LOGIC ---
                 // Folder-Based Logic applied to Player (All assets in Joziel -> 1.15)
-                // We remove specific state overrides to ensure consistency.
                 const currentScale = getScaleFromPath('assets/sprites/Joziel/');
-                if (this.currentState === 'idle') {
-                    this.mesh.scale.set(PLAYER_SCALE * 0.7, PLAYER_SCALE, 1);
-                } else if (this.currentState === 'shooting') {
-                    if (this.isFacingLeft) {
-                        this.mesh.scale.set(currentScale * 1.7, currentScale * 1.7, 1);
-                    } else {
-                        this.mesh.scale.set(currentScale * 1.35, currentScale * 1.35, 1);
-                    }
-                } else {
-                    this.mesh.scale.set(currentScale, currentScale, 1);
-                }
+
+                // Aplicar CALCULADORA UNIVERSAL DE ASPECT RATIO
+                updateSizeFromAspectRatio(this.mesh, currentScale);
 
 
                 if (stateChanged || directionChanged) {
