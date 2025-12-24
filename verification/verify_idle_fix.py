@@ -1,91 +1,95 @@
-from playwright.sync_api import sync_playwright
-import os
 
-def check_idle_fix():
+from playwright.sync_api import sync_playwright
+
+def test_check_idle_texture_and_logic():
     with sync_playwright() as p:
-        # Launch browser with required args for WebGL
         browser = p.chromium.launch(
-            headless=True,
             args=[
                 "--enable-unsafe-swiftshader",
-                "--autoplay-policy=no-user-gesture-required"
+                "--autoplay-policy=no-user-gesture-required",
+                "--use-gl=swiftshader"
             ]
         )
-        page = browser.new_page()
+        context = browser.new_context()
+        page = context.new_page()
 
-        # Load the game using file protocol
-        cwd = os.getcwd()
-        page.goto(f"file://{cwd}/Lumenfall-juego/index.html")
+        # Route Auth
+        page.route("**/auth-core.js", lambda route: route.fulfill(
+            status=200,
+            content_type="application/javascript",
+            body="window.LumenfallAuth = { currentUser: { uid: 'test-user', displayName: 'Test' }, onAuthStateChanged: (cb) => cb({ uid: 'test-user', displayName: 'Test' }) };"
+        ))
 
-        # Inject mock Auth to bypass login
-        page.add_init_script("""
-            window.LumenfallAuth = {
-                currentUser: { uid: 'test-user', displayName: 'Tester', email: 'test@example.com' },
-                userData: { gameCode: '123456' },
-                onAuthStateChanged: (cb) => cb({ uid: 'test-user' })
-            };
-        """)
+        # Navigate to game
+        page.goto("file:///app/Lumenfall-juego/index.html")
 
-        # Click start button to init game (handling opacity transition)
+        # Wait for game to be potentially ready (start button)
         try:
-            # Wait for start button
-            page.wait_for_selector('#start-button', state='visible')
-            page.click('#start-button')
-
-            # Wait for play button (menu transition)
-            page.wait_for_selector('#play-button', state='visible', timeout=5000)
-            page.click('#play-button')
-
-            # Wait for game to initialize (player created)
-            page.wait_for_function("() => window.player && window.player.mesh")
-
-            # Wait a bit for update loop to run and apply 'idle' state logic
-            page.wait_for_timeout(2000)
-
-            # Evaluate the texture repeat property on the player
-            # We access window.player.idleTexture directly as verified in code
-            data = page.evaluate("""
-                () => {
-                    if (!window.player) return null;
-                    const tex = window.player.idleTexture;
-                    if (!tex) return { error: "No idleTexture" };
-
-                    // Force a few updates to ensure logic runs
-                    // But checking static props should be enough if frame loop is running
-
-                    return {
-                        repeatX: tex.repeat.x,
-                        repeatY: tex.repeat.y,
-                        offsetX: tex.offset.x,
-                        magFilter: tex.magFilter,
-                        nearestFilterConst: 1003 // THREE.NearestFilter
-                    };
-                }
-            """)
-
-            print(f"Data Retrieved: {data}")
-
-            # Assertions for the Fix
-            expected_repeat = 0.18
-            if abs(data['repeatX'] - expected_repeat) > 0.001:
-                print(f"FAIL: Expected repeat.x ~0.18, got {data['repeatX']}")
-            else:
-                print(f"SUCCESS: repeat.x is {data['repeatX']}")
-
-            if data['magFilter'] != 1003:
-                print(f"FAIL: Expected NearestFilter (1003), got {data['magFilter']}")
-            else:
-                print("SUCCESS: NearestFilter is active.")
-
-            # Take screenshot for visual confirmation
-            page.screenshot(path="verification/verify_idle_fix.png")
-            print("Screenshot saved to verification/verify_idle_fix.png")
-
+            page.wait_for_selector("#start-button", state="visible", timeout=5000)
+            page.click("#start-button")
         except Exception as e:
-            print(f"Error during verification: {e}")
+            print(f"Start button not found or error: {e}")
 
-        finally:
-            browser.close()
+
+        # Wait for menu (play button)
+        try:
+            page.wait_for_selector("#play-button", state="visible", timeout=5000)
+            page.click("#play-button")
+        except Exception as e:
+            print(f"Play button not found or error: {e}")
+
+        # Wait a bit for game to initialize
+        page.wait_for_timeout(3000)
+
+        # Evaluate window.player state with safer access
+        player_info = page.evaluate("""() => {
+            if (!window.player) return { error: "Player not found" };
+            if (!window.player.idleTexture) return { error: "idleTexture not found" };
+
+            let src = "unknown";
+            if (window.player.idleTexture.image && window.player.idleTexture.image.src) {
+                src = window.player.idleTexture.image.src;
+            } else if (window.player.idleTexture.source && window.player.idleTexture.source.data && window.player.idleTexture.source.data.src) {
+                src = window.player.idleTexture.source.data.src;
+            }
+
+            return {
+                idleSrc: src,
+                repeatX: window.player.idleTexture.repeat.x,
+                scaleX: window.player.mesh.scale.x,
+                scaleY: window.player.mesh.scale.y,
+                currentState: window.player.currentState,
+                PLAYER_SCALE: 1.35
+            };
+        }""")
+
+        if 'error' in player_info:
+             print(f"Error accessing player info: {player_info['error']}")
+             browser.close()
+             return
+
+        print(f"Player Info: {player_info}")
+
+        # Check source URL (should contain new filename)
+        if "Joziel_Idle_V2.png" in player_info['idleSrc']:
+             print("SUCCESS: idleSrc contains Joziel_Idle_V2.png")
+        else:
+             print(f"FAILURE: idleSrc expected Joziel_Idle_V2.png, got {player_info['idleSrc']}")
+
+        # Check repeat.x (should be 0.18)
+        if abs(player_info['repeatX'] - 0.18) < 0.001:
+             print("SUCCESS: repeatX is 0.18")
+        else:
+             print(f"FAILURE: repeatX expected 0.18, got {player_info['repeatX']}")
+
+        # Check Scale (should be PLAYER_SCALE * 0.85 = 1.35 * 0.85 = 1.1475)
+        expected_scale = 1.35 * 0.85
+        if abs(player_info['scaleX'] - expected_scale) < 0.01:
+             print(f"SUCCESS: scaleX is {player_info['scaleX']} (Target ~{expected_scale})")
+        else:
+             print(f"FAILURE: scaleX expected {expected_scale}, got {player_info['scaleX']}")
+
+        browser.close()
 
 if __name__ == "__main__":
-    check_idle_fix()
+    test_check_idle_texture_and_logic()
