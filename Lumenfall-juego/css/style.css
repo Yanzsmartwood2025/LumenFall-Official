@@ -827,3 +827,47 @@ html, body {
 .spin-infinite {
     animation: spin 2s linear infinite;
 }
+
+/* --- New Menu Elements --- */
+#souls-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border: 1px solid #00aaff;
+    border-radius: 20px;
+    padding: 5px 15px 5px 5px;
+    box-shadow: 0 0 10px rgba(0, 170, 255, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+#souls-container img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 5px #00aaff);
+}
+
+#souls-count {
+    color: white;
+    font-family: 'Cinzel', serif;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-shadow: 0 0 5px #00aaff;
+}
+
+#store-button {
+    /* Inherits .menu-option styles, but can have specific overrides here */
+    border-color: #ffd700; /* Gold/Yellow for Store distinction */
+    color: #ffd700;
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
+    filter: drop-shadow(0 0 2px gold);
+}
+
+#store-button:hover {
+    background-color: rgba(255, 215, 0, 0.2);
+    box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+}
