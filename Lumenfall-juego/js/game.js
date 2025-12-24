@@ -1410,7 +1410,7 @@
                     video.controls = false;
                     video.style.width = '100%';
                     video.style.height = '100%';
-                    video.style.objectFit = 'cover';
+                    video.style.objectFit = 'contain';
                     video.style.position = 'relative';
                     video.style.zIndex = '10001';
                     video.onended = () => {
