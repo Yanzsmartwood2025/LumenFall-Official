@@ -3928,6 +3928,9 @@
                 this.scene = scene;
                 this.type = type; // 'soul', 'health', 'power'
 
+                // Dummy mesh to satisfy main loop interface (scene.remove safety)
+                this.mesh = new THREE.Object3D();
+
                 // Create DOM element for visual travel
                 this.element = document.createElement('div');
                 this.element.style.position = 'absolute';
@@ -3936,6 +3939,7 @@
                 this.element.style.borderRadius = '50%';
                 this.element.style.zIndex = '10000';
                 this.element.style.pointerEvents = 'none';
+                this.element.style.mixBlendMode = 'screen';
 
                 // Set color/image based on type
                 if (type === 'health') {
@@ -4036,16 +4040,18 @@
             }
         }
 
-        function spawnLoot(scene, x, y, z) {
+        function spawnLoot(optionalScene, x, y, z) {
+            const activeScene = optionalScene || scene; // Fallback to global scene
+
             // Drop Probability Logic
             const rand = Math.random();
             const position = new THREE.Vector3(x, y, z);
 
             // 5% Jackpot (All three)
             if (rand < 0.05) {
-                new LootItem(scene, position.clone().add(new THREE.Vector3(-1, 0, 0)), 'soul');
-                new LootItem(scene, position.clone(), 'health');
-                new LootItem(scene, position.clone().add(new THREE.Vector3(1, 0, 0)), 'power');
+                new LootItem(activeScene, position.clone().add(new THREE.Vector3(-1, 0, 0)), 'soul');
+                new LootItem(activeScene, position.clone(), 'health');
+                new LootItem(activeScene, position.clone().add(new THREE.Vector3(1, 0, 0)), 'power');
                 return;
             }
 
@@ -4063,7 +4069,7 @@
                 type = 'soul';
             }
 
-            new LootItem(scene, position, type);
+            new LootItem(activeScene, position, type);
         }
 
         class LootItem {
