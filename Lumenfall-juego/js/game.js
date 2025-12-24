@@ -1885,7 +1885,7 @@
                 // We remove specific state overrides to ensure consistency.
                 const currentScale = getScaleFromPath('assets/sprites/Joziel/');
                 if (this.currentState === 'idle') {
-                    this.mesh.scale.set(PLAYER_SCALE * 0.85, PLAYER_SCALE, 1);
+                    this.mesh.scale.set(PLAYER_SCALE * 0.7, PLAYER_SCALE, 1);
                 } else if (this.currentState === 'shooting') {
                     if (this.isFacingLeft) {
                         this.mesh.scale.set(currentScale * 1.7, currentScale * 1.7, 1);
@@ -2064,7 +2064,7 @@
                             [totalFrames, currentTexture, shadowTexture] = [10, this.idleTexture, null]; // Shadows disabled for now or use null
 
                             // FORZAR CONFIGURACIÓN CORRECTA (User Request)
-                            this.idleTexture.repeat.set(0.18, 0.5); // Reducido de 0.2 a 0.18 (Safety Margin)
+                            this.idleTexture.repeat.set(0.15, 0.5); // Reducido drásticamente a 0.15 para eliminar ghosting
                             this.idleTexture.magFilter = THREE.NearestFilter;
                             this.idleTexture.minFilter = THREE.NearestFilter;
 
@@ -2138,9 +2138,9 @@
                             const col = this.currentFrame % cols;
                             const row = Math.floor(this.currentFrame / cols);
 
-                            // Ajuste de Offset: Centrar ventana 0.18 en slot 0.20
-                            // (0.20 - 0.18) / 2 = 0.01 de margen a la izquierda
-                            currentTexture.offset.x = (col / cols) + 0.01;
+                            // Ajuste de Offset: Centrar ventana 0.15 en slot 0.20
+                            // (0.20 - 0.15) / 2 = 0.025 de margen a la izquierda
+                            currentTexture.offset.x = (col / cols) + 0.025;
                             currentTexture.offset.y = (rows - 1 - row) / rows;
 
                         } else if (!isManualUV) {
