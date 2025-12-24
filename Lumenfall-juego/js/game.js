@@ -195,6 +195,72 @@
         let joyVector = new THREE.Vector2(0, 0);
         let prevGamepadButtons = {};
 
+        // --- 3D INTERACTION PROMPT ---
+        let interactPromptMesh;
+
+        function createInteractionPrompt() {
+            // Use blue fire texture
+            const texture = textureLoader.load(assetUrls.blueFire);
+            texture.repeat.set(1/8, 0.5);
+
+            const mat = new THREE.MeshBasicMaterial({
+                map: texture,
+                color: 0x00aaff,
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false, // Transparent but in world space
+                side: THREE.DoubleSide
+            });
+
+            // Plane Geometry
+            const geometry = new THREE.PlaneGeometry(1.5, 1.5);
+            interactPromptMesh = new THREE.Mesh(geometry, mat);
+            interactPromptMesh.visible = false;
+            scene.add(interactPromptMesh);
+
+            // Add simple animation logic in update loop
+            interactPromptMesh.userData = { frameTimer: 0, currentFrame: 0 };
+        }
+
+        function createRomanNumeralTexture(text, isLit) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128; // Power of 2
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+
+            // Clear
+            ctx.clearRect(0, 0, 128, 128);
+
+            // Font Style matching CSS 'Cinzel'
+            ctx.font = 'bold 64px "Cinzel", serif'; // Large enough for texture
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Glow/Shadow Effect
+            if (isLit) {
+                ctx.shadowColor = '#00aaff';
+                ctx.shadowBlur = 20;
+                ctx.fillStyle = '#ffffff';
+            } else {
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#555555';
+            }
+
+            // Draw Text
+            ctx.fillText(text, 64, 64);
+
+            // Stronger Glow Pass if lit
+            if (isLit) {
+                 ctx.shadowBlur = 10;
+                 ctx.fillText(text, 64, 64);
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.minFilter = THREE.LinearFilter;
+            return texture;
+        }
+
         camera.position.set(0, 6, 14);
         camera.lookAt(0, 3, 0);
         camera.far = roomDepth + 50;
@@ -384,7 +450,7 @@
             firstFlameTriggered = true;
 
             // Hide interact prompt to prevent visual dragging
-            doorPromptFlame.style.display = 'none';
+            if (interactPromptMesh) interactPromptMesh.visible = false;
 
             // 1. Disable Input
             isPaused = true;
@@ -466,18 +532,6 @@
             animateEvent();
         }
 
-        function updateGateNumerals() {
-            allGates.forEach(gate => {
-                const screenPosition = gate.mesh.position.clone();
-                screenPosition.y += 6.8;
-                const vector = screenPosition.project(camera);
-                const x = (vector.x * 0.5 + 0.5) * renderer.domElement.clientWidth;
-                const y = (-vector.y * 0.5 + 0.5) * renderer.domElement.clientHeight;
-                gate.numeralElement.style.left = `${x}px`;
-                gate.numeralElement.style.top = `${y}px`;
-            });
-        }
-
         function animate() {
             if (isPaused && !window.isCinematic) return; // Allow cinematic to run
             animationFrameId = requestAnimationFrame(animate);
@@ -494,7 +548,6 @@
                         allFlames.splice(i, 1);
                     }
                 }
-                updateGateNumerals();
                 renderer.render(scene, camera);
                 return;
             }
@@ -573,15 +626,11 @@
                     const distance = player.mesh.position.distanceTo(gate.mesh.position);
                     const distanceX = Math.abs(player.mesh.position.x - gate.mesh.position.x);
 
-                    // Atmospheric Dimming & Interactive Glow
+                    // Atmospheric Dimming ONLY - Glow removed by Director order
                     const gateMesh = gate.mesh.children[0];
                     if (distance < 10) {
-                        const pulse = (Math.sin(Date.now() * 0.005) + 1) * 0.5;
-                        gateMesh.material.emissive.setHex(0x00aaff);
-                        gateMesh.material.emissiveIntensity = 0.5 + pulse * 0.5;
                         gateMesh.material.color.setHex(0xffffff);
                     } else {
-                        gateMesh.material.emissiveIntensity = 0;
                         const dimFactor = Math.max(0.2, 1 - (distance / 40));
                         gateMesh.material.color.setScalar(dimFactor);
                     }
@@ -591,7 +640,6 @@
                         interactableObject = {type: 'gate', object: gate};
                     }
                 });
-                updateGateNumerals();
 
                 allPuzzles.forEach(puzzle => {
                     if (!puzzle.isSolved) {
@@ -612,14 +660,29 @@
                 });
 
                 if (isNearInteractable) {
-                    const screenPosition = interactableObject.object.mesh.position.clone();
-                    screenPosition.y += (interactableObject.type === 'gate' ? 5 : 4);
-                    const vector = screenPosition.project(camera);
-                    const x = (vector.x * 0.5 + 0.5) * renderer.domElement.clientWidth;
-                    const y = (-vector.y * 0.5 + 0.5) * renderer.domElement.clientHeight;
-                    doorPromptFlame.style.left = `${x}px`;
-                    doorPromptFlame.style.top = `${y}px`;
-                    doorPromptFlame.style.display = 'block';
+                    // Update 3D Prompt Mesh
+                    if (interactPromptMesh) {
+                        interactPromptMesh.visible = true;
+                        const targetPos = interactableObject.object.mesh.position.clone();
+                        // Adjust offset based on type
+                        const yOffset = (interactableObject.type === 'gate' ? 6.5 : 5.5);
+                        interactPromptMesh.position.set(targetPos.x, targetPos.y + yOffset, targetPos.z + 2.0); // Z pushed forward
+
+                        // Animate Prompt Texture (Flame)
+                        if (interactPromptMesh.userData) {
+                             interactPromptMesh.userData.frameTimer += deltaTime;
+                             if (interactPromptMesh.userData.frameTimer > 0.05) {
+                                  interactPromptMesh.userData.frameTimer = 0;
+                                  interactPromptMesh.userData.currentFrame = (interactPromptMesh.userData.currentFrame + 1) % 16;
+                                  const col = interactPromptMesh.userData.currentFrame % 8;
+                                  const row = Math.floor(interactPromptMesh.userData.currentFrame / 8);
+                                  if (interactPromptMesh.material.map) {
+                                      interactPromptMesh.material.map.offset.x = col / 8;
+                                      interactPromptMesh.material.map.offset.y = (1 - row) * 0.5;
+                                  }
+                             }
+                        }
+                    }
 
                     if (interactPressed) {
                         if (interactableObject.type === 'gate') {
@@ -650,7 +713,7 @@
                         }
                     }
                 } else {
-                    doorPromptFlame.style.display = 'none';
+                    if (interactPromptMesh) interactPromptMesh.visible = false;
                 }
 
                 const isMoving = Math.abs(joyVector.x) > 0.1;
@@ -863,6 +926,10 @@
                 document.getElementById('ui-container').style.display = 'flex';
                 controlsContainer.style.opacity = '1';
                 controlsContainer.style.pointerEvents = 'auto';
+
+                // Initialize Global Interaction Prompt Here
+                createInteractionPrompt();
+
                 player = new Player();
                 window.player = player; // Expose for verification
                 loadLevelById(currentLevelId);
@@ -2518,7 +2585,7 @@
         function clearSceneForLevelLoad() {
             for (let i = scene.children.length - 1; i >= 0; i--) {
                 const obj = scene.children[i];
-                if (obj !== player.mesh && obj !== player.playerLight && !(obj instanceof THREE.Camera) && !(obj instanceof THREE.Light)) {
+                if (obj !== player.mesh && obj !== player.playerLight && !(obj instanceof THREE.Camera) && !(obj instanceof THREE.Light) && obj !== interactPromptMesh) {
                     scene.remove(obj);
                 }
             }
@@ -2545,7 +2612,8 @@
             allStatues.length = 0;
             allOrbs.length = 0;
             allPuzzles.length = 0;
-            numeralsContainer.innerHTML = '';
+            // numeralsContainer.innerHTML = ''; // REMOVED
+            if (interactPromptMesh) interactPromptMesh.visible = false;
         }
 
         function loadLevel(levelData) {
@@ -2584,19 +2652,31 @@
                 gateGroup.position.x = gateData.x;
                 gateGroup.position.z = camera.position.z - roomDepth;
                 scene.add(gateGroup);
-                const numeralElement = document.createElement('div');
-                numeralElement.className = 'door-numeral';
-                numeralElement.textContent = gateData.numeral;
+
                 let isLit = completedRooms[gateData.destination];
                 if (levelData.id !== 'dungeon_1') {
                     // Inside a room, the torches reflect if the current room is cleared
                     isLit = completedRooms[levelData.id];
                 }
-                if (!isLit) {
-                    numeralElement.classList.add('off');
-                }
-                numeralsContainer.appendChild(numeralElement);
-                allGates.push({ mesh: gateGroup, id: gateData.id, destination: gateData.destination, numeralElement: numeralElement });
+
+                // 3D Numeral Mesh
+                const numeralTexture = createRomanNumeralTexture(gateData.numeral, isLit);
+                const numeralMat = new THREE.MeshBasicMaterial({
+                    map: numeralTexture,
+                    transparent: true,
+                    depthWrite: false, // Ensure transparency works but position handles Z-sorting
+                    side: THREE.DoubleSide
+                });
+                const numeralMesh = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), numeralMat);
+                // Position relative to gate group (local coords)
+                // gateGroup is at x, 4, 0.3. Wait, gateGroup is at WORLD position.
+                // gateMesh is at 0, 4, 0.3 relative to Group.
+                // We want numeral above gate.
+                // Let's add it to the GROUP so it moves with it.
+                numeralMesh.position.set(0, 9.0, 0.3); // High above the door (y=4 + 5?)
+                gateGroup.add(numeralMesh);
+
+                allGates.push({ mesh: gateGroup, id: gateData.id, destination: gateData.destination, numeralMesh: numeralMesh });
                 createTorch(gateData.x - 6, 3.2, camera.position.z - roomDepth + 0.5, isLit);
                 createTorch(gateData.x + 6, 3.2, camera.position.z - roomDepth + 0.5, isLit);
             });
