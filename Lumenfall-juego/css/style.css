@@ -184,7 +184,39 @@ html, body {
             animation: move-power 2s infinite linear;
         }
 
+        #spectral-bar {
+            width: 200px;
+            height: 20px; /* Increased height for image visibility */
+            background-color: transparent;
+            background-image: url('../assets/ui/hud/energy_spectral_frame.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            border: none;
+            padding: 0; /* Removing padding to fit image exact */
+            position: relative;
+            overflow: hidden;
+            mix-blend-mode: screen; /* Remove black background */
+        }
+
+        #spectral-fill {
+            height: 100%;
+            width: 0%; /* Controlled by JS */
+            background-color: transparent;
+            background-image: url('../assets/ui/hud/energy_spectral_fill.png');
+            background-size: 200px 100%; /* Fixed to parent width to reveal instead of stretch */
+            background-repeat: no-repeat;
+            background-position: left center;
+            transition: width 0.3s ease-out;
+            mix-blend-mode: screen; /* Remove black background */
+            /* Removed shadow/animation to prioritize pure image asset */
+        }
+
         @keyframes move-power {
+            0% { background-position: 0% 0; }
+            100% { background-position: 100% 0; }
+        }
+
+        @keyframes move-spectral {
             0% { background-position: 0% 0; }
             100% { background-position: 100% 0; }
         }
