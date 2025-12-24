@@ -2297,8 +2297,95 @@
             }
         }
 
+        class HUDProjectile {
+            constructor(scene, startPosition, type) {
+                this.scene = scene;
+                this.type = type;
+                this.startPos = startPosition.clone();
+                this.targetElement = null;
+
+                if (type === 'health') {
+                    this.targetElement = document.getElementById('energy-bar');
+                } else if (type === 'power') {
+                    this.targetElement = document.getElementById('power-bar');
+                } else {
+                    this.targetElement = document.getElementById('souls-container'); // Or spectral bar? defaulting to souls/spectral
+                    if (!this.targetElement) this.targetElement = document.getElementById('spectral-bar');
+                }
+
+                // Project 3D start pos to 2D screen pos
+                const vector = this.startPos.clone();
+                vector.project(camera);
+
+                const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
+
+                // Create DOM Element
+                this.element = document.createElement('div');
+                this.element.style.position = 'fixed';
+                this.element.style.left = `${x}px`;
+                this.element.style.top = `${y}px`;
+                this.element.style.width = '20px';
+                this.element.style.height = '20px';
+                this.element.style.borderRadius = '50%';
+                this.element.style.zIndex = '10001';
+                this.element.style.pointerEvents = 'none';
+
+                // Color based on type
+                if (type === 'health') this.element.style.backgroundColor = '#00ff00';
+                else if (type === 'power') this.element.style.backgroundColor = '#00aaff';
+                else this.element.style.backgroundColor = '#aa00ff'; // Soul/Spectral
+
+                this.element.style.boxShadow = `0 0 10px ${this.element.style.backgroundColor}`;
+                this.element.style.transition = 'all 0.5s ease-in';
+
+                document.body.appendChild(this.element);
+
+                // Trigger Animation
+                requestAnimationFrame(() => {
+                    if (this.targetElement) {
+                        const rect = this.targetElement.getBoundingClientRect();
+                        const targetX = rect.left + rect.width / 2;
+                        const targetY = rect.top + rect.height / 2;
+
+                        this.element.style.left = `${targetX}px`;
+                        this.element.style.top = `${targetY}px`;
+                        this.element.style.opacity = '0'; // Fade out as it arrives
+                    }
+                });
+
+                // Cleanup and Apply Effect after animation
+                setTimeout(() => {
+                    if (this.element && this.element.parentNode) {
+                        this.element.parentNode.removeChild(this.element);
+                    }
+                    this.applyEffect();
+                }, 500); // Match transition time
+            }
+
+            applyEffect() {
+                if (!player) return;
+                if (this.type === 'health') player.restoreHealth(10);
+                else if (this.type === 'power') player.restorePower(15);
+                // Soul logic if needed
+            }
+
+            update(deltaTime) {
+                // Dummy update to satisfy main loop if added to allProjectiles
+                // Since this is DOM based, we return false immediately to remove from THREE.js array?
+                // Actually, LootItem calls allProjectiles.push(new HUDProjectile...)
+                // Main loop calls update(). If false, removes.
+                // We return FALSE so it is removed from the game logic array immediately,
+                // as the DOM animation runs independently.
+                return false;
+            }
+        }
+
+        function spawnLoot(scene, position, type) {
+             allPowerUps.push(new LootItem(scene, position, type));
+        }
+
         // Expose classes to global scope for testing/verification
-        window.LootItem = LootItem;
         window.spawnLoot = spawnLoot;
         window.HUDProjectile = HUDProjectile;
 
@@ -3988,20 +4075,21 @@
 
                 // Logic
                 const distToPlayer = player ? this.mesh.position.distanceTo(player.mesh.position) : 999;
-                const isAbsorbing = player && player.isAbsorbing;
+                // Explicitly check for "Reload" action (Absorbing)
+                const isReloading = player && player.isAbsorbing;
 
                 if (this.state === 'IDLE') {
                     // Bobbing
                     this.bobOffset += deltaTime * 2;
                     this.mesh.position.y += Math.sin(this.bobOffset) * 0.005;
 
-                    // Trigger Attraction
-                    if (isAbsorbing && distToPlayer < 15) {
+                    // Trigger Attraction ONLY if input is held
+                    if (isReloading && distToPlayer < 15) {
                         this.state = 'ATTRACTED';
                     }
                 } else if (this.state === 'ATTRACTED') {
-                    if (!isAbsorbing) {
-                        this.state = 'IDLE'; // Drop if button released
+                    if (!isReloading) {
+                        this.state = 'IDLE'; // Stop if button released
                     } else {
                         // Move to player (Chest Height)
                         const targetPos = player.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0));
@@ -4042,3 +4130,7 @@
                 }
             }
         }
+
+// Expose classes to global scope for testing/verification
+window.LootItem = LootItem;
+window.PowerUp = LootItem; // Alias for backward compatibility
