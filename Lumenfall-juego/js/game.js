@@ -1368,9 +1368,9 @@
                 // Shadows (Legacy _128 format usually) - assuming they match main sprite logic or handle separately
                 this.runningShadowTexture.repeat.set(0.125, 0.5);
 
-                // 3. Idle (Frontal): 5x2 Grid (10 frames)
-                this.idleTexture.repeat.set(0.18, 0.5); // CORRECCIÓN: 0.18 para evitar ghosting
-                this.idleBackTexture.repeat.set(0.18, 0.5); // Same asset
+                // 3. Idle (Frontal): 6x2 Grid (11 frames: 6 top, 5 bottom)
+                this.idleTexture.repeat.set(1/6, 0.5);
+                this.idleBackTexture.repeat.set(1/6, 0.5); // Same asset
 
                 this.idleShadowTexture.repeat.set(1 / totalIdleFrames, 1); // Legacy shadow?
 
@@ -2065,11 +2065,11 @@
                             }
                             break;
                         case 'idle':
-                            // Unified Frontal Idle System (5 cols x 2 rows = 10 frames)
-                            [totalFrames, currentTexture, shadowTexture] = [10, this.idleTexture, null];
+                            // Unified Frontal Idle System (6 cols x 2 rows = 11 frames)
+                            // Row 0: 6 frames, Row 1: 5 frames
+                            [totalFrames, currentTexture, shadowTexture] = [11, this.idleTexture, null];
 
-                            // Option B: Maintain ghosting fix with discrete steps
-                            this.idleTexture.repeat.set(0.15, 0.5);
+                            this.idleTexture.repeat.set(1/6, 0.5);
                             this.idleTexture.magFilter = THREE.NearestFilter;
                             this.idleTexture.minFilter = THREE.NearestFilter;
 
@@ -2077,7 +2077,7 @@
 
                             // Stepped Animation Logic (8 FPS)
                     // Simple Accumulator: Just increment, NO interpolation or math tricks
-                    this.currentFrame = (this.currentFrame + 1) % 10;
+                    this.currentFrame = (this.currentFrame + 1) % 11;
                             break;
                         default:
                             [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
@@ -2116,15 +2116,17 @@
                                  currentTexture.offset.set(frameData.x, frameData.y);
                              }
                         } else if (isIdleSprite) {
-                            // NEW: Idle 5x2 Grid (Frames 0-9)
-                            const cols = 5;
+                            // NEW: Idle 6x2 Grid (Frames 0-10)
+                            const cols = 6;
                             const rows = 2;
+
+                            // Adjust for 11 frames total distributed across 2 rows
+                            // Frames 0-5 -> Row 0
+                            // Frames 6-10 -> Row 1
                             const col = this.currentFrame % cols;
                             const row = Math.floor(this.currentFrame / cols);
 
-                            // Option B: Exact stepped calculation + centering offset
-                            // Slot width = 0.2. View width = 0.15. Offset = 0.025.
-                            currentTexture.offset.x = (col * 0.2) + 0.025;
+                            currentTexture.offset.x = col / cols;
                             currentTexture.offset.y = (rows - 1 - row) / rows;
 
                         } else if (!isManualUV) {
