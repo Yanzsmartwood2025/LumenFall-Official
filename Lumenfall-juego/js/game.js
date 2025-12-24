@@ -763,7 +763,6 @@
         const pauseLanguageSelect = document.getElementById('pause-language-select');
         const btnAttack = document.getElementById('btn-attack');
         const btnShoot = document.getElementById('btn-shoot');
-        const doorPromptFlame = document.getElementById('door-prompt-flame');
         const jozielHalo = document.getElementById('joziel-halo');
         const pauseMenu = document.getElementById('pause-menu');
         const resumeButton = document.getElementById('resume-button');
@@ -774,7 +773,6 @@
         const transitionOverlay = document.getElementById('transition-overlay');
         const loadingContent = document.getElementById('loading-content');
         const loadingText = document.getElementById('loading-text');
-        const numeralsContainer = document.getElementById('numerals-container');
         const dialogueBox = document.getElementById('dialogue-box');
         const gamepadStatus = document.getElementById('gamepad-status');
         const gamepadToggleButton = document.getElementById('gamepad-toggle');
@@ -1209,9 +1207,6 @@
              }
         }, { passive: false });
 
-
-        doorPromptFlame.addEventListener('mousedown', (e) => { if (!isPaused) { e.preventDefault(); interactPressed = true; } });
-        doorPromptFlame.addEventListener('touchstart', (e) => { if (!isPaused) { e.preventDefault(); interactPressed = true; } }, { passive: false });
 
         startButton.addEventListener('click', () => {
             if (audioContext.state === 'suspended') {
