@@ -187,7 +187,7 @@ html, body {
         #spectral-bar {
             width: 64px;
             height: 64px;
-            background-color: transparent;
+            background-color: transparent !important; /* Force transparency */
             background-image: url('../assets/ui/hud/energy_spectral_frame.png');
             background-size: 100% 100%;
             background-repeat: no-repeat;
@@ -197,21 +197,27 @@ html, body {
             top: 20px;
             right: 20px;
             overflow: hidden;
-            mix-blend-mode: screen;
+            mix-blend-mode: screen; /* Should knock out black bg */
             z-index: 10000;
         }
 
         #spectral-fill {
             height: 100%;
             width: 0%; /* Controlled by JS */
-            background-color: transparent;
+            background-color: transparent !important;
             background-image: url('../assets/ui/hud/energy_spectral_fill.png');
             background-size: 200px 100%; /* Fixed to parent width to reveal instead of stretch */
             background-repeat: no-repeat;
             background-position: left center;
             transition: width 0.3s ease-out;
-            mix-blend-mode: screen; /* Remove black background */
+            mix-blend-mode: screen;
             /* Removed shadow/animation to prioritize pure image asset */
+        }
+
+        /* FIX: Asegurar que el contenedor padre no tenga fondo opaco accidentalmente */
+        .stats-group {
+             background-color: transparent !important;
+             isolation: isolate; /* Crear nuevo contexto de stacking para que el mix-blend-mode funcione localmente si es necesario */
         }
 
         @keyframes move-power {
