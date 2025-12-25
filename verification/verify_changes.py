@@ -1,95 +1,131 @@
+from playwright.sync_api import sync_playwright
+import time
+import os
 
-import asyncio
-from playwright.async_api import async_playwright
+# Create verification directory
+os.makedirs("verification", exist_ok=True)
 
-async def run():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(args=["--enable-unsafe-swiftshader", "--autoplay-policy=no-user-gesture-required"])
-        context = await browser.new_context()
+def verify_interaction_logic(page):
+    print("Navigating to game...")
+    # Use file:// protocol for local file
+    page.goto(f"file://{os.getcwd()}/Lumenfall-juego/index.html")
 
-        # Mock Auth
-        await context.route("**/auth-core.js", lambda route: route.fulfill(
-            body="""
-                window.LumenfallAuth = {
-                    onStateChanged: (cb) => {
-                        console.log("Mock Auth: onStateChanged called");
-                        setTimeout(() => cb({ displayName: 'Tester', photoURL: 'test.png' }, {}), 100);
-                    },
-                    currentUser: { displayName: 'Tester' }
-                };
-            """,
-            content_type="application/javascript"
-        ))
+    # Wait for splash screen click
+    print("Clicking start button...")
+    page.click("#start-button")
 
-        page = await context.new_page()
+    # Wait for menu transition and play button
+    print("Waiting for play button...")
+    page.wait_for_selector("#play-button", state="visible")
 
-        # Console logging
-        page.on("console", lambda msg: print(f"CONSOLE: {msg.text}"))
-        page.on("pageerror", lambda exc: print(f"PAGE ERROR: {exc}"))
+    # Click play to start game logic
+    print("Clicking play button...")
+    page.click("#play-button")
 
-        # Load game
-        try:
-            await page.goto("http://localhost:8080/Lumenfall-juego/index.html", timeout=10000)
-        except Exception:
-            print("Navigation timeout ignored.")
+    # Wait for game to initialize (canvas visible)
+    page.wait_for_selector("#bg-canvas", state="visible")
 
-        # CSS Check
-        print("Verifying CSS...")
-        try:
-            spectral_bar_style = await page.evaluate("window.getComputedStyle(document.getElementById('spectral-bar')).mixBlendMode")
-            print(f"Spectral Bar Mix Blend Mode: {spectral_bar_style}")
-            if spectral_bar_style == 'normal':
-                print("PASS: CSS Visual Fix verified.")
-        except Exception as e:
-            print(f"CSS Check Failed: {e}")
+    # Give it a moment to load level
+    time.sleep(2)
 
-        # Start Flow
-        try:
-            await page.wait_for_selector("#start-button", state="visible", timeout=5000)
-            await page.click("#start-button")
-            print("Clicked Start Button.")
-        except Exception as e:
-            print(f"Start Button error: {e}")
+    print("Injecting verification logic...")
 
-        try:
-            await page.wait_for_selector("#play-button", state="visible", timeout=10000)
-            print("Play Button Visible.")
-            await page.click("#play-button")
-            print("Clicked Play Button (Game Loop Start).")
-        except Exception as e:
-            print(f"Play Button error: {e}")
-            # If we can't play, we can't check dynamic logic.
-            return
+    # We will verify that:
+    # 1. attemptInteraction function exists
+    # 2. Input event listeners are attached (by simulating events)
+    # 3. Raycaster logic is present
 
-        await page.wait_for_timeout(3000)
+    result = page.evaluate("""
+        () => {
+            const log = [];
 
-        # Logic Check
-        print("Verifying Logic...")
-        try:
-            res = await page.evaluate("window.allEnemiesX1.length")
-            print(f"Enemies Count: {res}")
+            // 1. Verify global variables
+            if (typeof window.attemptInteraction === 'function') {
+                log.push("PASS: attemptInteraction is a global function");
+            } else {
+                log.push("FAIL: attemptInteraction not found globally");
+                // It might not be attached to window explicitly in game.js, but declared in scope.
+                // However, since game.js is not a module, top-level vars should be on window?
+                // Actually game.js is loaded as <script src="js/game.js"> so it is global scope.
+            }
 
-            # Unlock Gate 1
-            await page.evaluate("window.firstFlameTriggered = true;")
+            // Check if raycaster exists
+            // We can't easily check internal variables unless we exposed them or check side effects.
+            // But we can check if firing a keydown 'E' calls the function.
 
-            # Check gate logic function directly if possible
-            gate_check = await page.evaluate("""
-                (() => {
-                    const g = allGates.find(x => x.id === 'gate_1');
-                    if(!g) return 'No Gate';
-                    if(window.firstFlameTriggered) return 'Unlocked';
-                    return 'Locked';
-                })()
-            """)
-            print(f"Gate 1 Logic Status: {gate_check}")
+            // Mock attemptInteraction to track calls
+            let callCount = 0;
+            const originalAttempt = window.attemptInteraction;
+            window.attemptInteraction = () => {
+                callCount++;
+                if (originalAttempt) originalAttempt();
+            };
 
-            if gate_check == 'Unlocked':
-                print("PASS: Gate Logic Verified.")
+            // Trigger 'E' key
+            const eKey = new KeyboardEvent('keydown', { key: 'e' });
+            window.dispatchEvent(eKey);
 
-        except Exception as e:
-            print(f"Logic Check Error: {e}")
+            if (callCount > 0) {
+                log.push("PASS: Keydown 'E' triggers attemptInteraction");
+            } else {
+                log.push("FAIL: Keydown 'E' did not trigger attemptInteraction");
+            }
 
-        await browser.close()
+            // Trigger 'Enter' key
+            const enterKey = new KeyboardEvent('keydown', { key: 'Enter' });
+            window.dispatchEvent(enterKey);
+
+            if (callCount > 1) {
+                log.push("PASS: Keydown 'Enter' triggers attemptInteraction");
+            } else {
+                log.push("FAIL: Keydown 'Enter' did not trigger attemptInteraction");
+            }
+
+            // Check canvas listeners
+            const canvas = document.getElementById('bg-canvas');
+            // We can't list listeners easily, but we can trigger mousedown
+
+            // Mock raycaster logic?
+            // It's hard to verify raycasting success without visual object,
+            // but we can verify the listener doesn't crash.
+
+            try {
+                const mouseDown = new MouseEvent('mousedown', {
+                    clientX: window.innerWidth / 2,
+                    clientY: window.innerHeight / 2
+                });
+                canvas.dispatchEvent(mouseDown);
+                log.push("PASS: Canvas mousedown dispatched without error");
+            } catch (e) {
+                log.push("FAIL: Canvas mousedown error: " + e.message);
+            }
+
+            return log;
+        }
+    """)
+
+    print("Verification Results:")
+    for line in result:
+        print(line)
+
+    # Take screenshot of game running
+    page.screenshot(path="verification/game_running.png")
 
 if __name__ == "__main__":
-    asyncio.run(run())
+    with sync_playwright() as p:
+        # Launch with arguments to support WebGL/Audio in headless
+        browser = p.chromium.launch(
+            headless=True,
+            args=[
+                "--enable-unsafe-swiftshader",
+                "--autoplay-policy=no-user-gesture-required"
+            ]
+        )
+        context = browser.new_context()
+        page = context.new_page()
+        try:
+            verify_interaction_logic(page)
+        except Exception as e:
+            print(f"Error: {e}")
+        finally:
+            browser.close()

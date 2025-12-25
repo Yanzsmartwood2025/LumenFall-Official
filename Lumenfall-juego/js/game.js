@@ -204,6 +204,56 @@
         let joyVector = new THREE.Vector2(0, 0);
         let prevGamepadButtons = {};
 
+        // --- INTERACTION STATE ---
+        let interactableObject = null;
+        let isNearInteractable = false;
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+
+        function attemptInteraction() {
+            if (!isNearInteractable || !interactableObject) return;
+
+            if (interactableObject.type === 'gate') {
+                const gate = interactableObject.object;
+
+                // Lógica de "Puerta Bloqueada" explícita al interactuar
+                let isLocked = true;
+                if (currentLevelId === 'dungeon_1') {
+                    if (gate.id === 'gate_1' && firstFlameTriggered) isLocked = false;
+                    else if (gate.id === 'gate_2' && completedRooms.room_1) isLocked = false;
+                    else if (gate.id === 'gate_3' && completedRooms.room_2) isLocked = false;
+                    else if (gate.id === 'gate_4' && completedRooms.room_3) isLocked = false;
+                    else if (gate.id === 'gate_5' && completedRooms.room_4) isLocked = false;
+                    else if (gate.id === 'gate_boss' && completedRooms.room_5) isLocked = false;
+                } else {
+                    if (completedRooms[currentLevelId]) isLocked = false;
+                }
+
+                if (isLocked) {
+                    showDialogue("PUERTA BLOQUEADA", 1000);
+                    playAudio('fantasma_lamento', false, 1.5); // Feedback sonoro negativo opcional
+                    return;
+                }
+
+                const destinationId = gate.destination;
+                let spawnX = null;
+                if (destinationId === 'dungeon_1') {
+                    const roomNumber = gate.id.split('_')[1];
+                    const targetGateId = `gate_${roomNumber}`;
+                    const targetGate = MAPS.dungeon_1.gates.find(g => g.id === targetGateId);
+                    if (targetGate) {
+                        spawnX = targetGate.x;
+                    }
+                }
+                playAudio('puerta');
+                triggerTransition(destinationId, spawnX);
+            } else if (interactableObject.type === 'puzzle') {
+                interactableObject.object.solve();
+            } else if (interactableObject.type === 'statue') {
+                interactableObject.object.interact();
+            }
+        }
+
         // --- 3D INTERACTION PROMPT ---
         let interactPromptMesh;
 
@@ -696,8 +746,9 @@
                     }
                 });
 
-                let isNearInteractable = false;
-                let interactableObject = null;
+                // Reset per frame before checks
+                isNearInteractable = false;
+                interactableObject = null;
 
                 allGates.forEach(gate => {
                     const distance = player.mesh.position.distanceTo(gate.mesh.position);
@@ -788,45 +839,7 @@
                     }
 
                     if (interactPressed) {
-                        if (interactableObject.type === 'gate') {
-                            const gate = interactableObject.object;
-
-                            // Lógica de "Puerta Bloqueada" explícita al interactuar
-                            let isLocked = true;
-                            if (currentLevelId === 'dungeon_1') {
-                                if (gate.id === 'gate_1' && firstFlameTriggered) isLocked = false;
-                                else if (gate.id === 'gate_2' && completedRooms.room_1) isLocked = false;
-                                else if (gate.id === 'gate_3' && completedRooms.room_2) isLocked = false;
-                                else if (gate.id === 'gate_4' && completedRooms.room_3) isLocked = false;
-                                else if (gate.id === 'gate_5' && completedRooms.room_4) isLocked = false;
-                                else if (gate.id === 'gate_boss' && completedRooms.room_5) isLocked = false;
-                            } else {
-                                if (completedRooms[currentLevelId]) isLocked = false;
-                            }
-
-                            if (isLocked) {
-                                showDialogue("PUERTA BLOQUEADA", 1000);
-                                playAudio('fantasma_lamento', false, 1.5); // Feedback sonoro negativo opcional
-                                return;
-                            }
-
-                            const destinationId = gate.destination;
-                            let spawnX = null;
-                            if (destinationId === 'dungeon_1') {
-                                const roomNumber = gate.id.split('_')[1];
-                                const targetGateId = `gate_${roomNumber}`;
-                                const targetGate = MAPS.dungeon_1.gates.find(g => g.id === targetGateId);
-                                if (targetGate) {
-                                    spawnX = targetGate.x;
-                                }
-                            }
-                            playAudio('puerta');
-                            triggerTransition(destinationId, spawnX);
-                        } else if (interactableObject.type === 'puzzle') {
-                            interactableObject.object.solve();
-                        } else if (interactableObject.type === 'statue') {
-                            interactableObject.object.interact();
-                        }
+                        attemptInteraction();
                     }
                 } else {
                     if (interactPromptMesh) interactPromptMesh.visible = false;
@@ -1421,6 +1434,50 @@
             handleResize();
         });
         window.addEventListener('resize', handleResize);
+
+        // --- NEW INPUT HANDLERS FOR INTERACTION ---
+        window.addEventListener('keydown', (e) => {
+            if (!isPaused && (e.key.toLowerCase() === 'e' || e.key === 'Enter')) {
+                attemptInteraction();
+            }
+        });
+
+        function onPointerDown(event) {
+            if (isPaused) return;
+
+            // Calculate pointer position in normalized device coordinates (-1 to +1) for both components
+            let clientX, clientY;
+
+            if (event.changedTouches) {
+                clientX = event.changedTouches[0].clientX;
+                clientY = event.changedTouches[0].clientY;
+            } else {
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+
+            pointer.x = (clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(pointer, camera);
+
+            if (interactPromptMesh && interactPromptMesh.visible) {
+                const intersects = raycaster.intersectObject(interactPromptMesh);
+                if (intersects.length > 0) {
+                    attemptInteraction();
+                }
+            }
+        }
+
+        const bgCanvas = document.getElementById('bg-canvas');
+        if (bgCanvas) {
+            bgCanvas.addEventListener('mousedown', onPointerDown);
+            bgCanvas.addEventListener('touchstart', (e) => {
+                // e.preventDefault(); // Don't block other touch behaviors yet
+                onPointerDown(e);
+            }, { passive: false });
+        }
+        // ------------------------------------------
 
         window.addEventListener("gamepadconnected", (e) => {
             gamepadStatus.style.display = 'block';
