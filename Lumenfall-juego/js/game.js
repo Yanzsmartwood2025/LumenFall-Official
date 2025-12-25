@@ -1808,6 +1808,11 @@
                 this.health = this.maxHealth;
                 this.energyBarFill = document.getElementById('energy-fill');
 
+                // Initialize Plasma Classes
+                if(this.energyBarFill) {
+                    this.energyBarFill.classList.add('plasma-fill', 'plasma-green');
+                }
+
                 this.isInvincible = false;
                 this.invincibilityDuration = 2.0;
                 this.invincibilityTimer = 0;
@@ -1817,6 +1822,16 @@
                 this.maxPower = 100;
                 this.power = this.maxPower;
                 this.powerBarFill = document.getElementById('power-fill');
+
+                if(this.powerBarFill) {
+                    this.powerBarFill.classList.add('plasma-fill', 'plasma-blue');
+                }
+
+                // Also initialize Spectral Bar if found
+                const spectralFill = document.getElementById('spectral-fill');
+                if(spectralFill) {
+                    spectralFill.classList.add('plasma-fill', 'plasma-purple');
+                }
             }
 
         createSuctionParticles() {
@@ -1888,13 +1903,33 @@
             checkHealthStatus() {
                 const pct = this.health / this.maxHealth;
                 if (pct <= 0.2 && this.health > 0) {
-                    this.energyBarFill.style.backgroundColor = '#8B0000';
+                    // Critical Plasma State (Red)
+                    this.energyBarFill.classList.remove('plasma-green');
+                    this.energyBarFill.classList.add('plasma-red');
+
                     energyBarContainer.classList.add('low-health-pulse');
                     playerProfileImage.classList.add('hud-shake');
                 } else {
-                    this.energyBarFill.style.backgroundColor = '#00ff00';
+                    // Normal Plasma State (Green)
+                    this.energyBarFill.classList.remove('plasma-red');
+                    this.energyBarFill.classList.add('plasma-green');
+
                     energyBarContainer.classList.remove('low-health-pulse');
                     playerProfileImage.classList.remove('hud-shake');
+                }
+            }
+
+            triggerSwell(elementId) {
+                const container = document.getElementById(elementId);
+                if (container) {
+                    container.classList.remove('swell-active');
+                    void container.offsetWidth; // Trigger reflow
+                    container.classList.add('swell-active');
+
+                    // Auto-remove after animation (300ms)
+                    setTimeout(() => {
+                        if (container) container.classList.remove('swell-active');
+                    }, 300);
                 }
             }
 
@@ -1902,11 +1937,13 @@
                 this.health = Math.min(this.maxHealth, this.health + amount);
                 this.energyBarFill.style.width = `${(this.health / this.maxHealth) * 100}%`;
                 this.checkHealthStatus();
+                this.triggerSwell('energy-bar');
             }
 
             restorePower(amount) {
                 this.power = Math.min(this.maxPower, this.power + amount);
                 this.powerBarFill.style.width = `${(this.power / this.maxPower) * 100}%`;
+                this.triggerSwell('power-bar');
             }
 
             restorePowerAndHealth() {
@@ -2625,15 +2662,16 @@
                 if (this.type === 'health') player.restoreHealth(10);
                 else if (this.type === 'power') player.restorePower(15);
 
-                // Visual Flash on UI Element
-                if (this.targetElement) {
-                    this.targetElement.style.transition = 'none';
-                    this.targetElement.style.filter = 'brightness(2.0) drop-shadow(0 0 15px ' + this.glowColor + ')';
-                    setTimeout(() => {
-                        this.targetElement.style.transition = 'filter 0.5s';
-                        this.targetElement.style.filter = 'none';
-                    }, 50);
+                // For Spectral or generic fallback logic not handled by restore functions
+                if (this.type !== 'health' && this.type !== 'power' && this.targetElement) {
+                     // Manually trigger swell for Spectral Bar
+                     this.targetElement.classList.remove('swell-active');
+                     void this.targetElement.offsetWidth;
+                     this.targetElement.classList.add('swell-active');
+                     setTimeout(() => this.targetElement.classList.remove('swell-active'), 300);
                 }
+
+                // Note: filter brightness logic removed in favor of CSS Swell animation
             }
         }
 
