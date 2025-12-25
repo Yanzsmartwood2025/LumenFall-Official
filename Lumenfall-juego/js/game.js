@@ -1828,9 +1828,41 @@
                 }
 
                 // Also initialize Spectral Bar if found
-                const spectralFill = document.getElementById('spectral-fill');
-                if(spectralFill) {
-                    spectralFill.classList.add('plasma-fill', 'plasma-purple');
+                this.spectralBarFill = document.getElementById('spectral-fill');
+                if(this.spectralBarFill) {
+                    this.spectralBarFill.classList.add('plasma-fill', 'plasma-purple');
+                }
+
+                // Soul System Initialization
+                this.currentSouls = 0;
+                this.soulCharges = 0;
+                this.soulChargesDisplay = document.getElementById('soul-charges-count');
+            }
+
+            addSouls(amount) {
+                this.currentSouls += amount;
+                if (this.currentSouls >= 100) {
+                    this.currentSouls -= 100;
+                    this.soulCharges++;
+
+                    // Visual/Audio Feedback for Level Up
+                    this.triggerSwell('spectral-bar');
+                    // Optional: Play a special sound?
+                }
+
+                // Update UI
+                if (this.spectralBarFill) {
+                    // Update HEIGHT because CSS uses height for vertical fill
+                    this.spectralBarFill.style.height = `${this.currentSouls}%`;
+                }
+
+                if (this.soulChargesDisplay) {
+                    this.soulChargesDisplay.textContent = this.soulCharges;
+                    // Pop animation
+                    this.soulChargesDisplay.style.transform = "scale(1.5)";
+                    setTimeout(() => {
+                        if(this.soulChargesDisplay) this.soulChargesDisplay.style.transform = "scale(1)";
+                    }, 200);
                 }
             }
 
@@ -2661,6 +2693,7 @@
                 if (!player) return;
                 if (this.type === 'health') player.restoreHealth(10);
                 else if (this.type === 'power') player.restorePower(15);
+                else if (this.type === 'soul') player.addSouls(10);
 
                 // For Spectral or generic fallback logic not handled by restore functions
                 if (this.type !== 'health' && this.type !== 'power' && this.targetElement) {

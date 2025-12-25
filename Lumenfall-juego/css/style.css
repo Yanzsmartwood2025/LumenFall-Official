@@ -186,28 +186,93 @@ html, body {
         #spectral-bar {
             width: 64px;
             height: 64px;
-            background-color: transparent !important; /* Force transparency */
-            background-image: url('../assets/ui/hud/energy_spectral_frame.png');
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
+            background-color: transparent !important;
+            /* Removed static frame image */
             border: none;
             padding: 0;
             position: fixed;
             top: 20px;
             right: 20px;
-            overflow: hidden;
-            /* mix-blend-mode removed by request */
+            /* Overflow hidden removed to allow counter to pop out if needed,
+               but kept for fill clipping if we want the fill inside the circle.
+               User asked for "Container circular". */
+            border-radius: 50%; /* Ensure it's circular */
+            overflow: visible;
             z-index: 10000;
+            /* Optional: subtle backing */
+            box-shadow: 0 0 10px rgba(170, 0, 255, 0.3);
+        }
+
+        #soul-flame-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('../assets/sprites/Items/Drops/Souls/soul_fragment.png');
+            background-size: 600% 200%; /* 6 cols, 2 rows */
+            background-repeat: no-repeat;
+            /* Animation: 11 frames total.
+               We need a custom keyframe set for the 6x2 grid. */
+            animation: soul-burn 1.2s steps(1) infinite;
+            z-index: 2; /* On top of fill */
+            pointer-events: none;
+        }
+
+        @keyframes soul-burn {
+            /* Row 0: Frames 0-5 */
+            0% { background-position: 0% 0%; }
+            9.09% { background-position: 20% 0%; }
+            18.18% { background-position: 40% 0%; }
+            27.27% { background-position: 60% 0%; }
+            36.36% { background-position: 80% 0%; }
+            45.45% { background-position: 100% 0%; }
+            /* Row 1: Frames 6-10 */
+            54.54% { background-position: 0% 100%; }
+            63.63% { background-position: 20% 100%; }
+            72.72% { background-position: 40% 100%; }
+            81.81% { background-position: 60% 100%; }
+            90.90% { background-position: 80% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+
+        #soul-charges-count {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid #aa00ff;
+            color: #e0b0ff;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            font-size: 1.2em;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 5px #aa00ff;
+            z-index: 3;
+            text-shadow: 0 0 2px #fff;
         }
 
         #spectral-fill {
-            height: 100%;
-            width: 0%; /* Controlled by JS */
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%; /* Vertical Fill seems more appropriate for a flask/container feel */
+            /* But legacy was width. Let's stick to height for a circular container or width? */
+            /* If we use width on a circle, it looks weird unless masked.
+               Let's try Vertical Fill (height) because it feels like filling a vessel. */
             background-color: transparent !important;
             /* Image replaced by Plasma CSS */
-            background-size: 200% 100%; /* Consistent with plasma */
-            transition: width 0.3s ease-out;
-            /* mix-blend-mode removed by request */
+            background-size: 100% 200%;
+            transition: height 0.3s ease-out;
+            z-index: 1; /* Behind flame */
+            border-radius: 50%; /* Clip to circle */
+            opacity: 0.5; /* Semi-transparent so flame pops */
         }
 
         /* --- NEXT-GEN PLASMA UI --- */
