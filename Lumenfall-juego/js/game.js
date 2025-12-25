@@ -4539,30 +4539,44 @@
 
                 // State Determination
                 if (isAbsorbing && distToPlayer < absorptionRange) {
-                    // --- ABSORPTION STATE (Heavy Start & Chaos) ---
+                    // --- ABSORPTION STATE (Spiral Vortex) ---
 
-                    // A. Attraction Force (Exponential: Weak at 15m, Strong at 1m)
-                    // Formula: Base + (Scale / (Distance + epsilon))
-                    // Result: ~1.0 at max range, ~20.0 at close range
-                    const pullStrength = 10.0 + (50.0 / (distToPlayer + 2.0));
-                    const pullForce = toPlayer.normalize().multiplyScalar(pullStrength * deltaTime);
+                    // 1. Calculate Basis Vectors
+                    const dirToPlayer = toPlayer.clone().normalize();
+                    // Tangent is perpendicular to direction (Cross product with Up)
+                    // This creates the "Orbit" direction
+                    const tangent = new THREE.Vector3(-dirToPlayer.z, 0, dirToPlayer.x).normalize();
 
-                    // B. Tangential Force (Orbital Chaos)
-                    // Cross product with Up Vector (0,1,0) gives tangential direction
-                    // Modify direction based on time to create "struggle" arcs
-                    const tangent = new THREE.Vector3(-toPlayer.z, 0, toPlayer.x).normalize();
-                    // Sine wave creates left-right fighting motion
-                    const struggle = Math.sin(Date.now() * 0.005) * 20.0;
-                    const orbitForce = tangent.multiplyScalar(struggle * deltaTime);
+                    // 2. Variable Forces (The Vortex Math)
+                    // Pull increases exponentially as we get closer to ensure capture
+                    const pullStrength = 15.0 + (50.0 / (distToPlayer + 0.1));
 
-                    // Apply Forces
+                    // Orbit Speed creates the funnel effect
+                    // High enough to spin, but lower than pull at close range to avoid eternal orbit
+                    const orbitStrength = 30.0 + (10.0 / (distToPlayer + 1.0));
+
+                    // 3. Apply Forces
+                    const pullForce = dirToPlayer.multiplyScalar(pullStrength * deltaTime);
+                    const orbitForce = tangent.multiplyScalar(orbitStrength * deltaTime);
+
                     this.velocity.add(pullForce);
                     this.velocity.add(orbitForce);
 
-                    // If very close, collect
-                    if (distToPlayer < 1.0) {
-                        this.collect();
-                        return false;
+                    // 4. Damping (Air Resistance)
+                    // Crucial to prevent orbit from becoming elliptical/slingshotting too far out
+                    this.velocity.multiplyScalar(0.95);
+
+                    // 5. Hard Capture (The "Event Horizon")
+                    // If very close, force collision to prevent infinite spinning
+                    if (distToPlayer < 0.5) {
+                         // Direct massive pull override
+                         this.velocity.add(dirToPlayer.multiplyScalar(50.0 * deltaTime));
+
+                         // Check for collision
+                         if (distToPlayer < 0.3) {
+                             this.collect();
+                             return false;
+                         }
                     }
 
                 } else {
