@@ -186,21 +186,25 @@ html, body {
         #spectral-bar {
             width: 64px;
             height: 64px;
-            background-color: transparent !important;
-            /* Removed static frame image */
-            border: none;
-            padding: 0;
             position: fixed;
             top: 20px;
             right: 20px;
-            /* Overflow hidden removed to allow counter to pop out if needed,
-               but kept for fill clipping if we want the fill inside the circle.
-               User asked for "Container circular". */
-            border-radius: 50%; /* Ensure it's circular */
-            overflow: visible;
             z-index: 10000;
-            /* Optional: subtle backing */
-            box-shadow: 0 0 10px rgba(170, 0, 255, 0.3);
+            padding: 0;
+            background-color: transparent !important;
+            border: none;
+            overflow: visible; /* Allow counter to pop out */
+        }
+
+        #spectral-flask-container {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden; /* Clips fill and flame to circle */
+            border: 2px solid #aa00ff;
+            box-shadow: 0 0 15px #aa00ff, inset 0 0 10px #aa00ff;
+            background-color: rgba(0, 0, 0, 0.3);
+            position: relative;
         }
 
         #soul-flame-animation {
@@ -212,6 +216,7 @@ html, body {
             background-image: url('../assets/sprites/Items/Drops/Souls/soul_fragment.png');
             background-size: 600% 200%; /* 6 cols, 2 rows */
             background-repeat: no-repeat;
+            mix-blend-mode: screen; /* REMOVES BLACK BACKGROUND */
             /* Animation: 11 frames total.
                We need a custom keyframe set for the 6x2 grid. */
             animation: soul-burn 1.2s steps(1) infinite;
@@ -253,7 +258,7 @@ html, body {
             justify-content: center;
             align-items: center;
             box-shadow: 0 0 5px #aa00ff;
-            z-index: 3;
+            z-index: 10; /* High Z-Index */
             text-shadow: 0 0 2px #fff;
         }
 
@@ -262,16 +267,13 @@ html, body {
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 0%; /* Vertical Fill seems more appropriate for a flask/container feel */
-            /* But legacy was width. Let's stick to height for a circular container or width? */
-            /* If we use width on a circle, it looks weird unless masked.
-               Let's try Vertical Fill (height) because it feels like filling a vessel. */
+            height: 0%; /* Vertical Fill */
             background-color: transparent !important;
             /* Image replaced by Plasma CSS */
             background-size: 100% 200%;
             transition: height 0.3s ease-out;
             z-index: 1; /* Behind flame */
-            border-radius: 50%; /* Clip to circle */
+            border-radius: 0; /* Let container handle clipping */
             opacity: 0.5; /* Semi-transparent so flame pops */
         }
 
