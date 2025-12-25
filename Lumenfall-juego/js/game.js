@@ -2708,8 +2708,9 @@
             }
         }
 
-        function spawnLoot(scene, position, type) {
-             allPowerUps.push(new LootItem(scene, position, type));
+        function spawnLoot(targetScene, position, type) {
+             const s = targetScene || scene; // Fallback to global scene if not provided
+             allPowerUps.push(new LootItem(s, position, type));
         }
 
         // Expose classes to global scope for testing/verification
@@ -4496,23 +4497,23 @@
                 this.mesh.position.copy(position);
                 this.scene.add(this.mesh);
 
-                this.state = 'IDLE';
-                this.bobOffset = Math.random() * Math.PI * 2;
+                // --- NEW PHYSICS PROPERTIES ---
+                this.velocity = new THREE.Vector3(0, 0, 0);
+                this.friction = 0.96; // Air resistance (Damping)
+                this.anchorPos = position.clone(); // The tether point
+                this.wanderTarget = position.clone(); // Current target for idle movement
+                this.wanderTimer = 0;
+
+                // Animation
                 this.currentFrame = Math.floor(Math.random() * this.totalFrames);
                 this.frameTimer = 0;
-
-                // Physics for Orbit/Attraction
-                this.orbitAngle = 0;
-                this.orbitRadius = 0;
-                this.orbitY = 0;
-                this.orbitInitialized = false;
             }
 
             update(deltaTime) {
                 // Sleep optimization
                 if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return true;
 
-                // Animation
+                // 1. Animation Loop
                 this.frameTimer += deltaTime;
                 if (this.frameTimer > 0.1) { // 10 FPS
                     this.frameTimer = 0;
@@ -4520,78 +4521,87 @@
 
                     const col = this.currentFrame % this.cols;
                     const row = Math.floor(this.currentFrame / this.cols);
-                    // Row 0 is top (v=0.5), Row 1 is bottom (v=0)
                     this.texture.offset.x = col / this.cols;
                     this.texture.offset.y = (this.rows - 1 - row) * 0.5;
                 }
 
+                // Face Camera
                 this.mesh.lookAt(camera.position);
 
-                // Logic
-                const distToPlayer = player ? this.mesh.position.distanceTo(player.mesh.position) : 999;
-                // Explicitly check for "Reload" action (Absorbing)
-                const isReloading = player && player.isAbsorbing;
+                // 2. Physics Logic
+                if (!player) return true;
 
-                if (this.state === 'IDLE') {
-                    // Bobbing
-                    this.bobOffset += deltaTime * 2;
-                    this.mesh.position.y += Math.sin(this.bobOffset) * 0.005;
+                const targetCenter = player.mesh.position.clone().add(new THREE.Vector3(0, 2.0, 0));
+                const toPlayer = new THREE.Vector3().subVectors(targetCenter, this.mesh.position);
+                const distToPlayer = toPlayer.length();
+                const isAbsorbing = player.isAbsorbing;
+                const absorptionRange = 15.0;
 
-                    // Trigger Attraction ONLY if input is held
-                    if (isReloading && distToPlayer < 15) {
-                        this.state = 'ATTRACTED';
-                        this.orbitInitialized = false;
+                // State Determination
+                if (isAbsorbing && distToPlayer < absorptionRange) {
+                    // --- ABSORPTION STATE (Heavy Start & Chaos) ---
+
+                    // A. Attraction Force (Exponential: Weak at 15m, Strong at 1m)
+                    // Formula: Base + (Scale / (Distance + epsilon))
+                    // Result: ~1.0 at max range, ~20.0 at close range
+                    const pullStrength = 10.0 + (50.0 / (distToPlayer + 2.0));
+                    const pullForce = toPlayer.normalize().multiplyScalar(pullStrength * deltaTime);
+
+                    // B. Tangential Force (Orbital Chaos)
+                    // Cross product with Up Vector (0,1,0) gives tangential direction
+                    // Modify direction based on time to create "struggle" arcs
+                    const tangent = new THREE.Vector3(-toPlayer.z, 0, toPlayer.x).normalize();
+                    // Sine wave creates left-right fighting motion
+                    const struggle = Math.sin(Date.now() * 0.005) * 20.0;
+                    const orbitForce = tangent.multiplyScalar(struggle * deltaTime);
+
+                    // Apply Forces
+                    this.velocity.add(pullForce);
+                    this.velocity.add(orbitForce);
+
+                    // If very close, collect
+                    if (distToPlayer < 1.0) {
+                        this.collect();
+                        return false;
                     }
-                } else if (this.state === 'ATTRACTED') {
-                    if (!isReloading) {
-                        this.state = 'IDLE'; // Stop if button released
-                    } else {
-                        // Center target: Chest of Player
-                        const targetCenter = player.mesh.position.clone().add(new THREE.Vector3(0, 2.0, 0));
 
-                        if (!this.orbitInitialized) {
-                            const offset = new THREE.Vector3().subVectors(this.mesh.position, targetCenter);
-                            // Initial Radius from player center
-                            this.orbitRadius = offset.length();
-                            // Initial Y relative to player center
-                            this.orbitY = offset.y;
-                            // Initial Angle in XZ plane
-                            this.orbitAngle = Math.atan2(offset.z, offset.x);
-                            this.orbitInitialized = true;
-                        }
+                } else {
+                    // --- IDLE STATE (Tethered Wandering) ---
 
-                        // 1. Shrink Radius (Suction)
-                        // Accelerate as it gets closer
-                        const suctionSpeed = 10.0 + (20.0 / (this.orbitRadius + 0.1));
-                        this.orbitRadius -= suctionSpeed * deltaTime;
+                    this.wanderTimer -= deltaTime;
+                    if (this.wanderTimer <= 0) {
+                        // Pick new random target within 2m of Anchor
+                        // Use a sphere distribution or simple random offsets
+                        const offsetX = (Math.random() - 0.5) * 4.0; // +/- 2.0
+                        const offsetY = (Math.random() - 0.5) * 2.0; // +/- 1.0 (Height variation)
+                        const offsetZ = (Math.random() - 0.5) * 4.0; // +/- 2.0
 
-                        // 2. Spin (Orbit)
-                        // Spin faster as it gets closer (Conservation of angular momentum feel)
-                        const spinSpeed = 5.0 + (15.0 / (this.orbitRadius + 0.1));
-                        this.orbitAngle += spinSpeed * deltaTime;
+                        this.wanderTarget.copy(this.anchorPos).add(new THREE.Vector3(offsetX, offsetY, offsetZ));
 
-                        // 3. Move Y towards 0 (Player Center Height)
-                        // Exponential decay for Y difference
-                        this.orbitY = THREE.MathUtils.lerp(this.orbitY, 0, deltaTime * 5.0);
+                        // Keep Y reasonable (don't go below floor)
+                        if (this.wanderTarget.y < 1.0) this.wanderTarget.y = 1.0;
 
-                        // 4. Calculate New Position
-                        // Spiral in XZ plane + Y offset
-                        // "Fight" wobble: add sine wave to Y
-                        const fightWobble = Math.sin(this.orbitAngle * 4.0) * (this.orbitRadius * 0.2);
+                        this.wanderTimer = 1.5 + Math.random() * 1.5; // Next decision in 1.5-3s
+                    }
 
-                        const newX = targetCenter.x + Math.cos(this.orbitAngle) * this.orbitRadius;
-                        const newZ = targetCenter.z + Math.sin(this.orbitAngle) * this.orbitRadius;
-                        const newY = targetCenter.y + this.orbitY + fightWobble;
+                    // Steer towards wander target
+                    const toTarget = new THREE.Vector3().subVectors(this.wanderTarget, this.mesh.position);
+                    const distToTarget = toTarget.length();
 
-                        this.mesh.position.set(newX, newY, newZ);
-
-                        // Impact Condition
-                        if (this.orbitRadius < 0.5) {
-                            this.collect();
-                            return false; // Remove from array
-                        }
+                    // Gentle nudges (low force)
+                    if (distToTarget > 0.1) {
+                         const steerForce = toTarget.normalize().multiplyScalar(2.0 * deltaTime);
+                         this.velocity.add(steerForce);
                     }
                 }
+
+                // 3. Integration & Friction (Inertia)
+                this.mesh.position.add(this.velocity.clone().multiplyScalar(deltaTime * 10.0)); // Apply velocity
+
+                // Friction keeps it from accelerating infinitely and handles the "Drift" on release
+                // When button released, no new forces added, but velocity persists and decays
+                this.velocity.multiplyScalar(this.friction);
+
                 return true;
             }
 
