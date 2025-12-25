@@ -187,6 +187,8 @@
         let firstFlameTriggered = false; // Evento La Primera Llama
         const completedRooms = { room_1: false, room_2: false, room_3: false, room_4: false, room_5: false };
 
+        window.firstKillHappened = false; // TESTEO RÁPIDO: Flag para el primer loot garantizado
+
         let isGamepadModeActive = false;
         let vibrationLevel = 1; // 0: Off, 1: Soft, 2: Strong
         let isAttackButtonPressed = false;
@@ -663,25 +665,46 @@
                 if (isNearInteractable) {
                     // Update 3D Prompt Mesh
                     if (interactPromptMesh) {
-                        interactPromptMesh.visible = true;
-                        const targetPos = interactableObject.object.mesh.position.clone();
-                        // Adjust offset based on type
-                        const yOffset = (interactableObject.type === 'gate' ? 6.5 : 5.5);
-                        interactPromptMesh.position.set(targetPos.x, targetPos.y + yOffset, targetPos.z + 2.0); // Z pushed forward
+                        let showPrompt = true;
 
-                        // Animate Prompt Texture (Flame)
-                        if (interactPromptMesh.userData) {
-                             interactPromptMesh.userData.frameTimer += deltaTime;
-                             if (interactPromptMesh.userData.frameTimer > 0.05) {
-                                  interactPromptMesh.userData.frameTimer = 0;
-                                  interactPromptMesh.userData.currentFrame = (interactPromptMesh.userData.currentFrame + 1) % 16;
-                                  const col = interactPromptMesh.userData.currentFrame % 8;
-                                  const row = Math.floor(interactPromptMesh.userData.currentFrame / 8);
-                                  if (interactPromptMesh.material.map) {
-                                      interactPromptMesh.material.map.offset.x = col / 8;
-                                      interactPromptMesh.material.map.offset.y = (1 - row) * 0.5;
-                                  }
-                             }
+                        // AJUSTE: La Flama SOLO debe aparecer si la puerta está DESBLOQUEADA.
+                        if (interactableObject.type === 'gate') {
+                            const gate = interactableObject.object;
+                            // Si estamos en el dungeon principal, revisamos si la sala destino está completada
+                            if (currentLevelId === 'dungeon_1') {
+                                if (!completedRooms[gate.destination]) {
+                                    showPrompt = false;
+                                }
+                            } else {
+                                // Si estamos dentro de una sala, revisamos si esa sala está completada
+                                if (!completedRooms[currentLevelId]) {
+                                    showPrompt = false;
+                                }
+                            }
+                        }
+
+                        interactPromptMesh.visible = showPrompt;
+
+                        if (showPrompt) {
+                            const targetPos = interactableObject.object.mesh.position.clone();
+                            // Adjust offset based on type
+                            const yOffset = (interactableObject.type === 'gate' ? 6.5 : 5.5);
+                            interactPromptMesh.position.set(targetPos.x, targetPos.y + yOffset, targetPos.z + 2.0); // Z pushed forward
+
+                            // Animate Prompt Texture (Flame)
+                            if (interactPromptMesh.userData) {
+                                 interactPromptMesh.userData.frameTimer += deltaTime;
+                                 if (interactPromptMesh.userData.frameTimer > 0.05) {
+                                      interactPromptMesh.userData.frameTimer = 0;
+                                      interactPromptMesh.userData.currentFrame = (interactPromptMesh.userData.currentFrame + 1) % 16;
+                                      const col = interactPromptMesh.userData.currentFrame % 8;
+                                      const row = Math.floor(interactPromptMesh.userData.currentFrame / 8);
+                                      if (interactPromptMesh.material.map) {
+                                          interactPromptMesh.material.map.offset.x = col / 8;
+                                          interactPromptMesh.material.map.offset.y = (1 - row) * 0.5;
+                                      }
+                                 }
+                            }
                         }
                     }
 
@@ -689,10 +712,18 @@
                         if (interactableObject.type === 'gate') {
                             const gate = interactableObject.object;
 
-                            // Guard: If inside a room and not cleared, cannot exit
-                            if (currentLevelId !== 'dungeon_1' && !completedRooms[currentLevelId]) {
+                            // Lógica de "Puerta Bloqueada" explícita al interactuar
+                            let isLocked = false;
+                            if (currentLevelId === 'dungeon_1') {
+                                if (!completedRooms[gate.destination]) isLocked = true;
+                            } else {
+                                if (!completedRooms[currentLevelId]) isLocked = true;
+                            }
+
+                            if (isLocked) {
                                 showDialogue("PUERTA BLOQUEADA", 1000);
-                                return; // Block interaction
+                                playAudio('fantasma_lamento', false, 1.5); // Feedback sonoro negativo opcional
+                                return;
                             }
 
                             const destinationId = gate.destination;
@@ -806,7 +837,9 @@
                 deactivateGamepad: "Activar Táctil",
                 vibrationOff: "Vibración: OFF",
                 vibrationSoft: "Vibration: SUAVE",
-                vibrationStrong: "Vibration: FUERTE"
+                vibrationStrong: "Vibration: FUERTE",
+                "PUERTA BLOQUEADA": "PUERTA BLOQUEADA",
+                "PUERTA DESBLOQUEADA": "PUERTA DESBLOQUEADA"
             },
             en: {
                 start: "Start",
@@ -825,7 +858,9 @@
                 deactivateGamepad: "Activate Touch",
                 vibrationOff: "Vibration: OFF",
                 vibrationSoft: "Vibration: SOFT",
-                vibrationStrong: "Vibration: STRONG"
+                vibrationStrong: "Vibration: STRONG",
+                "PUERTA BLOQUEADA": "DOOR LOCKED",
+                "PUERTA DESBLOQUEADA": "DOOR UNLOCKED"
             }
         };
 
@@ -3099,7 +3134,14 @@
                     this.isAlive = false;
                     this.scene.remove(this.mesh);
                     this.stopAudio(1.5);
-                    if (Math.random() < 0.5) {
+
+                    if (!window.firstKillHappened) {
+                        window.firstKillHappened = true;
+                        // Garantizar los 3 items
+                        allPowerUps.push(new LootItem(this.scene, this.mesh.position.clone(), 'health'));
+                        allPowerUps.push(new LootItem(this.scene, this.mesh.position.clone(), 'power'));
+                        allPowerUps.push(new LootItem(this.scene, this.mesh.position.clone(), 'soul')); // Asumiendo 'soul' existe o usará default
+                    } else if (Math.random() < 0.5) {
                         const dropPosition = this.mesh.position.clone();
                         const type = Math.random() < 0.5 ? 'health' : 'power';
                         allPowerUps.push(new PowerUp(this.scene, dropPosition, type));
@@ -3355,7 +3397,14 @@
 
             finalizeDeath() {
                 this.isDying = false;
-                if (Math.random() < 0.6) {
+
+                if (!window.firstKillHappened) {
+                    window.firstKillHappened = true;
+                    // Garantizar los 3 items: Vida, Energía y Alma
+                    allPowerUps.push(new LootItem(this.scene, this.mesh.position.clone(), 'health'));
+                    allPowerUps.push(new LootItem(this.scene, this.mesh.position.clone(), 'power'));
+                    allPowerUps.push(new LootItem(this.scene, this.mesh.position.clone(), 'soul'));
+                } else if (Math.random() < 0.6) {
                     const dropPosition = this.mesh.position.clone();
                     const type = Math.random() < 0.5 ? 'health' : 'power';
                     allPowerUps.push(new PowerUp(this.scene, dropPosition, type));
@@ -3394,6 +3443,14 @@
                 this.currentFrame = 0;
                 this.lastFrameTime = 0;
 
+                // Wander AI Variables
+                this.state = 'IDLE'; // 'IDLE' or 'MOVING'
+                this.moveTargetX = x;
+                this.waitTimer = Math.random() * 2 + 1; // Initial wait
+                this.moveSpeed = 1.5; // Units per second
+                this.startX = x;
+                this.wanderRange = 15; // Move +/- 15 units
+
                 this.voiceSource = null;
                 this.voiceGain = null;
                 this.startVoice();
@@ -3420,9 +3477,37 @@
             }
 
             update(deltaTime) {
-                // Optimization: Sleep if off-screen
+                // Optimization: Sleep if off-screen (skip update but keep alive)
                 if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return;
 
+                // --- AI LOGIC (WANDER) ---
+                if (this.state === 'IDLE') {
+                    this.waitTimer -= deltaTime;
+                    if (this.waitTimer <= 0) {
+                        // Pick new target
+                        const randomOffset = (Math.random() - 0.5) * 2 * this.wanderRange;
+                        this.moveTargetX = this.startX + randomOffset;
+                        // Clamp to level bounds roughly (-55 to 55)
+                        this.moveTargetX = Math.max(-50, Math.min(50, this.moveTargetX));
+                        this.state = 'MOVING';
+                    }
+                } else if (this.state === 'MOVING') {
+                    const direction = this.moveTargetX > this.mesh.position.x ? 1 : -1;
+                    const dist = Math.abs(this.moveTargetX - this.mesh.position.x);
+
+                    if (dist < 0.2) {
+                        // Arrived
+                        this.state = 'IDLE';
+                        this.waitTimer = Math.random() * 3 + 2; // Wait 2-5 seconds
+                    } else {
+                        // Move
+                        this.mesh.position.x += direction * this.moveSpeed * deltaTime;
+                        // Face Direction (Ghost logic: Face movement)
+                        this.mesh.rotation.y = direction > 0 ? 0 : Math.PI;
+                    }
+                }
+
+                // --- ANIMATION & BOBBING ---
                 if (Date.now() - this.lastFrameTime > specterAnimationSpeed) {
                     this.lastFrameTime = Date.now();
                     this.currentFrame = (this.currentFrame + 1) % totalSpecterFrames;
