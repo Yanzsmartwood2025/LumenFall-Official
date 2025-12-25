@@ -29,7 +29,10 @@
             dustParticle: 'assets/textures/vfx/Polvo.png',
             projectileSprite: 'assets/sprites/Joziel/Sombras-efectos/efectos/proyectil-1.jpg',
             chargingSprite: 'assets/sprites/Joziel/Movimiento/carga-de-energia-1.png',
-            blueFire: 'assets/textures/vfx/fuego-antorcha.jpg'
+            blueFire: 'assets/textures/vfx/fuego-antorcha.jpg',
+            healthEssence: 'assets/sprites/Items/Drops/Health/health_essence.png',
+            energyEssence: 'assets/sprites/Items/Drops/Energy/energy_essence.png',
+            soulFragment: 'assets/sprites/Items/Drops/Souls/soul_fragment.png'
         };
 
         const PIXELS_PER_UNIT = 64;
@@ -3070,6 +3073,15 @@
             }
 
             if (levelId === 'dungeon_1') {
+                 // --- VISUAL TEST: SPAWN LOOT ITEMS ---
+                 // X: -5 (Health), 0 (Power), 5 (Soul)
+                 if (allPowerUps.length === 0) {
+                     spawnLoot(scene, new THREE.Vector3(-5, 2.0, 0), 'health');
+                     spawnLoot(scene, new THREE.Vector3(0, 2.0, 0), 'power');
+                     spawnLoot(scene, new THREE.Vector3(5, 2.0, 0), 'soul');
+                 }
+                 // -------------------------------------
+
                  if (allEnemiesX1.length === 0) {
                     const gateKeeper = new EnemyX1(scene, -40);
                     gateKeeper.isGatekeeper = true;
