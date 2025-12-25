@@ -2480,83 +2480,160 @@
             constructor(scene, startPosition, type) {
                 this.scene = scene;
                 this.type = type;
-                this.startPos = startPosition.clone();
-                this.targetElement = null;
+                this.life = 0;
+                this.duration = 0.8; // Time to reach target
 
+                // Determine Target
                 if (type === 'health') {
                     this.targetElement = document.getElementById('energy-bar');
                 } else if (type === 'power') {
                     this.targetElement = document.getElementById('power-bar');
                 } else {
-                    this.targetElement = document.getElementById('souls-container'); // Or spectral bar? defaulting to souls/spectral
-                    if (!this.targetElement) this.targetElement = document.getElementById('spectral-bar');
+                    this.targetElement = document.getElementById('spectral-bar');
+                    if (!this.targetElement) this.targetElement = document.getElementById('souls-container');
                 }
 
-                // Project 3D start pos to 2D screen pos
-                const vector = this.startPos.clone();
+                // Calculate Screen Positions
+                const vector = startPosition.clone();
                 vector.project(camera);
+                this.startScreen = {
+                    x: (vector.x * 0.5 + 0.5) * window.innerWidth,
+                    y: (-(vector.y * 0.5) + 0.5) * window.innerHeight
+                };
 
-                const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-                const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
+                if (this.targetElement) {
+                    const rect = this.targetElement.getBoundingClientRect();
+                    this.targetScreen = {
+                        x: rect.left + rect.width / 2,
+                        y: rect.top + rect.height / 2
+                    };
+                } else {
+                    // Fallback target
+                    this.targetScreen = { x: window.innerWidth/2, y: window.innerHeight/2 };
+                }
 
-                // Create DOM Element
+                // Control Point for Curve (Random arc)
+                const dx = this.targetScreen.x - this.startScreen.x;
+                const dy = this.targetScreen.y - this.startScreen.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                // Normal vector (-dy, dx)
+                const nx = -dy / dist;
+                const ny = dx / dist;
+
+                // Curve "height" varies
+                const curveHeight = 100 + Math.random() * 100;
+                const side = Math.random() > 0.5 ? 1 : -1;
+
+                this.controlPoint = {
+                    x: this.startScreen.x + dx * 0.5 + nx * curveHeight * side,
+                    y: this.startScreen.y + dy * 0.5 + ny * curveHeight * side
+                };
+
+                // Create Head Element ("Energy Comet")
                 this.element = document.createElement('div');
                 this.element.style.position = 'fixed';
-                this.element.style.left = `${x}px`;
-                this.element.style.top = `${y}px`;
-                this.element.style.width = '20px';
-                this.element.style.height = '20px';
+                this.element.style.width = '12px';
+                this.element.style.height = '12px';
                 this.element.style.borderRadius = '50%';
-                this.element.style.zIndex = '10001';
+                this.element.style.zIndex = '10002';
                 this.element.style.pointerEvents = 'none';
 
-                // Color based on type
-                if (type === 'health') this.element.style.backgroundColor = '#00ff00';
-                else if (type === 'power') this.element.style.backgroundColor = '#00aaff';
-                else this.element.style.backgroundColor = '#aa00ff'; // Soul/Spectral
+                // Colors
+                let color = '#ffffff';
+                let glowColor = '#ffffff';
+                if (type === 'health') { color = '#ffffff'; glowColor = '#00ff00'; }
+                else if (type === 'power') { color = '#ffffff'; glowColor = '#00aaff'; }
+                else { color = '#ffffff'; glowColor = '#aa00ff'; }
 
-                this.element.style.boxShadow = `0 0 10px ${this.element.style.backgroundColor}`;
-                this.element.style.transition = 'all 0.5s ease-in';
+                this.element.style.backgroundColor = color;
+                this.element.style.boxShadow = `0 0 10px ${glowColor}, 0 0 20px ${glowColor}`;
+                this.element.style.transform = 'translate(-50%, -50%)'; // Center pivot
 
                 document.body.appendChild(this.element);
 
-                // Trigger Animation
-                requestAnimationFrame(() => {
-                    if (this.targetElement) {
-                        const rect = this.targetElement.getBoundingClientRect();
-                        const targetX = rect.left + rect.width / 2;
-                        const targetY = rect.top + rect.height / 2;
+                this.trailTimer = 0;
+                this.glowColor = glowColor;
 
-                        this.element.style.left = `${targetX}px`;
-                        this.element.style.top = `${targetY}px`;
-                        this.element.style.opacity = '0'; // Fade out as it arrives
-                    }
+                // Dummy Mesh to satisfy main loop 'scene.remove(projectile.mesh)'
+                this.mesh = new THREE.Object3D();
+                this.scene.add(this.mesh);
+            }
+
+            update(deltaTime) {
+                this.life += deltaTime;
+                const t = Math.min(this.life / this.duration, 1.0);
+
+                // Quadratic Bezier: (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
+                const u = 1 - t;
+                const tt = t * t;
+                const uu = u * u;
+
+                const x = uu * this.startScreen.x + 2 * u * t * this.controlPoint.x + tt * this.targetScreen.x;
+                const y = uu * this.startScreen.y + 2 * u * t * this.controlPoint.y + tt * this.targetScreen.y;
+
+                this.element.style.left = `${x}px`;
+                this.element.style.top = `${y}px`;
+
+                // Spawn Trail
+                this.trailTimer += deltaTime;
+                if (this.trailTimer > 0.02) { // Every 20ms
+                    this.trailTimer = 0;
+                    this.createTrailParticle(x, y);
+                }
+
+                if (t >= 1.0) {
+                    // Arrived
+                    if (this.element.parentNode) this.element.parentNode.removeChild(this.element);
+                    this.applyEffect();
+                    return false; // Remove from game loop
+                }
+
+                return true; // Keep updating
+            }
+
+            createTrailParticle(x, y) {
+                const p = document.createElement('div');
+                p.style.position = 'fixed';
+                p.style.left = `${x}px`;
+                p.style.top = `${y}px`;
+                p.style.width = '8px';
+                p.style.height = '8px';
+                p.style.borderRadius = '50%';
+                p.style.backgroundColor = this.glowColor;
+                p.style.opacity = '0.8';
+                p.style.zIndex = '10001';
+                p.style.pointerEvents = 'none';
+                p.style.transform = 'translate(-50%, -50%) scale(1)';
+                p.style.transition = 'all 0.4s ease-out';
+
+                document.body.appendChild(p);
+
+                // Animate Fade Out
+                requestAnimationFrame(() => {
+                    p.style.transform = 'translate(-50%, -50%) scale(0)';
+                    p.style.opacity = '0';
                 });
 
-                // Cleanup and Apply Effect after animation
                 setTimeout(() => {
-                    if (this.element && this.element.parentNode) {
-                        this.element.parentNode.removeChild(this.element);
-                    }
-                    this.applyEffect();
-                }, 500); // Match transition time
+                    if(p.parentNode) p.parentNode.removeChild(p);
+                }, 400);
             }
 
             applyEffect() {
                 if (!player) return;
                 if (this.type === 'health') player.restoreHealth(10);
                 else if (this.type === 'power') player.restorePower(15);
-                // Soul logic if needed
-            }
 
-            update(deltaTime) {
-                // Dummy update to satisfy main loop if added to allProjectiles
-                // Since this is DOM based, we return false immediately to remove from THREE.js array?
-                // Actually, LootItem calls allProjectiles.push(new HUDProjectile...)
-                // Main loop calls update(). If false, removes.
-                // We return FALSE so it is removed from the game logic array immediately,
-                // as the DOM animation runs independently.
-                return false;
+                // Visual Flash on UI Element
+                if (this.targetElement) {
+                    this.targetElement.style.transition = 'none';
+                    this.targetElement.style.filter = 'brightness(2.0) drop-shadow(0 0 15px ' + this.glowColor + ')';
+                    setTimeout(() => {
+                        this.targetElement.style.transition = 'filter 0.5s';
+                        this.targetElement.style.filter = 'none';
+                    }, 50);
+                }
             }
         }
 
@@ -4252,6 +4329,68 @@
             }
         }
 
+        class ImpactBurst {
+            constructor(scene, position, color) {
+                this.scene = scene;
+                this.life = 0.5;
+                this.particles = [];
+                const count = 15;
+
+                const geo = new THREE.PlaneGeometry(0.15, 0.15);
+                const mat = new THREE.MeshBasicMaterial({
+                    color: color,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    side: THREE.DoubleSide,
+                    depthWrite: false
+                });
+
+                for(let i=0; i<count; i++) {
+                    const p = new THREE.Mesh(geo, mat.clone());
+                    p.position.copy(position);
+                    // Random spherical velocity
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.acos(2 * Math.random() - 1);
+                    const speed = 2.0 + Math.random() * 4.0;
+
+                    p.userData = {
+                        vel: new THREE.Vector3(
+                            Math.sin(phi) * Math.cos(theta) * speed,
+                            Math.sin(phi) * Math.sin(theta) * speed,
+                            Math.cos(phi) * speed
+                        ),
+                        rotSpeed: (Math.random()-0.5) * 10
+                    };
+                    this.scene.add(p);
+                    this.particles.push(p);
+                }
+            }
+            update(dt) {
+                this.life -= dt;
+                if(this.life <= 0) {
+                    this.particles.forEach(p => this.scene.remove(p));
+                    return false;
+                }
+
+                this.particles.forEach(p => {
+                    p.position.add(p.userData.vel.clone().multiplyScalar(dt));
+                    p.rotation.z += p.userData.rotSpeed * dt;
+                    p.scale.multiplyScalar(0.95); // Shrink
+                    p.material.opacity = this.life * 2;
+                });
+                return true;
+            }
+        }
+
+        function createImpactBurst(scene, position, type) {
+            let color = 0xffffff;
+            if(type === 'health') color = 0x00ff00;
+            else if(type === 'power') color = 0x00aaff;
+            else if(type === 'soul') color = 0xaa00ff;
+
+            allFlames.push(new ImpactBurst(scene, position, color));
+        }
+
         class LootItem {
             constructor(scene, position, type) {
                 this.scene = scene;
@@ -4291,8 +4430,11 @@
                 this.currentFrame = Math.floor(Math.random() * this.totalFrames);
                 this.frameTimer = 0;
 
-                // Physics for attraction
-                this.noiseSeed = Math.random() * 100;
+                // Physics for Orbit/Attraction
+                this.orbitAngle = 0;
+                this.orbitRadius = 0;
+                this.orbitY = 0;
+                this.orbitInitialized = false;
             }
 
             update(deltaTime) {
@@ -4327,29 +4469,53 @@
                     // Trigger Attraction ONLY if input is held
                     if (isReloading && distToPlayer < 15) {
                         this.state = 'ATTRACTED';
+                        this.orbitInitialized = false;
                     }
                 } else if (this.state === 'ATTRACTED') {
                     if (!isReloading) {
                         this.state = 'IDLE'; // Stop if button released
                     } else {
-                        // Move to player (Chest Height)
-                        const targetPos = player.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0));
-                        const direction = new THREE.Vector3().subVectors(targetPos, this.mesh.position);
-                        const dist = direction.length();
-                        direction.normalize();
+                        // Center target: Chest of Player
+                        const targetCenter = player.mesh.position.clone().add(new THREE.Vector3(0, 2.0, 0));
 
-                        // Speed increases as distance decreases
-                        const speed = 5.0 + (15 - dist);
+                        if (!this.orbitInitialized) {
+                            const offset = new THREE.Vector3().subVectors(this.mesh.position, targetCenter);
+                            // Initial Radius from player center
+                            this.orbitRadius = offset.length();
+                            // Initial Y relative to player center
+                            this.orbitY = offset.y;
+                            // Initial Angle in XZ plane
+                            this.orbitAngle = Math.atan2(offset.z, offset.x);
+                            this.orbitInitialized = true;
+                        }
 
-                        // Turbulence
-                        this.noiseSeed += deltaTime * 5;
-                        const perp = new THREE.Vector3(-direction.y, direction.x, 0); // Simple 2D perp
-                        const noise = Math.sin(this.noiseSeed) * Math.min(dist * 0.5, 2.0); // Less noise when very close
+                        // 1. Shrink Radius (Suction)
+                        // Accelerate as it gets closer
+                        const suctionSpeed = 10.0 + (20.0 / (this.orbitRadius + 0.1));
+                        this.orbitRadius -= suctionSpeed * deltaTime;
 
-                        this.mesh.position.add(direction.multiplyScalar(speed * deltaTime));
-                        this.mesh.position.add(perp.multiplyScalar(noise * deltaTime));
+                        // 2. Spin (Orbit)
+                        // Spin faster as it gets closer (Conservation of angular momentum feel)
+                        const spinSpeed = 5.0 + (15.0 / (this.orbitRadius + 0.1));
+                        this.orbitAngle += spinSpeed * deltaTime;
 
-                        if (dist < 1.0) {
+                        // 3. Move Y towards 0 (Player Center Height)
+                        // Exponential decay for Y difference
+                        this.orbitY = THREE.MathUtils.lerp(this.orbitY, 0, deltaTime * 5.0);
+
+                        // 4. Calculate New Position
+                        // Spiral in XZ plane + Y offset
+                        // "Fight" wobble: add sine wave to Y
+                        const fightWobble = Math.sin(this.orbitAngle * 4.0) * (this.orbitRadius * 0.2);
+
+                        const newX = targetCenter.x + Math.cos(this.orbitAngle) * this.orbitRadius;
+                        const newZ = targetCenter.z + Math.sin(this.orbitAngle) * this.orbitRadius;
+                        const newY = targetCenter.y + this.orbitY + fightWobble;
+
+                        this.mesh.position.set(newX, newY, newZ);
+
+                        // Impact Condition
+                        if (this.orbitRadius < 0.5) {
                             this.collect();
                             return false; // Remove from array
                         }
@@ -4362,6 +4528,9 @@
                 this.scene.remove(this.mesh);
                 const index = allPowerUps.indexOf(this);
                 if (index > -1) allPowerUps.splice(index, 1);
+
+                // Spawn Particles
+                createImpactBurst(this.scene, this.mesh.position, this.type);
 
                 if (typeof HUDProjectile !== 'undefined') {
                     allProjectiles.push(new HUDProjectile(this.scene, this.mesh.position, this.type));
