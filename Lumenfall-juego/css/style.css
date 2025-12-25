@@ -170,18 +170,17 @@ html, body {
         #energy-fill, #power-fill {
             height: 100%;
             border-radius: 6px;
+            /* Delegated to .plasma-fill classes */
         }
 
         #energy-fill {
-            background-color: #00ff00;
             width: 100%;
+            /* background-color removed for Plasma */
         }
 
         #power-fill {
-            background: linear-gradient(90deg, transparent 0%, rgba(52, 152, 219, 0.5) 10%, #00aaff 50%, rgba(52, 152, 219, 0.5) 90%, transparent 100%);
-            transition: width 0.3s ease-out, box-shadow 0.3s ease-out;
-            box-shadow: 0 0 8px #00aaff;
-            animation: move-power 2s infinite linear;
+            transition: width 0.3s ease-out;
+            /* background removed for Plasma */
         }
 
         #spectral-bar {
@@ -205,13 +204,64 @@ html, body {
             height: 100%;
             width: 0%; /* Controlled by JS */
             background-color: transparent !important;
-            background-image: url('../assets/ui/hud/energy_spectral_fill.png');
-            background-size: 200px 100%; /* Fixed to parent width to reveal instead of stretch */
-            background-repeat: no-repeat;
-            background-position: left center;
+            /* Image replaced by Plasma CSS */
+            background-size: 200% 100%; /* Consistent with plasma */
             transition: width 0.3s ease-out;
             /* mix-blend-mode removed by request */
-            /* Removed shadow/animation to prioritize pure image asset */
+        }
+
+        /* --- NEXT-GEN PLASMA UI --- */
+
+        .plasma-fill {
+            height: 100%;
+            width: 100%;
+            border-radius: 6px;
+            background-size: 200% 100%;
+            animation: plasma-flow 2s infinite linear;
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.5); /* Brillo interno */
+            position: relative;
+        }
+
+        @keyframes plasma-flow {
+            0% { background-position: 100% 0; }
+            100% { background-position: 0% 0; }
+        }
+
+        /* Variantes de Color */
+
+        .plasma-green {
+            background-image: linear-gradient(90deg, #00b300, #33ff33, #ccffcc, #33ff33, #00b300);
+            box-shadow: 0 0 10px #00ff00, inset 0 0 5px rgba(255,255,255,0.8);
+        }
+
+        .plasma-blue {
+            background-image: linear-gradient(90deg, #0055aa, #00aaff, #99ddff, #00aaff, #0055aa);
+            box-shadow: 0 0 10px #00aaff, inset 0 0 5px rgba(255,255,255,0.8);
+        }
+
+        .plasma-purple {
+            background-image: linear-gradient(90deg, #4b0082, #aa00ff, #e0b0ff, #aa00ff, #4b0082);
+            box-shadow: 0 0 10px #aa00ff, inset 0 0 5px rgba(255,255,255,0.8);
+        }
+
+        .plasma-red { /* Estado Crítico */
+            background-image: linear-gradient(90deg, #500000, #ff0000, #ff6666, #ff0000, #500000);
+            box-shadow: 0 0 15px #ff0000, inset 0 0 5px rgba(255,255,255,0.8);
+            animation: plasma-flow 0.5s infinite linear; /* Más rápido y agitado */
+        }
+
+        /* Animación de Impacto (SWELL) */
+
+        @keyframes swell-anim {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.1); filter: brightness(1.5) drop-shadow(0 0 10px white); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        .swell-active {
+            animation: swell-anim 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efecto rebote */
+            transform-origin: center center;
+            z-index: 10001 !important;
         }
 
         /* FIX: Asegurar que el contenedor padre no tenga fondo opaco accidentalmente */
