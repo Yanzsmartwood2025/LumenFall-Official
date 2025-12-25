@@ -3952,7 +3952,8 @@
                 this.scene = scene;
                 this.speed = 0.5;
 
-                this.texture = textureLoader.load(assetUrls.projectileSprite);
+                // CLONE texture to ensure unique UV offsets per projectile instance
+                this.texture = textureLoader.load(assetUrls.projectileSprite).clone();
                 this.texture.wrapS = THREE.RepeatWrapping;
                 this.texture.wrapT = THREE.RepeatWrapping;
                 this.texture.magFilter = THREE.NearestFilter;
@@ -3961,6 +3962,9 @@
                 this.cols = 4;
                 this.rows = 2;
                 this.texture.repeat.set(1 / this.cols, 1 / this.rows);
+
+                // Ensure the cloned texture updates its matrix
+                this.texture.needsUpdate = true;
 
                 const material = new THREE.MeshBasicMaterial({
                     map: this.texture,
@@ -4021,8 +4025,8 @@
                 this.plasmaCore.scale.set(0.8, 0.8, 1);
                 this.scene.add(this.plasmaCore);
 
-                // Offset Z: Core behind Sprite
-                this.zOffset = -0.1;
+                // Offset Z: Core behind Sprite (Tightened to -0.01 to appear as one body)
+                this.zOffset = -0.01;
 
                 // 2. Trail (Improved)
                 // Width 0.5 (Base), Length 12, MaxAlpha 0.6
