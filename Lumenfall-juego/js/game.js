@@ -173,6 +173,11 @@
         // Expose for debugging/verification
         window.allProjectiles = allProjectiles;
         window.allFlames = allFlames;
+        window.allEnemiesX1 = allEnemiesX1;
+        window.allSimpleEnemies = allSimpleEnemies;
+        window.allGates = allGates;
+        // window.completedRooms assignment moved below definition to avoid ReferenceError
+        window.isCinematic = false;
 
         let currentLevelId = 'dungeon_1';
         let isPaused = false;
@@ -186,6 +191,7 @@
 
         let firstFlameTriggered = false; // Evento La Primera Llama
         const completedRooms = { room_1: false, room_2: false, room_3: false, room_4: false, room_5: false };
+        window.completedRooms = completedRooms; // Expose global AFTER definition
 
         window.firstKillHappened = false; // TESTEO RÁPIDO: Flag para el primer loot garantizado
 
@@ -447,6 +453,66 @@
             }, 150); // Slightly longer fade for distant flicker
         }
 
+        // --- CINEMATIC SYSTEM ---
+        function triggerCinematicSequence(targetPos, onShowAction) {
+            if (window.isCinematic) return;
+            window.isCinematic = true;
+            isPaused = true;
+
+            const overlay = document.getElementById('agony-overlay');
+            overlay.style.display = 'block';
+            overlay.style.backgroundColor = 'black';
+            overlay.style.opacity = 0;
+            overlay.style.transition = 'opacity 0.5s ease-in-out';
+
+            // Sequence: FadeOut -> Move/Action -> FadeIn -> Hold -> FadeOut -> Return -> FadeIn
+
+            // 1. Fade Out
+            setTimeout(() => overlay.style.opacity = 1, 10);
+
+            setTimeout(() => {
+                // 2. Hidden Phase
+                const savedCamPos = camera.position.clone();
+                camera.position.set(targetPos.x, targetPos.y, 14);
+
+                if (onShowAction) onShowAction();
+
+                // 3. Fade In (Reveal)
+                overlay.style.opacity = 0;
+
+                setTimeout(() => {
+                    // 4. Hold Phase (Observation)
+
+                    // 5. Fade Out
+                    overlay.style.opacity = 1;
+
+                    setTimeout(() => {
+                        // 6. Return Camera
+                        if (player) {
+                             camera.position.x = player.mesh.position.x;
+                             const targetCameraY = player.mesh.position.y + 6;
+                             camera.position.y = targetCameraY;
+                             camera.position.z = 14;
+                        } else {
+                             camera.position.copy(savedCamPos);
+                        }
+
+                        // 7. Fade In (Resume)
+                        overlay.style.opacity = 0;
+                        setTimeout(() => {
+                            overlay.style.display = 'none';
+                            window.isCinematic = false;
+                            isPaused = false;
+                            animate();
+                        }, 500);
+
+                    }, 500 + 1500); // Wait FadeIn(500) + Hold(1500)
+
+                }, 500); // Wait FadeOut(500)
+
+            }, 500); // Wait initial FadeOut
+        }
+
         // --- FIRST FLAME EVENT (INTRO) ---
         function triggerFirstFlameEvent() {
             if (firstFlameTriggered) return;
@@ -579,27 +645,35 @@
                 const attackHeld = isAttackButtonPressed && (Date.now() - attackPressStartTime > 200);
                 player.update(deltaTime, { joyVector, attackHeld });
 
-                // --- NIGHTMARE LOGIC: Check Room Clear ---
+                // --- LOGIC: Check Room Clear & Cinematic ---
                 if (currentLevelId !== 'dungeon_1' && currentLevelId !== 'boss_room') {
                     const enemiesRemaining = allSimpleEnemies.length + allEnemiesX1.length;
                     if (enemiesRemaining === 0) {
-                        // Activate Exit Torches (Nightmare Victory)
                         if (!completedRooms[currentLevelId]) {
-                             completedRooms[currentLevelId] = true;
-                             // Spawn Torches at Exit (x=0)
-                             const z = camera.position.z - roomDepth + 0.5;
-                             new AmbientTorchFlame(scene, new THREE.Vector3(-6, 3.2+1.8, z+0.1));
-                             const l1 = new THREE.PointLight(0x00aaff, 1, 15);
-                             l1.position.set(-6, 3.2, z+0.5);
-                             scene.add(l1);
+                             completedRooms[currentLevelId] = true; // Mark Complete
 
-                             new AmbientTorchFlame(scene, new THREE.Vector3(6, 3.2+1.8, z+0.1));
-                             const l2 = new THREE.PointLight(0x00aaff, 1, 15);
-                             l2.position.set(6, 3.2, z+0.5);
-                             scene.add(l2);
+                             // Trigger Cinematic Sequence
+                             const exitX = 0; // Standard Exit X
+                             const exitY = 4; // Door Center Y
+                             const targetPos = new THREE.Vector3(exitX, exitY, 0);
 
-                             playAudio('puerta'); // Success sound
-                             showDialogue('PUERTA DESBLOQUEADA', 2000);
+                             triggerCinematicSequence(targetPos, () => {
+                                 // Action: Light Torches
+                                 const gateZ = -5; // Visual depth approximation for room exits
+
+                                 new AmbientTorchFlame(scene, new THREE.Vector3(-6, 3.2+1.8, gateZ+0.1));
+                                 const l1 = new THREE.PointLight(0x00aaff, 1, 15);
+                                 l1.position.set(-6, 3.2, gateZ+0.5);
+                                 scene.add(l1);
+
+                                 new AmbientTorchFlame(scene, new THREE.Vector3(6, 3.2+1.8, gateZ+0.1));
+                                 const l2 = new THREE.PointLight(0x00aaff, 1, 15);
+                                 l2.position.set(6, 3.2, gateZ+0.5);
+                                 scene.add(l2);
+
+                                 playAudio('puerta'); // Success sound
+                                 showDialogue('PUERTA DESBLOQUEADA', 2000);
+                             });
                         }
                     }
                 }
@@ -670,17 +744,22 @@
                         // AJUSTE: La Flama SOLO debe aparecer si la puerta está DESBLOQUEADA.
                         if (interactableObject.type === 'gate') {
                             const gate = interactableObject.object;
-                            // Si estamos en el dungeon principal, revisamos si la sala destino está completada
+                            let isGateUnlocked = false;
+
                             if (currentLevelId === 'dungeon_1') {
-                                if (!completedRooms[gate.destination]) {
-                                    showPrompt = false;
-                                }
+                                // Chain Logic
+                                if (gate.id === 'gate_1' && firstFlameTriggered) isGateUnlocked = true;
+                                else if (gate.id === 'gate_2' && completedRooms.room_1) isGateUnlocked = true;
+                                else if (gate.id === 'gate_3' && completedRooms.room_2) isGateUnlocked = true;
+                                else if (gate.id === 'gate_4' && completedRooms.room_3) isGateUnlocked = true;
+                                else if (gate.id === 'gate_5' && completedRooms.room_4) isGateUnlocked = true;
+                                else if (gate.id === 'gate_boss' && completedRooms.room_5) isGateUnlocked = true;
                             } else {
-                                // Si estamos dentro de una sala, revisamos si esa sala está completada
-                                if (!completedRooms[currentLevelId]) {
-                                    showPrompt = false;
-                                }
+                                // Inside Room: Exit Unlocks when Room is Cleared
+                                if (completedRooms[currentLevelId]) isGateUnlocked = true;
                             }
+
+                            if (!isGateUnlocked) showPrompt = false;
                         }
 
                         interactPromptMesh.visible = showPrompt;
@@ -713,11 +792,16 @@
                             const gate = interactableObject.object;
 
                             // Lógica de "Puerta Bloqueada" explícita al interactuar
-                            let isLocked = false;
+                            let isLocked = true;
                             if (currentLevelId === 'dungeon_1') {
-                                if (!completedRooms[gate.destination]) isLocked = true;
+                                if (gate.id === 'gate_1' && firstFlameTriggered) isLocked = false;
+                                else if (gate.id === 'gate_2' && completedRooms.room_1) isLocked = false;
+                                else if (gate.id === 'gate_3' && completedRooms.room_2) isLocked = false;
+                                else if (gate.id === 'gate_4' && completedRooms.room_3) isLocked = false;
+                                else if (gate.id === 'gate_5' && completedRooms.room_4) isLocked = false;
+                                else if (gate.id === 'gate_boss' && completedRooms.room_5) isLocked = false;
                             } else {
-                                if (!completedRooms[currentLevelId]) isLocked = true;
+                                if (completedRooms[currentLevelId]) isLocked = false;
                             }
 
                             if (isLocked) {
@@ -2918,15 +3002,13 @@
                 }
             }
 
-            if (levelId === 'room_1') {
-                if (allEnemiesX1.length === 0 && !completedRooms['room_1']) {
-                    allEnemiesX1.push(new EnemyX1(scene, 0));
-                }
-            }
-
-            if (levelId === 'room_3') {
-                if (allSimpleEnemies.length === 0) {
-                    // allSimpleEnemies.push(new SimpleEnemy(scene, 0)); // Disabled
+            // --- SPAWN LOGIC: 1 Enemy per Room (Rooms 1-5) ---
+            if (['room_1', 'room_2', 'room_3', 'room_4', 'room_5'].includes(levelId)) {
+                if (!completedRooms[levelId]) {
+                    // Ensure only 1 enemy is spawned for testing/flow
+                    if (allEnemiesX1.length === 0 && allSimpleEnemies.length === 0) {
+                        allEnemiesX1.push(new EnemyX1(scene, 0));
+                    }
                 }
             }
 
@@ -3478,7 +3560,8 @@
 
             update(deltaTime) {
                 // Optimization: Sleep if off-screen (skip update but keep alive)
-                if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return;
+                // Increased range to 60 to ensure it stays active/visible longer
+                if (Math.abs(this.mesh.position.x - camera.position.x) > 60) return;
 
                 // --- AI LOGIC (WANDER) ---
                 if (this.state === 'IDLE') {
