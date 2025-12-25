@@ -3952,8 +3952,7 @@
                 this.scene = scene;
                 this.speed = 0.5;
 
-                // CLONE texture to ensure unique UV offsets per projectile instance
-                this.texture = textureLoader.load(assetUrls.projectileSprite).clone();
+                this.texture = textureLoader.load(assetUrls.projectileSprite);
                 this.texture.wrapS = THREE.RepeatWrapping;
                 this.texture.wrapT = THREE.RepeatWrapping;
                 this.texture.magFilter = THREE.NearestFilter;
@@ -3962,9 +3961,6 @@
                 this.cols = 4;
                 this.rows = 2;
                 this.texture.repeat.set(1 / this.cols, 1 / this.rows);
-
-                // Ensure the cloned texture updates its matrix
-                this.texture.needsUpdate = true;
 
                 const material = new THREE.MeshBasicMaterial({
                     map: this.texture,
@@ -4020,13 +4016,14 @@
                     });
                 }
 
-                this.plasmaCore = new THREE.Sprite(sharedCoreMaterial);
+                // Clone material to allow independent rotation per projectile
+                this.plasmaCore = new THREE.Sprite(sharedCoreMaterial.clone());
                 // Slightly smaller than main projectile
                 this.plasmaCore.scale.set(0.8, 0.8, 1);
                 this.scene.add(this.plasmaCore);
 
-                // Offset Z: Core behind Sprite (Tightened to -0.01 to appear as one body)
-                this.zOffset = -0.01;
+                // Offset Z: Core behind Sprite (Safe value -0.05 to prevent clipping but keep attached)
+                this.zOffset = -0.05;
 
                 // 2. Trail (Improved)
                 // Width 0.5 (Base), Length 12, MaxAlpha 0.6
@@ -4209,7 +4206,11 @@
 
             cleanup() {
                 this.scene.remove(this.mesh);
-                if (this.plasmaCore) this.scene.remove(this.plasmaCore);
+                if (this.plasmaCore) {
+                    this.scene.remove(this.plasmaCore);
+                    // Dispose cloned material to prevent memory leaks
+                    if (this.plasmaCore.material) this.plasmaCore.material.dispose();
+                }
                 this.trail.dispose();
                 this.sparks.forEach(s => this.scene.remove(s.mesh));
                 this.sparks = [];
