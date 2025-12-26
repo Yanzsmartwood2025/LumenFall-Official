@@ -4605,6 +4605,13 @@
                 this.wanderTarget = position.clone(); // Current target for idle movement
                 this.wanderTimer = 0;
 
+                // Personality & Struggle Vars
+                this.strugglePhase = Math.random() * Math.PI * 2;
+                this.struggleFrequency = 5.0 + Math.random() * 5.0; // Frenetic shaking
+                this.struggleAmplitude = 15.0 + Math.random() * 10.0; // How hard it pulls away
+                this.orbitOffset = (Math.random() - 0.5) * 2.0; // "Por un lado o por otro"
+                this.absorbTime = 0;
+
                 // Animation
                 this.currentFrame = Math.floor(Math.random() * this.totalFrames);
                 this.frameTimer = 0;
@@ -4636,88 +4643,98 @@
                 const toPlayer = new THREE.Vector3().subVectors(targetCenter, this.mesh.position);
                 const distToPlayer = toPlayer.length();
                 const isAbsorbing = player.isAbsorbing;
-                const absorptionRange = 8.0;
+                const absorptionRange = 15.0; // Extended range slightly for better feel
 
                 // State Determination
                 if (isAbsorbing && distToPlayer < absorptionRange) {
-                    // --- ABSORPTION STATE (Spiral Vortex) ---
+                    // --- ABSORPTION STATE ("The Struggle") ---
+                    this.absorbTime += deltaTime;
 
-                    // 1. Calculate Basis Vectors
+                    // 1. Base Pull (Gradual acceleration)
+                    // Adjusted for *10.0 position multiplier. We need effective speed ~3.3.
+                    // Internal Velocity target ~0.33. Acceleration ~0.1 - 0.2.
+                    const pullFactor = 0.5 + (this.absorbTime * 2.5); // Start 0.5, ramp up faster
                     const dirToPlayer = toPlayer.clone().normalize();
-                    // Tangent is perpendicular to direction (Cross product with Up)
-                    // This creates the "Orbit" direction
-                    const tangent = new THREE.Vector3(-dirToPlayer.z, 0, dirToPlayer.x).normalize();
+                    const pullForce = dirToPlayer.multiplyScalar(pullFactor * deltaTime);
 
-                    // 2. Variable Forces (The Vortex Math)
-                    // Pull increases exponentially as we get closer to ensure capture
-                    const pullStrength = 15.0 + (50.0 / (distToPlayer + 0.1));
+                    // 2. Struggle Force (Perpendicular "Chaos")
+                    const sideVec = new THREE.Vector3(-dirToPlayer.z, 0, dirToPlayer.x).normalize();
+                    const upVec = new THREE.Vector3(0, 1, 0);
 
-                    // Orbit Speed creates the funnel effect
-                    // High enough to spin, but lower than pull at close range to avoid eternal orbit
-                    const orbitStrength = 30.0 + (10.0 / (distToPlayer + 1.0));
+                    // Sine wave struggle + Orbital Bias
+                    const struggleVal = Math.sin(this.absorbTime * this.struggleFrequency + this.strugglePhase) + this.orbitOffset;
+
+                    // Amplitude decreases as it gets closer. Clamp dist influence to avoid explosion.
+                    // Fade out struggle completely when very close to allow entry
+                    const safeDist = Math.min(distToPlayer, 15.0);
+                    const closeFade = Math.min(1.0, Math.max(0, (distToPlayer - 2.0) / 5.0)); // 0 at dist 2, 1 at dist 7
+
+                    const currentAmp = (this.struggleAmplitude * 0.15) * (safeDist / 10.0) * closeFade;
+
+                    const struggleForce = sideVec.multiplyScalar(struggleVal * currentAmp * deltaTime);
+
+                    // Vertical struggle
+                    const vertStruggle = upVec.multiplyScalar(Math.cos(this.absorbTime * this.struggleFrequency * 1.5) * currentAmp * 0.5 * deltaTime);
 
                     // 3. Apply Forces
-                    const pullForce = dirToPlayer.multiplyScalar(pullStrength * deltaTime);
-                    const orbitForce = tangent.multiplyScalar(orbitStrength * deltaTime);
-
                     this.velocity.add(pullForce);
-                    this.velocity.add(orbitForce);
+                    this.velocity.add(struggleForce);
+                    this.velocity.add(vertStruggle);
 
-                    // 4. Damping (Air Resistance)
-                    // Crucial to prevent orbit from becoming elliptical/slingshotting too far out
-                    this.velocity.multiplyScalar(0.95);
+                    // 4. Friction & Z-Constraint
+                    this.velocity.multiplyScalar(0.85); // High friction to prevent overshoot
+                    this.velocity.z *= 0.8; // Dampen Z heavily to keep near 2D plane
 
-                    // 5. Hard Capture (The "Event Horizon")
-                    // If very close, force collision to prevent infinite spinning
-                    if (distToPlayer < 0.5) {
-                         // Force Velocity towards player (Violent Magnetization)
-                         // We overwrite velocity to ensure it doesn't orbit. Snap speed factor 5.0 (~50 units/sec)
-                         const snapSpeed = 5.0;
-                         this.velocity.copy(dirToPlayer).multiplyScalar(snapSpeed);
+                    // 5. Hard Capture (Event Horizon)
+                    // Increased radius to catch fast movers
+                    if (distToPlayer < 3.0) {
+                         // Succumb to player (Zap!) - Steer aggressively
+                         const snapSpeed = 8.0;
+                         const targetVel = dirToPlayer.clone().multiplyScalar(snapSpeed);
+                         // Lerp velocity towards target to smooth the snap but enforce it
+                         this.velocity.lerp(targetVel, 0.5);
 
-                         // Check for collision (Threshold 0.1)
-                         if (distToPlayer < 0.1) {
+                         if (distToPlayer < 0.8) { // Increased threshold slightly
                              this.collect();
                              return false;
                          }
                     }
 
                 } else {
-                    // --- IDLE STATE (Tethered Wandering) ---
-
+                    // --- IDLE STATE (Alive Wandering) ---
+                    this.absorbTime = 0; // Reset struggle timer
                     this.wanderTimer -= deltaTime;
+
+                    // "Breathing" / "Floating" movement
+                    const hoverY = Math.sin(Date.now() * 0.003 + this.strugglePhase) * 0.005;
+                    this.mesh.position.y += hoverY;
+
                     if (this.wanderTimer <= 0) {
                         // Pick new random target within 2m of Anchor
-                        // Use a sphere distribution or simple random offsets
-                        const offsetX = (Math.random() - 0.5) * 4.0; // +/- 2.0
-                        const offsetY = (Math.random() - 0.5) * 2.0; // +/- 1.0 (Height variation)
-                        const offsetZ = (Math.random() - 0.5) * 4.0; // +/- 2.0
+                        const offsetX = (Math.random() - 0.5) * 4.0;
+                        const offsetY = (Math.random() - 0.5) * 2.0;
+                        const offsetZ = (Math.random() - 0.5) * 4.0;
 
                         this.wanderTarget.copy(this.anchorPos).add(new THREE.Vector3(offsetX, offsetY, offsetZ));
-
-                        // Keep Y reasonable (don't go below floor)
                         if (this.wanderTarget.y < 1.0) this.wanderTarget.y = 1.0;
 
-                        this.wanderTimer = 1.5 + Math.random() * 1.5; // Next decision in 1.5-3s
+                        this.wanderTimer = 1.5 + Math.random() * 1.5;
                     }
 
-                    // Steer towards wander target
                     const toTarget = new THREE.Vector3().subVectors(this.wanderTarget, this.mesh.position);
                     const distToTarget = toTarget.length();
 
-                    // Gentle nudges (low force)
                     if (distToTarget > 0.1) {
-                         const steerForce = toTarget.normalize().multiplyScalar(2.0 * deltaTime);
+                         const steerForce = toTarget.normalize().multiplyScalar(3.0 * deltaTime);
                          this.velocity.add(steerForce);
                     }
+
+                    // Higher friction in idle to keep it contained
+                    this.velocity.multiplyScalar(0.90);
                 }
 
-                // 3. Integration & Friction (Inertia)
-                this.mesh.position.add(this.velocity.clone().multiplyScalar(deltaTime * 10.0)); // Apply velocity
-
-                // Friction keeps it from accelerating infinitely and handles the "Drift" on release
-                // When button released, no new forces added, but velocity persists and decays
-                this.velocity.multiplyScalar(this.friction);
+                // 3. Apply Velocity
+                this.mesh.position.add(this.velocity.clone().multiplyScalar(deltaTime * 10.0));
 
                 return true;
             }
