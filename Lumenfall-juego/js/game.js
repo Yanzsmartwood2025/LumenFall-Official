@@ -1903,6 +1903,10 @@
                 this.currentSouls = 0;
                 this.soulCharges = 0;
                 this.soulChargesDisplay = document.getElementById('soul-charges-count');
+
+                // NEW: Idle Sequence Logic
+                this.idleSequence = [0, 1, 2, 1, 2, 1, 2, 3];
+                this.currentSequenceIndex = 0;
             }
 
             addSouls(amount) {
@@ -2363,11 +2367,11 @@
                 let currentAnimSpeed = animationSpeed;
                 if (this.currentState === 'idle') {
                     // Frame 0: Pause for 3 seconds (breathing)
+                    // Others: 2 seconds
                     if (this.currentFrame === 0) {
                         currentAnimSpeed = 3000;
                     } else {
-                        // Frames 1-10: Slow animation (5 FPS)
-                        currentAnimSpeed = 200;
+                        currentAnimSpeed = 2000;
                     }
                 }
                 if ((this.currentState === 'jumping' || this.currentState === 'landing') && this.isFacingLeft) {
@@ -2561,9 +2565,9 @@
 
                             isIdleSprite = true;
 
-                            // Stepped Animation Logic (8 FPS)
-                    // Simple Accumulator: Just increment, NO interpolation or math tricks
-                    this.currentFrame = (this.currentFrame + 1) % 11;
+                            // Sequence: 0 -> 1 -> 2 -> 1 -> 2 -> 1 -> 2 -> 3 -> 0...
+                            this.currentSequenceIndex = (this.currentSequenceIndex + 1) % this.idleSequence.length;
+                            this.currentFrame = this.idleSequence[this.currentSequenceIndex];
                             break;
                         default:
                             [totalFrames, currentTexture, shadowTexture] = [totalIdleFrames, this.idleTexture, this.idleShadowTexture];
