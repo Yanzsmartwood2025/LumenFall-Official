@@ -1770,6 +1770,21 @@
         this.floorLight.position.set(0, 0.1, 0); // Relative to feet (0)
                 this.mesh.add(this.floorLight);
 
+                // Additive Flash Overlay
+                const flashMat = new THREE.MeshBasicMaterial({
+                    map: null,
+                    color: 0xffffff,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    opacity: 0,
+                    side: THREE.DoubleSide,
+                    depthWrite: false
+                });
+                this.flashMesh = new THREE.Mesh(playerGeometry, flashMat);
+                this.flashMesh.position.set(0, 0, 0.01); // Just in front
+                this.flashMesh.visible = false;
+                this.mesh.add(this.flashMesh);
+
                 this.create3DProxy();
 
             // Charging State Variables
@@ -1781,6 +1796,9 @@
             this.idleTimer = 0;
             this.idleAnimTimer = 0;
             this.isPlayingSpecialIdle = false;
+
+            // Flash State (Impact)
+            this.flashTimer = 0;
 
             // Suction Particles for Loop Phase
             this.suctionParticles = new ImpactParticleSystem(scene, this.mesh.position); // Reusing logic or creating simplified?
@@ -1864,6 +1882,20 @@
                         if(this.soulChargesDisplay) this.soulChargesDisplay.style.transform = "scale(1)";
                     }, 200);
                 }
+            }
+
+            triggerImpactFlash(type) {
+                // Determine color
+                let color = 0xffffff;
+                if (type === 'health') color = 0x00ff00; // Green
+                else if (type === 'power') color = 0x00aaff; // Cyan
+                else if (type === 'soul') color = 0xaa00ff; // Purple
+
+                // Apply Flash
+                this.flashMesh.material.color.setHex(color);
+                this.flashMesh.material.opacity = 0.8;
+                this.flashMesh.visible = true;
+                this.flashTimer = 0.15; // 150ms flash
             }
 
         createSuctionParticles() {
@@ -2092,6 +2124,18 @@
                     if (this.invincibilityTimer <= 0) {
                         this.isInvincible = false;
                         this.mesh.material.opacity = 1.0;
+                    }
+                }
+
+                // Handle Flash Timer
+                if (this.flashTimer > 0) {
+                    this.flashTimer -= deltaTime;
+                    if (this.flashTimer <= 0) {
+                        this.flashMesh.visible = false;
+                        this.flashMesh.material.opacity = 0;
+                    } else {
+                        // Fade out
+                        this.flashMesh.material.opacity = (this.flashTimer / 0.15) * 0.8;
                     }
                 }
 
@@ -2470,6 +2514,15 @@
                         if (this.mesh.material === this.standardMaterial) {
                             this.mesh.material.map = currentTexture;
                         }
+
+                        // Sync Flash Mesh
+                        if (this.flashMesh.visible) {
+                            this.flashMesh.material.map = currentTexture;
+                            this.flashMesh.material.map.repeat.copy(currentTexture.repeat);
+                            this.flashMesh.material.map.offset.copy(currentTexture.offset);
+                            this.flashMesh.scale.x = 1; // Always 1 as parent handles facing
+                        }
+
                         if (isGridSprite) {
                             let frameMap = this.runningFrameMap;
                             if (this.isFacingLeft && this.currentState === 'running') {
@@ -4535,7 +4588,7 @@
                 const toPlayer = new THREE.Vector3().subVectors(targetCenter, this.mesh.position);
                 const distToPlayer = toPlayer.length();
                 const isAbsorbing = player.isAbsorbing;
-                const absorptionRange = 15.0;
+                const absorptionRange = 8.0;
 
                 // State Determination
                 if (isAbsorbing && distToPlayer < absorptionRange) {
@@ -4569,11 +4622,13 @@
                     // 5. Hard Capture (The "Event Horizon")
                     // If very close, force collision to prevent infinite spinning
                     if (distToPlayer < 0.5) {
-                         // Direct massive pull override
-                         this.velocity.add(dirToPlayer.multiplyScalar(50.0 * deltaTime));
+                         // Force Velocity towards player (Violent Magnetization)
+                         // We overwrite velocity to ensure it doesn't orbit. Snap speed factor 5.0 (~50 units/sec)
+                         const snapSpeed = 5.0;
+                         this.velocity.copy(dirToPlayer).multiplyScalar(snapSpeed);
 
-                         // Check for collision
-                         if (distToPlayer < 0.3) {
+                         // Check for collision (Threshold 0.1)
+                         if (distToPlayer < 0.1) {
                              this.collect();
                              return false;
                          }
@@ -4620,6 +4675,9 @@
             }
 
             collect() {
+                // Trigger Player Reaction
+                if (player) player.triggerImpactFlash(this.type);
+
                 this.scene.remove(this.mesh);
                 const index = allPowerUps.indexOf(this);
                 if (index > -1) allPowerUps.splice(index, 1);
