@@ -27,7 +27,8 @@
             enemyX1Attack: 'assets/sprites/Enemigos/Ataques-enemigo1/ataque-1.png',
             enemyX1Death: 'assets/sprites/Enemigos/Ataques-enemigo1/muerte-1.png',
             dustParticle: 'assets/textures/vfx/Polvo.png',
-            projectileSprite: 'assets/sprites/Joziel/Sombras-efectos/efectos/proyectil-1.jpg',
+            projectileSprite: 'assets/sprites/VFX/VFX_Projectile_BluePlasma_Sheet.png',
+            chargingAura: 'assets/sprites/VFX/VFX_Cast_Aura_Cylinder_Loop.png',
             chargingSprite: 'assets/sprites/Joziel/Movimiento/carga-de-energia-1.png',
             blueFire: 'assets/textures/vfx/fuego-antorcha.jpg',
             healthEssence: 'assets/sprites/Items/Drops/Health/health_essence.png',
@@ -1642,6 +1643,36 @@
         }
 
         // ... (Player Class - Kept as is)
+        const auraVertexShader = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
+
+        const auraFragmentShader = `
+            uniform sampler2D uTexture;
+            uniform vec2 uOffset;
+            uniform vec2 uRepeat;
+            varying vec2 vUv;
+
+            void main() {
+                // Map UVs to Grid
+                vec2 uv = vUv * uRepeat + uOffset;
+                vec4 color = texture2D(uTexture, uv);
+
+                // Vertical Fade: Soft edges at top (1.0) and bottom (0.0)
+                // smoothstep(edge0, edge1, x) returns 0 if x < edge0, 1 if x > edge1
+                // We want fade in at bottom (0.0 to 0.2) and fade out at top (0.8 to 1.0)
+                float fadeBottom = smoothstep(0.0, 0.2, vUv.y);
+                float fadeTop = 1.0 - smoothstep(0.8, 1.0, vUv.y);
+                float fade = fadeBottom * fadeTop;
+
+                gl_FragColor = vec4(color.rgb, color.a * fade);
+            }
+        `;
+
         class Player {
              constructor() {
                 this.runningTexture = textureLoader.load(assetUrls.runningSprite);
@@ -1689,14 +1720,6 @@
                 this.attackBackTexture.minFilter = THREE.NearestFilter;
                 this.attackBackTexture.repeat.set(1/6, 1);
 
-            // Carga
-            this.chargingTexture = textureLoader.load(assetUrls.chargingSprite);
-            this.chargingTexture.wrapS = THREE.RepeatWrapping;
-            this.chargingTexture.wrapT = THREE.RepeatWrapping;
-            this.chargingTexture.magFilter = THREE.NearestFilter;
-            this.chargingTexture.minFilter = THREE.NearestFilter;
-            this.chargingTexture.repeat.set(0.25, 0.25); // 4x4 Grid
-
                 // RUN FRAMEMAPS (GRID 8x2)
                 // Convention: Top Row (y=0.5) is frames 0-7, Bottom (y=0) is frame 8+
                 this.runningFrameMap = [];
@@ -1732,14 +1755,6 @@
                     depthWrite: false
                 });
                 this.standardMaterial = playerMaterial;
-
-                // Material básico con transparencia PNG para carga de energía
-                this.chargingMaterial = new THREE.MeshBasicMaterial({
-                    map: this.chargingTexture,
-                    transparent: true,
-                    side: THREE.DoubleSide,
-                    depthWrite: false
-                });
 
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
         this.mesh.position.y = 0.8; // Feet at 0.8
@@ -1784,6 +1799,35 @@
                 this.flashMesh.position.set(0, 0, 0.01); // Just in front
                 this.flashMesh.visible = false;
                 this.mesh.add(this.flashMesh);
+
+                // --- NEW AURA VFX ---
+                this.auraTexture = textureLoader.load(assetUrls.chargingAura);
+                this.auraTexture.magFilter = THREE.NearestFilter;
+                this.auraTexture.minFilter = THREE.NearestFilter;
+
+                this.auraGeometry = new THREE.CylinderGeometry(1.6, 1.6, 5.0, 16, 1, true);
+                this.auraMaterial = new THREE.ShaderMaterial({
+                    uniforms: {
+                        uTexture: { value: this.auraTexture },
+                        uRepeat: { value: new THREE.Vector2(1/6, 1/2) },
+                        uOffset: { value: new THREE.Vector2(0, 0) }
+                    },
+                    vertexShader: auraVertexShader,
+                    fragmentShader: auraFragmentShader,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    side: THREE.DoubleSide
+                });
+
+                this.auraMesh = new THREE.Mesh(this.auraGeometry, this.auraMaterial);
+                this.auraMesh.visible = false;
+                this.auraMesh.position.y = 2.5;
+                this.auraMesh.position.z = 0.1;
+                this.mesh.add(this.auraMesh);
+
+                this.auraCurrentFrame = 0;
+                this.auraFrameTimer = 0;
 
                 this.create3DProxy();
 
@@ -2287,6 +2331,31 @@
             // Update Suction Particles
             this.updateSuctionParticles(deltaTime);
 
+            // --- AURA UPDATE LOGIC ---
+            if (this.currentState === 'charging') {
+                this.auraMesh.visible = true;
+                this.auraFrameTimer += deltaTime;
+                if (this.auraFrameTimer > 0.08) { // ~12 FPS
+                    this.auraFrameTimer = 0;
+                    this.auraCurrentFrame = (this.auraCurrentFrame + 1) % 12; // 12 frames total (6x2)
+
+                    const col = this.auraCurrentFrame % 6;
+                    const row = Math.floor(this.auraCurrentFrame / 6);
+
+                    // Update Uniforms
+                    // Row 0 is Top (0.5), Row 1 is Bottom (0.0) usually?
+                    // Let's assume standard Grid logic:
+                    // v (offset.y) = (rows - 1 - row) * (1/rows)
+                    const uOff = col * (1/6);
+                    const vOff = (1 - row) * 0.5;
+
+                    this.auraMaterial.uniforms.uOffset.value.set(uOff, vOff);
+                }
+            } else {
+                this.auraMesh.visible = false;
+            }
+            // -------------------------
+
                 let currentAnimSpeed = animationSpeed;
                 if (this.currentState === 'idle') {
                     // Frame 0: Pause for 3 seconds (breathing)
@@ -2369,45 +2438,31 @@
                             }
                             break;
                     case 'charging':
-                        currentTexture = this.chargingTexture;
-                        shadowTexture = null;
-                        isGridSprite = false;
-                        isManualUV = true;
+                        // Use Idle Animation for Character Sprite during Charge (Aura handles the visual)
+                        [totalFrames, currentTexture, shadowTexture] = [11, this.idleTexture, null];
+                        isIdleSprite = true;
 
-                        // Custom Animation Logic for Charging
-                        let speed = 100; // default start
+                        // State Logic (Time-based instead of frame-based)
+                        // Advance timer to handle Start -> Loop -> End transitions
+                        this.chargingTimer += currentAnimSpeed; // approx elapsed time since last frame
+
                         if (this.chargingState === 'start') {
-                            speed = 100;
-                            if (this.currentChargeFrame < 3) {
-                                this.currentChargeFrame++;
-                            } else {
+                            if (this.chargingTimer > 300) { // ~300ms delay
                                 this.chargingState = 'loop';
-                                this.currentChargeFrame = 4;
+                                this.chargingTimer = 0;
                             }
                         } else if (this.chargingState === 'loop') {
-                            speed = 40; // Extreme speed
-                            this.currentChargeFrame++;
-                            if (this.currentChargeFrame > 11) this.currentChargeFrame = 4;
+                            // Stay in loop until released
                         } else if (this.chargingState === 'end') {
-                            speed = 80;
-                            if (this.currentChargeFrame < 13) {
-                                this.currentChargeFrame++;
-                            } else {
+                            if (this.chargingTimer > 200) { // ~200ms delay
                                 this.chargingState = 'none';
-                                this.currentState = 'idle'; // Reset to idle
+                                this.currentState = 'idle';
                             }
                         }
 
-                        const cFrame = this.currentChargeFrame;
-                        const cCol = cFrame % 4;
-                        const cRow = Math.floor(cFrame / 4);
-
-                        currentTexture.offset.x = cCol * 0.25;
-                        currentTexture.offset.y = (3 - cRow) * 0.25;
-
-                        // Set speed for next frame
-                        currentAnimSpeed = speed;
-                            break;
+                        // Animate Idle
+                        this.currentFrame = (this.currentFrame + 1) % 11;
+                        break;
 
                         case 'running':
                             if (this.isFacingLeft) {
@@ -2499,15 +2554,8 @@
                             break;
                     }
 
-                    // Material Swapping Logic for Charging State
-                    if (this.currentState === 'charging') {
-                        if (this.mesh.material !== this.chargingMaterial) {
-                            this.mesh.material = this.chargingMaterial;
-                        }
-                    } else {
-                        if (this.mesh.material !== this.standardMaterial) {
-                            this.mesh.material = this.standardMaterial;
-                        }
+                    if (this.mesh.material !== this.standardMaterial) {
+                        this.mesh.material = this.standardMaterial;
                     }
 
                     if (currentTexture) {
