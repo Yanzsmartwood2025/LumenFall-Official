@@ -1685,10 +1685,11 @@
                 this.attackBackTexture = textureLoader.load(assetUrls.attackBackSprite);
                 this.jumpTexture = textureLoader.load(assetUrls.jumpSprite);
                 this.jumpBackTexture = textureLoader.load(assetUrls.jumpBackSprite);
+                this.chargingTexture = textureLoader.load(assetUrls.chargingSprite);
 
                 // Configuración de Filtros (Pixel Art)
                 [this.runningTexture, this.runningBackTexture, this.idleTexture, this.idleBackTexture,
-                 this.attackTexture, this.jumpTexture, this.jumpBackTexture].forEach(tex => {
+                 this.attackTexture, this.jumpTexture, this.jumpBackTexture, this.chargingTexture].forEach(tex => {
                     tex.magFilter = THREE.NearestFilter;
                     tex.minFilter = THREE.NearestFilter;
                 });
@@ -1719,6 +1720,9 @@
                 this.attackBackTexture.magFilter = THREE.NearestFilter;
                 this.attackBackTexture.minFilter = THREE.NearestFilter;
                 this.attackBackTexture.repeat.set(1/6, 1);
+
+                // 9. Charging: 4x4 Grid
+                this.chargingTexture.repeat.set(0.25, 0.25);
 
                 // RUN FRAMEMAPS (GRID 8x2)
                 // Convention: Top Row (y=0.5) is frames 0-7, Bottom (y=0) is frame 8+
@@ -1805,7 +1809,7 @@
                 this.auraTexture.magFilter = THREE.NearestFilter;
                 this.auraTexture.minFilter = THREE.NearestFilter;
 
-                this.auraGeometry = new THREE.CylinderGeometry(1.6, 1.6, 5.0, 16, 1, true);
+                this.auraGeometry = new THREE.CylinderGeometry(3.2, 3.2, 5.0, 16, 1, true);
                 this.auraMaterial = new THREE.ShaderMaterial({
                     uniforms: {
                         uTexture: { value: this.auraTexture },
@@ -1822,7 +1826,7 @@
 
                 this.auraMesh = new THREE.Mesh(this.auraGeometry, this.auraMaterial);
                 this.auraMesh.visible = false;
-                this.auraMesh.position.y = 2.5;
+                this.auraMesh.position.y = 1.7;
                 this.auraMesh.position.z = 0.1;
                 this.mesh.add(this.auraMesh);
 
@@ -2210,7 +2214,7 @@
                     this.currentState = 'charging';
                     if (this.chargingState === 'none' || this.chargingState === 'end') {
                         this.chargingState = 'start';
-                        this.currentChargeFrame = 0;
+                        this.currentFrame = -1;
                             playAudio('charge', true, 0.9 + Math.random() * 0.2, 4.0);
                         vibrateGamepad(100, 0.8, 0.8);
                         }
@@ -2226,7 +2230,7 @@
                     // Released button or moving
                     if (this.chargingState === 'start' || this.chargingState === 'loop') {
                         this.chargingState = 'end';
-                        this.currentChargeFrame = 12; // Start of end sequence
+                        this.currentFrame = 11; // Start of end sequence (next frame will be 12)
                         stopAudio('charge');
                     } else if (this.chargingState === 'end') {
                         // Let it play out, but allow movement physics below
@@ -2438,30 +2442,44 @@
                             }
                             break;
                     case 'charging':
-                        // Use Idle Animation for Character Sprite during Charge (Aura handles the visual)
-                        [totalFrames, currentTexture, shadowTexture] = [11, this.idleTexture, null];
-                        isIdleSprite = true;
+                        // Use Charging Animation
+                        currentTexture = this.chargingTexture;
+                        shadowTexture = null;
+                        isGridSprite = false;
+                        isManualUV = true;
+                        currentAnimSpeed = 80; // Standard speed
 
-                        // State Logic (Time-based instead of frame-based)
-                        // Advance timer to handle Start -> Loop -> End transitions
-                        this.chargingTimer += currentAnimSpeed; // approx elapsed time since last frame
+                        // Advance Frame
+                        this.currentFrame++;
 
+                        // State Logic Frame-Based
                         if (this.chargingState === 'start') {
-                            if (this.chargingTimer > 300) { // ~300ms delay
+                            // Frames 0-3
+                            if (this.currentFrame > 3) {
                                 this.chargingState = 'loop';
-                                this.chargingTimer = 0;
+                                this.currentFrame = 4;
                             }
                         } else if (this.chargingState === 'loop') {
-                            // Stay in loop until released
+                            // Frames 4-11
+                            if (this.currentFrame > 11) {
+                                this.currentFrame = 4;
+                            }
                         } else if (this.chargingState === 'end') {
-                            if (this.chargingTimer > 200) { // ~200ms delay
+                            // Frames 12-15
+                            if (this.currentFrame > 15) {
                                 this.chargingState = 'none';
                                 this.currentState = 'idle';
                             }
                         }
 
-                        // Animate Idle
-                        this.currentFrame = (this.currentFrame + 1) % 11;
+                        // UV Mapping for 4x4 Grid
+                        const cFrame = this.currentFrame;
+                        const cCol = cFrame % 4;
+                        const cRow = Math.floor(cFrame / 4);
+
+                        // Row 0 is Top (v=0.75), Row 3 is Bottom (v=0.0)
+                        currentTexture.offset.x = cCol * 0.25;
+                        currentTexture.offset.y = (3 - cRow) * 0.25;
                         break;
 
                         case 'running':
