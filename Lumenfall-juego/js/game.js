@@ -4524,6 +4524,55 @@
             }
         }
 
+        class CollectionFlash {
+            constructor(scene, position, color) {
+                this.scene = scene;
+                this.life = 0.3;
+
+                const texture = textureLoader.load(assetUrls.sparkParticle);
+                const mat = new THREE.SpriteMaterial({
+                    map: texture,
+                    color: color,
+                    transparent: true,
+                    opacity: 1.0,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                });
+
+                this.sprite = new THREE.Sprite(mat);
+                this.sprite.position.copy(position);
+                // Start slightly behind the item
+                this.sprite.position.z -= 0.1;
+                this.sprite.scale.set(0.5, 0.5, 1);
+                this.scene.add(this.sprite);
+            }
+
+            update(dt) {
+                this.life -= dt;
+                if(this.life <= 0) {
+                    this.scene.remove(this.sprite);
+                    return false;
+                }
+
+                // Expand and Fade
+                const t = 1.0 - (this.life / 0.3);
+                const scale = 0.5 + (t * 0.7); // 0.5 -> 1.2 (Smaller)
+                this.sprite.scale.setScalar(scale);
+                this.sprite.material.opacity = 1.0 - t;
+
+                return true;
+            }
+        }
+
+        function createCollectionFlash(scene, position, type) {
+            let color = 0xffffff;
+            if(type === 'health') color = 0x00ff00;
+            else if(type === 'power') color = 0x00aaff;
+            else if(type === 'soul') color = 0xaa00ff;
+
+            allFlames.push(new CollectionFlash(scene, position, color));
+        }
+
         class ImpactBurst {
             constructor(scene, position, color) {
                 this.scene = scene;
@@ -4634,12 +4683,37 @@
                 this.orbitOffset = (Math.random() - 0.5) * 2.0; // "Por un lado o por otro"
                 this.absorbTime = 0;
 
+                this.isCollected = false;
+                this.collectionTimer = 0;
+
                 // Animation
                 this.currentFrame = Math.floor(Math.random() * this.totalFrames);
                 this.frameTimer = 0;
             }
 
             update(deltaTime) {
+                if (this.isCollected) {
+                    this.collectionTimer += deltaTime;
+                    const duration = 0.25;
+                    const progress = Math.min(this.collectionTimer / duration, 1.0);
+
+                    // Shrink (1.0 -> 0.0)
+                    const scale = 1.0 * (1.0 - progress);
+                    this.mesh.scale.setScalar(scale);
+
+                    // Lerp to Chest
+                    if (player) {
+                        const targetPos = player.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0));
+                        this.mesh.position.lerp(targetPos, 15.0 * deltaTime);
+                    }
+
+                    if (progress >= 1.0) {
+                        this.finalizeCollection();
+                        return false; // Remove from updates
+                    }
+                    return true;
+                }
+
                 // Sleep optimization
                 if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return true;
 
@@ -4718,7 +4792,7 @@
 
                          if (distToPlayer < 0.8) { // Increased threshold slightly
                              this.collect();
-                             return false;
+                             return true;
                          }
                     }
 
@@ -4762,9 +4836,17 @@
             }
 
             collect() {
+                if (this.isCollected) return;
+                this.isCollected = true;
+
                 // Trigger Player Reaction
                 if (player) player.triggerImpactFlash(this.type);
 
+                // Trigger Back Flash Immediately (smaller now)
+                createCollectionFlash(this.scene, this.mesh.position, this.type);
+            }
+
+            finalizeCollection() {
                 this.scene.remove(this.mesh);
                 const index = allPowerUps.indexOf(this);
                 if (index > -1) allPowerUps.splice(index, 1);
