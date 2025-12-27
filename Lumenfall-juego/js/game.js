@@ -2722,41 +2722,91 @@
                     y: this.startScreen.y + dy * 0.5 + ny * curveHeight * side
                 };
 
-                // Create Head Element ("Energy Comet")
-                this.element = document.createElement('div');
-                this.element.style.position = 'fixed';
-                this.element.style.width = '12px';
-                this.element.style.height = '12px';
-                this.element.style.borderRadius = '50%';
-                this.element.style.zIndex = '10002';
-                this.element.style.pointerEvents = 'none';
+                // --- NEW VISUALS (Container + Glow + Sprite) ---
+                this.container = document.createElement('div');
+                this.container.style.position = 'fixed';
+                this.container.style.width = '0px';
+                this.container.style.height = '0px'; // Pivot point
+                this.container.style.zIndex = '10002';
+                this.container.style.pointerEvents = 'none';
+                this.container.style.transform = 'translate(-50%, -50%)'; // Center pivot
 
-                // Colors
-                let color = '#ffffff';
+                // Colors & Assets
                 let glowColor = '#ffffff';
-                if (type === 'health') { color = '#ffffff'; glowColor = '#00ff00'; }
-                else if (type === 'power') { color = '#ffffff'; glowColor = '#00aaff'; }
-                else { color = '#ffffff'; glowColor = '#aa00ff'; }
+                let spriteUrl = '';
+                if (type === 'health') {
+                    glowColor = '#00ff00';
+                    spriteUrl = assetUrls.healthEssence;
+                } else if (type === 'power') {
+                    glowColor = '#00aaff';
+                    spriteUrl = assetUrls.energyEssence;
+                } else {
+                    glowColor = '#aa00ff';
+                    spriteUrl = assetUrls.soulFragment;
+                }
+                this.glowColor = glowColor;
 
-                this.element.style.backgroundColor = color;
-                this.element.style.boxShadow = `0 0 10px ${glowColor}, 0 0 20px ${glowColor}`;
-                this.element.style.transform = 'translate(-50%, -50%)'; // Center pivot
+                // 1. Glow Background (The "Sphere")
+                this.glow = document.createElement('div');
+                this.glow.style.position = 'absolute';
+                this.glow.style.left = '50%';
+                this.glow.style.top = '50%';
+                this.glow.style.transform = 'translate(-50%, -50%)';
+                this.glow.style.width = '32px';
+                this.glow.style.height = '32px';
+                this.glow.style.borderRadius = '50%';
+                this.glow.style.backgroundColor = '#ffffff'; // White core
+                this.glow.style.boxShadow = `0 0 15px ${glowColor}, 0 0 30px ${glowColor}`; // Strong glow
+                this.glow.style.opacity = '0.8';
+                this.container.appendChild(this.glow);
 
-                document.body.appendChild(this.element);
+                // 2. Animated Sprite Foreground
+                this.sprite = document.createElement('div');
+                this.sprite.style.position = 'absolute';
+                this.sprite.style.left = '50%';
+                this.sprite.style.top = '50%';
+                this.sprite.style.transform = 'translate(-50%, -50%)';
+                this.sprite.style.width = '48px';
+                this.sprite.style.height = '48px';
+                this.sprite.style.backgroundImage = `url('${spriteUrl}')`;
+                this.sprite.style.backgroundSize = '600% 200%'; // 6 cols, 2 rows
+                this.sprite.style.backgroundRepeat = 'no-repeat';
+                this.sprite.style.imageRendering = 'pixelated'; // Keep retro feel
+                this.container.appendChild(this.sprite);
+
+                document.body.appendChild(this.container);
+
+                // Animation State
+                this.frameTimer = 0;
+                this.currentFrame = 0;
+                this.totalFrames = 11;
+                this.cols = 6;
+                this.rows = 2;
+                this.updateSpriteFrame();
 
                 this.trailTimer = 0;
-                this.glowColor = glowColor;
 
                 // Dummy Mesh to satisfy main loop 'scene.remove(projectile.mesh)'
                 this.mesh = new THREE.Object3D();
                 this.scene.add(this.mesh);
             }
 
+            updateSpriteFrame() {
+                const col = this.currentFrame % this.cols;
+                const row = Math.floor(this.currentFrame / this.cols);
+                const xPos = (col / (this.cols - 1)) * 100;
+                const yPos = (row / (this.rows - 1)) * 100;
+                // CSS background-position uses percentages differently than UVs
+                // For a sprite sheet, x% means "align x% point of image with x% point of container"
+                // 6 cols -> 0%, 20%, 40%, 60%, 80%, 100%
+                this.sprite.style.backgroundPosition = `${xPos}% ${yPos}%`;
+            }
+
             update(deltaTime) {
                 this.life += deltaTime;
                 const t = Math.min(this.life / this.duration, 1.0);
 
-                // Quadratic Bezier: (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
+                // Quadratic Bezier
                 const u = 1 - t;
                 const tt = t * t;
                 const uu = u * u;
@@ -2764,8 +2814,16 @@
                 const x = uu * this.startScreen.x + 2 * u * t * this.controlPoint.x + tt * this.targetScreen.x;
                 const y = uu * this.startScreen.y + 2 * u * t * this.controlPoint.y + tt * this.targetScreen.y;
 
-                this.element.style.left = `${x}px`;
-                this.element.style.top = `${y}px`;
+                this.container.style.left = `${x}px`;
+                this.container.style.top = `${y}px`;
+
+                // Update Animation (10 FPS)
+                this.frameTimer += deltaTime;
+                if (this.frameTimer > 0.1) {
+                    this.frameTimer = 0;
+                    this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
+                    this.updateSpriteFrame();
+                }
 
                 // Spawn Trail
                 this.trailTimer += deltaTime;
@@ -2776,7 +2834,7 @@
 
                 if (t >= 1.0) {
                     // Arrived
-                    if (this.element.parentNode) this.element.parentNode.removeChild(this.element);
+                    if (this.container.parentNode) this.container.parentNode.removeChild(this.container);
                     this.applyEffect();
                     return false; // Remove from game loop
                 }
