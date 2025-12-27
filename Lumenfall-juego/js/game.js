@@ -2766,8 +2766,9 @@
                 this.sprite.style.left = '50%';
                 this.sprite.style.top = '50%';
                 this.sprite.style.transform = 'translate(-50%, -50%)';
-                this.sprite.style.width = '48px';
-                this.sprite.style.height = '48px';
+                this.sprite.style.width = '38px';
+                this.sprite.style.height = '38px';
+                this.sprite.style.mixBlendMode = 'screen';
                 this.sprite.style.backgroundImage = `url('${spriteUrl}')`;
                 this.sprite.style.backgroundSize = '600% 200%'; // 6 cols, 2 rows
                 this.sprite.style.backgroundRepeat = 'no-repeat';
