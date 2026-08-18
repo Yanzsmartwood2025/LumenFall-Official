@@ -70,8 +70,17 @@
 
             const ratio = frameWidth / frameHeight;
 
-            mesh.scale.y = targetHeight;
-            mesh.scale.x = targetHeight * ratio;
+            const targetScaleX = targetHeight * ratio;
+            const targetScaleY = targetHeight;
+
+            if (mesh.userData && mesh.userData.smoothSpriteScale) {
+                const smoothing = mesh.userData.spriteScaleSmoothing || 0.28;
+                mesh.scale.x += (targetScaleX - mesh.scale.x) * smoothing;
+                mesh.scale.y += (targetScaleY - mesh.scale.y) * smoothing;
+            } else {
+                mesh.scale.x = targetScaleX;
+                mesh.scale.y = targetScaleY;
+            }
             mesh.scale.z = 1;
         }
 
@@ -1763,6 +1772,8 @@
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
         this.mesh.position.y = 0.8; // Feet at 0.8
                 this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
+                this.mesh.userData.smoothSpriteScale = true;
+                this.mesh.userData.spriteScaleSmoothing = 0.34;
                 this.mesh.castShadow = true;
                 this.mesh.frustumCulled = false;
                 this.mesh.renderOrder = 0;
@@ -4318,7 +4329,8 @@
                     side: THREE.DoubleSide
                 });
 
-                const geometry = new THREE.PlaneGeometry(2.0, 2.0);
+                const frameAspectRatio = (1600 / this.cols) / (678 / this.rows);
+                const geometry = new THREE.PlaneGeometry(2.55 * frameAspectRatio, 2.55);
 
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.copy(startPosition);
@@ -4331,20 +4343,21 @@
 
                 this.scene.add(this.mesh);
 
-                this.state = 'FLIGHT';
+                this.state = 'SPAWN';
                 this.frameTimer = 0;
                 this.animationSpeed = 0.04;
 
                 this.frames = {
-                    FLIGHT: [2, 3, 4],
+                    SPAWN: [0, 1],
+                    FLIGHT: [2, 3, 4, 3],
                     IMPACT: [5, 6, 7]
                 };
 
                 this.currentSeqIndex = 0;
                 this.isDead = false;
 
-        this.mesh.scale.set(1.5, 1.5, 1.0); // Fixed Scale 1.5
-                this.updateFrameUVs(this.frames.FLIGHT[0]);
+        this.mesh.scale.set(1.2, 1.2, 1.0); // Fixed Scale 1.2
+                this.updateFrameUVs(this.frames.SPAWN[0]);
 
                 // --- NEW ELEMENTS & VISUAL POLISH ---
 
@@ -4382,6 +4395,7 @@
 
                 // 4. Flash
                 this.flashMesh = null;
+                this.impactBursts = [];
             }
 
             updateFrameUVs(frameIndex) {
@@ -4415,6 +4429,69 @@
                 if (this.flashMesh.material.opacity <= 0) {
                     this.scene.remove(this.flashMesh);
                     this.flashMesh = null;
+                }
+            }
+
+            createImpactBurst(hitType = 'enemy') {
+                const impactColor = hitType === 'wall' ? 0x88ddff : 0x00ffff;
+                const ringGeometry = new THREE.RingGeometry(0.35, 0.55, 32);
+                const ringMaterial = new THREE.MeshBasicMaterial({
+                    color: impactColor,
+                    transparent: true,
+                    opacity: 0.9,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    side: THREE.DoubleSide
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.position.copy(this.mesh.position);
+                ring.position.z += 0.04;
+                ring.lookAt(camera.position);
+                this.scene.add(ring);
+                this.impactBursts.push({ mesh: ring, life: 0.28, maxLife: 0.28, type: 'ring' });
+
+                for (let i = 0; i < 12; i++) {
+                    const sparkMat = new THREE.SpriteMaterial({
+                        map: this.sparkTexture,
+                        color: impactColor,
+                        transparent: true,
+                        opacity: 0.95,
+                        blending: THREE.AdditiveBlending,
+                        depthWrite: false
+                    });
+                    const shard = new THREE.Sprite(sparkMat);
+                    shard.position.copy(this.mesh.position);
+                    shard.position.z += 0.08;
+                    shard.scale.set(0.25, 0.25, 1);
+                    const burstAngle = this.angle + Math.PI + (Math.random() - 0.5) * Math.PI;
+                    const speed = 0.12 + Math.random() * 0.18;
+                    const velocity = new THREE.Vector3(Math.cos(burstAngle), Math.sin(burstAngle), 0).multiplyScalar(speed);
+                    this.scene.add(shard);
+                    this.impactBursts.push({ mesh: shard, life: 0.35, maxLife: 0.35, velocity, type: 'spark' });
+                }
+            }
+
+            updateImpactBursts(deltaTime) {
+                for (let i = this.impactBursts.length - 1; i >= 0; i--) {
+                    const burst = this.impactBursts[i];
+                    burst.life -= deltaTime;
+                    const progress = 1 - Math.max(burst.life, 0) / burst.maxLife;
+
+                    if (burst.type === 'ring') {
+                        burst.mesh.scale.setScalar(1 + progress * 4.2);
+                        burst.mesh.material.opacity = (1 - progress) * 0.9;
+                    } else {
+                        burst.mesh.position.add(burst.velocity);
+                        burst.mesh.material.opacity = (1 - progress) * 0.95;
+                        burst.mesh.scale.multiplyScalar(0.985);
+                    }
+
+                    if (burst.life <= 0) {
+                        this.scene.remove(burst.mesh);
+                        if (burst.mesh.material) burst.mesh.material.dispose();
+                        if (burst.mesh.geometry) burst.mesh.geometry.dispose();
+                        this.impactBursts.splice(i, 1);
+                    }
                 }
             }
 
@@ -4455,7 +4532,7 @@
                 }
             }
 
-            triggerImpact() {
+            triggerImpact(hitType = 'enemy') {
                 if (this.state === 'IMPACT') return;
 
                 this.state = 'IMPACT';
@@ -4467,6 +4544,7 @@
                 allFlames.push(new ImpactParticleSystem(this.scene, this.mesh.position));
 
                 this.createFlash();
+                this.createImpactBurst(hitType);
 
                 playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
             }
@@ -4490,6 +4568,7 @@
                 }
                 this.updateSparks(deltaTime);
                 this.updateFlash(deltaTime);
+                this.updateImpactBursts(deltaTime);
 
                 this.mesh.lookAt(camera.position);
                 this.mesh.rotation.z = this.angle;
@@ -4500,7 +4579,16 @@
                 if (this.frameTimer > this.animationSpeed) {
                     this.frameTimer = 0;
 
-                    if (this.state === 'FLIGHT') {
+                    if (this.state === 'SPAWN') {
+                        this.currentSeqIndex++;
+                        if (this.currentSeqIndex >= this.frames.SPAWN.length) {
+                            this.state = 'FLIGHT';
+                            this.currentSeqIndex = 0;
+                            frameToSet = this.frames.FLIGHT[this.currentSeqIndex];
+                        } else {
+                            frameToSet = this.frames.SPAWN[this.currentSeqIndex];
+                        }
+                    } else if (this.state === 'FLIGHT') {
                         this.currentSeqIndex = (this.currentSeqIndex + 1) % this.frames.FLIGHT.length;
                         frameToSet = this.frames.FLIGHT[this.currentSeqIndex];
                     } else if (this.state === 'IMPACT') {
@@ -4523,7 +4611,8 @@
                     this.mesh.position.add(this.velocity);
 
                     if (this.mesh.position.x < player.minPlayerX || this.mesh.position.x > player.maxPlayerX) {
-                        this.triggerImpact();
+                        this.triggerImpact('wall');
+                        return true;
                     }
 
                     for (const enemy of allSimpleEnemies) {
@@ -4532,7 +4621,8 @@
 
                         if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                             enemy.takeHit();
-                            this.triggerImpact();
+                            this.triggerImpact('enemy');
+                            return true;
                         }
                     }
 
@@ -4542,7 +4632,8 @@
 
                         if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                             enemy.takeHit();
-                            this.triggerImpact();
+                            this.triggerImpact('enemy');
+                            return true;
                         }
                     }
                 }
@@ -4556,6 +4647,12 @@
                 this.trail.dispose();
                 this.sparks.forEach(s => this.scene.remove(s.mesh));
                 this.sparks = [];
+                this.impactBursts.forEach(burst => {
+                    this.scene.remove(burst.mesh);
+                    if (burst.mesh.material) burst.mesh.material.dispose();
+                    if (burst.mesh.geometry) burst.mesh.geometry.dispose();
+                });
+                this.impactBursts = [];
                 if (this.flashMesh) this.scene.remove(this.flashMesh);
             }
         }
