@@ -167,6 +167,28 @@
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: true, alpha: true });
         const textureLoader = new THREE.TextureLoader();
+        const textureCache = new Map();
+        const enemySoundLimiter = new Map();
+
+        function getCachedTexture(url, configure) {
+            if (!textureCache.has(url)) {
+                const texture = textureLoader.load(url);
+                textureCache.set(url, texture);
+            }
+            const texture = textureCache.get(url).clone();
+            texture.needsUpdate = true;
+            if (configure) configure(texture);
+            return texture;
+        }
+
+        function canPlayEnemySound(name, minInterval = 0.12) {
+            const now = audioContext.currentTime;
+            const nextAllowed = enemySoundLimiter.get(name) || 0;
+            if (now < nextAllowed) return false;
+            enemySoundLimiter.set(name, now + minInterval);
+            return true;
+        }
+
         const clock = new THREE.Clock();
 
         let player;
@@ -214,6 +236,36 @@
             const mesh = object && (object.mesh || object);
             if (!mesh || !mesh.position) return true;
             return Math.abs(mesh.position.x - camera.position.x) <= getCameraActiveXRange(buffer);
+        }
+
+        const MAX_FULL_ENEMY_UPDATES = 10;
+        let enemyUpdateCursor = 0;
+
+        function updateEnemiesLightweight(enemies, deltaTime, buffer = 18) {
+            if (!enemies.length) return;
+
+            const activeRange = getCameraActiveXRange(buffer);
+            const activeEnemies = [];
+
+            enemies.forEach((enemy) => {
+                const mesh = enemy && enemy.mesh;
+                if (!mesh) return;
+                const isNearView = Math.abs(mesh.position.x - camera.position.x) <= activeRange;
+                mesh.visible = isNearView;
+                if (isNearView) activeEnemies.push(enemy);
+                else if (enemy.setSleeping) enemy.setSleeping(true);
+            });
+
+            if (!activeEnemies.length) return;
+
+            const fullUpdateCount = Math.min(MAX_FULL_ENEMY_UPDATES, activeEnemies.length);
+            const catchUpDelta = deltaTime * Math.ceil(activeEnemies.length / fullUpdateCount);
+            for (let i = 0; i < fullUpdateCount; i++) {
+                const enemy = activeEnemies[(enemyUpdateCursor + i) % activeEnemies.length];
+                if (enemy.setSleeping) enemy.setSleeping(false);
+                enemy.update(catchUpDelta);
+            }
+            enemyUpdateCursor = (enemyUpdateCursor + fullUpdateCount) % activeEnemies.length;
         }
 
         let firstFlameTriggered = false; // Evento La Primera Llama
@@ -837,13 +889,15 @@
 
                 // Collision detection between player and enemies
                 allSimpleEnemies.forEach(enemy => {
-                    if (!player.isInvincible && player.mesh.position.distanceTo(enemy.mesh.position) < 2) {
+                    const distanceX = Math.abs(enemy.mesh.position.x - player.mesh.position.x);
+                    if (!player.isInvincible && distanceX < 2 && player.mesh.position.distanceTo(enemy.mesh.position) < 2) {
                         player.takeDamage(player.maxHealth * 0.05, enemy);
                     }
                 });
 
                 allEnemiesX1.forEach(enemy => {
-                    if (enemy.isAlive && !enemy.isDying && !player.isInvincible && player.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
+                    const distanceX = Math.abs(enemy.mesh.position.x - player.mesh.position.x);
+                    if (enemy.isAlive && !enemy.isDying && !player.isInvincible && distanceX < 2.5 && player.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                         player.takeDamage(player.maxHealth * 0.10, enemy);
                     }
 
@@ -959,8 +1013,8 @@
                     allFootstepParticles.splice(i, 1);
                 }
             }
-            allSimpleEnemies.forEach(enemy => { if (isObjectNearActiveView(enemy, 18)) enemy.update(deltaTime); });
-            allEnemiesX1.forEach(enemy => { if (isObjectNearActiveView(enemy, 18)) enemy.update(deltaTime); });
+            updateEnemiesLightweight(allSimpleEnemies, deltaTime, 18);
+            updateEnemiesLightweight(allEnemiesX1, deltaTime, 18);
             allDecorGhosts.forEach(ghost => { if (isObjectNearActiveView(ghost, 8)) ghost.update(deltaTime); });
             allPuzzles.forEach(puzzle => { if (isObjectNearActiveView(puzzle, 10)) puzzle.update(deltaTime); });
             allPowerUps.forEach(powerUp => { if (isObjectNearActiveView(powerUp, 20)) powerUp.update(deltaTime); });
@@ -3580,7 +3634,7 @@
         class SimpleEnemy {
              constructor(scene, initialX) {
                 this.scene = scene;
-                this.texture = textureLoader.load(assetUrls.enemySprite);
+                this.texture = getCachedTexture(assetUrls.enemySprite);
                 this.texture.repeat.x = 1 / totalEnemyFrames;
                 const enemyHeight = 5.6;
                 const enemyWidth = 1.8;
@@ -3615,7 +3669,7 @@
                 this.impactTimer = Math.random() * 5 + 3;
                 this.growlSource = null;
                 this.growlGain = null;
-                this.startGrowl();
+                this.isSleeping = false;
             }
 
             startGrowl() {
@@ -3647,8 +3701,15 @@
                 }
             }
 
+            setSleeping(isSleeping) {
+                this.isSleeping = isSleeping;
+                if (isSleeping && this.growlGain) {
+                    this.growlGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.08);
+                }
+            }
+
             playScopedSound(name, rate, baseVolume, distance) {
-                if (!audioBuffers[name]) return;
+                if (!audioBuffers[name] || distance > 30 || !canPlayEnemySound(name)) return;
                 const source = audioContext.createBufferSource();
                 source.buffer = audioBuffers[name];
                 source.playbackRate.value = rate;
@@ -3667,6 +3728,7 @@
 
                 if (!this.isAlive || !player) return;
                 const distanceToPlayer = this.mesh.position.distanceTo(player.mesh.position);
+                if (distanceToPlayer < 30 && !this.growlSource) this.startGrowl();
                 if (this.growlGain) {
                     const maxDist = 30;
                     let vol = 1 - (distanceToPlayer / maxDist);
@@ -3740,17 +3802,20 @@
             constructor(scene, initialX) {
                 this.scene = scene;
                 // Textures with NearestFilter
-                this.runTexture = textureLoader.load(assetUrls.enemyX1Run);
-                this.runTexture.magFilter = THREE.NearestFilter;
-                this.runTexture.minFilter = THREE.NearestFilter;
+                this.runTexture = getCachedTexture(assetUrls.enemyX1Run, (texture) => {
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                });
 
-                this.attackTexture = textureLoader.load(assetUrls.enemyX1Attack);
-                this.attackTexture.magFilter = THREE.NearestFilter;
-                this.attackTexture.minFilter = THREE.NearestFilter;
+                this.attackTexture = getCachedTexture(assetUrls.enemyX1Attack, (texture) => {
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                });
 
-                this.deathTexture = textureLoader.load(assetUrls.enemyX1Death);
-                this.deathTexture.magFilter = THREE.NearestFilter;
-                this.deathTexture.minFilter = THREE.NearestFilter;
+                this.deathTexture = getCachedTexture(assetUrls.enemyX1Death, (texture) => {
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                });
 
                 // Grid 8x2
                 this.runTexture.repeat.set(0.125, 0.5);
@@ -3801,7 +3866,7 @@
                 this.stepTimer = 0;
                 this.growlSource = null;
                 this.growlGain = null;
-                this.startGrowl();
+                this.isSleeping = false;
             }
 
             startGrowl() {
@@ -3835,8 +3900,15 @@
                 }
             }
 
+            setSleeping(isSleeping) {
+                this.isSleeping = isSleeping;
+                if (isSleeping && this.growlGain) {
+                    this.growlGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.08);
+                }
+            }
+
             playScopedSound(name, rate, baseVolume, distance) {
-                if (!audioBuffers[name]) return;
+                if (!audioBuffers[name] || distance > 25 || !canPlayEnemySound(name)) return;
                 const source = audioContext.createBufferSource();
                 source.buffer = audioBuffers[name];
                 source.playbackRate.value = rate;
@@ -3901,6 +3973,7 @@
                 const distanceToPlayer = this.mesh.position.distanceTo(player.mesh.position);
 
                 // --- AUDIO UPDATE ---
+                if (distanceToPlayer < 25 && !this.growlSource) this.startGrowl();
                 if (this.growlGain) {
                     const maxDist = 25;
                     const vol = calculateLogVolume(distanceToPlayer, maxDist);
