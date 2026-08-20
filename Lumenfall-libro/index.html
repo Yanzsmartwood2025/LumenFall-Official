@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LumenFall - Libro Interactivo</title>
+
+    <meta property="og:title" content="LumenFall - Mi Libro Digital Interactivo" />
+    <meta property="og:description" content="Te invito a explorar el universo de LumenFall a través de este libro digital. Una nueva aventura te espera." />
+    <meta property="og:image" content="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/be10babecd71c85fcbf447231accb45c83607f28/Lumenfall-libro/assets/imagenes/portada-inicio.jpg" />
+    <meta property="og:url" content="#" />
+    <meta property="og:type" content="website" />
+    
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;600;700&family=Merriweather:wght@400;700&family=Lora&display=swap" rel="stylesheet">
+    
+    <style type="text/css">
+        :root {
+            --runa-primary: #D47500;
+            --slider-track-color: #25D366;
+            --header-height: 6rem;
+        }
+        html { scroll-behavior: smooth; }
+        
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            transition: background-color 0.4s ease, color 0.4s ease; 
+            margin: 0;
+            overflow: hidden;
+            touch-action: none; /* CRÍTICO para que el dedo mueva la hoja y no la pantalla */
+            background-color: #101010; 
+        }
+
+        #video-background { 
+            position: fixed; top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            object-fit: cover; z-index: -2; 
+            transition: opacity 0.5s ease-in-out; 
+        }
+        
+        .translucent-panel { 
+            backdrop-filter: blur(16px); 
+            -webkit-backdrop-filter: blur(16px); 
+        }
+
+        [data-lang] { display: none; }
+        html.lang-es [data-lang="es"],
+        html.lang-en [data-lang="en"],
+        html.lang-pt [data-lang="pt"] { display: block; }
+        
+        .portal-button { display: none; }
+        html.lang-es a.portal-button[data-lang="es"],
+        html.lang-en a.portal-button[data-lang="en"],
+        html.lang-pt a.portal-button[data-lang="pt"] { display: inline-block; }
+
+        /* --- Theme Styles --- */
+        html:not(.dark) body { background-color: #e0e0e0; color: #3a2e2a; }
+        html:not(.dark) .translucent-panel { background-color: rgba(255, 255, 255, 0.5); border-color: rgba(0,0,0,0.1); }
+        html:not(.dark) .flipbook .page { background-color: #fdfbf7; color: #333; }
+        html:not(.dark) .page .content-wrapper h2, html:not(.dark) .page .content-wrapper h3 { color: #1c1c1c; }
+        html:not(.dark) .page .content-wrapper p { color: #2d2d2d; }
+        html:not(.dark) .page-number { color: rgba(0, 0, 0, 0.4); }
+        html:not(.dark) #book-side-title { color: rgba(0,0,0,0.2); }
+        html:not(.dark) .copyright-page { color: #888; }
+        html:not(.dark) hr { border-color: rgba(0,0,0,0.2); }
+        
+        html.dark body { background-color: #111; color: #E2E8F0; }
+        html.dark .translucent-panel { background-color: rgba(0, 0, 0, 0.3); border-color: rgba(255, 255, 255, 0.1); }
+        html.dark .flipbook .page { background-color: #2a2a2a; color: #e0e0e0; }
+        html.dark .page .content-wrapper h2, html.dark .page .content-wrapper h3 { color: #f0f0f0; }
+        html.dark .page .content-wrapper p { color: #d4d4d4; }
+        html.dark .page-number { color: rgba(255, 255, 255, 0.4); }
+        html.dark #book-side-title { color: rgba(255,255,255,0.2); }
+        html.dark .copyright-page { color: #777; }
+        html.dark hr { border-color: rgba(255,255,255,0.2); }
+
+        .flipbook-viewport { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            width: 100vw; 
+            position: fixed; top: 0; left: 0;
+            visibility: hidden; opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            padding-top: var(--header-height); 
+            box-sizing: border-box; 
+        }
+        .flipbook-viewport.ready { visibility: visible; opacity: 1; }
+        
+        .flipbook-container { 
+            width: 95vw; height: 95%; max-width: 1400px; position: relative; z-index: 1;
+        }
+        .flipbook { width: 100%; height: 100%; }
+
+        .flipbook .page { box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
+        .flipbook .hard { background-color: #101010; box-shadow: inset 0 0 5px #000; }
+        
+        .cover-page { 
+            background: #101010 url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/be10babecd71c85fcbf447231accb45c83607f28/Lumenfall-libro/assets/imagenes/portada-inicio.jpg') center/100% 100% no-repeat !important; 
+        }
+        
+        .back-cover-page { 
+            background: #101010 url('https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/fb3659f718eff77d90136ff789e194c94d67ce82/Lumenfall-libro/assets/imagenes/contraportada-libro.jpg') center/100% 100% no-repeat !important; 
+        }
+        
+        .page-number { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 0.9em; }
+
+        #book-side-title { position: absolute; left: 2vw; top: 50%; transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; font-family: 'Poppins', sans-serif; font-size: 8rem; font-weight: 700; letter-spacing: 0.5rem; opacity: 0.4; display: none; pointer-events: none; }
+        @media (min-width: 1024px) { #book-side-title { display: block; } }
+
+        /* --- SOLUCIÓN AL ESPACIO VACÍO: FLEXBOX VERTICAL --- */
+        .page .content-wrapper {
+            height: 100%; 
+            display: flex; 
+            flex-direction: column;
+            /* ESTA ES LA CLAVE: Distribuye el espacio uniformemente entre elementos */
+            justify-content: space-between; 
+            padding: 2.5rem 2rem 3.5rem 2rem; /* Padding inferior extra para el número de página */
+            box-sizing: border-box; 
+            text-align: justify; 
+        }
+        
+        .page .content-wrapper.center-content { justify-content: center; text-align: center; }
+
+        .page .content-wrapper p { 
+            font-family: 'Lora', serif; 
+            font-size: 1.25rem; 
+            line-height: 1.6;   
+            margin: 0; /* El margen lo maneja el justify-content ahora */
+            font-weight: 400;
+        }
+        .page .content-wrapper h2 { font-size: 2.4rem; margin: 0; text-align: left; line-height: 1.2; }
+        .page .content-wrapper h3 { font-size: 1.8rem; margin: 0; text-align: left; font-weight: 700; }
+        
+        .footer-quote {
+            padding-top: 1rem;
+            font-style: italic;
+            text-align: center;
+            font-size: 1.1rem;
+            opacity: 0.8;
+            border-top: 1px solid;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .page .content-wrapper { padding: 3rem 4rem 4rem 4rem; }
+            .page .content-wrapper p { font-size: 1.4rem; line-height: 1.8; }
+            .page .content-wrapper h2 { font-size: 3.5rem; }
+            .page .content-wrapper h3 { font-size: 2.2rem; }
+        }
+
+        .video-page .page-background-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .full-image-page { padding: 0 !important; overflow: hidden; }
+        .full-image-page img { width: 100%; height: 100%; object-fit: cover; }
+        
+        #page-finder-list { max-height: 40vh; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 1rem; padding-top: 1rem; }
+        .page-finder-item { display: flex; align-items: center; width: 100%; padding: 0.75rem 0.5rem; border-radius: 0.5rem; transition: background-color 0.2s ease; text-align: left; }
+        html:not(.dark) .page-finder-item:hover { background-color: rgba(0,0,0,0.1); }
+        html.dark .page-finder-item:hover { background-color: rgba(255,255,255,0.1); }
+        .page-finder-item .page-number-label { font-weight: 600; margin-right: 1rem; min-width: 60px; }
+        .page-finder-item .page-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    </style>
+</head>
+<body>
+
+<div id="video-background-wrapper">
+    <video id="video-background" autoplay loop muted playsinline>
+        <source id="video-source" src="assets/videos/video-1.mp4" type="video/mp4">
+    </video>
+</div>
+
+<header id="main-header" class="fixed top-0 left-0 right-0 z-40">
+    <nav class="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center h-24">
+        <div class="flex-1 flex justify-start items-center space-x-4">
+            <button id="main-menu-toggle" class="w-12 h-12 p-2 rounded-full text-white flex items-center justify-center" aria-label="Abrir menú principal">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <button id="language-toggle" class="w-12 h-12 rounded-full text-white overflow-hidden" aria-label="Cambiar idioma">
+                <img src="assets/imagenes/Selector-idiomas.png" alt="Select Language" class="w-full h-full object-cover">
+            </button>
+        </div>
+        
+        <div class="flex-shrink-0">
+            <button class="h-16 w-16 rounded-full overflow-hidden bg-black shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--runa-primary)]">
+                <video autoplay loop muted playsinline class="w-full h-full object-cover" style="transform: scale(1.2) translateY(-8%);">
+                    <source src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/fb3659f718eff77d90136ff789e194c94d67ce82/Lumenfall-libro/assets/videos/Logo-cabezal.mp4" type="video/mp4">
+                </video>
+            </button>
+        </div>
+        
+        <div class="flex-1 flex justify-end items-center space-x-4">
+            <button id="video-skin-toggle" class="w-12 h-12 p-2 rounded-full text-white flex items-center justify-center" aria-label="Abrir selector de video">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            </button>
+            <button id="mixer-toggle-button" class="w-12 h-12 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--runa-primary)]" aria-label="Abrir mezclador de ambiente"><video autoplay loop muted playsinline class="w-full h-full object-cover"><source src="assets/videos/runa-equalizer-video.mp4" type="video/mp4"></video></button>
+        </div>
+    </nav>
+    <div id="main-menu-panel" class="hidden absolute w-full shadow-lg border-t translucent-panel"><div class="container mx-auto px-6 py-4"><div id="theme-toggle-container" class="flex justify-between items-center"></div><div id="page-finder-list"></div></div></div>
+    <div id="mixer-panel" class="hidden absolute w-full shadow-lg border-t translucent-panel"><div class="container mx-auto px-6 py-4"><h3 class="font-semibold text-lg mb-4">Mezclador de Ambiente</h3><div id="sound-controls" class="space-y-4"></div></div></div>
+    <div id="video-skin-panel" class="hidden absolute w-full shadow-lg border-t translucent-panel"><div class="container mx-auto px-6 py-4"><h3 class="font-semibold text-lg mb-4">Selector de Video de Fondo</h3><div id="video-list" class="space-y-2"></div></div></div>
+    <div id="language-panel" class="hidden absolute w-full shadow-lg border-t translucent-panel"><div class="container mx-auto px-6 py-4"><h3 class="font-semibold text-lg mb-4">Idioma / Language</h3><div id="language-list" class="space-y-2"></div></div></div>
+</header>
+
+<main>
+    <div class="flipbook-viewport">
+        <h1 id="book-side-title">LumenFall</h1>
+        <div class="flipbook-container">
+            <div class="flipbook">
+                
+                <!-- PORTADA EXTERNA -->
+                <div class="page hard cover-page"></div> 
+                
+                <!-- PÁGINA EN BLANCO -->
+                <div class="page"></div>
+
+                <!-- 1. BIENVENIDA (MANIFIESTO) -->
+                <div class="page full-image-page">
+                    <img src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/be10babecd71c85fcbf447231accb45c83607f28/Lumenfall-libro/assets/imagenes/portada-libro0.jpg" alt="Bienvenida">
+                    <div class="page-number">1</div>
+                </div>
+                <div class="page">
+                    <div class="content-wrapper">
+                        <h3 class="font-bold">I. MANIFIESTO (El Umbral)</h3>
+                        <p><strong>La Premisa:</strong><br>Esto no es una historia sobre encontrar la luz, sino sobre sobrevivir a la ausencia de ella. LumenFall no es un refugio; es un espejo. Antes de avanzar, debes aceptar una verdad incómoda: el caos no es tu enemigo, es tu origen.</p>
+                        <hr class="my-2 opacity-30">
+                        <p><strong>El Pacto:</strong><br>Al cruzar este umbral, dejas atrás la búsqueda de consuelo. Aquí no hay promesas vacías ni finales felices garantizados. Solo hay estrategia, disciplina y la voluntad de mirar al abismo sin parpadear. Estás entrando en la mente de Joziel, y una vez dentro, la única salida es atravesarlo todo.</p>
+                        <div class="footer-quote">"El control es absoluto."</div>
+                    </div>
+                    <div class="page-number">2</div>
+                </div>
+
+                <!-- 2. GRIMORIO -->
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/joziel-grimoire.jpeg" alt="Grimorio de Joziel">
+                    <div class="page-number">3</div>
+                </div>
+                <div class="page">
+                    <div class="content-wrapper">
+                        <h3 class="font-bold">II. JOZIEL’S GRIMOIRE (El Manual)</h3>
+                        <p><strong>El Origen del Tomo:</strong><br>Este libro no nació de la imaginación, sino de la supervivencia. El Grimorio es el registro tangible de la guerra interna que libró la Anfitriona para someter a la entidad Joziel. Escrito metafóricamente con "tinta de sangre y ceniza", representa la codificación del trauma convertido en arma. Es la evidencia física de que el infierno puede ser atravesado si se tiene el mapa correcto.</p>
+                        <hr class="my-2 opacity-30">
+                        <p><strong>El Contenido Prohibido:</strong><br>Este pilar es una masterclass de poder. Joziel abre las páginas de este texto para enseñar lo que las escuelas convencionales temen tocar: la manipulación ética, la lectura de intenciones, la soberanía emocional y las leyes inmutables del dominio jerárquico. Es un estudio frío sobre la naturaleza humana y cómo navegarla sin ser devorado. El Grimorio enseña que en el gran tablero de la vida, o eres el jugador que mueve las piezas, o eres el peón que es sacrificado.</p>
+                        <div class="footer-quote">"El dolor es temporal. La gloria es eterna."</div>
+                    </div>
+                    <div class="page-number">4</div>
+                </div>
+
+                <!-- 3. SHADOW FILES -->
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/Shadow-files.jpeg" alt="Shadow Files">
+                    <div class="page-number">5</div>
+                </div>
+                <div class="page">
+                    <div class="content-wrapper">
+                        <h3 class="font-bold">III. SHADOW FILES (Las Crónicas)</h3>
+                        <p><strong>La Inmersión:</strong><br>Cuando se abren los Archivos de la Sombra, la atmósfera cambia. La voz de la Anfitriona cede el paso a las frecuencias más graves y ancestrales del Demonio. Este no es un espacio para cuentos de hadas, sino para la crónica documental del universo Lumenfall, el plano dimensional de oscuridad y entropía de donde proviene la entidad.</p>
+                        <hr class="my-2 opacity-30">
+                        <p><strong>El Propósito del Miedo:</strong><br>Joziel narra historias de pactos rotos, entidades devoradoras y horrores cósmicos, no con la intención de asustar, sino de entrenar. El miedo, bajo esta doctrina, es una herramienta de agudeza sensorial. Al exponer al espectador al abismo, Shadow Files enseña una lección estoica fundamental: el horror existe, y la única forma de sobrevivir a él no es cerrando los ojos, sino devolviéndole la mirada con absoluta frialdad. Es el entrenamiento final para perder el miedo a la oscuridad del mundo real.</p>
+                        <div class="footer-quote">"Si miras al abismo, el abismo te devuelve la mirada."</div>
+                    </div>
+                    <div class="page-number">6</div>
+                </div>
+
+                <!-- 4. MIDNIGHT MANTRAS -->
+                <div class="page full-image-page">
+                    <img src="assets/imagenes/Midnight-mantras.png" alt="Midnight Mantras">
+                    <div class="page-number">7</div>
+                </div>
+                <div class="page">
+                    <div class="content-wrapper">
+                        <h3 class="font-bold">IV. MIDNIGHT MANTRAS (La Doctrina)</h3>
+                        <p><strong>La Filosofía:</strong><br>En un mundo adicto al consuelo rápido y la validación vacía, los Midnight Mantras surgen como un correctivo brutal y necesario. No son simples frases motivacionales; son códigos de reprogramación subconsciente. La premisa central es la "Motivación Oscura": la comprensión de que la ira, el rechazo y las cicatrices son combustibles más densos y duraderos que la efímera alegría.</p>
+                        <hr class="my-2 opacity-30">
+                        <p><strong>El Método:</strong><br>Joziel destila verdades complejas en dosis de menos de sesenta segundos, diseñadas para cortar el ruido mental como un bisturí. Cada mantra es una orden de batalla que exige la erradicación inmediata de la mentalidad de víctima. Aquí no se viene a buscar un abrazo, sino a recibir una estrategia. Es la disciplina militar aplicada al espíritu humano: levántate, cállate y conquista.</p>
+                        <div class="footer-quote">"Levántate. Cállate. Conquista."</div>
+                    </div>
+                    <div class="page-number">8</div>
+                </div>
+
+                <!-- INTRODUCCIÓN -->
+                <div class="page"><div class="content-wrapper center-content"><h2 style="font-family: 'Merriweather', serif; text-align:center;">LumenFall</h2></div></div>
+                <div class="page"><div class="content-wrapper center-content"><h1 class="text-4xl sm:text-5xl md:text-6xl font-bold" style="font-family: 'Poppins', sans-serif;">LUMENFALL</h1><p class="text-xl sm:text-2xl mt-4" style="font-family: 'Merriweather', serif;">A LIGHT DIVIDED</p><p class="mt-24 text-lg sm:text-xl">JUSN38 STUDIO</p></div></div>
+                <div class="page"><div class="content-wrapper center-content"><div class="text-xs copyright-page"><p>LumenFall © 2025 JUSN38 STUDIO.</p><p data-lang="es">Todos los derechos reservados.</p><p data-lang="en">All rights reserved.</p><p data-lang="pt">Todos os direitos reservados.</p><br><p data-lang="es">Ninguna parte de esta publicación puede ser reproducida...</p><p data-lang="en">No part of this publication may be reproduced...</p><p data-lang="pt">Nenhuma parte desta publicação pode ser reproduzida...</p><br><p class="italic mt-8" data-lang="es">Para aquellos que encuentran luz...</p><p class="italic mt-8" data-lang="en">For those who find light...</p><p class="italic mt-8" data-lang="pt">Para aqueles que encontram luz...</p></div></div></div>
+                
+                <!-- VIDEO 1 -->
+                <div class="page video-page">
+                    <video class="page-background-video" autoplay loop muted playsinline>
+                        <source src="https://raw.githubusercontent.com/Yanzsmartwood2025/LumenFall-Official/fb3659f718eff77d90136ff789e194c94d67ce82/Lumenfall-libro/assets/videos/video-1.mp4" type="video/mp4">
+                    </video>
+                    <div class="page-number">9</div>
+                </div>
+
+                <!-- CAPÍTULO 1: COMPACTADO Y JUSTIFICADO VERTICALMENTE -->
+                <div class="page">
+                    <div class="content-wrapper">
+                        <h2 class="handwriting-title" data-lang="es">Capítulo 1 – Fragmentos Rotos</h2>
+                        <h2 class="handwriting-title" data-lang="en">Chapter 1 – Broken Fragments</h2>
+                        <h2 class="handwriting-title" data-lang="pt">Capítulo 1 – Fragmentos Quebrados</h2>
+                        
+                        <p data-lang="es">Muchos disfrutan una taza de café por la mañana. Para mí, ese aroma siempre fue un recordatorio de que el día había empezado… y que mi madre seguía ahí. La veía de espaldas, removiendo el café en la olla, el vapor subiendo como un velo entre nosotras. A veces me sonreía. Otras, sin mirarme, dejaba caer frases que se quedaban flotando en el aire, como esa vez que dijo que hubiera preferido que yo no hubiera nacido.</p>
+                        <p data-lang="en">Many people enjoy a cup of coffee in the morning. For me, that aroma was always a reminder that the day had begun… and that my mother was still there. I would see her from behind, stirring the coffee in the pot, the steam rising like a veil between us. Sometimes she smiled at me. Other times, without looking at me, she would let fall phrases that lingered in the air, like that time she said she would have preferred if I had never been born.</p>
+                        <p data-lang="pt">Muitos apreciam uma xícara de café pela manhã. Para mim, esse aroma sempre foi um lembrete de que o dia havia começado… e de que minha mãe ainda estava lá. Eu a via de costas, mexendo o café na panela, o vapor subindo como um véu entre nós. Às vezes ela sorria para mim. Outras, sem me olhar, deixava escapar frases que ficavam flutuando no ar, como aquela vez em que disse que teria preferido que eu não tivesse nascido.</p>
+
+                        <p data-lang="es">Pero en esas mañanas, con la lluvia golpeando el techo y el olor a tierra mojada entrando por la ventana, yo me aferraba a la ilusión de que todo estaba bien. Después de todo lo que casi me arruina, entendí que esos días eran un lujo que nunca volvería a tener. Les voy a contar algo que me pasó hace mucho. El primero fue el alacrán. De pequeña, no soportaba esos bichos. En la finca, los niños mayores me agarraban uno vivo y me lo hacían correr por el brazo, riéndose mientras yo lloraba y pataleaba.</p>
+                        <p data-lang="en">But on those mornings, with the rain beating on the roof and the smell of wet earth coming in through the window, I clung to the illusion that everything was fine. After everything that nearly ruined me, I understood that those days were a luxury I would never have again. I’m going to tell you something that happened long ago. The first was the scorpion. As a child, I couldn’t stand them. On the farm, older kids would put one on my arm, laughing while I cried.</p>
+                        <p data-lang="pt">Mas nessas manhãs, com a chuva batendo no telhado e o cheiro de terra molhada entrando pela janela, eu me agarrava à ilusão de que tudo estaba bem. Depois de tudo que quase me destruiu, entendi que aqueles dias eram um luxo que nunca mais teria. Vou contar algo que aconteceu há muito tempo. O primeiro foi o escorpião. Quando pequena, não suportava. Na fazenda, os meninos colocavam no meu braço, rindo enquanto eu chorava.</p>
+
+                        <p data-lang="es">Esa tarde, estaba descalza en el patio, bailando sola. Entonces lo vi: a centímetros de mi pie, un alacrán negro, vivo, inmóvil. Y entonces pasó. Sin que yo lo tocara, su cuerpo empezó a humear. El alacrán se encogió sobre sí mismo, ennegrecido, hasta quedar muerto. No había nadie cerca.</p>
+                        <p data-lang="en">That afternoon, barefoot in the yard, I saw it: a black scorpion, inches from my foot. Then it happened. Without touching it, its body began to smoke. It curled up, blackened, until dead. No one was around.</p>
+                        <p data-lang="pt">Naquela tarde, descalça no pátio, vi: um escorpião preto, a centímetros do meu pé. Então aconteceu. Sem tocar, começou a soltar fumaça. Encolheu-se, enegrecido, até morrer. Não havia ninguém por perto.</p>
+                    </div>
+                    <div class="page-number">10</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">El segundo fue un coche. Yo estaba en la acera, esperando a mi mamá, cuando escuché el chirrido de llantas. Un auto venía directo hacia mí, derrapando. Vi el reflejo del sol en el parabrisas, sentí el aire caliente cortarme la cara… y entonces, se detuvo. No frenó: se detuvo, como si hubiera chocado contra algo invisible. El conductor bajó pálido, jurando que el volante se le había trabado solo. Hubo más. Pequeñas salvaciones imposibles. La gente decía que Dios me cuidaba. Yo sonreía, pero por dentro, una semilla fría de duda empezaba a germinar.</p>
+                        <p data-lang="en">The second was a car. I was on the sidewalk when I heard tires screeching. A car came straight at me. I felt the hot air... then it stopped. It didn't brake; it stopped as if hitting something invisible. The driver got out pale, swearing the wheel locked. There were more impossible salvations. People said God watched over me. I smiled, but a cold seed of doubt sprouted inside.</p>
+                        <p data-lang="pt">O segundo foi um carro. Eu estava na calçada quando ouvi pneus cantando. Um carro vinha em minha direção. Senti o ar quente... então parou. Não freou; parou como se batesse em algo invisível. O motorista saiu pálido, jurando que o volante travou. Houve mais salvações impossíveis. Diziam que Deus cuidava de mim. Eu sorria, mas uma semente fria de dúvida brotava.</p>
+
+                        <p data-lang="es">Crecí en una familia que vivía del café. Desde que tengo memoria, las mañanas olían a granos tostándose y a tierra húmeda. Tenía un hermano mayor, Elías. Nunca nos llevamos bien. Él siempre encontraba la forma de recordarme que yo era “la menor” y que debía quedarme callada. Discutíamos por todo. Y estaba mi hermana, Sheyka. En ese entonces, yo no sabía que un día cambiaría mi vida para siempre. Para mí, era solo mi hermana: la que me peinaba, la que me prestaba su ropa a escondidas, la que me defendía de Elías.</p>
+                        <p data-lang="en">I grew up in a coffee family. Mornings smelled of roasting beans. I had an older brother, Elías. We never got along. He always reminded me I was "the youngest." We argued about everything. And there was my sister, Sheyka. Back then, I didn't know she'd change my life. She was just my sister: the one who braided my hair, lent me clothes, defended me from Elías.</p>
+                        <p data-lang="pt">Cresci numa família de café. As manhãs cheiravam a grãos torrados. Tinha um irmão mais velho, Elías. Nunca nos demos bem. Ele sempre lembrava que eu era "a menor". Discutíamos por tudo. E havia minha irmã, Sheyka. Na época, não sabia que ela mudaria minha vida. Era apenas minha irmã: a que penteava meu cabelo, emprestava roupas, me defendia de Elías.</p>
+
+                        <p data-lang="es">Éramos una familia como tantas, unida por el trabajo y separada por los silencios. Y entonces llegó el momento que lo cambió todo. El que me marcó para siempre. La noche en la finca. El jornalero.</p>
+                        <p data-lang="en">We were a family like many, bound by work, separated by silence. Then came the moment that changed everything. The one that marked me forever. The night on the farm. The farmhand.</p>
+                        <p data-lang="pt">Éramos uma família como tantas, unida pelo trabalho, separada pelo silêncio. Então chegou o momento que mudou tudo. O que me marcou para sempre. A noite na fazenda. O trabalhador.</p>
+                    </div>
+                    <div class="page-number">11</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <h3 data-lang="es">La noche en que la sombra me salvó</h3>
+                        <h3 data-lang="en">The night the shadow saved me</h3>
+                        <h3 data-lang="pt">A noite em que a sombra me salvou</h3>
+                        
+                        <p data-lang="es">A veces sueño con esa noche. Mis padres estaban en una fiesta familiar. La finca se llenó de gente, de luces colgadas entre los árboles. Sheyka se fue con mi tía a ayudar en la cocina. Elías estaba con sus amigos. Y yo… yo estaba sola. El jornalero había estado bebiendo desde temprano. Lo vi tambaleándose entre los adultos. Cuando me vio, algo cambió en su mirada. Empezó a seguirme con esa lentitud que da más miedo que la prisa. Me llamaba con voz suave: “Muñequita… ven, quiero mostrarte algo.”</p>
+                        <p data-lang="en">Sometimes I dream of that night. My parents were at a party. The farm was full of people and lights. Sheyka was in the kitchen. Elías was with friends. And I... I was alone. The farmhand had been drinking. I saw him stumbling. When he saw me, his look changed. He followed me with a scary slowness. He called softly: "Doll... come, I want to show you something."</p>
+                        <p data-lang="pt">Às vezes sonho com essa noite. Meus pais estavam numa festa. A fazenda cheia de gente e luzes. Sheyka estava na cozinha. Elías com amigos. E eu... sozinha. O trabalhador tinha bebido. Vi ele cambaleando. Quando me viu, o olhar mudou. Seguiu-me com uma lentidão assustadora. Chamou suavemente: "Bonequinha... vem, quero te mostrar algo."</p>
+
+                        <p data-lang="es">Me alejé hacia la parte trasera de la finca. Él me siguió. La tierra estaba húmeda. Cuando me di cuenta, estábamos solos. Él se acercó, tambaleante, con las manos ásperas. Me acorraló contra la pared del galpón. Su voz se volvió un susurro: “—Quieta, muñequita. Vamos a jugar un juego…”. Y entonces, algo golpeó la puerta. Un sonido seco, fuerte. Él se giró, molesto. Y ahí… mi memoria se corta.</p>
+                        <p data-lang="en">I walked away to the back. He followed. The ground was wet. Suddenly, we were alone. He staggered closer, rough hands reaching. He cornered me against the shed. His voice whispered: "Still, doll. Let's play a game..." Then, something hit the door. A hard sound. He turned, annoyed. And there... my memory cuts off.</p>
+                        <p data-lang="pt">Afastei-me para os fundos. Ele seguiu. O chão estava úmido. De repente, estávamos sós. Ele se aproximou cambaleando, mãos ásperas. Encurralou-me no galpão. Sussurrou: "Quieta, bonequinha. Vamos brincar..." Então, algo bateu na porta. Um som forte. Ele virou, irritado. E aí... minha memória corta.</p>
+                    </div>
+                    <div class="page-number">12</div>
+                </div>
+
+                <div class="page">
+                    <div class="content-wrapper">
+                        <p data-lang="es">Lo que vino después no lo viví despierta. Lo vi en sueños. La sombra tenía un parecido a mí, pero corrompido. Su cuerpo empapado se pegaba al del jornalero. “¿A dónde ibas, hombre?”, susurraba con mi voz deformada. Él, borracho, la agarraba con fuerza. Y aquí empieza mi infierno: siento lo que ella siente, un pulso ajeno, oscuro. Y entonces la escucho: “—Más… más… así…”.</p>
+                        <p data-lang="en">What followed I saw in dreams. The shadow looked like a corrupted me. Its wet body pressed against him. "Where were you going?" it whispered with my distorted voice. Drunk, he grabbed her. My hell began: I felt what she felt, a dark, foreign pulse. Then I heard her: "More... more... like that..."</p>
+                        <p data-lang="pt">O que veio depois vi em sonhos. A sombra parecia uma eu corrompida. Seu corpo molhado colado nele. "Onde ia?" sussurrou com minha voz distorcida. Bêbado, ele a agarrou. Meu inferno começou: senti o que ela sentia, um pulso escuro e estranho. Então a ouvi: "Mais... mais... assim..."</p>
+
+                        <p data-lang="es">Justo cuando él se abandona, la cara de la aparición se deforma en una sonrisa inhumana. Con velocidad sobrenatural, le arrebata el machete del cinto. Un destello plateado corta la noche. El grito del hombre muere antes de nacer. Su cabeza se separa del cuerpo. La aparición sonríe, salpicada de sangre. El sueño me devuelve de golpe a mi cuerpo de niña, sola y a salvo.</p>
+                        <p data-lang="en">Just as he gives in, the apparition's face warps into an inhuman smile. With supernatural speed, it snatches his machete. A silver flash cuts the night. His scream dies instantly. His head separates from his body. The apparition smiles, blood-spattered. The dream slams me back into my child body, alone and safe.</p>
+                        <p data-lang="pt">Quando ele se entrega, o rosto da aparição vira um sorriso desumano. Com velocidade sobrenatural, ela toma o facão. Um clarão prateado corta a noite. O grito morre instantaneamente. A cabeça separa-se do corpo. A aparição sorri, salpicada de sangue. O sonho me joga de volta ao corpo de criança, sozinha e salva.</p>
+
+                        <p data-lang="es">Solo recé, sin entender por qué el frío en mi estómago se sentía cálido. Como si algo me hubiera marcado y elegido. Me llamo Joziel. Y esta es la historia de cómo la sombra que me salva… también me destruye.</p>
+                        <p data-lang="en">I just prayed, not understanding why the cold inside felt warm. As if something marked and chose me. I am Joziel. And this is the story of how the shadow that saves me... also destroys me.</p>
+                        <p data-lang="pt">Só rezei, sem entender por que o frio dentro parecia quente. Como se algo me marcasse e escolhesse. Sou Joziel. E esta é a história de como a sombra que me salva... também me destrói.</p>
+                    </div>
+                    <div class="page-number">13</div>
+                </div>
+
+                <!-- PÁGINA "CONTINUARÁ..." -->
+                <div class="page">
+                    <div class="content-wrapper center-content">
+                        <h2 style="font-family: 'Merriweather', serif; font-size: 3rem;">Continuará...</h2>
+                    </div>
+                </div>
+                
+                <!-- CONTRAPORTADA DEFINITIVA (Última Página 'Dura') -->
+                <div class="page hard back-cover-page"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<audio id="music-audio" loop><source src="assets/audio/runa-main-audio.mp3" type="audio/mpeg"></audio>
+<audio id="river-audio" loop><source src="assets/audio/Sonido_de_rio.mp3" type="audio/mpeg"></audio>
+<audio id="birds-audio" loop><source src="assets/audio/Sonidos_de_Pajaros.mp3" type="audio/mpeg"></audio>
+<audio id="rain-audio" loop><source src="assets/audio/rain.mp3" type="audio/mpeg"></audio>
+<audio id="fire-audio" loop><source src="assets/audio/fire.mp3" type="audio/mpeg"></audio>
+<audio id="wind-audio" loop><source src="assets/audio/wind_gust.ogg" type="audio/ogg"></audio>
+<audio id="storm-audio" loop><source src="assets/audio/thunder_crack.ogg" type="audio/ogg"></audio>
+<audio id="magic-chimes-audio" loop><source src="assets/audio/magic_chimes.ogg" type="audio/ogg"></audio>
+<audio id="cave-ambience-audio" loop><source src="assets/audio/cave_ambience.ogg" type="audio/ogg"></audio>
+
+<!-- Auth Core -->
+<script type="module" src="../assets/js/auth-core.js"></script>
+
+<script type="module">
+$(window).on('load', function() {
+    const flipbook = $('.flipbook');
+    const viewport = $('.flipbook-viewport');
+    const pageFlipSound = new Audio('assets/audio/pasar-hoja-de-libro.mp3');
+    
+    const videoSkins = [
+        {"name":"Intro LumenFall", "url":"assets/videos/video-1.mp4"},
+        {"name":"Bosque Tenebroso", "url":"https://assets.mixkit.co/videos/preview/mixkit-gloomy-forest-with-flying-particles-39803-large.mp4"}, 
+        {"name":"Naturaleza", "url":"https://raw.githubusercontent.com/Yanzsmartwood2025/Runacoffee/abb2e1a716439dd1ba47f48c0bba176ff72e197e/public/assets/videos/runa-fondo-video.mp4"}
+    ];
+    let currentVideoIndex = 0;
+    
+    const ambienceSounds = [
+        {"id":"music-audio","name":"Música","gifSrc":"assets/gif/music.gif"},
+        {"id":"river-audio","name":"Río","gifSrc":"assets/gif/river.gif"},
+        {"id":"birds-audio","name":"Pájaros","gifSrc":"assets/gif/birds.gif"},
+        {"id":"rain-audio","name":"Lluvia","gifSrc":"assets/gif/rain.gif"},
+        {"id":"fire-audio","name":"Fuego","gifSrc":"assets/gif/fire.gif"},
+        {"id":"wind-audio","name":"Viento","gifSrc":"assets/gif/wind.gif"},
+        {"id":"storm-audio","name":"Tormenta","gifSrc":"assets/gif/storm.gif"},
+        {"id":"magic-chimes-audio","name":"Sonido Mágico","gifSrc":"assets/gif/Magic.gif"},
+        {"id":"cave-ambience-audio","name":"Cueva","gifSrc":"assets/gif/Cave.gif"}
+    ];
+    
+    const languages = [
+        {"code":"es","name":"Español","flagUrl":"assets/imagenes/Espanol.png"},
+        {"code":"en","name":"English","flagUrl":"assets/imagenes/ingles.png"}, 
+        {"code":"pt","name":"Português (BR)","flagUrl":"assets/imagenes/Brasil.png"}
+    ];
+    let currentLang = 'es';
+
+    function applyTheme(e){"dark"===e?($("html").removeClass("light").addClass("dark"),$("#theme-icon-sun-menu").removeClass("hidden"),$("#theme-icon-moon-menu").addClass("hidden")):($("html").removeClass("dark").addClass("light"),$("#theme-icon-sun-menu").addClass("hidden"),$("#theme-icon-moon-menu").removeClass("hidden"))}
+    function closeAllPanels(){$("#main-menu-panel, #mixer-panel, #video-skin-panel, #language-panel").addClass("hidden")}
+    function initializeMixer(){const e=$("#sound-controls");e.html(""),ambienceSounds.forEach(t=>{const o=document.getElementById(t.id);if(o){const a=`<div class="flex items-center gap-4 text-sm text-white"><button id="btn-${t.id}" class="mixer-icon-button relative w-10 h-10 rounded-full shadow-md flex-shrink-0 overflow-hidden"><img src="${t.gifSrc}" alt="${t.name}"></button><span class="font-medium w-20 truncate">${t.name}</span><input type="range" id="volume-${t.id}" min="0" max="1" step="0.01" value="0" class="styled-slider" style="--thumb-color: var(--runa-primary); --track-fill-color: var(--slider-track-color);"></div>`;e.append(a);const n=$(`#volume-${t.id}`);n.on("input",function(){const e=parseFloat($(this).val());o.volume=e,$(`#btn-${t.id}`).toggleClass("active",e>0),updateSliderFill(this),e>0&&o.paused?o.play().catch(e=>console.error(`Error playing ${t.id}:`,e)):0===e&&!o.paused&&o.pause()}),$(`#btn-${t.id}`).on("click",function(){const e=parseFloat(n.val());e>0?(n.data("lastValue",e),n.val(0)):n.val(n.data("lastValue")||.5),n.trigger("input")}),updateSliderFill(n[0])}})}
+    function setVideoSkin(e){const t=$("#video-background"),o=$("#video-source");t.length&&o.length&&(t.css("opacity",0),setTimeout(()=>{currentVideoIndex=e,o.attr("src",videoSkins[currentVideoIndex].url);const a=t[0];a.load(),$(a).off("canplaythrough.autoplay").on("canplaythrough.autoplay",function(){$(this).off("canplaythrough.autoplay");const e=a.play();void 0!==e&&e.then(()=>{t.css("opacity",1)}).catch(e=>{console.error("Video autoplay was prevented:",e),t.css("opacity",1)})}),localStorage.setItem("lumenFallVideoSkin",currentVideoIndex),updateVideoListUI()},500))}
+    function updateVideoListUI(){$("#video-list button").each(function(e){$(this).toggleClass("active",e===currentVideoIndex)})}
+    function initializeVideoSelector(){const e=$("#video-list");e.html(""),videoSkins.forEach((t,o)=>{const a=$(`<button class="video-list-button w-full text-left p-2 rounded-lg transition-colors duration-200 text-white">${t.name}</button>`);a.on("click",()=>setVideoSkin(o)),e.append(a)}),updateVideoListUI()}
+    function setLanguage(e){e&&languages.some(t=>t.code===e)&&(currentLang=e,$("html").removeClass("lang-es lang-en lang-pt").addClass(`lang-${e}`),localStorage.setItem("lumenFallLanguage",currentLang),updateLanguageListUI(),$("#main-menu-panel").hasClass("hidden")||generatePageFinder())}
+    function updateLanguageListUI(){$("#language-list button").each(function(){$(this).toggleClass("active",$(this).data("lang-code")===currentLang)})}
+    function initializeLanguageSwitcher(){const e=$("#language-list");e.html(""),languages.forEach(t=>{const o=$(`<button class="language-list-button w-full text-left p-2 rounded-lg transition-colors duration-200 text-white" data-lang-code="${t.code}"><div class="flex items-center gap-x-3"><img src="${t.flagUrl}" alt="${t.name} flag" class="w-6 h-4 object-cover rounded-sm"><span>${t.name}</span></div></button>`);o.on("click",()=>{setLanguage(t.code),closeAllPanels()}),e.append(o)}),updateLanguageListUI()}
+    function updateSliderFill(e){const t=$(e).attr("min")||0,o=$(e).attr("max")||100,a=$(e).val(),n=(a-t)/(o-t)*100;$(e).css("--value-percent",`${n}%`)}
+    function updateFlipbookLayout(){const e=$(".flipbook-container"),t=$(window).width(),o=t>=1024?"double":"single";flipbook.turn("display")!==o&&flipbook.turn("display",o),flipbook.turn("size",e.width(),e.height())}
+    
+    function generatePageFinder(){const e=$("#page-finder-list"),t=$("html").hasClass("dark"),o=flipbook.turn("pages"),a={es:"Índice de Páginas",en:"Page Index",pt:"Índice de Páginas"},n={es:"Pág.",en:"Pg.",pt:"Pág."};e.html(`<h3 class="font-semibold text-lg mb-2">${a[currentLang]}</h3>`);for(let l=1;l<=o;l++){const s=$(".flipbook .page").eq(l-1);let r="Página "+l;1===l?r={es:"Portada",en:"Cover",pt:"Capa"}[currentLang]:s.hasClass("back-cover-page")?r={es:"Contraportada",en:"Back Cover",pt:"Contracapa"}[currentLang]:s.find("h2.handwriting-title[data-lang='"+currentLang+"']").length>0?r=s.find("h2.handwriting-title[data-lang='"+currentLang+"']").text():s.find("h3[data-lang='"+currentLang+"']").length>0?r=s.find("h3[data-lang='"+currentLang+"']").text():s.find(".portal-content h2[data-lang='"+currentLang+"']").length>0&&(r=s.find(".portal-content h2[data-lang='"+currentLang+"']").text());const i=$(`<button class="page-finder-item" data-page="${l}"><span class="page-number-label">${n[currentLang]} ${l}</span><span class="page-title">${r}</span></button>`);i.on("click",function(){flipbook.turn("page",$(this).data("page")),closeAllPanels()}),e.append(i)}}
+
+    function initializeThemeToggle(){const e=$("#theme-toggle-container"),t={es:"Tema",en:"Theme",pt:"Tema"};e.html(`
+        <span class="font-semibold text-lg">${t[currentLang]}</span>
+        <button id="theme-toggle-button" class="p-2 rounded-full">
+            <svg id="theme-icon-sun-menu" class="h-8 w-8" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-1.414 8.486l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414-1.414zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z"></path></svg>
+            <svg id="theme-icon-moon-menu" class="h-8 w-8" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+        </button>`);
+        $("#theme-toggle-button").on("click",()=>{const o=$("html").hasClass("dark")?"light":"dark";localStorage.setItem("lumenFallTheme",o),applyTheme(o)});
+        const o=$("html").hasClass("dark");$("#theme-icon-sun-menu").toggleClass("hidden",!o),$("#theme-icon-moon-menu").toggleClass("hidden",o)
+    }
+
+    flipbook.turn({
+        display:"single",
+        duration:300,
+        elevation:50,
+        gradients:!0,
+        autoCenter:!0,
+        acceleration: true,
+        when:{
+            turned:(e,t,o)=>{
+                if (t>1) {
+                    try {
+                        pageFlipSound.currentTime=2.2;
+                        pageFlipSound.play().catch(console.error);
+                        setTimeout(()=>pageFlipSound.pause(),1000)
+                    } catch(err) {
+                        console.error("Error al reproducir sonido:", err);
+                    }
+                }
+            }
+        }
+    });
+
+    $(window).on("resize",updateFlipbookLayout).trigger("resize");
+    viewport.addClass("ready");
+    
+    $("#main-menu-toggle").on("click",e=>{e.stopPropagation();const t=!$("#main-menu-panel").hasClass("hidden");closeAllPanels(),t||($("#main-menu-panel").removeClass("hidden"),generatePageFinder(),initializeThemeToggle())});
+    $("#mixer-toggle-button").on("click",e=>{e.stopPropagation();const t=!$("#mixer-panel").hasClass("hidden");closeAllPanels(),t||$("#mixer-panel").removeClass("hidden")});
+    $("#video-skin-toggle").on("click",e=>{e.stopPropagation();const t=!$("#video-skin-panel").hasClass("hidden");closeAllPanels(),t||$("#video-skin-panel").removeClass("hidden")});
+    $("#language-toggle").on("click",e=>{e.stopPropagation();const t=!$("#language-panel").hasClass("hidden");closeAllPanels(),t||$("#language-panel").removeClass("hidden")});
+    $(document).on("click",e=>{$(e.target).closest("#main-header").length||closeAllPanels()});
+    
+    const pageTurnHint=$("#page-turn-hint");"true"!==localStorage.getItem("lumenFallHintSeen")&&(setTimeout(()=>pageTurnHint.addClass("visible"),1500),flipbook.one("turned",()=>{pageTurnHint.removeClass("visible"),localStorage.setItem("lumenFallHintSeen","true")}));
+    
+    applyTheme(localStorage.getItem("lumenFallTheme")||"dark");
+    initializeMixer();
+    initializeVideoSelector();
+    initializeLanguageSwitcher();
+    setVideoSkin(parseInt(localStorage.getItem("lumenFallVideoSkin"))||0);
+    setLanguage(localStorage.getItem("lumenFallLanguage")||'es');
+
+    try { ambienceSounds[5].gifSrc = "assets/gif/wind.gif"; } catch(e) { console.error("Error al corregir typos en arrays", e); }
+});
+</script>
+
+</body>
+</html>
