@@ -195,12 +195,26 @@
         let currentLevelId = 'dungeon_1';
         let isPaused = false;
         let isTransitioning = false;
-        let animationFrameId;
+        let animationFrameId = null;
 
         let lightningLight;
         let stormTimerStrike = Math.random() * 20 + 20; // 20-40s initial
         let stormTimerDistant = Math.random() * 7 + 8; // 8-15s initial
         let isLightningActive = false;
+
+
+        function getCameraActiveXRange(buffer = 12) {
+            const distance = Math.abs(camera.position.z);
+            const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * distance / Math.max(camera.zoom || 1, 0.001);
+            const visibleWidth = visibleHeight * camera.aspect;
+            return (visibleWidth / 2) + buffer;
+        }
+
+        function isObjectNearActiveView(object, buffer = 12) {
+            const mesh = object && (object.mesh || object);
+            if (!mesh || !mesh.position) return true;
+            return Math.abs(mesh.position.x - camera.position.x) <= getCameraActiveXRange(buffer);
+        }
 
         let firstFlameTriggered = false; // Evento La Primera Llama
         const completedRooms = { room_1: false, room_2: false, room_3: false, room_4: false, room_5: false };
@@ -356,7 +370,7 @@
         camera.updateProjectionMatrix();
 
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
         renderer.shadowMap.enabled = true;
         renderer.setClearColor(0x000000, 0);
 
@@ -728,9 +742,16 @@
         }
 
         function animate() {
-            if (isPaused && !window.isCinematic) return; // Allow cinematic to run
-            animationFrameId = requestAnimationFrame(animate);
-            const deltaTime = clock.getDelta();
+            if (isPaused && !window.isCinematic) {
+                animationFrameId = null;
+                return; // Allow cinematic to run
+            }
+            if (animationFrameId) return;
+            animationFrameId = requestAnimationFrame(() => {
+                animationFrameId = null;
+                animate();
+            });
+            const deltaTime = Math.min(clock.getDelta(), 0.05);
 
             // Cinematic Mode: Skip updates, only render
             if (window.isCinematic) {
@@ -928,11 +949,11 @@
                     allFootstepParticles.splice(i, 1);
                 }
             }
-            allSimpleEnemies.forEach(enemy => enemy.update(deltaTime));
-            allEnemiesX1.forEach(enemy => enemy.update(deltaTime));
-            allDecorGhosts.forEach(ghost => ghost.update(deltaTime));
-            allPuzzles.forEach(puzzle => puzzle.update(deltaTime));
-            allPowerUps.forEach(powerUp => powerUp.update(deltaTime));
+            allSimpleEnemies.forEach(enemy => { if (isObjectNearActiveView(enemy, 18)) enemy.update(deltaTime); });
+            allEnemiesX1.forEach(enemy => { if (isObjectNearActiveView(enemy, 18)) enemy.update(deltaTime); });
+            allDecorGhosts.forEach(ghost => { if (isObjectNearActiveView(ghost, 8)) ghost.update(deltaTime); });
+            allPuzzles.forEach(puzzle => { if (isObjectNearActiveView(puzzle, 10)) puzzle.update(deltaTime); });
+            allPowerUps.forEach(powerUp => { if (isObjectNearActiveView(powerUp, 20)) powerUp.update(deltaTime); });
             if (dustSystem) dustSystem.update();
 
             for (let i = allProjectiles.length - 1; i >= 0; i--) {
@@ -1150,7 +1171,8 @@
             isPaused = true;
             stopAudio('ambiente');
             stopAudio('pasos');
-            cancelAnimationFrame(animationFrameId);
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
             pauseMenu.classList.add('active');
         }
 
@@ -1482,6 +1504,7 @@
         function handleResize() {
             updateJoystickDimensions();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
             camera.aspect = window.innerWidth / window.innerHeight;
 
             if (camera.aspect < 1) {
@@ -1598,7 +1621,8 @@
 
         function triggerDeathSequence() {
             isPaused = true;
-            cancelAnimationFrame(animationFrameId);
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
             for (let key in audioSources) {
                 stopAudio(key);
             }
@@ -4927,7 +4951,7 @@
                          // Lerp velocity towards target to smooth the snap but enforce it
                          this.velocity.lerp(targetVel, 0.5);
 
-                         if (distToPlayer < 0.8) { // Increased threshold slightly
+                         if (distToPlayer < 1.4) { // Larger pickup radius for reliable mobile absorption
                              this.collect();
                              return false;
                          }
@@ -4987,7 +5011,8 @@
                     allProjectiles.push(new HUDProjectile(this.scene, this.mesh.position, this.type));
                 } else {
                     if (this.type === 'health') player.restoreHealth(10);
-                    if (this.type === 'power') player.restorePower(15);
+                    else if (this.type === 'power') player.restorePower(15);
+                    else if (this.type === 'soul') player.addSouls(10);
                 }
             }
         }
