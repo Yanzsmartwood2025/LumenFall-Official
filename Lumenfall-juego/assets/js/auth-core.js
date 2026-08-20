@@ -20,7 +20,7 @@ import {
     setDoc,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+import { getAnalytics, isSupported as isAnalyticsSupported } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
 // --- 1. Configuración de Firebase ---
 // Esta configuración centralizada actúa como el "Breaker Principal".
@@ -60,13 +60,43 @@ try {
         });
 
     db = getFirestore(app);
-    analytics = getAnalytics(app);
+    isAnalyticsSupported()
+        .then((supported) => {
+            if (supported) {
+                analytics = getAnalytics(app);
+            }
+        })
+        .catch((error) => {
+            console.warn("⚠️ Lumenfall System: Analytics unavailable:", error);
+        });
     console.log("⚡ Lumenfall System: Main Breaker Active (Firebase Init).");
 } catch (e) {
     console.error("❌ Lumenfall System: Breaker Failure (Firebase Init Error):", e);
 }
 
 // --- 3. Generación de Código de Juego ---
+function getSafeUserEmail(user) {
+    return user?.email || user?.providerData?.find((provider) => provider.email)?.email || null;
+}
+
+function getSafeDisplayName(user, email) {
+    return user?.displayName || (email ? email.split('@')[0] : `Operador-${user?.uid?.slice(0, 6) || 'Anon'}`);
+}
+
+function ensureAuthReady() {
+    if (!auth) {
+        const error = new Error("Firebase Auth no está inicializado. Revisa la configuración de Firebase.");
+        console.error("❌ Lumenfall System: Auth unavailable:", error);
+        return { ready: false, error };
+    }
+
+    return { ready: true };
+}
+
+function getCleanActionUrl() {
+    return `${window.location.origin}${window.location.pathname}`;
+}
+
 function generateGameCode() {
     // Genera un código numérico de 6 dígitos
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -76,6 +106,13 @@ function generateGameCode() {
 async function handleUserProfile(user) {
     if (!user) return null;
 
+    if (!db) {
+        console.error("Error al gestionar el perfil del usuario: Firestore no está inicializado.");
+        return null;
+    }
+
+    const email = getSafeUserEmail(user);
+    const displayName = getSafeDisplayName(user, email);
     const userRef = doc(db, "users", user.uid);
 
     try {
@@ -83,7 +120,7 @@ async function handleUserProfile(user) {
 
         if (userSnap.exists()) {
             // Usuario ya registrado
-            console.log("✅ Operador Identificado:", user.email);
+            console.log("✅ Operador Identificado:", email || displayName);
             return userSnap.data();
         } else {
             // Nuevo Usuario: Generar Código y Crear Perfil
@@ -91,8 +128,8 @@ async function handleUserProfile(user) {
             console.log("🆕 Nuevo Operador Detectado. Generando Credenciales...");
 
             const userData = {
-                email: user.email,
-                displayName: user.displayName || user.email.split('@')[0], // Usar parte del email si no hay nombre
+                email: email,
+                displayName: displayName, // GitHub puede ocultar el correo principal
                 photoURL: user.photoURL || null,
                 gameCode: newCode,
                 createdAt: serverTimestamp(),
@@ -103,7 +140,7 @@ async function handleUserProfile(user) {
             await setDoc(userRef, userData);
 
             // Simular envío de correo
-            alert(`📨 SYSTEM ALERT:\n\nBienvenido, Operador.\nSe ha enviado un CÓDIGO DE ACCESO CLASIFICADO a tu correo (${user.email}).\n\nUtilízalo para desbloquear la Primera Puerta.`);
+            alert(`📨 SYSTEM ALERT:\n\nBienvenido, Operador.\nTu CÓDIGO DE ACCESO CLASIFICADO es ${newCode}.\n\nGuárdalo para desbloquear la Primera Puerta.`);
 
             return userData;
         }
@@ -126,32 +163,46 @@ window.LumenfallAuth = {
 
     // 1. Google
     loginWithGoogle: async () => {
+        const authStatus = ensureAuthReady();
+        if (!authStatus.ready) return { success: false, error: authStatus.error };
+
         const provider = new GoogleAuthProvider();
         try {
-            await signInWithPopup(auth, provider);
+            const result = await signInWithPopup(auth, provider);
+            return { success: true, user: result.user };
         } catch (error) {
             console.error("Login Google Failed:", error);
             alert("Error de autenticación con Google: " + error.message);
+            return { success: false, error };
         }
     },
 
     // 2. GitHub
     loginWithGithub: async () => {
+        const authStatus = ensureAuthReady();
+        if (!authStatus.ready) return { success: false, error: authStatus.error };
+
         const provider = new GithubAuthProvider();
+        provider.addScope('user:email');
         try {
-            await signInWithPopup(auth, provider);
+            const result = await signInWithPopup(auth, provider);
+            return { success: true, user: result.user };
         } catch (error) {
             console.error("Login GitHub Failed:", error);
             alert("Error de autenticación con GitHub: " + error.message);
+            return { success: false, error };
         }
     },
 
     // 3. Magic Link (Email sin contraseña)
     sendMagicLink: async (email) => {
+        const authStatus = ensureAuthReady();
+        if (!authStatus.ready) return { success: false, error: authStatus.error };
+
         const actionCodeSettings = {
             // URL a la que se redirige después de hacer clic.
             // Debe estar en la lista de dominios autorizados de Firebase Console.
-            url: window.location.href, // Redirige a la misma página donde estaba
+            url: getCleanActionUrl(), // Redirige sin reutilizar query/hash de enlaces antiguos
             handleCodeInApp: true
         };
 
@@ -168,6 +219,9 @@ window.LumenfallAuth = {
 
     // 4. Finalizar Login con Magic Link (Llamar al cargar la página)
     checkAndSignInWithMagicLink: async () => {
+        const authStatus = ensureAuthReady();
+        if (!authStatus.ready) return { success: false, error: authStatus.error };
+
         if (isSignInWithEmailLink(auth, window.location.href)) {
             let email = window.localStorage.getItem('emailForSignIn');
 
@@ -194,7 +248,10 @@ window.LumenfallAuth = {
 
     logout: async () => {
         try {
-            await signOut(auth);
+            const authStatus = ensureAuthReady();
+            if (authStatus.ready) {
+                await signOut(auth);
+            }
         } catch (error) {
             console.error("Logout Failed (Force Reloading):", error);
         } finally {
@@ -205,7 +262,13 @@ window.LumenfallAuth = {
 
     // Método para suscribirse a cambios de estado
     onStateChanged: (callback) => {
-        onAuthStateChanged(auth, async (user) => {
+        const authStatus = ensureAuthReady();
+        if (!authStatus.ready) {
+            callback(null, null);
+            return () => {};
+        }
+
+        return onAuthStateChanged(auth, async (user) => {
             window.LumenfallAuth.currentUser = user;
             if (user) {
                 const data = await handleUserProfile(user);
