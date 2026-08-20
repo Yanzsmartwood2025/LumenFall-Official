@@ -594,63 +594,96 @@
         }
 
         // --- CINEMATIC SYSTEM ---
+        function igniteGateTorches(gateX, gateZ) {
+            // Encendido reutilizable para que todas las puertas compartan el mismo lenguaje visual.
+            playAudio('fireball_cast', false, 0.5);
+
+            [-6, 6].forEach(offsetX => {
+                const torchX = gateX + offsetX;
+                new AmbientTorchFlame(scene, new THREE.Vector3(torchX, 3.2 + 1.8, gateZ + 0.1));
+
+                const light = new THREE.PointLight(0x00aaff, 1, 15);
+                light.position.set(torchX, 3.2, gateZ + 0.5);
+                scene.add(light);
+            });
+        }
+
+        function getNextDungeonGateForRoom(roomId) {
+            const roomIndex = dungeonRoomIds.indexOf(roomId);
+            if (roomIndex === -1) return null;
+
+            // Al completar la sala I se desbloquea la puerta II, y así sucesivamente.
+            // La sala V prepara la puerta del jefe.
+            return MAPS.dungeon_1.gates[roomIndex + 1] || null;
+        }
+
         function triggerCinematicSequence(targetPos, onShowAction) {
             if (window.isCinematic) return;
             window.isCinematic = true;
             isPaused = true;
 
             const overlay = document.getElementById('agony-overlay');
-            overlay.style.display = 'block';
-            overlay.style.backgroundColor = 'black';
-            overlay.style.opacity = 0;
-            overlay.style.transition = 'opacity 0.5s ease-in-out';
-
-            // Sequence: FadeOut -> Move/Action -> FadeIn -> Hold -> FadeOut -> Return -> FadeIn
-
-            // 1. Fade Out
-            setTimeout(() => overlay.style.opacity = 1, 10);
-
-            setTimeout(() => {
-                // 2. Hidden Phase
-                const savedCamPos = camera.position.clone();
-                camera.position.set(targetPos.x, targetPos.y, 14);
-
-                if (onShowAction) onShowAction();
-
-                // 3. Fade In (Reveal)
+            if (overlay) {
                 overlay.style.opacity = 0;
+                overlay.style.display = 'none';
+            }
 
-                setTimeout(() => {
-                    // 4. Hold Phase (Observation)
+            // Sequence: Pan to the unlocked gate -> ignite torches/open feedback -> hold -> return to player.
+            const startCamPos = camera.position.clone();
+            const targetCamPos = new THREE.Vector3(targetPos.x, targetPos.y, targetPos.z);
+            const durationPan = 1500;
+            const durationHold = 2200;
+            const durationReturn = 1500;
+            const startTime = Date.now();
+            let actionShown = false;
 
-                    // 5. Fade Out
-                    overlay.style.opacity = 1;
+            function animateCinematic() {
+                const elapsed = Date.now() - startTime;
 
-                    setTimeout(() => {
-                        // 6. Return Camera
-                        if (player) {
-                             camera.position.x = player.mesh.position.x;
-                             const targetCameraY = player.mesh.position.y + 6;
-                             camera.position.y = targetCameraY;
-                             camera.position.z = 14;
-                        } else {
-                             camera.position.copy(savedCamPos);
-                        }
+                if (elapsed < durationPan) {
+                    const t = elapsed / durationPan;
+                    const smoothT = t * t * (3 - 2 * t);
+                    camera.position.lerpVectors(startCamPos, targetCamPos, smoothT);
+                    requestAnimationFrame(animateCinematic);
+                    return;
+                }
 
-                        // 7. Fade In (Resume)
-                        overlay.style.opacity = 0;
-                        setTimeout(() => {
-                            overlay.style.display = 'none';
-                            window.isCinematic = false;
-                            isPaused = false;
-                            animate();
-                        }, 500);
+                if (elapsed < durationPan + durationHold) {
+                    camera.position.copy(targetCamPos);
 
-                    }, 500 + 1500); // Wait FadeIn(500) + Hold(1500)
+                    if (!actionShown) {
+                        actionShown = true;
+                        if (onShowAction) onShowAction();
+                    }
 
-                }, 500); // Wait FadeOut(500)
+                    requestAnimationFrame(animateCinematic);
+                    return;
+                }
 
-            }, 500); // Wait initial FadeOut
+                if (elapsed < durationPan + durationHold + durationReturn) {
+                    const t = (elapsed - durationPan - durationHold) / durationReturn;
+                    const smoothT = t * t * (3 - 2 * t);
+                    const returnPos = player ? player.mesh.position.clone() : startCamPos.clone();
+                    if (player) {
+                        returnPos.y += 6;
+                        returnPos.z = 14;
+                    }
+                    camera.position.lerpVectors(targetCamPos, returnPos, smoothT);
+                    requestAnimationFrame(animateCinematic);
+                    return;
+                }
+
+                window.isCinematic = false;
+                isPaused = false;
+                if (player) {
+                    camera.position.x = player.mesh.position.x;
+                    camera.position.y = player.mesh.position.y + 6;
+                    camera.position.z = 14;
+                }
+                animate();
+            }
+
+            animateCinematic();
         }
 
         // --- FIRST FLAME EVENT (INTRO) ---
@@ -695,21 +728,7 @@
 
                         // Spawn Fire Logic (Gate 1)
                         const z = startCamPos.z - roomDepth + 0.5;
-
-                        // Fwoosh sound
-                        playAudio('fireball_cast', false, 0.5);
-
-                        // Spawn Fire Left
-                        new AmbientTorchFlame(scene, new THREE.Vector3(-56, 3.2+1.8, z+0.1));
-                        const l1 = new THREE.PointLight(0x00aaff, 1, 15);
-                        l1.position.set(-56, 3.2, z+0.5);
-                        scene.add(l1);
-
-                        // Spawn Fire Right
-                        new AmbientTorchFlame(scene, new THREE.Vector3(-44, 3.2+1.8, z+0.1));
-                        const l2 = new THREE.PointLight(0x00aaff, 1, 15);
-                        l2.position.set(-44, 3.2, z+0.5);
-                        scene.add(l2);
+                        igniteGateTorches(-50, z);
                     }
                     requestAnimationFrame(animateEvent);
                 } else if (elapsed < durationPan + durationHold + durationReturn) {
@@ -799,27 +818,18 @@
                         if (!completedRooms[currentLevelId]) {
                              completedRooms[currentLevelId] = true; // Mark Complete
 
-                             // Trigger Cinematic Sequence
+                             // Trigger Cinematic Sequence: show the current room exit being activated.
                              const exitX = 0; // Standard Exit X
                              const exitY = 4; // Door Center Y
-                             const targetPos = new THREE.Vector3(exitX, exitY, 0);
+                             const exitZ = camera.position.z - roomDepth + 5;
+                             const gateZ = camera.position.z - roomDepth + 0.5;
+                             const nextGate = getNextDungeonGateForRoom(currentLevelId);
+                             const unlockedLabel = nextGate ? `PUERTA ${nextGate.numeral} DESBLOQUEADA` : 'PUERTA DESBLOQUEADA';
 
-                             triggerCinematicSequence(targetPos, () => {
-                                 // Action: Light Torches
-                                 const gateZ = -5; // Visual depth approximation for room exits
-
-                                 new AmbientTorchFlame(scene, new THREE.Vector3(-6, 3.2+1.8, gateZ+0.1));
-                                 const l1 = new THREE.PointLight(0x00aaff, 1, 15);
-                                 l1.position.set(-6, 3.2, gateZ+0.5);
-                                 scene.add(l1);
-
-                                 new AmbientTorchFlame(scene, new THREE.Vector3(6, 3.2+1.8, gateZ+0.1));
-                                 const l2 = new THREE.PointLight(0x00aaff, 1, 15);
-                                 l2.position.set(6, 3.2, gateZ+0.5);
-                                 scene.add(l2);
-
+                             triggerCinematicSequence(new THREE.Vector3(exitX, exitY, exitZ), () => {
+                                 igniteGateTorches(exitX, gateZ);
                                  playAudio('puerta'); // Success sound
-                                 showDialogue('PUERTA DESBLOQUEADA', 2000);
+                                 showDialogue(unlockedLabel, 2000);
                              });
                         }
                     }
