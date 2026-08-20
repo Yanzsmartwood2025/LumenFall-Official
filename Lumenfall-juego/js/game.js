@@ -204,6 +204,8 @@
 
         let firstFlameTriggered = false; // Evento La Primera Llama
         const completedRooms = { room_1: false, room_2: false, room_3: false, room_4: false, room_5: false };
+        const dungeonRoomIds = ['room_1', 'room_2', 'room_3', 'room_4', 'room_5'];
+        const roomEnemyCounts = { room_1: 3, room_2: 4, room_3: 5, room_4: 6, room_5: 8 };
         window.completedRooms = completedRooms; // Expose global AFTER definition
 
         window.firstKillHappened = false; // TESTEO RÁPIDO: Flag para el primer loot garantizado
@@ -229,18 +231,8 @@
             if (interactableObject.type === 'gate') {
                 const gate = interactableObject.object;
 
-                // Lógica de "Puerta Bloqueada" explícita al interactuar
-                let isLocked = true;
-                if (currentLevelId === 'dungeon_1') {
-                    if (gate.id === 'gate_1' && firstFlameTriggered) isLocked = false;
-                    else if (gate.id === 'gate_2' && completedRooms.room_1) isLocked = false;
-                    else if (gate.id === 'gate_3' && completedRooms.room_2) isLocked = false;
-                    else if (gate.id === 'gate_4' && completedRooms.room_3) isLocked = false;
-                    else if (gate.id === 'gate_5' && completedRooms.room_4) isLocked = false;
-                    else if (gate.id === 'gate_boss' && completedRooms.room_5) isLocked = false;
-                } else {
-                    if (completedRooms[currentLevelId]) isLocked = false;
-                }
+                // Lógica de "Puerta Bloqueada" centralizada para que interacción, prompt y numerales coincidan.
+                const isLocked = !isGateUnlocked(gate);
 
                 if (isLocked) {
                     showDialogue("PUERTA BLOQUEADA", 1000);
@@ -292,6 +284,31 @@
 
             // Add simple animation logic in update loop
             interactPromptMesh.userData = { frameTimer: 0, currentFrame: 0 };
+        }
+
+        function isGateUnlocked(gate, levelId = currentLevelId) {
+            if (!gate) return false;
+
+            if (levelId === 'dungeon_1') {
+                if (gate.id === 'gate_1') return firstFlameTriggered;
+                if (gate.id === 'gate_2') return completedRooms.room_1;
+                if (gate.id === 'gate_3') return completedRooms.room_2;
+                if (gate.id === 'gate_4') return completedRooms.room_3;
+                if (gate.id === 'gate_5') return completedRooms.room_4;
+                if (gate.id === 'gate_boss') return completedRooms.room_5;
+                return false;
+            }
+
+            return Boolean(completedRooms[levelId]);
+        }
+
+        function updateGateNumeralVisual(gate, isLit) {
+            if (!gate || !gate.numeralMesh || gate.numeralLit === isLit) return;
+            const oldTexture = gate.numeralMesh.material.map;
+            gate.numeralMesh.material.map = createRomanNumeralTexture(gate.numeral, isLit);
+            gate.numeralMesh.material.needsUpdate = true;
+            if (oldTexture) oldTexture.dispose();
+            gate.numeralLit = isLit;
         }
 
         function createRomanNumeralTexture(text, isLit) {
@@ -432,6 +449,51 @@
             }
         }
 
+        class LightningImpactGlow {
+            constructor(scene, position) {
+                this.scene = scene;
+                this.life = 0.8;
+                const canvas = document.createElement('canvas');
+                canvas.width = 128;
+                canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+                const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+                gradient.addColorStop(0, 'rgba(220, 255, 255, 0.95)');
+                gradient.addColorStop(0.35, 'rgba(0, 200, 255, 0.55)');
+                gradient.addColorStop(1, 'rgba(0, 40, 80, 0)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 128, 128);
+
+                this.texture = new THREE.CanvasTexture(canvas);
+                this.material = new THREE.MeshBasicMaterial({
+                    map: this.texture,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    side: THREE.DoubleSide
+                });
+                this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), this.material);
+                this.mesh.rotation.x = -Math.PI / 2;
+                this.mesh.position.set(position.x, 0.08, position.z);
+                this.mesh.frustumCulled = false;
+                scene.add(this.mesh);
+            }
+
+            update(deltaTime) {
+                this.life -= deltaTime;
+                const t = Math.max(0, this.life / 0.8);
+                this.material.opacity = t * t;
+                this.mesh.scale.setScalar(1 + (1 - t) * 1.8);
+                if (this.life <= 0) {
+                    this.scene.remove(this.mesh);
+                    this.material.dispose();
+                    this.texture.dispose();
+                    return false;
+                }
+                return true;
+            }
+        }
+
         function triggerLightningStrike() {
             // Lógica de seguimiento al jugador: Caer cerca (izq o der)
             let strikeX = 0;
@@ -455,6 +517,7 @@
                 // Asegurar que el rayo no desaparezca prematuramente si el bounding sphere no es perfecto, pero intentamos culling
                 bolt.mesh.frustumCulled = false; // Mantener false para el rayo dinámico para evitar parpadeos
                 allFlames.push(bolt);
+                allFlames.push(new LightningImpactGlow(scene, endPos));
 
             // Posicionar la Luz Global (Directional) para el flash general
             lightningLight.position.x = strikeX;
@@ -749,7 +812,7 @@
                 });
 
                 allEnemiesX1.forEach(enemy => {
-                    if (!player.isInvincible && player.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
+                    if (enemy.isAlive && !enemy.isDying && !player.isInvincible && player.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
                         player.takeDamage(player.maxHealth * 0.10, enemy);
                     }
 
@@ -775,6 +838,9 @@
                         const dimFactor = Math.max(0.2, 1 - (distance / 40));
                         gateMesh.material.color.setScalar(dimFactor);
                     }
+
+                    updateGateNumeralVisual(gate, isGateUnlocked(gate));
+                    if (gate.numeralMesh) gate.numeralMesh.quaternion.copy(camera.quaternion);
 
                     if (distanceX < 4) {
                         isNearInteractable = true;
@@ -808,22 +874,7 @@
                         // AJUSTE: La Flama SOLO debe aparecer si la puerta está DESBLOQUEADA.
                         if (interactableObject.type === 'gate') {
                             const gate = interactableObject.object;
-                            let isGateUnlocked = false;
-
-                            if (currentLevelId === 'dungeon_1') {
-                                // Chain Logic
-                                if (gate.id === 'gate_1' && firstFlameTriggered) isGateUnlocked = true;
-                                else if (gate.id === 'gate_2' && completedRooms.room_1) isGateUnlocked = true;
-                                else if (gate.id === 'gate_3' && completedRooms.room_2) isGateUnlocked = true;
-                                else if (gate.id === 'gate_4' && completedRooms.room_3) isGateUnlocked = true;
-                                else if (gate.id === 'gate_5' && completedRooms.room_4) isGateUnlocked = true;
-                                else if (gate.id === 'gate_boss' && completedRooms.room_5) isGateUnlocked = true;
-                            } else {
-                                // Inside Room: Exit Unlocks when Room is Cleared
-                                if (completedRooms[currentLevelId]) isGateUnlocked = true;
-                            }
-
-                            if (!isGateUnlocked) showPrompt = false;
+                            if (!isGateUnlocked(gate)) showPrompt = false;
                         }
 
                         interactPromptMesh.visible = showPrompt;
@@ -2933,7 +2984,10 @@
         const floorGeometry = new THREE.PlaneGeometry(playableAreaWidth, roomDepth);
         const floorMaterial = new THREE.MeshStandardMaterial({
             map: textureLoader.load(assetUrls.floorTexture),
-            roughness: 0.8,
+            roughness: 0.55,
+            metalness: 0.08,
+            emissive: 0x071422,
+            emissiveIntensity: 0.12,
             color: 0x888888,
             side: THREE.DoubleSide
         });
@@ -3322,7 +3376,7 @@
                 numeralMesh.position.set(0, 9.0, 0.3); // High above the door (y=4 + 5?)
                 gateGroup.add(numeralMesh);
 
-                allGates.push({ mesh: gateGroup, id: gateData.id, destination: gateData.destination, numeralMesh: numeralMesh });
+                allGates.push({ mesh: gateGroup, id: gateData.id, destination: gateData.destination, numeral: gateData.numeral, numeralMesh: numeralMesh, numeralLit: isLit });
                 createTorch(gateData.x - 6, 3.2, camera.position.z - roomDepth + 0.5, isLit);
                 createTorch(gateData.x + 6, 3.2, camera.position.z - roomDepth + 0.5, isLit);
             });
@@ -3358,7 +3412,7 @@
 
             // --- NIGHTMARE LOGIC START ---
             // If room_1 to room_5 (Nightmare Mode)
-            const isNightmareRoom = ['room_1','room_2','room_3','room_4','room_5'].includes(levelId);
+            const isNightmareRoom = dungeonRoomIds.includes(levelId);
 
             if (isNightmareRoom) {
                 // Penumbra
@@ -3386,7 +3440,7 @@
 
             if (isNightmareRoom) {
                 // Remove the default lit torches at the exit (x=0) if not cleared.
-                if (!completedRooms[levelId + "_cleared"]) {
+                if (!completedRooms[levelId]) {
                     // We need to find and remove flames near x=0
                     // Exit gate is at x=0. Torches at +/- 6.
                     for (let i = allFlames.length - 1; i >= 0; i--) {
@@ -3404,13 +3458,14 @@
                 }
             }
 
-            // --- SPAWN LOGIC: 1 Enemy per Room (Rooms 1-5) ---
-            if (['room_1', 'room_2', 'room_3', 'room_4', 'room_5'].includes(levelId)) {
-                if (!completedRooms[levelId]) {
-                    // Ensure only 1 enemy is spawned for testing/flow
-                    if (allEnemiesX1.length === 0 && allSimpleEnemies.length === 0) {
-                        allEnemiesX1.push(new EnemyX1(scene, 0));
-                    }
+            // --- SPAWN LOGIC: escalating enemy waves for the endless-room prototype ---
+            if (dungeonRoomIds.includes(levelId) && !completedRooms[levelId]) {
+                const enemyCount = roomEnemyCounts[levelId] || 3;
+                const spacing = Math.min(8, 36 / Math.max(1, enemyCount - 1));
+                const startX = -((enemyCount - 1) * spacing) / 2;
+                for (let i = 0; i < enemyCount; i++) {
+                    const stagger = (i % 2 === 0 ? 1 : -1) * 1.5;
+                    allEnemiesX1.push(new EnemyX1(scene, startX + (i * spacing) + stagger));
                 }
             }
 
