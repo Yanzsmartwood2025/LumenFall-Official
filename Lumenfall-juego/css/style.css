@@ -479,8 +479,8 @@ html, body {
             width: 140%;
             height: 140%;
             transform: translate(-50%, -50%);
-            background-image: url('../assets/sprites/FX/fuego.png'); /* Ruta relativa a style.css (subir a root) */
-            /* ../assets/sprites/effects/fuego.png -> assets/sprites/effects/fuego.png desde css/ */
+            background-image: url('../assets/textures/vfx/fuego-antorcha.jpg'); /* Recurso existente, relativo a css/ */
+            /* El recurso de fuego se sirve desde assets/textures/vfx/. */
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
