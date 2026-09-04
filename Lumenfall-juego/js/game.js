@@ -1533,7 +1533,10 @@
                             await screen.orientation.lock('landscape');
                         }
                     } catch (err) {
-                        console.error('Could not lock orientation:', err);
+                        // Algunos navegadores de escritorio no permiten bloquear la orientación.
+                        if (err?.name !== 'NotSupportedError') {
+                            console.warn('Could not lock orientation:', err);
+                        }
                     }
                 })();
 
