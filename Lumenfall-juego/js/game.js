@@ -165,7 +165,7 @@
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: true, alpha: true });
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: false, alpha: true, powerPreference: 'high-performance' });
         const textureLoader = new THREE.TextureLoader();
         const textureCache = new Map();
         const enemySoundLimiter = new Map();
@@ -422,7 +422,7 @@
         camera.updateProjectionMatrix();
 
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1));
         renderer.shadowMap.enabled = true;
         renderer.setClearColor(0x000000, 0);
 
@@ -1533,7 +1533,10 @@
                             await screen.orientation.lock('landscape');
                         }
                     } catch (err) {
-                        console.error('Could not lock orientation:', err);
+                        // Algunos navegadores de escritorio no permiten bloquear la orientación.
+                        if (err?.name !== 'NotSupportedError') {
+                            console.warn('Could not lock orientation:', err);
+                        }
                     }
                 })();
 
@@ -1568,7 +1571,7 @@
         function handleResize() {
             updateJoystickDimensions();
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1));
             camera.aspect = window.innerWidth / window.innerHeight;
 
             if (camera.aspect < 1) {
