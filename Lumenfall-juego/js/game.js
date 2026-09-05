@@ -876,12 +876,10 @@
                              const exitZ = camera.position.z - roomDepth + 5;
                              const gateZ = camera.position.z - roomDepth + 0.5;
                              const nextGate = getNextDungeonGateForRoom(currentLevelId);
-                             const unlockedLabel = nextGate ? `PUERTA ${nextGate.numeral} DESBLOQUEADA` : 'PUERTA DESBLOQUEADA';
-
                              triggerCinematicSequence(new THREE.Vector3(exitX, exitY, exitZ), () => {
                                  igniteGateTorches(exitX, gateZ);
                                  playAudio('puerta'); // Success sound
-                                 showDialogue(unlockedLabel, 2000);
+                                 showDialogue('mysteryDoor', 3000);
                              });
                         }
                     }
@@ -1085,7 +1083,9 @@
                 vibrationSoft: "Vibration: SUAVE",
                 vibrationStrong: "Vibration: FUERTE",
                 "PUERTA BLOQUEADA": "PUERTA BLOQUEADA",
-                "PUERTA DESBLOQUEADA": "PUERTA DESBLOQUEADA"
+                "PUERTA DESBLOQUEADA": "PUERTA DESBLOQUEADA",
+                mysteryDoor: "La puerta susurra: aún no es el momento de cruzar.",
+                dialogueFallback: "Una voz antigua responde desde la oscuridad..."
             },
             en: {
                 start: "Start",
@@ -1106,7 +1106,9 @@
                 vibrationSoft: "Vibration: SOFT",
                 vibrationStrong: "Vibration: STRONG",
                 "PUERTA BLOQUEADA": "DOOR LOCKED",
-                "PUERTA DESBLOQUEADA": "DOOR UNLOCKED"
+                "PUERTA DESBLOQUEADA": "DOOR UNLOCKED",
+                mysteryDoor: "The door whispers: it is not yet time to cross.",
+                dialogueFallback: "An ancient voice answers from the darkness..."
             }
         };
 
@@ -1133,7 +1135,7 @@
 
         function showDialogue(dialogueKey, duration) {
             if (dialogueBox.classList.contains('visible')) return;
-            const message = translations[currentLanguage][dialogueKey] || "Dialogue not found.";
+            const message = translations[currentLanguage][dialogueKey] || translations[currentLanguage].mysteryDoor;
             dialogueBox.textContent = message;
             dialogueBox.classList.add('visible');
             setTimeout(() => {
@@ -3574,7 +3576,7 @@
                  // -------------------------------------
 
                  if (allEnemiesX1.length === 0) {
-                    const gateKeeper = new EnemyX1(scene, -40);
+                    const gateKeeper = new EnemyX1(scene, 12);
                     gateKeeper.isGatekeeper = true;
                     allEnemiesX1.push(gateKeeper);
                 }
@@ -3659,6 +3661,9 @@
 
                 this.mesh.position.set(initialX, enemyHeight / 2, 0);
                 this.mesh.castShadow = true;
+                this.mesh.renderOrder = 5;
+                this.mesh.material.opacity = 1;
+                this.mesh.visible = true;
                 this.scene.add(this.mesh);
                 this.hitCount = 0;
                 this.isAlive = true;
@@ -3846,6 +3851,9 @@
 
                 this.mesh.position.set(initialX, enemyHeight / 2, 0);
                 this.mesh.castShadow = true;
+                this.mesh.renderOrder = 5;
+                this.mesh.material.opacity = 1;
+                this.mesh.visible = true;
                 this.scene.add(this.mesh);
 
                 this.maxHealth = 8;
@@ -4205,6 +4213,7 @@
                 const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
                 this.table = new THREE.Mesh(tableGeometry, tableMaterial);
                 this.table.position.set(x, 1, camera.position.z - roomDepth + 4);
+                this.table.renderOrder = 0;
                 this.scene.add(this.table);
 
                 if (this.isSolved) {
@@ -4235,8 +4244,10 @@
                     material.map.offset.set((i % 2) * 0.5, (i < 2 ? 0.5 : 0));
 
                     const piece = new THREE.Mesh(new THREE.PlaneGeometry(pieceSize, pieceSize), material);
-                    piece.position.copy(initialPositions[i]).add(new THREE.Vector3(x, 4, this.table.position.z + 2.1));
-                    piece.userData.targetPosition = correctPositions[i].clone().add(new THREE.Vector3(x, 4, this.table.position.z + 2.1));
+                    const puzzleLayerZ = this.table.position.z + 0.2;
+                    piece.position.copy(initialPositions[i]).add(new THREE.Vector3(x, 4, puzzleLayerZ));
+                    piece.userData.targetPosition = correctPositions[i].clone().add(new THREE.Vector3(x, 4, puzzleLayerZ));
+                    piece.renderOrder = 1;
                     this.pieces.push(piece);
                     this.scene.add(piece);
                 }

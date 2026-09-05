@@ -435,35 +435,21 @@ html, body {
             object-fit: contain;
         }
 
-        /* Estilos para el anillo de 5 flamas (Reload/Attack) */
+        /* Un solo sprite en el botón de ataque; el efecto se activa al pulsar. */
         .flame-ring {
             position: relative;
             width: 80%;
             height: 80%;
-            border-radius: 50%;
-            animation: rotate-ring 10s linear infinite; /* Velocidad reducida (más lento) */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .flame-ring img {
-            position: absolute;
-            width: 35% !important; /* Sobreescribir el 50% general */
-            height: 35% !important;
-            top: 50%;
-            left: 50%;
-            transform-origin: center center;
-        }
-
-        /* Posicionamiento circular de las 5 flamas */
-        /* Rotamos 90 grados adicionales para que se vean "horizontales" (tangentes al círculo) */
-        .flame-ring img:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg) translate(0, -100%); }
-        .flame-ring img:nth-child(2) { transform: translate(-50%, -50%) rotate(72deg) translate(0, -100%); }
-        .flame-ring img:nth-child(3) { transform: translate(-50%, -50%) rotate(144deg) translate(0, -100%); }
-        .flame-ring img:nth-child(4) { transform: translate(-50%, -50%) rotate(216deg) translate(0, -100%); }
-        .flame-ring img:nth-child(5) { transform: translate(-50%, -50%) rotate(288deg) translate(0, -100%); }
-
-        @keyframes rotate-ring {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            position: relative;
+            width: 75% !important;
+            height: 75% !important;
+            object-fit: contain;
         }
 
         /* Efecto de "Aura" para el botón activo */
