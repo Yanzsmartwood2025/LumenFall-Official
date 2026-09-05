@@ -1188,9 +1188,12 @@
                     loadAudio('attack_voice', 'assets/audio/characters/joziel/attack_voice.mp3'),
                     loadAudio('thunder_strike', 'assets/audio/sfx/thunder_strike.mp3'),
                     loadAudio('thunder_distant', 'assets/audio/sfx/thunder_distant.mp3'),
-                    loadAudio('enemy1_growl', 'assets/audio/enemigos/enemigo-1/movimiento.mp3'),
+                    loadAudio('enemy1_growl', 'assets/audio/enemigos/enemigo-1/cc0/creature_stalk_01.ogg'),
                     loadAudio('enemy1_step', 'assets/audio/enemigos/enemigo-1/pasos.mp3'),
-                    loadAudio('enemy1_impact', 'assets/audio/enemigos/enemigo-1/impacto.mp3')
+                    loadAudio('enemy1_impact', 'assets/audio/enemigos/enemigo-1/impacto.mp3'),
+                    loadAudio('enemy1_hurt', 'assets/audio/enemigos/enemigo-1/cc0/creature_hurt_01.ogg'),
+                    loadAudio('enemy1_death', 'assets/audio/enemigos/enemigo-1/cc0/creature_die_01.ogg'),
+                    loadAudio('enemy1_roar', 'assets/audio/enemigos/enemigo-1/cc0/creature_roar_01.ogg')
                 ]);
             } catch (error) {
                 console.error("Error loading audio", error);
@@ -3999,6 +4002,7 @@
                 if (!this.hasDetectedPlayer) {
                     if (distanceToPlayer < this.detectionRange) {
                         this.hasDetectedPlayer = true;
+                        this.playScopedSound('enemy1_roar', 0.95 + Math.random() * 0.1, 0.8, distanceToPlayer);
                         this.state = 'PURSUE';
                     } else {
                         this.state = 'PATROL';
@@ -4044,7 +4048,7 @@
 
                 const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
                 this.playScopedSound('enemy1_impact', 1.0, 1.0, dist);
-
+                this.playScopedSound('enemy1_hurt', 0.95 + Math.random() * 0.1, 0.75, dist);
                 if (this.health <= 0) {
                     this.isAlive = false;
                     this.isDying = true;
@@ -4054,6 +4058,8 @@
             }
 
             finalizeDeath() {
+                const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
+                this.playScopedSound('enemy1_death', 0.9 + Math.random() * 0.12, 0.95, dist);
                 this.isDying = false;
 
                 if (!window.firstKillHappened) {

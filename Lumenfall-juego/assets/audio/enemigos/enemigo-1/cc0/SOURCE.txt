@@ -1,0 +1,5 @@
+CC0 assets sourced from the OpenGameArt.org page “80 CC0 RPG SFX” by rubberduck.
+Source page: https://opengameart.org/content/80-cc0-rpg-sfx
+Download: https://opengameart.org/sites/default/files/80-CC0-RPG-SFX_0.zip
+License: CC0; attribution is not required. Kept here for provenance.
+Selected files: creature_hurt_01.ogg, creature_die_01.ogg, creature_roar_01.ogg, creature_stalk_01.ogg (renamed from creature_misc_01.ogg).
