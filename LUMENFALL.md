@@ -87,6 +87,12 @@ Tailwind puede reemplazar gradualmente gran parte de `css/style.css`, especialme
 
 **Conclusión:** React + Tailwind es una buena dirección para modernizar Lumenfall, pero debe utilizarse como una nueva capa de interfaz sobre Three.js, no como reemplazo inmediato del motor del juego.
 
-## 8. Regla de trabajo para continuar
+## 8. Habilidades reutilizables
+
+Las habilidades creadas durante el trabajo quedan respaldadas en `skills/`. La habilidad `skills/lumenfall-maintenance/SKILL.md` contiene el proceso reutilizable para auditar el proyecto, modificarlo de forma incremental, gestionar audio con aprobación previa, documentar cambios, validar builds y publicar en GitHub.
+
+La copia operativa de la habilidad para el entorno de Manus se mantiene en `/home/ubuntu/skills/lumenfall-maintenance/SKILL.md`; la copia en `skills/` es el respaldo versionado en la nube dentro de este repositorio.
+
+## 9. Regla de trabajo para continuar
 
 Antes de modificar código existente se debe leer este archivo, revisar `git status`, crear una rama para cambios grandes, conservar `main` como respaldo y ejecutar la compilación antes de publicar. Cada cambio de audio debe seguir el flujo de escucha y aprobación indicado arriba.
