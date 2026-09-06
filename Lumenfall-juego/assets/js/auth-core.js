@@ -139,8 +139,8 @@ async function handleUserProfile(user) {
 
             await setDoc(userRef, userData);
 
-            // Simular envío de correo
-            alert(`📨 SYSTEM ALERT:\n\nBienvenido, Operador.\nTu CÓDIGO DE ACCESO CLASIFICADO es ${newCode}.\n\nGuárdalo para desbloquear la Primera Puerta.`);
+            // El código se devuelve al flujo de autenticación; no usar alertas nativas del navegador.
+            console.info('Access code generated for the authenticated flow.');
 
             return userData;
         }
@@ -172,7 +172,7 @@ window.LumenfallAuth = {
             return { success: true, user: result.user };
         } catch (error) {
             console.error("Login Google Failed:", error);
-            alert("Error de autenticación con Google: " + error.message);
+            // No usar alertas nativas: el juego mantiene los errores fuera de la interfaz del navegador.
             return { success: false, error };
         }
     },
@@ -189,7 +189,7 @@ window.LumenfallAuth = {
             return { success: true, user: result.user };
         } catch (error) {
             console.error("Login GitHub Failed:", error);
-            alert("Error de autenticación con GitHub: " + error.message);
+            // No usar alertas nativas: el juego mantiene los errores fuera de la interfaz del navegador.
             return { success: false, error };
         }
     },

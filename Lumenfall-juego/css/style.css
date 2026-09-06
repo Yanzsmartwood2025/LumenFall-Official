@@ -425,6 +425,8 @@ html, body {
             width: 50%;
             height: 50%;
             object-fit: contain;
+            position: relative;
+            z-index: 2;
             filter: drop-shadow(0 0 5px #00aaff);
         }
 
@@ -462,18 +464,16 @@ html, body {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 140%;
-            height: 140%;
+            width: 125%;
+            height: 125%;
             transform: translate(-50%, -50%);
-            background-image: url('../assets/textures/vfx/fuego-antorcha.jpg'); /* Recurso existente, relativo a css/ */
-            /* El recurso de fuego se sirve desde assets/textures/vfx/. */
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            opacity: 0.8;
+            background: radial-gradient(circle, rgba(0, 210, 255, 0.38) 0%, rgba(0, 90, 180, 0.18) 42%, transparent 72%);
+            border: 2px solid rgba(80, 220, 255, 0.75);
+            border-radius: 50%;
+            box-shadow: 0 0 12px #00aaff, 0 0 28px rgba(0, 170, 255, 0.75), inset 0 0 12px rgba(180, 245, 255, 0.6);
+            opacity: 0.9;
             pointer-events: none;
-            z-index: -1;
-            filter: hue-rotate(200deg) saturate(300%) brightness(120%) drop-shadow(0 0 10px #00aaff); /* Ajustado a azul profundo y corrección de orden de filtros */
+            z-index: 0;
             animation: aura-pulse 0.5s infinite alternate;
         }
 
@@ -490,6 +490,8 @@ html, body {
 
         /* Estilo para el texto debajo de los botones */
         .control-btn span {
+            position: relative;
+            z-index: 2;
             font-size: 2.5vmin; /* Texto que se adapta */
             margin-top: 5px;
             color: white;

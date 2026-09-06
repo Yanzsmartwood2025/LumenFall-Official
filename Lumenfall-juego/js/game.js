@@ -1524,10 +1524,12 @@
             startButton.addEventListener('click', () => {
                 // FORCE FULLSCREEN ON START
                 try {
-                    document.documentElement.requestFullscreen().catch(err => {
-                        console.log("Fullscreen blocked or not supported:", err);
+                    document.documentElement.requestFullscreen().catch(() => {
+                        // El navegador puede bloquear fullscreen; no mostramos mensajes nativos.
                     });
-                } catch (e) { console.log(e); }
+                } catch (e) {
+                    // Fullscreen es opcional y no debe interrumpir el inicio del juego.
+                }
 
                 if (audioContext.state === 'suspended') {
                     audioContext.resume();
@@ -4128,17 +4130,25 @@
                 this.startVoice();
             }
 
-            startVoice() {
-                if (!audioBuffers['fantasma_lamento']) return;
-                this.voiceSource = audioContext.createBufferSource();
-                this.voiceSource.buffer = audioBuffers['fantasma_lamento'];
-                this.voiceSource.loop = true;
-                this.voiceSource.playbackRate.value = 0.9;
-
-                this.voiceGain = audioContext.createGain();
-                this.voiceGain.gain.value = 0;
-                this.voiceSource.connect(this.voiceGain).connect(audioContext.destination);
-                this.voiceSource.start();
+                        startVoice() {
+                if (this.voiceSource || !audioBuffers['fantasma_lamento']) return;
+                if (audioContext.state === 'suspended') audioContext.resume();
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffers['fantasma_lamento'];
+                source.loop = true;
+                source.playbackRate.value = 0.9;
+                const gain = audioContext.createGain();
+                gain.gain.value = 0;
+                source.connect(gain).connect(audioContext.destination);
+                source.onended = () => {
+                    if (this.voiceSource === source) {
+                        this.voiceSource = null;
+                        this.voiceGain = null;
+                    }
+                };
+                this.voiceSource = source;
+                this.voiceGain = gain;
+                source.start();
             }
 
             stopAudio(fadeOutDuration = 0) {
@@ -4189,11 +4199,13 @@
 
                 this.mesh.position.y = this.initialY + Math.sin(Date.now() * 0.002) * 0.5;
 
+                // Reintentar la voz si el buffer terminó de cargarse después de crear el fantasma.
+                if (!this.voiceSource) this.startVoice();
                 if (player && this.voiceGain) {
                     const dist = this.mesh.position.distanceTo(player.mesh.position);
-                    const maxDist = 20;
+                    const maxDist = 24;
                     const vol = calculateLogVolume(dist, maxDist);
-                    this.voiceGain.gain.setTargetAtTime(vol * 1.0, audioContext.currentTime, 0.1);
+                    this.voiceGain.gain.setTargetAtTime(vol, audioContext.currentTime, 0.12);
                 }
             }
         }
