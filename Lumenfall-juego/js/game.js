@@ -4507,7 +4507,8 @@
                 this.texture.magFilter = THREE.NearestFilter;
                 this.texture.minFilter = THREE.NearestFilter;
 
-                this.cols = 4;
+                // The projectile spritesheet is arranged as 6 columns x 2 rows.
+                this.cols = 6;
                 this.rows = 2;
                 this.texture.repeat.set(1 / this.cols, 1 / this.rows);
 
@@ -4528,7 +4529,8 @@
 
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.copy(startPosition);
-                this.mesh.renderOrder = 10;
+                // Keep the authored projectile sprite in front of procedural glow layers.
+                this.mesh.renderOrder = 20;
 
                 this.angle = Math.atan2(direction.y, direction.x);
                 this.mesh.rotation.z = this.angle;
@@ -4543,8 +4545,8 @@
 
                 this.frames = {
                     SPAWN: [0, 1],
-                    FLIGHT: [2, 3, 4, 3],
-                    IMPACT: [5, 6, 7]
+                    FLIGHT: [2, 3, 4, 5],
+                    IMPACT: [6, 7, 8, 9, 10, 11]
                 };
 
                 this.currentSeqIndex = 0;
@@ -4571,6 +4573,7 @@
                 }
 
                 this.plasmaCore = new THREE.Sprite(sharedCoreMaterial);
+                this.plasmaCore.renderOrder = 5;
                 // Slightly smaller than main projectile
                 this.plasmaCore.scale.set(0.8, 0.8, 1);
                 this.scene.add(this.plasmaCore);
@@ -4581,6 +4584,7 @@
                 // 2. Trail (Improved)
                 // Width 0.5 (Base), Length 12, MaxAlpha 0.6
                 this.trail = new TrailRenderer(this.scene, 0.5, 12, 0.6);
+                this.trail.mesh.renderOrder = 2;
 
                 // 3. Sparks (Legacy optimization)
                 this.sparks = [];
@@ -4610,6 +4614,7 @@
                     depthWrite: false
                 });
                 this.flashMesh = new THREE.Mesh(geo, mat);
+                this.flashMesh.renderOrder = 35;
                 this.flashMesh.position.copy(this.mesh.position);
                 this.flashMesh.scale.set(0, 0, 0);
                 this.scene.add(this.flashMesh);
@@ -4638,6 +4643,7 @@
                     side: THREE.DoubleSide
                 });
                 const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.renderOrder = 30;
                 ring.position.copy(this.mesh.position);
                 ring.position.z += 0.04;
                 ring.lookAt(camera.position);
@@ -4654,6 +4660,7 @@
                         depthWrite: false
                     });
                     const shard = new THREE.Sprite(sparkMat);
+                    shard.renderOrder = 31;
                     shard.position.copy(this.mesh.position);
                     shard.position.z += 0.08;
                     shard.scale.set(0.25, 0.25, 1);
@@ -4718,6 +4725,7 @@
                         depthWrite: false
                     });
                     const spark = new THREE.Sprite(sparkMat);
+                    spark.renderOrder = 8;
                     spark.position.copy(spawnPos);
                     spark.scale.set(0.3, 0.3, 1);
                     const drift = new THREE.Vector3((Math.random() - 0.5) * 0.1, (Math.random() - 0.5) * 0.1, 0);
