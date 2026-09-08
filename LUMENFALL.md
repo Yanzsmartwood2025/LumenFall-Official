@@ -4,7 +4,7 @@
 **Rama estable:** `main`  
 **Juego:** Three.js + Vite  
 **Despliegue:** Vercel  
-**Última actualización:** 2026-09-05
+**Última actualización:** 2026-09-08
 
 > Este archivo es el punto de referencia principal de Lumenfall. Resume el estado real del código, las decisiones aplicadas, los respaldos técnicos y la estrategia recomendada para modernizar la interfaz sin romper el juego.
 
@@ -26,6 +26,8 @@ El núcleo del juego es una escena Three.js administrada desde JavaScript direct
 | Mensajes del juego | Completado | Se eliminó el fallback “Dialogue not found” y se añadió un mensaje misterioso propio. |
 | Enemigo inicial | Completado | Se colocó en una posición visible a la derecha y se forzó su opacidad/visibilidad inicial. |
 | Profundidad de la primera puerta | Completado | La caja y sus piezas se colocaron detrás del jugador y de los enemigos. |
+| Juego local / guest | Completado | En `localhost` / `127.0.0.1` o con `?guest=1` el demo ya no redirige al login. Producción sigue exigiendo Firebase. |
+| Magic Link | Completado | Se eliminó `window.prompt()` al completar el enlace mágico; si falta el correo se devuelve `needsEmail`. |
 
 ## 3. Commits importantes
 
@@ -57,6 +59,8 @@ Las imágenes de comprobación histórica permanecen en `verification/`. No se d
 ## 6. Validación actual
 
 La validación local vigente consiste en ejecutar `npm run build` desde `Lumenfall-juego/`, comprobar `node --check js/game.js` y verificar las rutas críticas de assets. La compilación reciente terminó correctamente y las comprobaciones estáticas confirmaron que los controles contienen un solo sprite de ataque y que no hay llamadas a `alert()`, `confirm()` o `prompt()` en `game.js`.
+
+Para probar el demo sin Firebase: `npm run dev` en `Lumenfall-juego/` (hostname local) o abrir la URL con `?guest=1`. En Vercel / dominio público el redirect de auth se mantiene.
 
 ## 7. Recomendación: migración gradual a React + Tailwind
 

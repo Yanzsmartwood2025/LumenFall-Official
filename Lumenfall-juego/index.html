@@ -145,6 +145,14 @@
         // Wait for window load to ensure modules are ready
         window.addEventListener('load', () => {
 
+            function isLocalPlayAllowed() {
+                const host = window.location.hostname;
+                const params = new URLSearchParams(window.location.search);
+                return host === 'localhost'
+                    || host === '127.0.0.1'
+                    || params.get('guest') === '1';
+            }
+
             function checkAuth() {
                 // Wait for Auth Core to initialize
                 if (!window.LumenfallAuth) {
@@ -155,6 +163,11 @@
                 // Subscribe to Auth State
                 window.LumenfallAuth.onStateChanged((user, userData) => {
                     if (!user) {
+                        if (isLocalPlayAllowed()) {
+                            console.info("Lumenfall: guest/local play — Firebase session not required.");
+                            window.currentUserData = { guest: true, displayName: 'Invitado' };
+                            return;
+                        }
                         // Security Breaker: Redirect if not logged in
                         console.warn("⚠️ UNAUTHORIZED ACCESS DETECTED. REDIRECTING...");
                         window.location.href = "../index.html";

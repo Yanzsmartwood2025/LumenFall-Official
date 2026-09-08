@@ -225,22 +225,21 @@ window.LumenfallAuth = {
         if (isSignInWithEmailLink(auth, window.location.href)) {
             let email = window.localStorage.getItem('emailForSignIn');
 
-            // Si el usuario abrió el link en otro dispositivo, pedir el email
+            // Si el usuario abrió el link en otro dispositivo, no usar prompt nativo.
             if (!email) {
-                email = window.prompt('Por favor, confirma tu correo electrónico para iniciar sesión:');
+                console.warn("Magic Link: falta el correo para completar el acceso.");
+                return { success: false, needsEmail: true, error: new Error('EMAIL_CONFIRMATION_REQUIRED') };
             }
 
-            if (email) {
-                try {
-                    const result = await signInWithEmailLink(auth, email, window.location.href);
-                    window.localStorage.removeItem('emailForSignIn'); // Limpiar
-                    // Reemplazar la URL para limpiar el hash del link
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    return { success: true, user: result.user };
-                } catch (error) {
-                    console.error("Error finalizando Magic Link:", error);
-                    return { success: false, error: error };
-                }
+            try {
+                const result = await signInWithEmailLink(auth, email, window.location.href);
+                window.localStorage.removeItem('emailForSignIn'); // Limpiar
+                // Reemplazar la URL para limpiar el hash del link
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return { success: true, user: result.user };
+            } catch (error) {
+                console.error("Error finalizando Magic Link:", error);
+                return { success: false, error: error };
             }
         }
         return { success: false, notLink: true };
