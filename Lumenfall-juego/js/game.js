@@ -3591,16 +3591,12 @@
                  }
                  // -------------------------------------
 
-                 // Mismo EnemyX1 fuera de las puertas I, II y III (pasillo, no dentro del muro).
-                 const hallGuardXs = MAPS.dungeon_1.gates
-                    .filter((gate) => gate.id === 'gate_1' || gate.id === 'gate_2' || gate.id === 'gate_3')
-                    .map((gate) => gate.x + 6);
-                 hallGuardXs.forEach((x) => {
-                    const gateKeeper = new EnemyX1(scene, x);
+                 if (allEnemiesX1.length === 0) {
+                    const gateKeeper = new EnemyX1(scene, 12);
                     gateKeeper.isGatekeeper = true;
                     gateKeeper.mesh.position.z = 0;
                     allEnemiesX1.push(gateKeeper);
-                 });
+                 }
 
                 // Intro Logic: If First Flame not triggered, force Gate 1 torches OFF.
                 if (!firstFlameTriggered) {
