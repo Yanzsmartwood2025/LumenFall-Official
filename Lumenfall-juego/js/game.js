@@ -172,11 +172,25 @@
 
         function getCachedTexture(url, configure) {
             if (!textureCache.has(url)) {
-                const texture = textureLoader.load(url);
-                textureCache.set(url, texture);
+                const waiters = [];
+                const base = textureLoader.load(url, (tex) => {
+                    tex.needsUpdate = true;
+                    waiters.forEach((clone) => {
+                        clone.image = tex.image;
+                        clone.needsUpdate = true;
+                    });
+                    waiters.length = 0;
+                });
+                textureCache.set(url, { base, waiters });
             }
-            const texture = textureCache.get(url).clone();
-            texture.needsUpdate = true;
+            const entry = textureCache.get(url);
+            const texture = entry.base.clone();
+            if (entry.base.image) {
+                texture.image = entry.base.image;
+                texture.needsUpdate = true;
+            } else {
+                entry.waiters.push(texture);
+            }
             if (configure) configure(texture);
             return texture;
         }
@@ -3577,11 +3591,16 @@
                  }
                  // -------------------------------------
 
-                 if (allEnemiesX1.length === 0) {
-                    const gateKeeper = new EnemyX1(scene, 12);
+                 // Mismo EnemyX1 fuera de las puertas I, II y III (pasillo, no dentro del muro).
+                 const hallGuardXs = MAPS.dungeon_1.gates
+                    .filter((gate) => gate.id === 'gate_1' || gate.id === 'gate_2' || gate.id === 'gate_3')
+                    .map((gate) => gate.x + 6);
+                 hallGuardXs.forEach((x) => {
+                    const gateKeeper = new EnemyX1(scene, x);
                     gateKeeper.isGatekeeper = true;
+                    gateKeeper.mesh.position.z = 0;
                     allEnemiesX1.push(gateKeeper);
-                }
+                 });
 
                 // Intro Logic: If First Flame not triggered, force Gate 1 torches OFF.
                 if (!firstFlameTriggered) {
@@ -3648,7 +3667,7 @@
                 this.texture.repeat.x = 1 / totalEnemyFrames;
                 const enemyHeight = 5.6;
                 const enemyWidth = 1.8;
-                const enemyMaterial = new THREE.MeshStandardMaterial({
+                const enemyMaterial = new THREE.MeshBasicMaterial({
                     map: this.texture,
                     transparent: true,
                     alphaTest: 0.1,
@@ -3830,15 +3849,17 @@
                     texture.minFilter = THREE.NearestFilter;
                 });
 
-                // Grid 8x2
                 this.runTexture.repeat.set(0.125, 0.5);
+                this.runTexture.offset.set(0, 0.5);
                 this.attackTexture.repeat.set(0.125, 0.5);
+                this.attackTexture.offset.set(0, 0.5);
                 this.deathTexture.repeat.set(0.125, 0.5);
+                this.deathTexture.offset.set(0, 0.5);
 
                 const enemyHeight = 5.6;
                 const enemyWidth = 4.4;
 
-                const enemyMaterial = new THREE.MeshStandardMaterial({
+                const enemyMaterial = new THREE.MeshBasicMaterial({
                     map: this.runTexture,
                     transparent: true,
                     alphaTest: 0.1,
