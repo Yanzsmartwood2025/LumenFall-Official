@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600&family=Manrope:wght@400;500;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  El "rayo de luz cayendo" es el único elemento con animación de entrada
+  de toda la interfaz (regla: un solo momento orquestado, no fade-in en
+  cada tarjeta). Se activa una vez cuando el menú principal aparece.
+*/
+@keyframes lf-light-fall {
+  0% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  60% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 0.55;
+  }
+}
+
+.lf-light-beam {
+  transform-origin: top;
+  animation: lf-light-fall 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lf-light-beam {
+    animation: none;
+    opacity: 0.55;
+    transform: scaleY(1);
+  }
+}
