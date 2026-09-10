@@ -4,7 +4,7 @@
 **Rama estable:** `main`  
 **Juego:** Three.js + Vite  
 **Despliegue:** Vercel  
-**Última actualización:** 2026-09-08
+**Última actualización:** 2026-09-10
 
 > Este archivo es el punto de referencia principal de Lumenfall. Resume el estado real del código, las decisiones aplicadas, los respaldos técnicos y la estrategia recomendada para modernizar la interfaz sin romper el juego.
 
@@ -24,7 +24,7 @@ El núcleo del juego es una escena Three.js administrada desde JavaScript direct
 | Sonidos de monstruos | Completado | Se integraron efectos CC0 de acecho, herida, rugido y muerte, con licencia documentada. |
 | Controles táctiles | Completado | El botón de ataque dejó de mostrar sprites repetidos; ahora usa un solo sprite y el aura aparece al pulsar. |
 | Mensajes del juego | Completado | Se eliminó el fallback “Dialogue not found” y se añadió un mensaje misterioso propio. |
-| Enemigo inicial | Completado | Se colocó en una posición visible a la derecha y se forzó su opacidad/visibilidad inicial. |
+| Enemigo inicial | Completado | Sprite de EnemyX1 visible: la textura ya no se clona vacía, UV inicial en el primer frame y material Basic (no depende de luces). El mismo enemigo aparece fuera de las puertas I, II y III. |
 | Profundidad de la primera puerta | Completado | La caja y sus piezas se colocaron detrás del jugador y de los enemigos. |
 | Juego local / guest | Completado | En `localhost` / `127.0.0.1` o con `?guest=1` el demo ya no redirige al login. Producción sigue exigiendo Firebase. |
 | Magic Link | Completado | Se eliminó `window.prompt()` al completar el enlace mágico; si falta el correo se devuelve `needsEmail`. |
