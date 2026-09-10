@@ -24,7 +24,7 @@ El núcleo del juego es una escena Three.js administrada desde JavaScript direct
 | Sonidos de monstruos | Completado | Se integraron efectos CC0 de acecho, herida, rugido y muerte, con licencia documentada. |
 | Controles táctiles | Completado | El botón de ataque dejó de mostrar sprites repetidos; ahora usa un solo sprite y el aura aparece al pulsar. |
 | Mensajes del juego | Completado | Se eliminó el fallback “Dialogue not found” y se añadió un mensaje misterioso propio. |
-| Enemigo inicial | Completado | Sprite de EnemyX1 visible: la textura ya no se clona vacía, UV inicial en el primer frame y material Basic (no depende de luces). El mismo enemigo aparece fuera de las puertas I, II y III. |
+| Enemigo inicial | Completado | Un solo EnemyX1 (espíritu) afuera al inicio, a la derecha. Sprite visible: textura ya no se clona vacía, UV en el primer frame, material Basic. Los enemigos de las habitaciones no se tocan. |
 | Profundidad de la primera puerta | Completado | La caja y sus piezas se colocaron detrás del jugador y de los enemigos. |
 | Juego local / guest | Completado | En `localhost` / `127.0.0.1` o con `?guest=1` el demo ya no redirige al login. Producción sigue exigiendo Firebase. |
 | Magic Link | Completado | Se eliminó `window.prompt()` al completar el enlace mágico; si falta el correo se devuelve `needsEmail`. |
