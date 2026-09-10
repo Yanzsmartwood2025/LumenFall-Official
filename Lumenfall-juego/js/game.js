@@ -165,7 +165,33 @@
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: false, alpha: true, powerPreference: 'high-performance' });
+        const existingBgCanvas = document.getElementById('bg-canvas');
+        const renderer = new THREE.WebGLRenderer({
+            canvas: existingBgCanvas || undefined,
+            antialias: false,
+            alpha: true,
+            powerPreference: 'high-performance'
+        });
+        if (renderer.domElement) {
+            renderer.domElement.id = 'bg-canvas';
+            renderer.domElement.style.width = '100%';
+            renderer.domElement.style.height = '100%';
+            renderer.domElement.style.display = 'block';
+        }
+
+        function mountRendererToCanvasRoot(containerEl) {
+            const root = containerEl || document.getElementById('lumenfall-canvas-root') || document.body;
+            if (root && renderer.domElement && !root.contains(renderer.domElement)) {
+                root.appendChild(renderer.domElement);
+            }
+        }
+
+        window.LumenfallGame = {
+            init: (containerEl) => {
+                mountRendererToCanvasRoot(containerEl);
+            }
+        };
+
         const textureLoader = new THREE.TextureLoader();
         const textureCache = new Map();
         const enemySoundLimiter = new Map();
@@ -1174,6 +1200,89 @@
             }, 400);
         }
 
+        const preloadAudioList = [
+            ['pasos', 'assets/audio/characters/joziel/pasos-joziel.mp3'],
+            ['ambiente', 'assets/audio/ambience/dungeons/calabozo_de_piedra.mp3'],
+            ['puerta', 'assets/audio/puerta-calabozo.mp3'],
+            ['fantasma_lamento', 'assets/audio/voz-fantasma.mp3'],
+            ['jump', 'assets/audio/characters/joziel/jump.mp3'],
+            ['fireball_cast', 'assets/audio/characters/joziel/fireball_cast.mp3'],
+            ['fireball_impact', 'assets/audio/characters/joziel/fireball_impact.mp3'],
+            ['charge', 'assets/audio/characters/joziel/charge.mp3'],
+            ['hurt', 'assets/audio/characters/joziel/hurt.mp3'],
+            ['attack_voice', 'assets/audio/characters/joziel/attack_voice.mp3'],
+            ['thunder_strike', 'assets/audio/sfx/thunder_strike.mp3'],
+            ['thunder_distant', 'assets/audio/sfx/thunder_distant.mp3'],
+            ['enemy1_growl', 'assets/audio/enemigos/enemigo-1/cc0/creature_stalk_01.ogg'],
+            ['enemy1_step', 'assets/audio/enemigos/enemigo-1/pasos.mp3'],
+            ['enemy1_impact', 'assets/audio/enemigos/enemigo-1/impacto.mp3'],
+            ['enemy1_hurt', 'assets/audio/enemigos/enemigo-1/cc0/creature_hurt_01.ogg'],
+            ['enemy1_death', 'assets/audio/enemigos/enemigo-1/cc0/creature_die_01.ogg'],
+            ['enemy1_roar', 'assets/audio/enemigos/enemigo-1/cc0/creature_roar_01.ogg']
+        ];
+
+        async function preloadAssets() {
+            mountRendererToCanvasRoot();
+            const textureUrls = Object.values(assetUrls);
+            const total = preloadAudioList.length + textureUrls.length;
+            let loaded = 0;
+
+            function notifyProgress() {
+                loaded++;
+                window.dispatchEvent(new CustomEvent('lumenfall:assets-progress', {
+                    detail: { loaded, total }
+                }));
+            }
+
+            const audioPromises = preloadAudioList.map(([name, url]) =>
+                loadAudio(name, url)
+                    .catch((err) => console.warn(`Audio preload warning (${name}):`, err))
+                    .finally(() => notifyProgress())
+            );
+
+            const texturePromises = textureUrls.map((url) =>
+                new Promise((resolve) => {
+                    textureLoader.load(
+                        url,
+                        () => { notifyProgress(); resolve(); },
+                        undefined,
+                        () => { notifyProgress(); resolve(); }
+                    );
+                })
+            );
+
+            await Promise.all([...audioPromises, ...texturePromises]);
+            window.dispatchEvent(new CustomEvent('lumenfall:ready', { detail: {} }));
+        }
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', preloadAssets);
+        } else {
+            preloadAssets();
+        }
+
+        window.addEventListener('lumenfall:start-game', (e) => {
+            const { guest } = (e && e.detail) || {};
+            if (guest) {
+                window.currentUserData = { guest: true, displayName: 'Invitado' };
+            }
+            if (startButtonContainer) startButtonContainer.style.display = 'none';
+            if (introScreen) introScreen.style.display = 'none';
+            if (menuScreen) menuScreen.style.display = 'none';
+            mountRendererToCanvasRoot();
+            startGame();
+        });
+
+        window.addEventListener('lumenfall:request-pause', () => {
+            pauseGame();
+            window.dispatchEvent(new CustomEvent('lumenfall:paused', { detail: {} }));
+        });
+
+        window.addEventListener('lumenfall:request-resume', () => {
+            resumeGame();
+            window.dispatchEvent(new CustomEvent('lumenfall:resumed', { detail: {} }));
+        });
+
         async function startGame() {
             if (isGameStarting) return;
             isGameStarting = true;
@@ -1186,39 +1295,24 @@
                 navigator.vibrate(20);
             }
 
-            playButton.textContent = translations[currentLanguage].loading;
-            playButton.style.opacity = '0.5';
-            playButton.style.pointerEvents = 'none';
+            if (playButton) {
+                playButton.textContent = translations[currentLanguage].loading;
+                playButton.style.opacity = '0.5';
+                playButton.style.pointerEvents = 'none';
+            }
 
             try {
-                await Promise.all([
-                    loadAudio('pasos', 'assets/audio/characters/joziel/pasos-joziel.mp3'),
-                    loadAudio('ambiente', 'assets/audio/ambience/dungeons/calabozo_de_piedra.mp3'),
-                    loadAudio('puerta', 'assets/audio/puerta-calabozo.mp3'),
-                    loadAudio('fantasma_lamento', 'assets/audio/voz-fantasma.mp3'),
-                    loadAudio('jump', 'assets/audio/characters/joziel/jump.mp3'),
-                    loadAudio('fireball_cast', 'assets/audio/characters/joziel/fireball_cast.mp3'),
-                    loadAudio('fireball_impact', 'assets/audio/characters/joziel/fireball_impact.mp3'),
-                    loadAudio('charge', 'assets/audio/characters/joziel/charge.mp3'),
-                    loadAudio('hurt', 'assets/audio/characters/joziel/hurt.mp3'),
-                    loadAudio('attack_voice', 'assets/audio/characters/joziel/attack_voice.mp3'),
-                    loadAudio('thunder_strike', 'assets/audio/sfx/thunder_strike.mp3'),
-                    loadAudio('thunder_distant', 'assets/audio/sfx/thunder_distant.mp3'),
-                    loadAudio('enemy1_growl', 'assets/audio/enemigos/enemigo-1/cc0/creature_stalk_01.ogg'),
-                    loadAudio('enemy1_step', 'assets/audio/enemigos/enemigo-1/pasos.mp3'),
-                    loadAudio('enemy1_impact', 'assets/audio/enemigos/enemigo-1/impacto.mp3'),
-                    loadAudio('enemy1_hurt', 'assets/audio/enemigos/enemigo-1/cc0/creature_hurt_01.ogg'),
-                    loadAudio('enemy1_death', 'assets/audio/enemigos/enemigo-1/cc0/creature_die_01.ogg'),
-                    loadAudio('enemy1_roar', 'assets/audio/enemigos/enemigo-1/cc0/creature_roar_01.ogg')
-                ]);
+                await Promise.all(preloadAudioList.map(([name, url]) => loadAudio(name, url)));
             } catch (error) {
                 console.error("Error loading audio", error);
             }
             playAudio('ambiente', true);
-            setAudioVolume('ambiente', musicVolumeSlider.value);
-            setAudioVolume('pasos', sfxVolumeSlider.value);
+            setAudioVolume('ambiente', musicVolumeSlider ? musicVolumeSlider.value : 0.5);
+            setAudioVolume('pasos', sfxVolumeSlider ? sfxVolumeSlider.value : 0.5);
 
-            menuScreen.style.opacity = 0;
+            mountRendererToCanvasRoot();
+
+            if (menuScreen) menuScreen.style.opacity = 0;
             const onTransitionEnd = () => {
                 if (menuScreen) menuScreen.style.display = 'none';
                 const bgCanvas = document.getElementById('bg-canvas');
@@ -1240,13 +1334,17 @@
                 loadLevelById(currentLevelId);
                 animate();
             };
-            menuScreen.addEventListener('transitionend', onTransitionEnd, { once: true });
-            setTimeout(() => {
-                if (menuScreen.style.display !== 'none') {
-                    menuScreen.removeEventListener('transitionend', onTransitionEnd);
-                    onTransitionEnd();
-                }
-            }, 1000);
+            if (menuScreen) {
+                menuScreen.addEventListener('transitionend', onTransitionEnd, { once: true });
+                setTimeout(() => {
+                    if (menuScreen.style.display !== 'none') {
+                        menuScreen.removeEventListener('transitionend', onTransitionEnd);
+                        onTransitionEnd();
+                    }
+                }, 1000);
+            } else {
+                onTransitionEnd();
+            }
         }
 
         function pauseGame() {
