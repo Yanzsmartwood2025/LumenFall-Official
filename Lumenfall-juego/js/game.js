@@ -43,11 +43,12 @@
             if (!path) return PLAYER_SCALE;
             if (path.includes('/ui/')) return 1.0; // UI must not be scaled
             if (path.includes('/Joziel/')) return PLAYER_SCALE; // x1.0
-            if (path.includes('/Enemigos/Comunes/')) return PLAYER_SCALE; // x1.0
+            if (path.includes('/Enemigos/Comunes/')) return PLAYER_SCALE * 1.35; // Enlarged so enemy is noticeably larger than player
             if (path.includes('/Enemigos/Elites/')) return PLAYER_SCALE * 2.0;
             if (path.includes('/Enemigos/Jefes/')) return PLAYER_SCALE * 3.5;
             if (path.includes('/Items/')) return PLAYER_SCALE * 0.6;
-            // Default for any other path (e.g., initial or uncategorized enemies)
+            // Default for any uncategorized enemies (e.g. enemySprite or enemyX1Run)
+            if (path.includes('/Enemigos/')) return PLAYER_SCALE * 1.35;
             return PLAYER_SCALE;
         }
 
@@ -1957,11 +1958,9 @@
                 vec2 uv = vUv * uRepeat + uOffset;
                 vec4 color = texture2D(uTexture, uv);
 
-                // Vertical Fade: Soft edges at top (1.0) and bottom (0.0)
-                // smoothstep(edge0, edge1, x) returns 0 if x < edge0, 1 if x > edge1
-                // We want fade in at bottom (0.0 to 0.2) and fade out at top (0.8 to 1.0)
-                float fadeBottom = smoothstep(0.0, 0.2, vUv.y);
-                float fadeTop = 1.0 - smoothstep(0.8, 1.0, vUv.y);
+                // Soft fade edges at top, bottom, and seamless sides to prevent hard square borders
+                float fadeBottom = smoothstep(0.0, 0.25, vUv.y);
+                float fadeTop = 1.0 - smoothstep(0.75, 1.0, vUv.y);
                 float fade = fadeBottom * fadeTop;
 
                 gl_FragColor = vec4(color.rgb, color.a * fade);
@@ -2056,13 +2055,14 @@
                 this.standardMaterial = playerMaterial;
 
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
-        this.mesh.position.y = 0.8; // Feet at 0.8
+                this.mesh.position.y = 0.8; // Feet at 0.8
+                this.mesh.position.z = 0.15; // In front of background furniture/decor objects
                 this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
                 this.mesh.userData.smoothSpriteScale = true;
                 this.mesh.userData.spriteScaleSmoothing = 0.34;
                 this.mesh.castShadow = true;
                 this.mesh.frustumCulled = false;
-                this.mesh.renderOrder = 0;
+                this.mesh.renderOrder = 10;
                 scene.add(this.mesh);
 
                 const glowMaterial = new THREE.MeshBasicMaterial({
@@ -2106,7 +2106,7 @@
                 this.auraTexture.magFilter = THREE.NearestFilter;
                 this.auraTexture.minFilter = THREE.NearestFilter;
 
-                this.auraGeometry = new THREE.CylinderGeometry(3.2, 3.2, 5.0, 16, 1, true);
+                this.auraGeometry = new THREE.CylinderGeometry(3.0, 3.0, 5.8, 24, 1, true);
                 this.auraMaterial = new THREE.ShaderMaterial({
                     uniforms: {
                         uTexture: { value: this.auraTexture },
@@ -2123,8 +2123,8 @@
 
                 this.auraMesh = new THREE.Mesh(this.auraGeometry, this.auraMaterial);
                 this.auraMesh.visible = false;
-                this.auraMesh.position.y = 1.7;
-                this.auraMesh.position.z = 0.1;
+                this.auraMesh.position.y = 1.3; // Center cylinder around player body/feet
+                this.auraMesh.position.z = 0.2; // Slightly forward so it surrounds character seamlessly
                 this.mesh.add(this.auraMesh);
 
                 this.auraCurrentFrame = 0;
@@ -2639,6 +2639,9 @@
             // --- AURA UPDATE LOGIC ---
             if (this.currentState === 'charging') {
                 this.auraMesh.visible = true;
+                // Rotate aura mesh continuously on Y axis to simulate 3D rotation surrounding the player
+                this.auraMesh.rotation.y += deltaTime * 2.5;
+
                 this.auraFrameTimer += deltaTime;
                 if (this.auraFrameTimer > 0.08) { // ~12 FPS
                     this.auraFrameTimer = 0;
@@ -2647,10 +2650,6 @@
                     const col = this.auraCurrentFrame % 6;
                     const row = Math.floor(this.auraCurrentFrame / 6);
 
-                    // Update Uniforms
-                    // Row 0 is Top (0.5), Row 1 is Bottom (0.0) usually?
-                    // Let's assume standard Grid logic:
-                    // v (offset.y) = (rows - 1 - row) * (1/rows)
                     const uOff = col * (1/6);
                     const vOff = (1 - row) * 0.5;
 
@@ -2770,6 +2769,9 @@
                             if (this.currentFrame > 15) {
                                 this.chargingState = 'none';
                                 this.currentState = 'idle';
+                                this.idleTexture.repeat.set(1/6, 0.5);
+                                this.currentSequenceIndex = 0;
+                                this.currentFrame = this.idleSequence[0];
                             }
                         }
 
@@ -2863,7 +2865,11 @@
                             isIdleSprite = true;
 
                             // Sequence: 0 -> 1 -> 2 -> 1 -> 2 -> 1 -> 2 -> 3 -> 0...
-                            this.currentSequenceIndex = (this.currentSequenceIndex + 1) % this.idleSequence.length;
+                            if (typeof this.currentSequenceIndex !== 'number' || isNaN(this.currentSequenceIndex)) {
+                                this.currentSequenceIndex = 0;
+                            } else {
+                                this.currentSequenceIndex = (this.currentSequenceIndex + 1) % this.idleSequence.length;
+                            }
                             this.currentFrame = this.idleSequence[this.currentSequenceIndex];
                             break;
                         default:
@@ -3799,9 +3805,9 @@
                 const scale = getScaleFromPath(assetUrls.enemySprite);
                 this.mesh.scale.set(scale, scale, 1);
 
-                this.mesh.position.set(initialX, enemyHeight / 2, 0);
+                this.mesh.position.set(initialX, (enemyHeight * scale) / 2, 0.1);
                 this.mesh.castShadow = true;
-                this.mesh.renderOrder = 5;
+                this.mesh.renderOrder = 10;
                 this.mesh.material.opacity = 1;
                 this.mesh.visible = true;
                 this.scene.add(this.mesh);
@@ -3995,9 +4001,9 @@
                 const scale = getScaleFromPath(assetUrls.enemyX1Run);
                 this.mesh.scale.set(scale, scale, 1);
 
-                this.mesh.position.set(initialX, enemyHeight / 2, 0);
+                this.mesh.position.set(initialX, (enemyHeight * scale) / 2, 0.1);
                 this.mesh.castShadow = true;
-                this.mesh.renderOrder = 5;
+                this.mesh.renderOrder = 10;
                 this.mesh.material.opacity = 1;
                 this.mesh.visible = true;
                 this.scene.add(this.mesh);
@@ -4345,10 +4351,10 @@
                 // Reintentar la voz si el buffer terminó de cargarse después de crear el fantasma.
                 if (!this.voiceSource) this.startVoice();
                 if (player && this.voiceGain) {
-                    const dist = this.mesh.position.distanceTo(player.mesh.position);
-                    const maxDist = 24;
+                    const dist = Math.abs(this.mesh.position.x - player.mesh.position.x);
+                    const maxDist = 30.0;
                     const vol = calculateLogVolume(dist, maxDist);
-                    this.voiceGain.gain.setTargetAtTime(vol, audioContext.currentTime, 0.12);
+                    this.voiceGain.gain.setTargetAtTime(vol * 0.85, audioContext.currentTime, 0.1);
                 }
             }
         }
@@ -4661,6 +4667,7 @@
                     map: this.texture,
                     color: 0xffffff,
                     transparent: true,
+                    alphaTest: 0.05,
                     blending: THREE.AdditiveBlending,
                     depthWrite: false,
                     side: THREE.DoubleSide
@@ -4671,7 +4678,7 @@
 
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.position.copy(startPosition);
-                // Keep the authored projectile sprite in front of procedural glow layers.
+                this.mesh.position.z += 0.02; // Aligned with light effect
                 this.mesh.renderOrder = 20;
 
                 this.angle = Math.atan2(direction.y, direction.x);
@@ -4683,7 +4690,7 @@
 
                 this.state = 'SPAWN';
                 this.frameTimer = 0;
-                this.animationSpeed = 0.04;
+                this.animationSpeed = 0.025; // Faster frame transitions for fluid movement
 
                 this.frames = {
                     SPAWN: [0, 1],
@@ -4716,12 +4723,12 @@
 
                 this.plasmaCore = new THREE.Sprite(sharedCoreMaterial);
                 this.plasmaCore.renderOrder = 5;
-                // Scaled larger than main projectile mesh (1.2) to form a glowing background aura
-                this.plasmaCore.scale.set(2.0, 2.0, 1);
+                // Scaled and perfectly centered at projectile origin to bind glow to sprite head
+                this.plasmaCore.scale.set(2.2, 2.2, 1);
                 this.scene.add(this.plasmaCore);
 
-                // Offset Z: Core behind Sprite (Tightened to -0.01 to appear as one body)
-                this.zOffset = -0.01;
+                // Offset Z: Core aligned right behind sprite
+                this.zOffset = -0.005;
 
                 // 2. Trail (Improved)
                 // Width 0.5 (Base), Length 12, MaxAlpha 0.6
