@@ -4643,19 +4643,18 @@
                 this.scene = scene;
                 this.speed = 0.5;
 
-                // CLONE texture to ensure unique UV offsets per projectile instance
-                this.texture = textureLoader.load(assetUrls.projectileSprite).clone();
-                this.texture.wrapS = THREE.RepeatWrapping;
-                this.texture.wrapT = THREE.RepeatWrapping;
-                this.texture.magFilter = THREE.NearestFilter;
-                this.texture.minFilter = THREE.NearestFilter;
+                // Use getCachedTexture to guarantee correct loading and independent UV offsets
+                this.texture = getCachedTexture(assetUrls.projectileSprite, (tex) => {
+                    tex.wrapS = THREE.RepeatWrapping;
+                    tex.wrapT = THREE.RepeatWrapping;
+                    tex.magFilter = THREE.NearestFilter;
+                    tex.minFilter = THREE.NearestFilter;
+                });
 
                 // The projectile spritesheet is arranged as 6 columns x 2 rows.
                 this.cols = 6;
                 this.rows = 2;
                 this.texture.repeat.set(1 / this.cols, 1 / this.rows);
-
-                // Ensure the cloned texture updates its matrix
                 this.texture.needsUpdate = true;
 
                 const material = new THREE.MeshBasicMaterial({
@@ -4717,8 +4716,8 @@
 
                 this.plasmaCore = new THREE.Sprite(sharedCoreMaterial);
                 this.plasmaCore.renderOrder = 5;
-                // Slightly smaller than main projectile
-                this.plasmaCore.scale.set(0.8, 0.8, 1);
+                // Scaled larger than main projectile mesh (1.2) to form a glowing background aura
+                this.plasmaCore.scale.set(2.0, 2.0, 1);
                 this.scene.add(this.plasmaCore);
 
                 // Offset Z: Core behind Sprite (Tightened to -0.01 to appear as one body)
