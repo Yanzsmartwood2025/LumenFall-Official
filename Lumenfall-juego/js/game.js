@@ -115,6 +115,24 @@
         const audioSources = {};
         const gainNodes = {};
 
+        const ENEMY_HURT_SOUNDS = ['enemy1_hurt', 'enemy1_hurt_02'];
+        const ENEMY_DEATH_SOUNDS = [
+            'enemy1_death',
+            'enemy1_death_01',
+            'enemy1_death_02',
+            'enemy1_death_03',
+            'enemy1_death_04',
+            'enemy1_death_05'
+        ];
+
+        function getRandomEnemyHurtSound() {
+            return ENEMY_HURT_SOUNDS[Math.floor(Math.random() * ENEMY_HURT_SOUNDS.length)];
+        }
+
+        function getRandomEnemyDeathSound() {
+            return ENEMY_DEATH_SOUNDS[Math.floor(Math.random() * ENEMY_DEATH_SOUNDS.length)];
+        }
+
         async function loadAudio(name, url) {
             return new Promise(async (resolve, reject) => {
                 try {
@@ -1217,7 +1235,13 @@
             ['enemy1_step', 'assets/audio/enemigos/enemigo-1/pasos.mp3'],
             ['enemy1_impact', 'assets/audio/enemigos/enemigo-1/impacto.mp3'],
             ['enemy1_hurt', 'assets/audio/enemigos/enemigo-1/cc0/creature_hurt_01.ogg'],
+            ['enemy1_hurt_02', 'assets/audio/enemigos/enemigo-1/hurt_02.mp3'],
             ['enemy1_death', 'assets/audio/enemigos/enemigo-1/cc0/creature_die_01.ogg'],
+            ['enemy1_death_01', 'assets/audio/enemigos/enemigo-1/death_01.mp3'],
+            ['enemy1_death_02', 'assets/audio/enemigos/enemigo-1/death_02.mp3'],
+            ['enemy1_death_03', 'assets/audio/enemigos/enemigo-1/death_03.mp3'],
+            ['enemy1_death_04', 'assets/audio/enemigos/enemigo-1/death_04.mp3'],
+            ['enemy1_death_05', 'assets/audio/enemigos/enemigo-1/death_05.mp3'],
             ['enemy1_roar', 'assets/audio/enemigos/enemigo-1/cc0/creature_roar_01.ogg']
         ];
 
@@ -3900,8 +3924,12 @@
             takeHit() {
                 if (!this.isAlive) return;
                 this.hitCount++;
+                const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
+                this.playScopedSound('enemy1_impact', 1.0, 1.0, dist);
+
                 if (this.hitCount >= 6) {
                     this.isAlive = false;
+                    this.playScopedSound(getRandomEnemyDeathSound(), 0.9 + Math.random() * 0.12, 0.95, dist);
                     this.scene.remove(this.mesh);
                     this.stopAudio(1.5);
 
@@ -3920,6 +3948,8 @@
                     if (index > -1) {
                         allSimpleEnemies.splice(index, 1);
                     }
+                } else {
+                    this.playScopedSound(getRandomEnemyHurtSound(), 0.95 + Math.random() * 0.1, 0.75, dist);
                 }
             }
         }
@@ -4173,7 +4203,7 @@
 
                 const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
                 this.playScopedSound('enemy1_impact', 1.0, 1.0, dist);
-                this.playScopedSound('enemy1_hurt', 0.95 + Math.random() * 0.1, 0.75, dist);
+                this.playScopedSound(getRandomEnemyHurtSound(), 0.95 + Math.random() * 0.1, 0.75, dist);
                 if (this.health <= 0) {
                     this.isAlive = false;
                     this.isDying = true;
@@ -4184,7 +4214,7 @@
 
             finalizeDeath() {
                 const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
-                this.playScopedSound('enemy1_death', 0.9 + Math.random() * 0.12, 0.95, dist);
+                this.playScopedSound(getRandomEnemyDeathSound(), 0.9 + Math.random() * 0.12, 0.95, dist);
                 this.isDying = false;
 
                 if (!window.firstKillHappened) {
