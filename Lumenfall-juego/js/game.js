@@ -4,6 +4,7 @@
         // Todos los personajes usan el mismo suelo lógico.  La coordenada es el
         // pivote de los pies, no el centro de la imagen.
         const GAMEPLAY_LANE_FOOT_Y = 0.8;
+        const GAMEPLAY_LANE_Z = 2.0; // Forward lane closer to camera
         const CHARACTER_SPRITE_WIDTH = 4.2;
         const CHARACTER_SPRITE_HEIGHT = 4.2;
 
@@ -48,13 +49,12 @@
             if (!path) return PLAYER_SCALE;
             if (path.includes('/ui/')) return 1.0; // UI must not be scaled
             if (path.includes('/Joziel/')) return PLAYER_SCALE; // x1.0
-            if (path.includes('/Enemigos/Comunes/')) return PLAYER_SCALE * 1.35 * 0.9; // Reduced by 10%
+            if (path.includes('/Enemigos/Comunes/')) return PLAYER_SCALE * 1.2; // 20% taller than player
             if (path.includes('/Enemigos/Elites/')) return PLAYER_SCALE * 2.0;
             if (path.includes('/Enemigos/Jefes/')) return PLAYER_SCALE * 3.5;
             if (path.includes('/Items/')) return PLAYER_SCALE * 0.6;
-            // Los enemigos sin categoría (como EnemyX1) comparten la escala base
-            // del jugador; las categorías explícitas de arriba pueden crecer.
-            if (path.includes('/Enemigos/')) return PLAYER_SCALE;
+            // Los enemigos generales (como EnemyX1) son un 20% más altos que el personaje
+            if (path.includes('/Enemigos/')) return PLAYER_SCALE * 1.2;
             return PLAYER_SCALE;
         }
 
@@ -244,6 +244,7 @@
         window.allEnemiesX1 = allEnemiesX1;
         window.allSimpleEnemies = allSimpleEnemies;
         window.allGates = allGates;
+        window.scene = scene;
         // window.completedRooms assignment moved below definition to avoid ReferenceError
         window.isCinematic = false;
 
@@ -1791,7 +1792,7 @@
             player.health = player.maxHealth;
             player.energyBarFill.style.width = '100%';
             player.checkHealthStatus();
-            player.mesh.position.set(0, GAMEPLAY_LANE_FOOT_Y, 0); // Reset to the shared gameplay lane
+            player.mesh.position.set(0, GAMEPLAY_LANE_FOOT_Y, GAMEPLAY_LANE_Z); // Reset to the shared gameplay lane
             player.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
             player.mesh.visible = true;
             gameOverScreen.style.display = 'none';
@@ -2031,7 +2032,7 @@
 
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
                 this.mesh.position.y = GAMEPLAY_LANE_FOOT_Y;
-                this.mesh.position.z = 0.15; // In front of background furniture/decor objects
+                this.mesh.position.z = GAMEPLAY_LANE_Z; // Forward lane
                 this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
                 this.mesh.castShadow = true;
                 this.mesh.frustumCulled = false;
@@ -2383,7 +2384,7 @@
         const startPosition = this.mesh.position.clone().add(new THREE.Vector3(spawnX, spawnY, 0)); // Z=0
 
                 let direction = new THREE.Vector2(this.isFacingLeft ? -1 : 1, 0);
-                if (Math.abs(aimVector.y) > 0.3) {
+                if (aimVector && Math.abs(aimVector.y) > 0.3) {
                     direction.y = aimVector.y;
                 }
                 direction.normalize();
@@ -2552,7 +2553,7 @@
                 if (!this.isGrounded) this.velocity.y += this.gravity;
                 this.mesh.position.y += this.velocity.y;
                 this.mesh.position.x += this.velocity.x;
-                this.mesh.position.z = 0; // Force Z 0
+                this.mesh.position.z = GAMEPLAY_LANE_Z; // Force shared lane Z
 
         if (this.mesh.position.y <= GAMEPLAY_LANE_FOOT_Y) { // Check against the shared lane
             this.mesh.position.y = GAMEPLAY_LANE_FOOT_Y; // Reset to the shared lane
@@ -3698,7 +3699,7 @@
                  if (allEnemiesX1.length === 0) {
                     const gateKeeper = new EnemyX1(scene, 12);
                     gateKeeper.isGatekeeper = true;
-                    gateKeeper.mesh.position.z = 0.15;
+                    gateKeeper.mesh.position.z = GAMEPLAY_LANE_Z;
                     allEnemiesX1.push(gateKeeper);
                  }
 
@@ -3727,7 +3728,7 @@
             if (player) {
                 player.mesh.position.x = spawnX !== null ? spawnX : 0;
                 player.mesh.position.y = GAMEPLAY_LANE_FOOT_Y; // Feet stay on the shared gameplay lane
-                player.mesh.position.z = 0.15;
+                player.mesh.position.z = GAMEPLAY_LANE_Z;
                 camera.position.x = player.mesh.position.x;
             }
         }
@@ -3781,7 +3782,7 @@
                 const scale = getScaleFromPath(assetUrls.enemySprite);
                 this.mesh.scale.set(scale, scale, 1);
 
-                this.mesh.position.set(initialX, GAMEPLAY_LANE_FOOT_Y, 0.15);
+                this.mesh.position.set(initialX, GAMEPLAY_LANE_FOOT_Y, GAMEPLAY_LANE_Z);
                 this.mesh.castShadow = true;
                 this.mesh.renderOrder = 10;
                 this.mesh.material.opacity = 1;
@@ -3980,7 +3981,7 @@
                 const scale = getScaleFromPath(assetUrls.enemyX1Run);
                 this.mesh.scale.set(scale, scale, 1);
 
-                this.mesh.position.set(initialX, GAMEPLAY_LANE_FOOT_Y, 0.15);
+                this.mesh.position.set(initialX, GAMEPLAY_LANE_FOOT_Y, GAMEPLAY_LANE_Z);
                 this.mesh.castShadow = true;
                 this.mesh.renderOrder = 10;
                 this.mesh.material.opacity = 1;
@@ -4946,10 +4947,11 @@
                     }
 
                     for (const enemy of allSimpleEnemies) {
-                        // Optimization: Skip collision check if enemy is far
-                        if (Math.abs(enemy.mesh.position.x - player.mesh.position.x) > 40) continue;
+                        if (!enemy.isAlive) continue;
+                        if (Math.abs(enemy.mesh.position.x - this.mesh.position.x) > 10) continue;
 
-                        if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
+                        const enemyCenter = enemy.mesh.position.clone().add(new THREE.Vector3(0, 2.0, 0));
+                        if (this.mesh.position.distanceTo(enemyCenter) < 2.5) {
                             enemy.takeHit();
                             this.triggerImpact('enemy');
                             return true;
@@ -4957,10 +4959,11 @@
                     }
 
                     for (const enemy of allEnemiesX1) {
-                        // Optimization: Skip collision check if enemy is far
-                        if (Math.abs(enemy.mesh.position.x - player.mesh.position.x) > 40) continue;
+                        if (!enemy.isAlive || enemy.isDying) continue;
+                        if (Math.abs(enemy.mesh.position.x - this.mesh.position.x) > 10) continue;
 
-                        if (this.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
+                        const enemyCenter = enemy.mesh.position.clone().add(new THREE.Vector3(0, 2.0, 0));
+                        if (this.mesh.position.distanceTo(enemyCenter) < 2.5) {
                             enemy.takeHit();
                             this.triggerImpact('enemy');
                             return true;
@@ -5271,3 +5274,5 @@
 // Expose classes to global scope for testing/verification
 window.LootItem = LootItem;
 window.PowerUp = LootItem; // Alias for backward compatibility
+window.EnemyX1 = EnemyX1;
+window.SimpleEnemy = SimpleEnemy;
