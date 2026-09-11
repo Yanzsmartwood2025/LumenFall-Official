@@ -43,12 +43,12 @@
             if (!path) return PLAYER_SCALE;
             if (path.includes('/ui/')) return 1.0; // UI must not be scaled
             if (path.includes('/Joziel/')) return PLAYER_SCALE; // x1.0
-            if (path.includes('/Enemigos/Comunes/')) return PLAYER_SCALE * 1.35; // Enlarged so enemy is noticeably larger than player
+            if (path.includes('/Enemigos/Comunes/')) return PLAYER_SCALE * 1.35 * 0.9; // Reduced by 10%
             if (path.includes('/Enemigos/Elites/')) return PLAYER_SCALE * 2.0;
             if (path.includes('/Enemigos/Jefes/')) return PLAYER_SCALE * 3.5;
             if (path.includes('/Items/')) return PLAYER_SCALE * 0.6;
             // Default for any uncategorized enemies (e.g. enemySprite or enemyX1Run)
-            if (path.includes('/Enemigos/')) return PLAYER_SCALE * 1.35;
+            if (path.includes('/Enemigos/')) return PLAYER_SCALE * 1.35 * 0.9; // Reduced by 10%
             return PLAYER_SCALE;
         }
 
@@ -2841,6 +2841,7 @@
                                 else this.currentFrame--;
                                 if (this.currentFrame < 0) {
                                     this.currentState = 'idle';
+                                    this.currentFrame = 0;
                                 }
                             } else {
                                 currentTexture = this.jumpTexture;
@@ -2850,6 +2851,7 @@
                                 else this.currentFrame++;
                                 if (this.currentFrame > 5) {
                                     this.currentState = 'idle';
+                                    this.currentFrame = 0;
                                 }
                             }
                             break;
@@ -2931,7 +2933,8 @@
                             if (currentTexture === this.attackBackTexture) framesInStrip = 6;
                             // idleBackTexture removed from strip logic as it uses grid now
 
-                            const uOffset = this.currentFrame / framesInStrip;
+                            const safeFrame = Math.max(0, this.currentFrame);
+                            const uOffset = safeFrame / framesInStrip;
                             currentTexture.offset.x = uOffset;
                             currentTexture.offset.y = 0;
                         }
@@ -3723,7 +3726,7 @@
                  if (allEnemiesX1.length === 0) {
                     const gateKeeper = new EnemyX1(scene, 12);
                     gateKeeper.isGatekeeper = true;
-                    gateKeeper.mesh.position.z = 0;
+                    gateKeeper.mesh.position.z = 0.15;
                     allEnemiesX1.push(gateKeeper);
                  }
 
@@ -3752,7 +3755,7 @@
             if (player) {
                 player.mesh.position.x = spawnX !== null ? spawnX : 0;
                 player.mesh.position.y = 0.8; // Feet at 0.8
-                player.mesh.position.z = 0;
+                player.mesh.position.z = 0.15;
                 camera.position.x = player.mesh.position.x;
             }
         }
@@ -3805,7 +3808,7 @@
                 const scale = getScaleFromPath(assetUrls.enemySprite);
                 this.mesh.scale.set(scale, scale, 1);
 
-                this.mesh.position.set(initialX, (enemyHeight * scale) / 2, 0.1);
+                this.mesh.position.set(initialX, (enemyHeight * scale) / 2, 0.15);
                 this.mesh.castShadow = true;
                 this.mesh.renderOrder = 10;
                 this.mesh.material.opacity = 1;
@@ -4001,7 +4004,7 @@
                 const scale = getScaleFromPath(assetUrls.enemyX1Run);
                 this.mesh.scale.set(scale, scale, 1);
 
-                this.mesh.position.set(initialX, (enemyHeight * scale) / 2, 0.1);
+                this.mesh.position.set(initialX, (enemyHeight * scale) / 2, 0.15);
                 this.mesh.castShadow = true;
                 this.mesh.renderOrder = 10;
                 this.mesh.material.opacity = 1;
@@ -4373,7 +4376,7 @@
                 const tableGeometry = new THREE.BoxGeometry(8, 2, 4);
                 const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
                 this.table = new THREE.Mesh(tableGeometry, tableMaterial);
-                this.table.position.set(x, 1, camera.position.z - roomDepth + 4);
+                this.table.position.set(x, 1, camera.position.z - roomDepth + 2); // Positioned further back (-3 vs player's 0.15)
                 this.table.renderOrder = 0;
                 this.scene.add(this.table);
 
