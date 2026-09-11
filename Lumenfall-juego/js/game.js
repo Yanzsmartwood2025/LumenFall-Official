@@ -1932,10 +1932,10 @@
                 vec2 uv = vUv * uRepeat + uOffset;
                 vec4 color = texture2D(uTexture, uv);
 
-                // Soft fade edges at top, bottom, and seamless sides to prevent hard square borders
-                float fadeBottom = smoothstep(0.0, 0.25, vUv.y);
-                float fadeTop = 1.0 - smoothstep(0.75, 1.0, vUv.y);
-                float fade = fadeBottom * fadeTop;
+                // Gentle vertical gradient fade at top and bottom ends to eliminate harsh flat square cut-offs
+                float fadeBottom = smoothstep(0.0, 0.38, vUv.y);
+                float fadeTop = 1.0 - smoothstep(0.62, 1.0, vUv.y);
+                float fade = pow(fadeBottom * fadeTop, 1.2);
 
                 gl_FragColor = vec4(color.rgb, color.a * fade);
             }
@@ -2098,7 +2098,7 @@
                 this.auraMesh = new THREE.Mesh(this.auraGeometry, this.auraMaterial);
                 this.auraMesh.visible = false;
                 this.auraMesh.position.y = 1.3; // Center cylinder around player body/feet
-                this.auraMesh.position.z = 0.2; // Slightly forward so it surrounds character seamlessly
+                this.auraMesh.position.z = 0.0; // Perfectly centered on Joziel's 3D plane
                 this.mesh.add(this.auraMesh);
 
                 this.auraCurrentFrame = 0;
@@ -2654,11 +2654,15 @@
                      this.hasPlayedIdleIntro = false;
                 }
 
-                // La malla mantiene un marco y una escala constantes en todas
-                // las animaciones. Antes, la relación de aspecto de cada hoja
-                // recalculaba la escala cada frame y hacía que Joziel encogiera,
-                // creciera o pareciera retroceder al cambiar de estado.
-                this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
+                // Ajuste proporcional de escala según la animación activa.
+                // Para saltar/aterrizar mirando a la derecha (saltar.png, 3x2 grid con marcos de 221x507 px),
+                // se aplica un ajuste en X de 221/507 * 1.55 (~0.676) para que guarde la misma proporción visual
+                // que la animación de salto a la izquierda (saltar-b.png) y del resto de movimientos.
+                if (!this.isFacingLeft && (this.currentState === 'jumping' || this.currentState === 'landing')) {
+                    this.mesh.scale.set(PLAYER_SCALE * (221 / 507) * 1.55, PLAYER_SCALE, 1);
+                } else {
+                    this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
+                }
 
 
                 if (stateChanged || directionChanged) {
