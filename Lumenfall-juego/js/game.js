@@ -148,7 +148,7 @@
             });
         }
 
-        function playAudio(name, loop = false, playbackRate = 1.0, volume = 0.5, startOffset = 0) {
+        function playAudio(name, loop = false, playbackRate = 1.0, volume = 0.8, startOffset = 0) {
             if (!audioBuffers[name]) return;
             if (audioSources[name] && audioSources[name].buffer) stopAudio(name);
             const source = audioContext.createBufferSource();
@@ -174,11 +174,12 @@
             if (gainNodes[name]) gainNodes[name].gain.value = volume;
         }
 
-        // Función auxiliar para atenuación logarítmica
-        function calculateLogVolume(distance, maxDistance) {
-            // Curva logarítmica: volumen 1.0 a distancia 0, volumen 0.0 a distancia maxDistance
-            const vol = 1.0 - (Math.log(Math.max(1, distance + 1)) / Math.log(maxDistance + 1));
-            return Math.max(0, Math.min(1.0, vol));
+        // Función auxiliar para atenuación de distancia suave que mantiene volumen alto en rango de combate
+        function calculateLogVolume(distance, maxDistance = 35) {
+            if (distance <= 0) return 1.0;
+            if (distance >= maxDistance) return 0.0;
+            const norm = distance / maxDistance;
+            return Math.max(0, Math.min(1.0, 1.0 - Math.pow(norm, 1.5)));
         }
 
         const scene = new THREE.Scene();
@@ -239,7 +240,7 @@
             return texture;
         }
 
-        function canPlayEnemySound(name, minInterval = 0.12) {
+        function canPlayEnemySound(name, minInterval = 0.05) {
             const now = audioContext.currentTime;
             const nextAllowed = enemySoundLimiter.get(name) || 0;
             if (now < nextAllowed) return false;
@@ -3859,15 +3860,13 @@
             }
 
             playScopedSound(name, rate, baseVolume, distance) {
-                if (!audioBuffers[name] || distance > 30 || !canPlayEnemySound(name)) return;
+                if (!audioBuffers[name] || distance > 35 || !canPlayEnemySound(name)) return;
                 const source = audioContext.createBufferSource();
                 source.buffer = audioBuffers[name];
                 source.playbackRate.value = rate;
                 const gain = audioContext.createGain();
-                const maxDist = 30;
-                let vol = 1 - (distance / maxDist);
-                if (vol < 0) vol = 0;
-                gain.gain.value = baseVolume * vol * vol;
+                const vol = calculateLogVolume(distance, 35);
+                gain.gain.value = baseVolume * vol;
                 source.connect(gain).connect(audioContext.destination);
                 source.start();
             }
@@ -3925,20 +3924,20 @@
                 if (!this.isAlive) return;
                 this.hitCount++;
                 const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
-                this.playScopedSound('enemy1_impact', 1.0, 1.0, dist);
+                this.playScopedSound('enemy1_impact', 0.95 + Math.random() * 0.1, 1.0, dist);
 
                 if (this.hitCount >= 6) {
                     this.isAlive = false;
-                    this.playScopedSound(getRandomEnemyDeathSound(), 0.9 + Math.random() * 0.12, 0.95, dist);
+                    this.stopAudio(0.1);
+                    this.playScopedSound(getRandomEnemyDeathSound(), 0.88 + Math.random() * 0.2, 1.0, dist);
                     this.scene.remove(this.mesh);
-                    this.stopAudio(1.5);
 
                     if (!window.firstKillHappened) {
                         window.firstKillHappened = true;
                         // Garantizar los 3 items
                         allPowerUps.push(new LootItem(this.scene, this.mesh.position.clone(), 'health'));
                         allPowerUps.push(new LootItem(this.scene, this.mesh.position.clone(), 'power'));
-                        allPowerUps.push(new LootItem(this.scene, this.mesh.position.clone(), 'soul')); // Asumiendo 'soul' existe o usará default
+                        allPowerUps.push(new LootItem(this.scene, this.mesh.position.clone(), 'soul'));
                     } else if (Math.random() < 0.5) {
                         const dropPosition = this.mesh.position.clone();
                         const type = Math.random() < 0.5 ? 'health' : 'power';
@@ -3949,7 +3948,7 @@
                         allSimpleEnemies.splice(index, 1);
                     }
                 } else {
-                    this.playScopedSound(getRandomEnemyHurtSound(), 0.95 + Math.random() * 0.1, 0.75, dist);
+                    this.playScopedSound(getRandomEnemyHurtSound(), 0.88 + Math.random() * 0.2, 1.0, dist);
                 }
             }
         }
@@ -4069,15 +4068,13 @@
             }
 
             playScopedSound(name, rate, baseVolume, distance) {
-                if (!audioBuffers[name] || distance > 25 || !canPlayEnemySound(name)) return;
+                if (!audioBuffers[name] || distance > 35 || !canPlayEnemySound(name)) return;
                 const source = audioContext.createBufferSource();
                 source.buffer = audioBuffers[name];
                 source.playbackRate.value = rate;
 
                 const gain = audioContext.createGain();
-                // Usar función logarítmica con baseVolume
-                const maxDist = 25;
-                const vol = calculateLogVolume(distance, maxDist);
+                const vol = calculateLogVolume(distance, 35);
                 gain.gain.value = baseVolume * vol;
 
                 source.connect(gain).connect(audioContext.destination);
@@ -4202,19 +4199,20 @@
                 this.health--;
 
                 const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
-                this.playScopedSound('enemy1_impact', 1.0, 1.0, dist);
-                this.playScopedSound(getRandomEnemyHurtSound(), 0.95 + Math.random() * 0.1, 0.75, dist);
+                this.playScopedSound('enemy1_impact', 0.95 + Math.random() * 0.1, 1.0, dist);
+
                 if (this.health <= 0) {
                     this.isAlive = false;
                     this.isDying = true;
                     this.currentFrame = -1;
-                    this.stopAudio(0.5);
+                    this.stopAudio(0.1);
+                    this.playScopedSound(getRandomEnemyDeathSound(), 0.88 + Math.random() * 0.2, 1.0, dist);
+                } else {
+                    this.playScopedSound(getRandomEnemyHurtSound(), 0.88 + Math.random() * 0.2, 1.0, dist);
                 }
             }
 
             finalizeDeath() {
-                const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
-                this.playScopedSound(getRandomEnemyDeathSound(), 0.9 + Math.random() * 0.12, 0.95, dist);
                 this.isDying = false;
 
                 if (!window.firstKillHappened) {
