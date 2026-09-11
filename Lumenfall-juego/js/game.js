@@ -1,6 +1,11 @@
 // --- src/game.js (Lógica Principal) ---
 
         const PLAYER_SCALE = 1.35;
+        // Todos los personajes usan el mismo suelo lógico.  La coordenada es el
+        // pivote de los pies, no el centro de la imagen.
+        const GAMEPLAY_LANE_FOOT_Y = 0.8;
+        const CHARACTER_SPRITE_WIDTH = 4.2;
+        const CHARACTER_SPRITE_HEIGHT = 4.2;
 
         const assetUrls = {
             runningSprite: 'assets/sprites/Joziel/Movimiento/Correr-1.png',
@@ -47,42 +52,10 @@
             if (path.includes('/Enemigos/Elites/')) return PLAYER_SCALE * 2.0;
             if (path.includes('/Enemigos/Jefes/')) return PLAYER_SCALE * 3.5;
             if (path.includes('/Items/')) return PLAYER_SCALE * 0.6;
-            // Default for any uncategorized enemies (e.g. enemySprite or enemyX1Run)
-            if (path.includes('/Enemigos/')) return PLAYER_SCALE * 1.35 * 0.9; // Reduced by 10%
+            // Los enemigos sin categoría (como EnemyX1) comparten la escala base
+            // del jugador; las categorías explícitas de arriba pueden crecer.
+            if (path.includes('/Enemigos/')) return PLAYER_SCALE;
             return PLAYER_SCALE;
-        }
-
-        function updateSizeFromAspectRatio(mesh, targetHeight) {
-            if (!mesh || !mesh.material || !mesh.material.map || !mesh.material.map.image) {
-                // Si no hay textura cargada aún, aplicar altura por defecto
-                if (mesh) mesh.scale.y = targetHeight;
-                return;
-            }
-
-            const texture = mesh.material.map;
-            if (texture.image.width === 0 || texture.image.height === 0) return;
-
-            // Calcular dimensiones efectivas del FRAME (no de la hoja completa)
-            // repeat.x = 1/cols, repeat.y = 1/rows
-            const frameWidth = texture.image.width * Math.abs(texture.repeat.x);
-            const frameHeight = texture.image.height * Math.abs(texture.repeat.y);
-
-            if (frameHeight === 0) return;
-
-            const ratio = frameWidth / frameHeight;
-
-            const targetScaleX = targetHeight * ratio;
-            const targetScaleY = targetHeight;
-
-            if (mesh.userData && mesh.userData.smoothSpriteScale) {
-                const smoothing = mesh.userData.spriteScaleSmoothing || 0.28;
-                mesh.scale.x += (targetScaleX - mesh.scale.x) * smoothing;
-                mesh.scale.y += (targetScaleY - mesh.scale.y) * smoothing;
-            } else {
-                mesh.scale.x = targetScaleX;
-                mesh.scale.y = targetScaleY;
-            }
-            mesh.scale.z = 1;
         }
 
         function calculateFrameSize(texture, cols, rows) {
@@ -1818,7 +1791,7 @@
             player.health = player.maxHealth;
             player.energyBarFill.style.width = '100%';
             player.checkHealthStatus();
-            player.mesh.position.set(0, 0.8, 0); // Reset to feet at 0.8
+            player.mesh.position.set(0, GAMEPLAY_LANE_FOOT_Y, 0); // Reset to the shared gameplay lane
             player.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
             player.mesh.visible = true;
             gameOverScreen.style.display = 'none';
@@ -2039,11 +2012,13 @@
                 for (let i = 0; i < 3; i++) this.jumpFrameMap.push({ x: i * (1/3), y: 0.0 });
 
 
-                const playerHeight = 4.2;
-                const playerWidth = 4.2;
+                const playerHeight = CHARACTER_SPRITE_HEIGHT;
+                const playerWidth = CHARACTER_SPRITE_WIDTH;
 
                 const playerGeometry = new THREE.PlaneGeometry(playerWidth, playerHeight);
-        playerGeometry.translate(0, (playerHeight / 2) - 0.8, 0); // Pivot at feet (Visual offset -0.8)
+                // El borde inferior del plano es el pivote: escalar o cambiar de
+                // animación nunca puede desplazar los pies fuera del carril.
+                playerGeometry.translate(0, playerHeight / 2, 0);
 
                 const playerMaterial = new THREE.MeshBasicMaterial({
                     map: this.runningTexture,
@@ -2055,11 +2030,9 @@
                 this.standardMaterial = playerMaterial;
 
                 this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
-                this.mesh.position.y = 0.8; // Feet at 0.8
+                this.mesh.position.y = GAMEPLAY_LANE_FOOT_Y;
                 this.mesh.position.z = 0.15; // In front of background furniture/decor objects
                 this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
-                this.mesh.userData.smoothSpriteScale = true;
-                this.mesh.userData.spriteScaleSmoothing = 0.34;
                 this.mesh.castShadow = true;
                 this.mesh.frustumCulled = false;
                 this.mesh.renderOrder = 10;
@@ -2581,8 +2554,8 @@
                 this.mesh.position.x += this.velocity.x;
                 this.mesh.position.z = 0; // Force Z 0
 
-        if (this.mesh.position.y <= 0.8) { // Check against floor (0.8)
-            this.mesh.position.y = 0.8; // Reset to floor
+        if (this.mesh.position.y <= GAMEPLAY_LANE_FOOT_Y) { // Check against the shared lane
+            this.mesh.position.y = GAMEPLAY_LANE_FOOT_Y; // Reset to the shared lane
                     if (!this.isGrounded) {
                         this.isGrounded = true;
                         this.isJumping = false;
@@ -2680,12 +2653,11 @@
                      this.hasPlayedIdleIntro = false;
                 }
 
-                // --- DYNAMIC SCALING LOGIC ---
-                // Folder-Based Logic applied to Player (All assets in Joziel -> 1.15)
-                const currentScale = getScaleFromPath('assets/sprites/Joziel/');
-
-                // Aplicar CALCULADORA UNIVERSAL DE ASPECT RATIO
-                updateSizeFromAspectRatio(this.mesh, currentScale);
+                // La malla mantiene un marco y una escala constantes en todas
+                // las animaciones. Antes, la relación de aspecto de cada hoja
+                // recalculaba la escala cada frame y hacía que Joziel encogiera,
+                // creciera o pareciera retroceder al cambiar de estado.
+                this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
 
 
                 if (stateChanged || directionChanged) {
@@ -3754,7 +3726,7 @@
 
             if (player) {
                 player.mesh.position.x = spawnX !== null ? spawnX : 0;
-                player.mesh.position.y = 0.8; // Feet at 0.8
+                player.mesh.position.y = GAMEPLAY_LANE_FOOT_Y; // Feet stay on the shared gameplay lane
                 player.mesh.position.z = 0.15;
                 camera.position.x = player.mesh.position.x;
             }
@@ -3793,8 +3765,8 @@
                 this.scene = scene;
                 this.texture = getCachedTexture(assetUrls.enemySprite);
                 this.texture.repeat.x = 1 / totalEnemyFrames;
-                const enemyHeight = 5.6;
-                const enemyWidth = 1.8;
+                const enemyHeight = CHARACTER_SPRITE_HEIGHT;
+                const enemyWidth = CHARACTER_SPRITE_WIDTH;
                 const enemyMaterial = new THREE.MeshBasicMaterial({
                     map: this.texture,
                     transparent: true,
@@ -3802,13 +3774,14 @@
                     side: THREE.DoubleSide
                 });
                 const enemyGeometry = new THREE.PlaneGeometry(enemyWidth, enemyHeight);
+                enemyGeometry.translate(0, enemyHeight / 2, 0);
                 this.mesh = new THREE.Mesh(enemyGeometry, enemyMaterial);
 
                 // Scale Logic
                 const scale = getScaleFromPath(assetUrls.enemySprite);
                 this.mesh.scale.set(scale, scale, 1);
 
-                this.mesh.position.set(initialX, (enemyHeight * scale) / 2, 0.15);
+                this.mesh.position.set(initialX, GAMEPLAY_LANE_FOOT_Y, 0.15);
                 this.mesh.castShadow = true;
                 this.mesh.renderOrder = 10;
                 this.mesh.material.opacity = 1;
@@ -3988,8 +3961,8 @@
                 this.deathTexture.repeat.set(0.125, 0.5);
                 this.deathTexture.offset.set(0, 0.5);
 
-                const enemyHeight = 5.6;
-                const enemyWidth = 4.4;
+                const enemyHeight = CHARACTER_SPRITE_HEIGHT;
+                const enemyWidth = CHARACTER_SPRITE_WIDTH;
 
                 const enemyMaterial = new THREE.MeshBasicMaterial({
                     map: this.runTexture,
@@ -3998,13 +3971,16 @@
                     side: THREE.DoubleSide
                 });
                 const enemyGeometry = new THREE.PlaneGeometry(enemyWidth, enemyHeight);
+                // Igual que el jugador: la base del frame es el punto de apoyo.
+                // Esto cubre también la animación de muerte, que usa otra hoja.
+                enemyGeometry.translate(0, enemyHeight / 2, 0);
                 this.mesh = new THREE.Mesh(enemyGeometry, enemyMaterial);
 
                 // Scale Logic (Using Run texture as reference)
                 const scale = getScaleFromPath(assetUrls.enemyX1Run);
                 this.mesh.scale.set(scale, scale, 1);
 
-                this.mesh.position.set(initialX, (enemyHeight * scale) / 2, 0.15);
+                this.mesh.position.set(initialX, GAMEPLAY_LANE_FOOT_Y, 0.15);
                 this.mesh.castShadow = true;
                 this.mesh.renderOrder = 10;
                 this.mesh.material.opacity = 1;
