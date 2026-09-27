@@ -1,284 +1,283 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import {
-    getAuth,
-    setPersistence,
-    browserLocalPersistence,
-    onAuthStateChanged,
-    signInWithPopup,
-    GoogleAuthProvider,
-    GithubAuthProvider,
-    sendSignInLinkToEmail,
-    isSignInWithEmailLink,
-    signInWithEmailLink,
-    signOut
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import {
-    getFirestore,
-    setLogLevel,
-    doc,
-    getDoc,
-    setDoc,
-    serverTimestamp
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getAnalytics, isSupported as isAnalyticsSupported } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+// Lumenfall central session bridge.
+// Identity is owned by AJNLIQ128 Firebase; profile/progress lives in AJN Supabase.
+// Existing UI/game code keeps using window.LumenfallAuth for compatibility.
 
-// --- 1. Configuración de Firebase ---
-// Esta configuración centralizada actúa como el "Breaker Principal".
-const firebaseConfig = {
-  apiKey: "AIzaSyAsQrihjtpdj8H7D7giKjo9pWz0jIJEp5c",
-  authDomain: "lumenfall-joziel.firebaseapp.com",
-  projectId: "lumenfall-joziel",
-  storageBucket: "lumenfall-joziel.firebasestorage.app",
-  messagingSenderId: "932168644650",
-  appId: "1:932168644650:web:51c4e5fdaf12f8030e2b53",
-  measurementId: "G-DR03GC3VMQ"
-};
+const AJN_ORIGIN = 'https://ajnliq128.vercel.app';
+const SESSION_KEY = 'ajn_lumenfall_id_token';
+const TOKEN_REQUEST = 'AJN_LUMENFALL_TOKEN_REQUEST';
+const TOKEN_RESPONSE = 'AJN_LUMENFALL_TOKEN_RESPONSE';
+const LOGOUT_REQUEST = 'AJN_LUMENFALL_LOGOUT_REQUEST';
 
-const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+let currentToken = null;
+let authReady = false;
+let currentUser = null;
+let currentProfile = null;
+let currentStorage = null;
+const listeners = new Set();
 
-// Configurar Logs de Firestore (opcional, para depuración)
-try {
-    // setLogLevel('Debug'); // Descomentar si se necesitan logs detallados
-} catch (e) {
-    console.error("Error al configurar el nivel de log de Firestore:", e);
-}
+function cleanHashAndReadToken() {
+    try {
+        const hash = window.location.hash.startsWith('#')
+            ? window.location.hash.slice(1)
+            : window.location.hash;
+        const params = new URLSearchParams(hash);
+        const token = params.get('idToken');
 
-// --- 2. Inicialización de Firebase ---
-let app, auth, db, analytics;
+        if (token) {
+            sessionStorage.setItem(SESSION_KEY, token);
+            const clean = window.location.pathname + window.location.search;
+            window.history.replaceState({}, document.title, clean);
+            return token;
+        }
 
-try {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-
-    // Configurar Persistencia Local Inmediata
-    setPersistence(auth, browserLocalPersistence)
-        .then(() => {
-             console.log("🔒 Lumenfall System: Session Persistence Enabled.");
-        })
-        .catch((error) => {
-             console.error("⚠️ Lumenfall System: Persistence Warning:", error);
-        });
-
-    db = getFirestore(app);
-    isAnalyticsSupported()
-        .then((supported) => {
-            if (supported) {
-                analytics = getAnalytics(app);
-            }
-        })
-        .catch((error) => {
-            console.warn("⚠️ Lumenfall System: Analytics unavailable:", error);
-        });
-    console.log("⚡ Lumenfall System: Main Breaker Active (Firebase Init).");
-} catch (e) {
-    console.error("❌ Lumenfall System: Breaker Failure (Firebase Init Error):", e);
-}
-
-// --- 3. Generación de Código de Juego ---
-function getSafeUserEmail(user) {
-    return user?.email || user?.providerData?.find((provider) => provider.email)?.email || null;
-}
-
-function getSafeDisplayName(user, email) {
-    return user?.displayName || (email ? email.split('@')[0] : `Operador-${user?.uid?.slice(0, 6) || 'Anon'}`);
-}
-
-function ensureAuthReady() {
-    if (!auth) {
-        const error = new Error("Firebase Auth no está inicializado. Revisa la configuración de Firebase.");
-        console.error("❌ Lumenfall System: Auth unavailable:", error);
-        return { ready: false, error };
-    }
-
-    return { ready: true };
-}
-
-function getCleanActionUrl() {
-    return `${window.location.origin}${window.location.pathname}`;
-}
-
-function generateGameCode() {
-    // Genera un código numérico de 6 dígitos
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-// --- 4. Lógica de Perfil de Usuario ---
-async function handleUserProfile(user) {
-    if (!user) return null;
-
-    if (!db) {
-        console.error("Error al gestionar el perfil del usuario: Firestore no está inicializado.");
+        return sessionStorage.getItem(SESSION_KEY);
+    } catch (error) {
+        console.warn('Lumenfall: no se pudo recuperar la sesión central.', error);
         return null;
     }
+}
 
-    const email = getSafeUserEmail(user);
-    const displayName = getSafeDisplayName(user, email);
-    const userRef = doc(db, "users", user.uid);
+function emitAuthState() {
+    listeners.forEach((callback) => {
+        try {
+            callback(currentUser, currentProfile);
+        } catch (error) {
+            console.error('Lumenfall: listener de autenticación falló.', error);
+        }
+    });
+}
+
+function centralEntryUrl() {
+    return `${AJN_ORIGIN}/joziel/lumenfall`;
+}
+
+function openCentralLogin() {
+    try {
+        window.top.location.href = centralEntryUrl();
+    } catch {
+        window.location.href = centralEntryUrl();
+    }
+}
+
+function requestParentToken(forceRefresh = false) {
+    return new Promise((resolve) => {
+        if (window.parent === window) {
+            resolve(null);
+            return;
+        }
+
+        const requestId = `lf-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        let settled = false;
+
+        const timeout = window.setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            window.removeEventListener('message', onMessage);
+            resolve(null);
+        }, 6000);
+
+        function onMessage(event) {
+            if (event.origin !== AJN_ORIGIN) return;
+            if (event.data?.type !== TOKEN_RESPONSE) return;
+            if (event.data?.requestId !== requestId) return;
+
+            settled = true;
+            window.clearTimeout(timeout);
+            window.removeEventListener('message', onMessage);
+
+            const token = typeof event.data?.token === 'string' ? event.data.token : null;
+            if (token) {
+                try {
+                    sessionStorage.setItem(SESSION_KEY, token);
+                } catch {}
+            }
+            resolve(token);
+        }
+
+        window.addEventListener('message', onMessage);
+        window.parent.postMessage(
+            { type: TOKEN_REQUEST, requestId, forceRefresh },
+            AJN_ORIGIN,
+        );
+    });
+}
+
+async function fetchCentralSession(token, allowRefresh = true) {
+    if (!token) return null;
+
+    const response = await fetch(`${AJN_ORIGIN}/api/lumenfall/session`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        cache: 'no-store',
+    });
+
+    if (response.status === 401 && allowRefresh) {
+        const refreshed = await requestParentToken(true);
+        if (refreshed) {
+            currentToken = refreshed;
+            return fetchCentralSession(refreshed, false);
+        }
+    }
+
+    if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        throw new Error(`AJN Lumenfall session HTTP ${response.status}: ${text.slice(0, 300)}`);
+    }
+
+    return response.json();
+}
+
+async function establishSession(token) {
+    currentToken = token || null;
+
+    if (!currentToken) {
+        authReady = true;
+        currentUser = null;
+        currentProfile = null;
+        currentStorage = null;
+        emitAuthState();
+        return;
+    }
 
     try {
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
-            // Usuario ya registrado
-            console.log("✅ Operador Identificado:", email || displayName);
-            return userSnap.data();
-        } else {
-            // Nuevo Usuario: Generar Código y Crear Perfil
-            const newCode = generateGameCode();
-            console.log("🆕 Nuevo Operador Detectado. Generando Credenciales...");
-
-            const userData = {
-                email: email,
-                displayName: displayName, // GitHub puede ocultar el correo principal
-                photoURL: user.photoURL || null,
-                gameCode: newCode,
-                createdAt: serverTimestamp(),
-                lastLogin: serverTimestamp(),
-                roles: ['user']
-            };
-
-            await setDoc(userRef, userData);
-
-            // El código se devuelve al flujo de autenticación; no usar alertas nativas del navegador.
-            console.info('Access code generated for the authenticated flow.');
-
-            return userData;
+        const session = await fetchCentralSession(currentToken);
+        if (!session?.ok || !session?.user) {
+            throw new Error('La sesión central no devolvió un usuario válido.');
         }
+
+        currentUser = {
+            uid: session.user.uid,
+            email: session.user.email || null,
+            displayName: session.user.displayName || null,
+            photoURL: session.user.photoURL || null,
+        };
+
+        currentProfile = {
+            ...(session.profile || {}),
+            gameCode: session.profile?.gameCode || null,
+        };
+
+        currentStorage = session.storage || null;
+        window.LumenfallCloud = currentStorage;
+
+        authReady = true;
+        window.LumenfallAuth.currentUser = currentUser;
+        window.LumenfallAuth.userData = currentProfile;
+        window.LumenfallAuth.storage = currentStorage;
+
+        console.log('⚡ Lumenfall System: sesión central AJN activa.');
+        emitAuthState();
     } catch (error) {
-        console.error("Error al gestionar el perfil del usuario:", error);
-        return null;
+        console.error('❌ Lumenfall System: no se pudo validar la sesión AJN.', error);
+        authReady = true;
+        currentUser = null;
+        currentProfile = null;
+        currentStorage = null;
+        try {
+            sessionStorage.removeItem(SESSION_KEY);
+        } catch {}
+        emitAuthState();
     }
 }
 
-// --- 5. Objeto Global de Autenticación (API Pública) ---
 window.LumenfallAuth = {
-    app: app,
-    auth: auth,
-    db: db,
-    analytics: analytics,
+    app: null,
+    auth: null,
+    db: null,
+    analytics: null,
     currentUser: null,
     userData: null,
+    storage: null,
 
-    // --- Métodos de Login ---
-
-    // 1. Google
     loginWithGoogle: async () => {
-        const authStatus = ensureAuthReady();
-        if (!authStatus.ready) return { success: false, error: authStatus.error };
-
-        const provider = new GoogleAuthProvider();
-        try {
-            const result = await signInWithPopup(auth, provider);
-            return { success: true, user: result.user };
-        } catch (error) {
-            console.error("Login Google Failed:", error);
-            // No usar alertas nativas: el juego mantiene los errores fuera de la interfaz del navegador.
-            return { success: false, error };
-        }
+        openCentralLogin();
+        return { success: false, redirected: true };
     },
 
-    // 2. GitHub
     loginWithGithub: async () => {
-        const authStatus = ensureAuthReady();
-        if (!authStatus.ready) return { success: false, error: authStatus.error };
-
-        const provider = new GithubAuthProvider();
-        provider.addScope('user:email');
-        try {
-            const result = await signInWithPopup(auth, provider);
-            return { success: true, user: result.user };
-        } catch (error) {
-            console.error("Login GitHub Failed:", error);
-            // No usar alertas nativas: el juego mantiene los errores fuera de la interfaz del navegador.
-            return { success: false, error };
-        }
+        openCentralLogin();
+        return { success: false, redirected: true };
     },
 
-    // 3. Magic Link (Email sin contraseña)
-    sendMagicLink: async (email) => {
-        const authStatus = ensureAuthReady();
-        if (!authStatus.ready) return { success: false, error: authStatus.error };
-
-        const actionCodeSettings = {
-            // URL a la que se redirige después de hacer clic.
-            // Debe estar en la lista de dominios autorizados de Firebase Console.
-            url: getCleanActionUrl(), // Redirige sin reutilizar query/hash de enlaces antiguos
-            handleCodeInApp: true
+    sendMagicLink: async () => {
+        openCentralLogin();
+        return {
+            success: false,
+            redirected: true,
+            error: new Error('El acceso por correo ahora se gestiona desde AJNLIQ128.'),
         };
-
-        try {
-            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-            // Guardar el email localmente para no pedirlo de nuevo al volver
-            window.localStorage.setItem('emailForSignIn', email);
-            return { success: true };
-        } catch (error) {
-            console.error("Magic Link Failed:", error);
-            return { success: false, error: error };
-        }
     },
 
-    // 4. Finalizar Login con Magic Link (Llamar al cargar la página)
     checkAndSignInWithMagicLink: async () => {
-        const authStatus = ensureAuthReady();
-        if (!authStatus.ready) return { success: false, error: authStatus.error };
-
-        if (isSignInWithEmailLink(auth, window.location.href)) {
-            let email = window.localStorage.getItem('emailForSignIn');
-
-            // Si el usuario abrió el link en otro dispositivo, no usar prompt nativo.
-            if (!email) {
-                console.warn("Magic Link: falta el correo para completar el acceso.");
-                return { success: false, needsEmail: true, error: new Error('EMAIL_CONFIRMATION_REQUIRED') };
-            }
-
-            try {
-                const result = await signInWithEmailLink(auth, email, window.location.href);
-                window.localStorage.removeItem('emailForSignIn'); // Limpiar
-                // Reemplazar la URL para limpiar el hash del link
-                window.history.replaceState({}, document.title, window.location.pathname);
-                return { success: true, user: result.user };
-            } catch (error) {
-                console.error("Error finalizando Magic Link:", error);
-                return { success: false, error: error };
-            }
-        }
         return { success: false, notLink: true };
     },
 
     logout: async () => {
         try {
-            const authStatus = ensureAuthReady();
-            if (authStatus.ready) {
-                await signOut(auth);
-            }
-        } catch (error) {
-            console.error("Logout Failed (Force Reloading):", error);
-        } finally {
-            // CRITICAL: Force reload to clear all memory state
-            window.location.reload();
+            sessionStorage.removeItem(SESSION_KEY);
+        } catch {}
+
+        currentToken = null;
+        currentUser = null;
+        currentProfile = null;
+        currentStorage = null;
+        window.LumenfallAuth.currentUser = null;
+        window.LumenfallAuth.userData = null;
+        window.LumenfallAuth.storage = null;
+        emitAuthState();
+
+        if (window.parent !== window) {
+            window.parent.postMessage({ type: LOGOUT_REQUEST }, AJN_ORIGIN);
+        } else {
+            openCentralLogin();
         }
     },
 
-    // Método para suscribirse a cambios de estado
     onStateChanged: (callback) => {
-        const authStatus = ensureAuthReady();
-        if (!authStatus.ready) {
-            callback(null, null);
-            return () => {};
+        listeners.add(callback);
+        if (authReady) {
+            queueMicrotask(() => callback(currentUser, currentProfile));
         }
+        return () => listeners.delete(callback);
+    },
 
-        return onAuthStateChanged(auth, async (user) => {
-            window.LumenfallAuth.currentUser = user;
-            if (user) {
-                const data = await handleUserProfile(user);
-                window.LumenfallAuth.userData = data;
-                callback(user, data);
-            } else {
-                // EXPLICIT CLEANUP for Guest State
-                window.LumenfallAuth.currentUser = null;
-                window.LumenfallAuth.userData = null;
-                callback(null, null);
-            }
+    getIdToken: async (forceRefresh = false) => {
+        if (forceRefresh || !currentToken) {
+            const refreshed = await requestParentToken(forceRefresh);
+            if (refreshed) currentToken = refreshed;
+        }
+        return currentToken;
+    },
+
+    saveProgress: async ({ progress, settings } = {}) => {
+        const token = await window.LumenfallAuth.getIdToken(false);
+        if (!token) return { success: false, error: 'No central session' };
+
+        const response = await fetch(`${AJN_ORIGIN}/api/lumenfall/session`, {
+            method: 'PATCH',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ progress, settings }),
         });
-    }
+
+        const data = await response.json().catch(() => ({}));
+        return response.ok
+            ? { success: true, data }
+            : { success: false, error: data?.error || `HTTP ${response.status}` };
+    },
 };
+
+const initialToken = cleanHashAndReadToken();
+
+if (initialToken) {
+    establishSession(initialToken);
+} else {
+    requestParentToken(false)
+        .then((token) => establishSession(token))
+        .catch(() => establishSession(null));
+}
