@@ -1,3 +1,14 @@
+## Integración central AJNLIQ128 — 2026-09-27
+
+Lumenfall forma parte del módulo **Joziel** dentro de AJNLIQ128. La entrada oficial es **AJNLIQ128 → Joziel → Lumenfall**.
+
+Arquitectura central:
+- **Identidad:** Firebase de AJNLIQ128 (proyecto `ajnliq128`). El cliente de Lumenfall ya no inicia el proyecto Firebase antiguo `lumenfall-joziel`.
+- **Perfil y progreso:** Supabase central `naylacore`, tabla `lumenfall_perfiles`, accesible únicamente a través del gateway autenticado de AJN.
+- **Cloudflare R2:** almacenamiento central de AJN con namespace lógico `joziel/lumenfall/`; los assets estáticos existentes permanecen en el repositorio para no romper rutas durante esta integración.
+- **Puente de sesión:** AJN abre Lumenfall oficial y entrega un Firebase ID token por fragmento URL; el fragmento no llega a logs del servidor. Lumenfall valida la sesión contra AJN y conserva la API global `window.LumenfallAuth` para no romper la portada ni el demo.
+- **Acceso directo:** los botones de login de Lumenfall redirigen a la entrada central de AJN en lugar de autenticar contra un Firebase separado.
+
 # Lumenfall — Archivo maestro del proyecto
 
 **Repositorio:** `Yanzsmartwood2025/LumenFall-Official`  
