@@ -1,6 +1,13 @@
 // --- src/game.js (Lógica Principal) ---
 
-        const PLAYER_SCALE = 1.35;
+        const BASE_CHARACTER_SCALE = 1.35;
+        // Joziel was visually too large/bloated in gameplay. Keep all authored
+        // sprite proportions but reduce the full character by exactly 10%.
+        const PLAYER_SCALE = BASE_CHARACTER_SCALE * 0.90;
+        // Enemies need to read as physically larger threats even after Joziel's
+        // reduction. Keep this independent from PLAYER_SCALE so player tuning
+        // never accidentally shrinks the monsters.
+        const ENEMY_SCALE = BASE_CHARACTER_SCALE * 1.35;
         // Todos los personajes usan el mismo suelo lógico.  La coordenada es el
         // pivote de los pies, no el centro de la imagen.
         const GAMEPLAY_LANE_FOOT_Y = 0.8;
@@ -46,16 +53,15 @@
 
         // --- NEW FOLDER-BASED SCALING LOGIC ---
         function getScaleFromPath(path) {
-            if (!path) return PLAYER_SCALE;
+            if (!path) return BASE_CHARACTER_SCALE;
             if (path.includes('/ui/')) return 1.0; // UI must not be scaled
-            if (path.includes('/Joziel/')) return PLAYER_SCALE; // x1.0
-            if (path.includes('/Enemigos/Comunes/')) return PLAYER_SCALE * 1.2; // 20% taller than player
-            if (path.includes('/Enemigos/Elites/')) return PLAYER_SCALE * 2.0;
-            if (path.includes('/Enemigos/Jefes/')) return PLAYER_SCALE * 3.5;
-            if (path.includes('/Items/')) return PLAYER_SCALE * 0.6;
-            // Los enemigos generales (como EnemyX1) son un 20% más altos que el personaje
-            if (path.includes('/Enemigos/')) return PLAYER_SCALE * 1.2;
-            return PLAYER_SCALE;
+            if (path.includes('/Joziel/')) return PLAYER_SCALE;
+            if (path.includes('/Enemigos/Comunes/')) return ENEMY_SCALE;
+            if (path.includes('/Enemigos/Elites/')) return BASE_CHARACTER_SCALE * 2.0;
+            if (path.includes('/Enemigos/Jefes/')) return BASE_CHARACTER_SCALE * 3.5;
+            if (path.includes('/Items/')) return BASE_CHARACTER_SCALE * 0.6;
+            if (path.includes('/Enemigos/')) return ENEMY_SCALE;
+            return BASE_CHARACTER_SCALE;
         }
 
         function calculateFrameSize(texture, cols, rows) {
@@ -897,10 +903,63 @@
         async function setGateCinematicFade(visible, duration = 450) {
             const fade = ensureGateCinematicFade();
             fade.style.transitionDuration = `${duration}ms`;
-            // Force a layout read so a newly-created overlay can animate from opacity 0.
-            void fade.offsetWidth;
-            fade.classList.toggle('visible', visible);
+
+            if (visible) {
+                fade.style.display = 'block';
+                fade.style.opacity = '';
+                // Force layout so a newly-created overlay animates from transparent.
+                void fade.offsetWidth;
+                fade.classList.add('visible');
+                await waitMs(duration + 30);
+                return;
+            }
+
+            fade.classList.remove('visible');
             await waitMs(duration + 30);
+
+            // Do not leave a full-screen black DOM layer alive after the cinematic.
+            fade.style.opacity = '0';
+            fade.style.display = 'none';
+            fade.remove();
+        }
+
+        function forceRestoreGameplayAfterGateCinematic() {
+            const fade = document.getElementById('gate-cinematic-fade');
+            if (fade) fade.remove();
+
+            document.body.classList.remove('gate-unlock-cinematic');
+            transitionOverlay?.classList.remove('visible');
+
+            const ui = document.getElementById('ui-container');
+            if (ui) {
+                ui.style.opacity = '';
+                ui.style.pointerEvents = '';
+                ui.style.display = 'flex';
+            }
+
+            const canvas = renderer?.domElement;
+            if (canvas) canvas.style.display = 'block';
+
+            if (player) {
+                player.mesh.visible = true;
+                if (player.playerLight) player.playerLight.visible = true;
+                player.mesh.position.z = GAMEPLAY_LANE_Z;
+                cameraDirector.snapToPlayer(player);
+            }
+
+            window.isCinematic = false;
+            isPaused = false;
+            roomClearCinematicRunning = false;
+
+            // The old loop can still own a scheduled RAF while the async cinematic
+            // finishes. Cancel it and start one clean gameplay loop.
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            clock.getDelta();
+            renderer.render(scene, camera);
+            animate();
         }
 
         function animateCameraZoom(fromZoom, toZoom, duration, onReveal) {
@@ -1025,6 +1084,9 @@
                 camera.updateProjectionMatrix();
                 cameraDirector.syncFromCamera();
 
+                // Bring the HUD back underneath the black frame, then reveal both
+                // gameplay and UI together.
+                document.body.classList.remove('gate-unlock-cinematic');
                 await setGateCinematicFade(false, 500);
             } catch (error) {
                 console.error('[Lumenfall Camera] Gate unlock cinematic failed:', error);
@@ -1043,15 +1105,11 @@
                     camera.updateProjectionMatrix();
                 }
 
-                const fade = ensureGateCinematicFade();
-                fade.classList.remove('visible');
+                const fade = document.getElementById('gate-cinematic-fade');
+                if (fade) fade.remove();
             } finally {
                 cinematicGateRevealId = null;
-                document.body.classList.remove('gate-unlock-cinematic');
-                window.isCinematic = false;
-                isPaused = false;
-                roomClearCinematicRunning = false;
-                animate();
+                forceRestoreGameplayAfterGateCinematic();
             }
         }
 
@@ -1142,6 +1200,47 @@
             animateEvent();
         }
 
+        function getCharacterBodyBox(entity, kind = 'player') {
+            if (!entity?.mesh) return null;
+
+            const scaleX = Math.abs(entity.mesh.scale.x || 1);
+            const scaleY = Math.abs(entity.mesh.scale.y || 1);
+            const fullWidth = CHARACTER_SPRITE_WIDTH * scaleX;
+            const fullHeight = CHARACTER_SPRITE_HEIGHT * scaleY;
+
+            // The mesh origin is the FOOT pivot. Use an intentionally solid body
+            // rectangle instead of transparent sprite pixels: legs, torso and head
+            // all cause contact damage. This also keeps jump collisions intuitive.
+            const widthFactor = kind === 'enemy' ? 0.62 : 0.52;
+            const heightFactor = kind === 'enemy' ? 0.96 : 0.88;
+            const width = fullWidth * widthFactor;
+            const height = fullHeight * heightFactor;
+            const bottom = entity.mesh.position.y;
+            const top = bottom + height;
+
+            return {
+                left: entity.mesh.position.x - width * 0.5,
+                right: entity.mesh.position.x + width * 0.5,
+                bottom,
+                top,
+                z: entity.mesh.position.z
+            };
+        }
+
+        function fullBodyContact(playerEntity, enemyEntity) {
+            const playerBox = getCharacterBodyBox(playerEntity, 'player');
+            const enemyBox = getCharacterBodyBox(enemyEntity, 'enemy');
+            if (!playerBox || !enemyBox) return false;
+
+            // Both actors are designed for the exact same 2.5D gameplay lane.
+            if (Math.abs(playerBox.z - enemyBox.z) > 0.35) return false;
+
+            return playerBox.left < enemyBox.right &&
+                   playerBox.right > enemyBox.left &&
+                   playerBox.bottom < enemyBox.top &&
+                   playerBox.top > enemyBox.bottom;
+        }
+
         function animate() {
             if (isPaused && !window.isCinematic) {
                 animationFrameId = null;
@@ -1209,17 +1308,16 @@
                     }
                 }
 
-                // Collision detection between player and enemies
+                // Full-body contact damage. The old logic measured distance between
+                // FOOT pivots, so jumping could incorrectly pass through the monster.
                 allSimpleEnemies.forEach(enemy => {
-                    const distanceX = Math.abs(enemy.mesh.position.x - player.mesh.position.x);
-                    if (!player.isInvincible && distanceX < 2 && player.mesh.position.distanceTo(enemy.mesh.position) < 2) {
+                    if (enemy.isAlive && !player.isInvincible && fullBodyContact(player, enemy)) {
                         player.takeDamage(player.maxHealth * 0.05, enemy);
                     }
                 });
 
                 allEnemiesX1.forEach(enemy => {
-                    const distanceX = Math.abs(enemy.mesh.position.x - player.mesh.position.x);
-                    if (enemy.isAlive && !enemy.isDying && !player.isInvincible && distanceX < 2.5 && player.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
+                    if (enemy.isAlive && !enemy.isDying && !player.isInvincible && fullBodyContact(player, enemy)) {
                         player.takeDamage(player.maxHealth * 0.10, enemy);
                     }
 
@@ -4074,7 +4172,8 @@
                     map: this.texture,
                     transparent: true,
                     alphaTest: 0.1,
-                    side: THREE.DoubleSide
+                    side: THREE.DoubleSide,
+                    depthWrite: false
                 });
                 const enemyGeometry = new THREE.PlaneGeometry(enemyWidth, enemyHeight);
                 enemyGeometry.translate(0, enemyHeight / 2, 0);
@@ -4157,6 +4256,10 @@
             }
 
             update(deltaTime) {
+                // Hard-lock the enemy to Joziel's 2.5D lane so camera movement can
+                // never make it read as a background character.
+                this.mesh.position.z = GAMEPLAY_LANE_Z;
+
                 // Sleep Mode
                 if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return;
 
@@ -4271,7 +4374,8 @@
                     map: this.runTexture,
                     transparent: true,
                     alphaTest: 0.1,
-                    side: THREE.DoubleSide
+                    side: THREE.DoubleSide,
+                    depthWrite: false
                 });
                 const enemyGeometry = new THREE.PlaneGeometry(enemyWidth, enemyHeight);
                 // Igual que el jugador: la base del frame es el punto de apoyo.
@@ -4370,6 +4474,9 @@
             }
 
             update(deltaTime) {
+                // Same physical lane as Joziel, including death/attack frames.
+                this.mesh.position.z = GAMEPLAY_LANE_Z;
+
                 // Optimization: Sleep if off-screen (and not already dead/static)
                 if (this.isAlive && Math.abs(this.mesh.position.x - camera.position.x) > 35) return;
 
