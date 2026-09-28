@@ -307,6 +307,111 @@
         const dungeonRoomIds = ['room_1', 'room_2', 'room_3', 'room_4', 'room_5'];
         let cinematicGateRevealId = null;
         let roomClearCinematicRunning = false;
+
+        // --- LUMENFALL CAMERA DIRECTOR ---
+        // Preserve the current 2.5D sprite/billboard illusion: gameplay never rotates
+        // the camera and never dollies on Z. Framing uses damped X/Y + camera.zoom.
+        const cameraDirector = {
+            deadZoneX: 2.2,
+            lookAheadDistance: 3.2,
+            lookAhead: 0,
+            followSharpnessX: 5.2,
+            followSharpnessY: 4.0,
+            zoomSharpness: 3.2,
+            minCombatZoom: 0.82,
+            combatRange: 18,
+            synced: false,
+
+            responsiveBaseZoom() {
+                return camera.aspect < 1 ? 1.2 : 1.0;
+            },
+
+            syncFromCamera() {
+                this.synced = true;
+            },
+
+            snapToPlayer(targetPlayer) {
+                if (!targetPlayer) return;
+                const facing = targetPlayer.isFacingLeft ? -1 : 1;
+                this.lookAhead = facing * this.lookAheadDistance * 0.45;
+                camera.position.x = targetPlayer.mesh.position.x + this.lookAhead;
+                camera.position.y = targetPlayer.mesh.position.y + 6;
+                camera.zoom = this.responsiveBaseZoom();
+                camera.updateProjectionMatrix();
+                this.synced = true;
+            },
+
+            activeCombatants(targetPlayer) {
+                if (!targetPlayer) return [];
+                const px = targetPlayer.mesh.position.x;
+                const candidates = [...allSimpleEnemies, ...allEnemiesX1];
+
+                return candidates.filter(enemy => {
+                    if (!enemy?.mesh) return false;
+                    if (enemy.isAlive === false || enemy.isDying) return false;
+                    return Math.abs(enemy.mesh.position.x - px) <= this.combatRange;
+                });
+            },
+
+            update(deltaTime, targetPlayer) {
+                if (!targetPlayer || window.isCinematic || isTransitioning) return;
+                if (!this.synced) this.snapToPlayer(targetPlayer);
+
+                const dt = Math.min(Math.max(deltaTime || 0, 0), 0.05);
+                const facing = targetPlayer.isFacingLeft ? -1 : 1;
+                const horizontalSpeed = Math.abs(targetPlayer.velocity?.x || 0);
+                const isMoving = horizontalSpeed > 0.015;
+
+                const desiredLookAhead = isMoving ? facing * this.lookAheadDistance : facing * 0.9;
+                const lookAlpha = 1 - Math.exp(-4.5 * dt);
+                this.lookAhead += (desiredLookAhead - this.lookAhead) * lookAlpha;
+
+                const playerX = targetPlayer.mesh.position.x;
+                const combatants = this.activeCombatants(targetPlayer);
+                let desiredX = playerX + this.lookAhead;
+                let targetZoom = this.responsiveBaseZoom();
+
+                if (combatants.length > 0) {
+                    let minX = playerX;
+                    let maxX = playerX;
+                    for (const enemy of combatants) {
+                        minX = Math.min(minX, enemy.mesh.position.x);
+                        maxX = Math.max(maxX, enemy.mesh.position.x);
+                    }
+
+                    const span = Math.max(0, maxX - minX);
+                    const combatCenter = (minX + maxX) * 0.5;
+
+                    // Favor the combat group without hard-snapping away from Joziel.
+                    desiredX = THREE.MathUtils.lerp(desiredX, combatCenter, 0.58);
+
+                    // Wider formations gradually open the shot.
+                    const spanZoom = this.responsiveBaseZoom() - Math.max(0, span - 6) * 0.018;
+                    targetZoom = Math.max(this.minCombatZoom, Math.min(this.responsiveBaseZoom(), spanZoom));
+                } else if (isMoving) {
+                    // Slightly wider exploration framing while running.
+                    targetZoom = Math.max(0.94, this.responsiveBaseZoom() - 0.04);
+                }
+
+                const deltaX = desiredX - camera.position.x;
+                let followTargetX = camera.position.x;
+                if (Math.abs(deltaX) > this.deadZoneX) {
+                    followTargetX = desiredX - Math.sign(deltaX) * this.deadZoneX;
+                }
+
+                const xAlpha = 1 - Math.exp(-this.followSharpnessX * dt);
+                const yAlpha = 1 - Math.exp(-this.followSharpnessY * dt);
+                const zoomAlpha = 1 - Math.exp(-this.zoomSharpness * dt);
+
+                camera.position.x += (followTargetX - camera.position.x) * xAlpha;
+                const targetY = targetPlayer.mesh.position.y + 6;
+                camera.position.y += (targetY - camera.position.y) * yAlpha;
+
+                camera.zoom += (targetZoom - camera.zoom) * zoomAlpha;
+                camera.updateProjectionMatrix();
+            }
+        };
+
         const roomEnemyCounts = { room_1: 3, room_2: 4, room_3: 5, room_4: 6, room_5: 8 };
         window.completedRooms = completedRooms; // Expose global AFTER definition
 
@@ -767,6 +872,7 @@
                     camera.position.x = player.mesh.position.x;
                     camera.position.y = player.mesh.position.y + 6;
                     camera.position.z = 14;
+                    cameraDirector.syncFromCamera();
                 }
                 animate();
             }
@@ -917,6 +1023,7 @@
                 }
                 camera.zoom = savedCameraZoom;
                 camera.updateProjectionMatrix();
+                cameraDirector.syncFromCamera();
 
                 await setGateCinematicFade(false, 500);
             } catch (error) {
@@ -1016,6 +1123,7 @@
                         const targetCameraY = player.mesh.position.y + 6;
                         camera.position.y = targetCameraY;
                         camera.position.z = 14;
+                        cameraDirector.syncFromCamera();
                     }
                     animate(); // Ensure loop continues
                 }
@@ -2766,9 +2874,7 @@
                     this.idleAnimTimer = 0;
                 }
 
-                camera.position.x = this.mesh.position.x;
-                const targetCameraY = this.mesh.position.y + 6;
-                camera.position.y += (targetCameraY - camera.position.y) * 0.05;
+                cameraDirector.update(deltaTime, this);
                 this.playerLight.position.set(this.mesh.position.x, this.mesh.position.y + 1, this.mesh.position.z + 2);
 
             if (this.currentState !== previousState && this.currentState !== 'charging') this.currentFrame = -1;
@@ -3910,7 +4016,7 @@
                 player.mesh.position.x = spawnX !== null ? spawnX : 0;
                 player.mesh.position.y = GAMEPLAY_LANE_FOOT_Y; // Feet stay on the shared gameplay lane
                 player.mesh.position.z = GAMEPLAY_LANE_Z;
-                camera.position.x = player.mesh.position.x;
+                cameraDirector.snapToPlayer(player);
             }
         }
 
