@@ -95,6 +95,50 @@
         const audioSources = {};
         const gainNodes = {};
 
+        // --- LUMENFALL AUDIO DIRECTOR ---
+        // All sounds share one controlled Web Audio graph instead of connecting
+        // directly to the speakers. This keeps simultaneous enemies from turning
+        // into one clipped wall of sound.
+        const masterCompressor = audioContext.createDynamicsCompressor();
+        masterCompressor.threshold.value = -16;
+        masterCompressor.knee.value = 14;
+        masterCompressor.ratio.value = 4;
+        masterCompressor.attack.value = 0.004;
+        masterCompressor.release.value = 0.18;
+        masterCompressor.connect(audioContext.destination);
+
+        function createAudioBus(initialGain) {
+            const bus = audioContext.createGain();
+            bus.gain.value = initialGain;
+            bus.connect(masterCompressor);
+            return bus;
+        }
+
+        const ambienceAudioBus = createAudioBus(0.72);
+        const playerAudioBus = createAudioBus(0.92);
+        const enemyAudioBus = createAudioBus(0.72);
+        const worldAudioBus = createAudioBus(0.88);
+
+        let sfxMixVolume = 0.8;
+
+        function setSfxMixVolume(value) {
+            const normalized = Math.max(0, Math.min(1, Number(value)));
+            sfxMixVolume = Number.isFinite(normalized) ? normalized : 0.8;
+            const now = audioContext.currentTime;
+            playerAudioBus.gain.setTargetAtTime(0.92 * sfxMixVolume, now, 0.03);
+            enemyAudioBus.gain.setTargetAtTime(0.72 * sfxMixVolume, now, 0.03);
+            worldAudioBus.gain.setTargetAtTime(0.88 * sfxMixVolume, now, 0.03);
+        }
+
+        function getAudioBusForName(name) {
+            if (name === 'ambiente') return ambienceAudioBus;
+            if (name.startsWith('enemy1_')) return enemyAudioBus;
+            if (name === 'puerta' || name === 'fantasma_lamento' || name.startsWith('thunder_')) {
+                return worldAudioBus;
+            }
+            return playerAudioBus;
+        }
+
         const ENEMY_HURT_SOUNDS = ['enemy1_hurt', 'enemy1_hurt_02'];
         const ENEMY_DEATH_SOUNDS = [
             'enemy1_death',
@@ -105,12 +149,39 @@
             'enemy1_death_05'
         ];
 
+        const enemySoundBags = new Map();
+
+        function nextSoundVariant(group, sounds) {
+            if (!sounds?.length) return null;
+            if (sounds.length === 1) return sounds[0];
+
+            let state = enemySoundBags.get(group);
+            if (!state || state.bag.length === 0) {
+                const bag = [...sounds];
+                for (let i = bag.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [bag[i], bag[j]] = [bag[j], bag[i]];
+                }
+
+                // Prevent the first item of a new bag from repeating the last sound.
+                if (state?.last && bag[bag.length - 1] === state.last && bag.length > 1) {
+                    [bag[bag.length - 1], bag[0]] = [bag[0], bag[bag.length - 1]];
+                }
+                state = { bag, last: state?.last || null };
+                enemySoundBags.set(group, state);
+            }
+
+            const next = state.bag.pop();
+            state.last = next;
+            return next;
+        }
+
         function getRandomEnemyHurtSound() {
-            return ENEMY_HURT_SOUNDS[Math.floor(Math.random() * ENEMY_HURT_SOUNDS.length)];
+            return nextSoundVariant('hurt', ENEMY_HURT_SOUNDS);
         }
 
         function getRandomEnemyDeathSound() {
-            return ENEMY_DEATH_SOUNDS[Math.floor(Math.random() * ENEMY_DEATH_SOUNDS.length)];
+            return nextSoundVariant('death', ENEMY_DEATH_SOUNDS);
         }
 
         async function loadAudio(name, url) {
@@ -131,14 +202,24 @@
         function playAudio(name, loop = false, playbackRate = 1.0, volume = 0.8, startOffset = 0) {
             if (!audioBuffers[name]) return;
             if (audioSources[name] && audioSources[name].buffer) stopAudio(name);
+
             const source = audioContext.createBufferSource();
             source.buffer = audioBuffers[name];
             source.loop = loop;
             source.playbackRate.value = playbackRate;
+
             const gainNode = audioContext.createGain();
             gainNode.gain.value = volume;
-            source.connect(gainNode).connect(audioContext.destination);
+
+            source.connect(gainNode).connect(getAudioBusForName(name));
+            source.onended = () => {
+                if (audioSources[name] === source) {
+                    delete audioSources[name];
+                    delete gainNodes[name];
+                }
+            };
             source.start(0, startOffset);
+
             audioSources[name] = source;
             gainNodes[name] = gainNode;
         }
