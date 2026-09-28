@@ -1020,3 +1020,50 @@ html, body {
     background-color: rgba(255, 215, 0, 0.2);
     box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
 }
+
+
+/* --- Lumenfall Camera Director: progression cinematics --- */
+#gate-cinematic-fade {
+    position: fixed;
+    inset: 0;
+    z-index: 190;
+    pointer-events: none;
+    background: #000;
+    opacity: 0;
+    transition-property: opacity;
+    transition-timing-function: ease-in-out;
+}
+
+#gate-cinematic-fade.visible {
+    opacity: 1;
+}
+
+#ui-container {
+    transition: opacity 220ms ease;
+}
+
+body.gate-unlock-cinematic #ui-container {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Subtle cinematic letterbox while the real next gate is being revealed. */
+body.gate-unlock-cinematic::before,
+body.gate-unlock-cinematic::after {
+    content: '';
+    position: fixed;
+    left: 0;
+    width: 100vw;
+    height: clamp(18px, 4.5vh, 48px);
+    z-index: 180;
+    pointer-events: none;
+    background: #000;
+}
+
+body.gate-unlock-cinematic::before {
+    top: 0;
+}
+
+body.gate-unlock-cinematic::after {
+    bottom: 0;
+}
