@@ -1337,7 +1337,11 @@
             }
             updateEnemiesLightweight(allSimpleEnemies, deltaTime, 18);
             updateEnemiesLightweight(allEnemiesX1, deltaTime, 18);
-            allDecorGhosts.forEach(ghost => { if (isObjectNearActiveView(ghost, 8)) ghost.update(deltaTime); });
+            allDecorGhosts.forEach(ghost => {
+                // Audio proximity must not sleep with visual culling.
+                if (ghost.updateAudio) ghost.updateAudio();
+                if (isObjectNearActiveView(ghost, 8)) ghost.update(deltaTime);
+            });
             allPuzzles.forEach(puzzle => { if (isObjectNearActiveView(puzzle, 10)) puzzle.update(deltaTime); });
             allPowerUps.forEach(powerUp => { if (isObjectNearActiveView(powerUp, 20)) powerUp.update(deltaTime); });
             if (dustSystem) dustSystem.update();
@@ -4579,10 +4583,46 @@
             }
 
             stopAudio(fadeOutDuration = 0) {
-                if (this.voiceSource) {
-                     try { this.voiceSource.stop(); } catch(e) {}
-                     this.voiceSource = null;
+                const source = this.voiceSource;
+                const gain = this.voiceGain;
+                this.voiceSource = null;
+                this.voiceGain = null;
+
+                if (!source) return;
+
+                if (fadeOutDuration > 0 && gain) {
+                    try {
+                        const now = audioContext.currentTime;
+                        gain.gain.cancelScheduledValues(now);
+                        gain.gain.setValueAtTime(gain.gain.value, now);
+                        gain.gain.linearRampToValueAtTime(0, now + fadeOutDuration);
+                        source.stop(now + fadeOutDuration);
+                    } catch(e) {
+                        try { source.stop(); } catch(e2) {}
+                    }
+                    return;
                 }
+
+                try { source.stop(); } catch(e) {}
+            }
+
+            updateAudio() {
+                // Keep the "nightmare" ghost voice alive independently from
+                // off-screen visual optimization. This is intentionally 1D
+                // distance because gameplay movement is horizontal.
+                if (!this.voiceSource) this.startVoice();
+                if (!player || !this.voiceGain) return;
+
+                const dist = Math.abs(this.mesh.position.x - player.mesh.position.x);
+                const maxDist = 28.0;
+                const proximity = calculateLogVolume(dist, maxDist);
+                const targetVolume = proximity < 0.015 ? 0 : proximity * 0.95;
+
+                this.voiceGain.gain.setTargetAtTime(
+                    targetVolume,
+                    audioContext.currentTime,
+                    targetVolume > this.voiceGain.gain.value ? 0.08 : 0.18
+                );
             }
 
             update(deltaTime) {
@@ -4626,14 +4666,8 @@
 
                 this.mesh.position.y = this.initialY + Math.sin(Date.now() * 0.002) * 0.5;
 
-                // Reintentar la voz si el buffer terminó de cargarse después de crear el fantasma.
-                if (!this.voiceSource) this.startVoice();
-                if (player && this.voiceGain) {
-                    const dist = Math.abs(this.mesh.position.x - player.mesh.position.x);
-                    const maxDist = 30.0;
-                    const vol = calculateLogVolume(dist, maxDist);
-                    this.voiceGain.gain.setTargetAtTime(vol * 0.85, audioContext.currentTime, 0.1);
-                }
+                // Proximity audio is updated separately every frame by updateAudio(),
+                // even when this visual/wander update is culled off-screen.
             }
         }
 
@@ -4925,7 +4959,9 @@
         class Projectile {
             constructor(scene, startPosition, direction) {
                 this.scene = scene;
-                this.speed = 0.5;
+                // Units/second. 30 preserves the old ~0.5 units/frame feel at 60 FPS
+                // without changing speed when the device drops frames.
+                this.speed = 30.0;
 
                 // Use getCachedTexture to guarantee correct loading and independent UV offsets
                 this.texture = getCachedTexture(assetUrls.projectileSprite, (tex) => {
@@ -4945,7 +4981,7 @@
                     map: this.texture,
                     color: 0xffffff,
                     transparent: true,
-                    alphaTest: 0.05,
+                    alphaTest: 0.01,
                     blending: THREE.AdditiveBlending,
                     depthWrite: false,
                     side: THREE.DoubleSide
@@ -4968,7 +5004,11 @@
 
                 this.state = 'SPAWN';
                 this.frameTimer = 0;
-                this.animationSpeed = 0.025; // Faster frame transitions for fluid movement
+                this.frameDurations = {
+                    SPAWN: 0.045,
+                    FLIGHT: 0.060,
+                    IMPACT: 0.045
+                };
 
                 this.frames = {
                     SPAWN: [0, 1],
@@ -4999,14 +5039,17 @@
                     });
                 }
 
-                this.plasmaCore = new THREE.Sprite(sharedCoreMaterial);
-                this.plasmaCore.renderOrder = 5;
-                // Scaled and perfectly centered at projectile origin to bind glow to sprite head
+                // Clone only the lightweight material so each projectile can rotate
+                // its procedural glow independently. The generated texture remains shared.
+                this.plasmaCore = new THREE.Sprite(sharedCoreMaterial.clone());
+                this.plasmaCore.renderOrder = 19;
                 this.plasmaCore.scale.set(2.2, 2.2, 1);
-                this.scene.add(this.plasmaCore);
 
-                // Offset Z: Core aligned right behind sprite
-                this.zOffset = -0.005;
+                // Tiny depth separation: procedural glow directly behind authored sprite.
+                this.zOffset = -0.01;
+                this.plasmaCore.position.copy(this.mesh.position);
+                this.plasmaCore.position.z += this.zOffset;
+                this.scene.add(this.plasmaCore);
 
                 // 2. Trail (Improved)
                 // Width 0.5 (Base), Length 12, MaxAlpha 0.6
@@ -5170,6 +5213,7 @@
                 this.updateFrameUVs(this.frames.IMPACT[0]);
 
                 this.velocity.set(0, 0, 0);
+                if (this.plasmaCore) this.plasmaCore.visible = false;
                 allFlames.push(new ImpactParticleSystem(this.scene, this.mesh.position));
 
                 this.createFlash();
@@ -5178,16 +5222,14 @@
                 playAudio('fireball_impact', false, 0.9 + Math.random() * 0.2);
             }
 
-            update(deltaTime) {
-                if (this.isDead) return false;
-
-                // --- Update Visual Components ---
-                // Plasma Core & Trail follow mesh but offset in Z
+            syncVisualLayers(deltaTime) {
+                // All authored/procedural layers use the FINAL physics position
+                // of this frame, so neither one can lead the other.
                 if (this.plasmaCore) {
-                     this.plasmaCore.position.copy(this.mesh.position);
-                     this.plasmaCore.position.z += this.zOffset;
-                     this.plasmaCore.material.rotation += 10.0 * deltaTime; // Spin!
-                     this.plasmaCore.visible = (this.state !== 'IMPACT'); // Hide on impact
+                    this.plasmaCore.position.copy(this.mesh.position);
+                    this.plasmaCore.position.z += this.zOffset;
+                    this.plasmaCore.material.rotation += 6.0 * deltaTime;
+                    this.plasmaCore.visible = this.state !== 'IMPACT';
                 }
 
                 if (this.state === 'FLIGHT' || this.state === 'SPAWN') {
@@ -5195,86 +5237,117 @@
                     trailPos.z += this.zOffset;
                     this.trail.update(trailPos, this.angle);
                 }
-                this.updateSparks(deltaTime);
-                this.updateFlash(deltaTime);
-                this.updateImpactBursts(deltaTime);
+            }
+
+            advanceAnimation(deltaTime) {
+                this.frameTimer += deltaTime;
+                const frameDuration = this.frameDurations[this.state] || 0.06;
+                if (this.frameTimer < frameDuration) return true;
+
+                // Preserve the remainder instead of resetting to zero. This avoids
+                // uneven frame cadence on 30/60/90/120 Hz displays.
+                this.frameTimer -= frameDuration;
+                let frameToSet = -1;
+
+                if (this.state === 'SPAWN') {
+                    this.currentSeqIndex++;
+                    if (this.currentSeqIndex >= this.frames.SPAWN.length) {
+                        this.state = 'FLIGHT';
+                        this.currentSeqIndex = 0;
+                        frameToSet = this.frames.FLIGHT[0];
+                    } else {
+                        frameToSet = this.frames.SPAWN[this.currentSeqIndex];
+                    }
+                } else if (this.state === 'FLIGHT') {
+                    this.currentSeqIndex = (this.currentSeqIndex + 1) % this.frames.FLIGHT.length;
+                    frameToSet = this.frames.FLIGHT[this.currentSeqIndex];
+                } else if (this.state === 'IMPACT') {
+                    this.currentSeqIndex++;
+                    if (this.currentSeqIndex >= this.frames.IMPACT.length) {
+                        this.cleanup();
+                        this.isDead = true;
+                        return false;
+                    }
+                    frameToSet = this.frames.IMPACT[this.currentSeqIndex];
+                }
+
+                if (frameToSet !== -1) this.updateFrameUVs(frameToSet);
+                return true;
+            }
+
+            detectImpact() {
+                // Exact wall impact point: don't let the sprite overshoot and then
+                // snap back while the impact animation is playing.
+                if (this.mesh.position.x < player.minPlayerX || this.mesh.position.x > player.maxPlayerX) {
+                    this.mesh.position.x = THREE.MathUtils.clamp(
+                        this.mesh.position.x,
+                        player.minPlayerX,
+                        player.maxPlayerX
+                    );
+                    this.triggerImpact('wall');
+                    return true;
+                }
+
+                for (const enemy of allSimpleEnemies) {
+                    if (!enemy.isAlive) continue;
+                    if (Math.abs(enemy.mesh.position.x - this.mesh.position.x) > 10) continue;
+
+                    const enemyCenter = enemy.mesh.position.clone().add(new THREE.Vector3(0, 2.0, 0));
+                    if (this.mesh.position.distanceTo(enemyCenter) < 2.5) {
+                        enemy.takeHit();
+                        this.triggerImpact('enemy');
+                        return true;
+                    }
+                }
+
+                for (const enemy of allEnemiesX1) {
+                    if (!enemy.isAlive || enemy.isDying) continue;
+                    if (Math.abs(enemy.mesh.position.x - this.mesh.position.x) > 10) continue;
+
+                    const enemyCenter = enemy.mesh.position.clone().add(new THREE.Vector3(0, 2.0, 0));
+                    if (this.mesh.position.distanceTo(enemyCenter) < 2.5) {
+                        enemy.takeHit();
+                        this.triggerImpact('enemy');
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            update(deltaTime) {
+                if (this.isDead) return false;
+
+                const dt = Math.min(Math.max(deltaTime || 0, 0), 0.05);
+
+                // PHYSICS FIRST. Previously the sprite moved after the procedural
+                // core/trail were positioned, leaving the sprite ~0.5 units ahead.
+                if (this.state !== 'IMPACT') {
+                    this.mesh.position.addScaledVector(this.velocity, dt);
+                    this.detectImpact();
+                }
+
+                // VISUALS SECOND: sprite, core, trail and collision point now share
+                // exactly the same X/Y position for this rendered frame.
+                this.syncVisualLayers(dt);
+                this.updateSparks(dt);
+                this.updateFlash(dt);
+                this.updateImpactBursts(dt);
 
                 this.mesh.lookAt(camera.position);
                 this.mesh.rotation.z = this.angle;
 
-                this.frameTimer += deltaTime;
-                let frameToSet = -1;
-
-                if (this.frameTimer > this.animationSpeed) {
-                    this.frameTimer = 0;
-
-                    if (this.state === 'SPAWN') {
-                        this.currentSeqIndex++;
-                        if (this.currentSeqIndex >= this.frames.SPAWN.length) {
-                            this.state = 'FLIGHT';
-                            this.currentSeqIndex = 0;
-                            frameToSet = this.frames.FLIGHT[this.currentSeqIndex];
-                        } else {
-                            frameToSet = this.frames.SPAWN[this.currentSeqIndex];
-                        }
-                    } else if (this.state === 'FLIGHT') {
-                        this.currentSeqIndex = (this.currentSeqIndex + 1) % this.frames.FLIGHT.length;
-                        frameToSet = this.frames.FLIGHT[this.currentSeqIndex];
-                    } else if (this.state === 'IMPACT') {
-                        this.currentSeqIndex++;
-                        if (this.currentSeqIndex >= this.frames.IMPACT.length) {
-                            this.cleanup();
-                            this.isDead = true;
-                            return false;
-                        } else {
-                            frameToSet = this.frames.IMPACT[this.currentSeqIndex];
-                        }
-                    }
-
-                    if (frameToSet !== -1) {
-                        this.updateFrameUVs(frameToSet);
-                    }
-                }
-
-                if (this.state !== 'IMPACT') {
-                    this.mesh.position.add(this.velocity);
-
-                    if (this.mesh.position.x < player.minPlayerX || this.mesh.position.x > player.maxPlayerX) {
-                        this.triggerImpact('wall');
-                        return true;
-                    }
-
-                    for (const enemy of allSimpleEnemies) {
-                        if (!enemy.isAlive) continue;
-                        if (Math.abs(enemy.mesh.position.x - this.mesh.position.x) > 10) continue;
-
-                        const enemyCenter = enemy.mesh.position.clone().add(new THREE.Vector3(0, 2.0, 0));
-                        if (this.mesh.position.distanceTo(enemyCenter) < 2.5) {
-                            enemy.takeHit();
-                            this.triggerImpact('enemy');
-                            return true;
-                        }
-                    }
-
-                    for (const enemy of allEnemiesX1) {
-                        if (!enemy.isAlive || enemy.isDying) continue;
-                        if (Math.abs(enemy.mesh.position.x - this.mesh.position.x) > 10) continue;
-
-                        const enemyCenter = enemy.mesh.position.clone().add(new THREE.Vector3(0, 2.0, 0));
-                        if (this.mesh.position.distanceTo(enemyCenter) < 2.5) {
-                            enemy.takeHit();
-                            this.triggerImpact('enemy');
-                            return true;
-                        }
-                    }
-                }
-
-                return true;
+                return this.advanceAnimation(dt);
             }
 
             cleanup() {
                 this.scene.remove(this.mesh);
-                if (this.plasmaCore) this.scene.remove(this.plasmaCore);
+                if (this.plasmaCore) {
+                    this.scene.remove(this.plasmaCore);
+                    if (this.plasmaCore.material && this.plasmaCore.material !== sharedCoreMaterial) {
+                        this.plasmaCore.material.dispose();
+                    }
+                }
                 this.trail.dispose();
                 this.sparks.forEach(s => this.scene.remove(s.mesh));
                 this.sparks = [];
