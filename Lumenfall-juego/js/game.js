@@ -1069,7 +1069,10 @@
 
             // 2. Camera Pan to Gate #1 (x: -50)
             const startCamPos = camera.position.clone();
-            const targetCamPos = new THREE.Vector3(-50, 4, startCamPos.z - 5); // Zoom in slightly?
+            const startZoom = camera.zoom || 1;
+            // Keep Z stable so the 2.5D sprites never reveal their flat geometry.
+            const targetCamPos = new THREE.Vector3(-50, 4, startCamPos.z);
+            const revealZoom = Math.min(1.16, startZoom + 0.16);
 
             const durationPan = 1500; // 1.5s
             const durationHold = 3000; // 3s
@@ -1087,6 +1090,8 @@
                     const t = elapsed / durationPan;
                     const smoothT = t * t * (3 - 2 * t); // EaseInOut
                     camera.position.lerpVectors(startCamPos, targetCamPos, smoothT);
+                    camera.zoom = THREE.MathUtils.lerp(startZoom, revealZoom, smoothT);
+                    camera.updateProjectionMatrix();
                     requestAnimationFrame(animateEvent);
                 } else if (elapsed < durationPan + durationHold) {
                     // Hold Phase
@@ -1095,8 +1100,10 @@
                     if (!torchesIgnited) {
                         torchesIgnited = true;
 
-                        // Spawn Fire Logic (Gate 1)
+                        // Spawn Fire Logic (Gate 1) + light numeral on the same cinematic beat.
                         const z = startCamPos.z - roomDepth + 0.5;
+                        const gateOne = allGates.find(gate => gate.id === 'gate_1');
+                        if (gateOne) updateGateNumeralVisual(gateOne, true);
                         igniteGateTorches(-50, z);
                         playAudio('puerta');
                     }
@@ -1112,6 +1119,8 @@
                     pPos.z = 14; // Default Z
 
                     camera.position.lerpVectors(targetCamPos, pPos, smoothT);
+                    camera.zoom = THREE.MathUtils.lerp(revealZoom, startZoom, smoothT);
+                    camera.updateProjectionMatrix();
                     requestAnimationFrame(animateEvent);
                 } else {
                     // Finish
@@ -1123,6 +1132,8 @@
                         const targetCameraY = player.mesh.position.y + 6;
                         camera.position.y = targetCameraY;
                         camera.position.z = 14;
+                        camera.zoom = startZoom;
+                        camera.updateProjectionMatrix();
                         cameraDirector.syncFromCamera();
                     }
                     animate(); // Ensure loop continues
