@@ -1915,7 +1915,7 @@
             }
             playAudio('ambiente', true);
             setAudioVolume('ambiente', musicVolumeSlider ? musicVolumeSlider.value : 0.5);
-            setAudioVolume('pasos', sfxVolumeSlider ? sfxVolumeSlider.value : 0.5);
+            setSfxMixVolume(sfxVolumeSlider ? sfxVolumeSlider.value : 0.5);
 
             mountRendererToCanvasRoot();
 
@@ -2019,7 +2019,7 @@
         if (gamepadToggleButton) gamepadToggleButton.addEventListener('click', toggleGamepadMode);
         if (vibrationToggleButton) vibrationToggleButton.addEventListener('click', toggleVibration);
         if (musicVolumeSlider) musicVolumeSlider.addEventListener('input', (e) => setAudioVolume('ambiente', e.target.value));
-        if (sfxVolumeSlider) sfxVolumeSlider.addEventListener('input', (e) => setAudioVolume('pasos', e.target.value));
+        if (sfxVolumeSlider) sfxVolumeSlider.addEventListener('input', (e) => setSfxMixVolume(e.target.value));
 
         if (continueButton) continueButton.addEventListener('click', restartLevel);
 
@@ -2407,7 +2407,7 @@
             if (audioContext.state === 'suspended') audioContext.resume();
             playAudio('ambiente', true);
             setAudioVolume('ambiente', musicVolumeSlider.value);
-            setAudioVolume('pasos', sfxVolumeSlider.value);
+            setSfxMixVolume(sfxVolumeSlider.value);
             loadLevelById(currentLevelId);
             animate();
         }
@@ -3259,13 +3259,14 @@
                      this.hasPlayedIdleIntro = false;
                 }
 
-                // Ajuste proporcional de escala según la animación activa.
-                // Para saltar/aterrizar mirando a la derecha (saltar.png, 3x2 grid con marcos de 221x507 px),
-                // se aplica un ajuste en X de 221/507 * 1.55 (~0.676) para que guarde la misma proporción visual
-                // que la animación de salto a la izquierda (saltar-b.png) y del resto de movimientos.
-                if (!this.isFacingLeft && (this.currentState === 'jumping' || this.currentState === 'landing')) {
-                    this.mesh.scale.set(PLAYER_SCALE * (221 / 507) * 1.55, PLAYER_SCALE, 1);
-                } else {
+                // Stable sprite envelope: every animation keeps exactly the same
+                // world-space dimensions. Running, jumping, landing and shooting
+                // may swap textures/UVs, but they never resize Joziel's mesh.
+                if (
+                    this.mesh.scale.x !== PLAYER_SCALE ||
+                    this.mesh.scale.y !== PLAYER_SCALE ||
+                    this.mesh.scale.z !== 1
+                ) {
                     this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
                 }
 
