@@ -305,6 +305,8 @@
         let firstFlameTriggered = false; // Evento La Primera Llama
         const completedRooms = { room_1: false, room_2: false, room_3: false, room_4: false, room_5: false };
         const dungeonRoomIds = ['room_1', 'room_2', 'room_3', 'room_4', 'room_5'];
+        let cinematicGateRevealId = null;
+        let roomClearCinematicRunning = false;
         const roomEnemyCounts = { room_1: 3, room_2: 4, room_3: 5, room_4: 6, room_5: 8 };
         window.completedRooms = completedRooms; // Expose global AFTER definition
 
@@ -772,6 +774,180 @@
             animateCinematic();
         }
 
+        function waitMs(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function ensureGateCinematicFade() {
+            let fade = document.getElementById('gate-cinematic-fade');
+            if (!fade) {
+                fade = document.createElement('div');
+                fade.id = 'gate-cinematic-fade';
+                document.body.appendChild(fade);
+            }
+            return fade;
+        }
+
+        async function setGateCinematicFade(visible, duration = 450) {
+            const fade = ensureGateCinematicFade();
+            fade.style.transitionDuration = `${duration}ms`;
+            // Force a layout read so a newly-created overlay can animate from opacity 0.
+            void fade.offsetWidth;
+            fade.classList.toggle('visible', visible);
+            await waitMs(duration + 30);
+        }
+
+        function animateCameraZoom(fromZoom, toZoom, duration, onReveal) {
+            return new Promise(resolve => {
+                const startedAt = performance.now();
+                let revealed = false;
+
+                function frame(now) {
+                    const rawT = Math.min(1, (now - startedAt) / Math.max(duration, 1));
+                    const t = rawT * rawT * (3 - 2 * rawT);
+                    camera.zoom = THREE.MathUtils.lerp(fromZoom, toZoom, t);
+                    camera.updateProjectionMatrix();
+
+                    if (!revealed && rawT >= 0.52) {
+                        revealed = true;
+                        if (onReveal) onReveal();
+                    }
+
+                    if (rawT < 1) {
+                        requestAnimationFrame(frame);
+                    } else {
+                        resolve();
+                    }
+                }
+
+                requestAnimationFrame(frame);
+            });
+        }
+
+        /**
+         * Professional room-clear reveal.
+         *
+         * The room remains the source of truth for gameplay, but while the screen
+         * is black we temporarily load the main hall and show the REAL next gate.
+         * Then we restore the cleared room. This avoids a fake pre-rendered video
+         * and guarantees that the numeral/torches shown in the cinematic are the
+         * same assets the player will see when returning to the hall.
+         */
+        async function triggerNextGateUnlockCinematic(clearedRoomId) {
+            if (roomClearCinematicRunning || window.isCinematic) return;
+
+            const nextGateData = getNextDungeonGateForRoom(clearedRoomId);
+            if (!nextGateData || !MAPS.dungeon_1) return;
+
+            roomClearCinematicRunning = true;
+            window.isCinematic = true;
+            isPaused = true;
+            document.body.classList.add('gate-unlock-cinematic');
+
+            if (interactPromptMesh) interactPromptMesh.visible = false;
+
+            const originalLevelId = clearedRoomId;
+            const savedPlayerPosition = player ? player.mesh.position.clone() : null;
+            const savedPlayerVisible = player ? player.mesh.visible : true;
+            const savedPlayerLightVisible = player?.playerLight ? player.playerLight.visible : true;
+            const savedCameraPosition = camera.position.clone();
+            const savedCameraZoom = camera.zoom || 1;
+            let restoredOriginalRoom = false;
+
+            try {
+                // 1. Fade the room away after the final enemy dies.
+                await setGateCinematicFade(true, 500);
+
+                // 2. Build the real hall behind black. The target gate is deliberately
+                // kept dark until the reveal beat below.
+                cinematicGateRevealId = nextGateData.id;
+                loadLevelById('dungeon_1', nextGateData.x);
+
+                if (player) {
+                    player.mesh.visible = false;
+                    if (player.playerLight) player.playerLight.visible = false;
+                }
+
+                const runtimeGate = allGates.find(gate => gate.id === nextGateData.id);
+                if (!runtimeGate) throw new Error(`Gate reveal target not found: ${nextGateData.id}`);
+
+                const previewBaseZoom = Math.max(0.88, Math.min(savedCameraZoom, 1.0));
+                const previewCloseZoom = Math.min(1.18, previewBaseZoom + 0.22);
+
+                camera.position.x = runtimeGate.mesh.position.x;
+                camera.position.y = 6;
+                camera.position.z = savedCameraPosition.z;
+                camera.zoom = previewBaseZoom;
+                camera.updateProjectionMatrix();
+
+                // 3. Fade into a clean, HUD-free five-second in-engine "video".
+                await setGateCinematicFade(false, 500);
+
+                let revealPlayed = false;
+                await animateCameraZoom(previewBaseZoom, previewCloseZoom, 1250, () => {
+                    if (revealPlayed) return;
+                    revealPlayed = true;
+
+                    updateGateNumeralVisual(runtimeGate, true);
+                    igniteGateTorches(runtimeGate.mesh.position.x, runtimeGate.mesh.position.z + 0.5);
+                    playAudio('puerta');
+                });
+
+                // Hold on the lit numeral and torches long enough for the player to read it.
+                await waitMs(1700);
+
+                // 4. Fade out, restore the cleared room, and unlock its exit.
+                await setGateCinematicFade(true, 450);
+                cinematicGateRevealId = null;
+                loadLevelById(originalLevelId, savedPlayerPosition ? savedPlayerPosition.x : 0);
+                restoredOriginalRoom = true;
+
+                if (player) {
+                    if (savedPlayerPosition) player.mesh.position.copy(savedPlayerPosition);
+                    player.mesh.visible = savedPlayerVisible;
+                    if (player.playerLight) player.playerLight.visible = savedPlayerLightVisible;
+                }
+
+                if (player) {
+                    camera.position.x = player.mesh.position.x;
+                    camera.position.y = player.mesh.position.y + 6;
+                    camera.position.z = savedCameraPosition.z;
+                } else {
+                    camera.position.copy(savedCameraPosition);
+                }
+                camera.zoom = savedCameraZoom;
+                camera.updateProjectionMatrix();
+
+                await setGateCinematicFade(false, 500);
+            } catch (error) {
+                console.error('[Lumenfall Camera] Gate unlock cinematic failed:', error);
+
+                // Fail safe: never strand the player in the temporary hall.
+                if (!restoredOriginalRoom) {
+                    cinematicGateRevealId = null;
+                    loadLevelById(originalLevelId, savedPlayerPosition ? savedPlayerPosition.x : 0);
+                    if (player && savedPlayerPosition) player.mesh.position.copy(savedPlayerPosition);
+                    if (player) {
+                        player.mesh.visible = savedPlayerVisible;
+                        if (player.playerLight) player.playerLight.visible = savedPlayerLightVisible;
+                    }
+                    camera.position.copy(savedCameraPosition);
+                    camera.zoom = savedCameraZoom;
+                    camera.updateProjectionMatrix();
+                }
+
+                const fade = ensureGateCinematicFade();
+                fade.classList.remove('visible');
+            } finally {
+                cinematicGateRevealId = null;
+                document.body.classList.remove('gate-unlock-cinematic');
+                window.isCinematic = false;
+                isPaused = false;
+                roomClearCinematicRunning = false;
+                animate();
+            }
+        }
+
         // --- FIRST FLAME EVENT (INTRO) ---
         function triggerFirstFlameEvent() {
             if (firstFlameTriggered) return;
@@ -815,6 +991,7 @@
                         // Spawn Fire Logic (Gate 1)
                         const z = startCamPos.z - roomDepth + 0.5;
                         igniteGateTorches(-50, z);
+                        playAudio('puerta');
                     }
                     requestAnimationFrame(animateEvent);
                 } else if (elapsed < durationPan + durationHold + durationReturn) {
@@ -904,17 +1081,11 @@
                         if (!completedRooms[currentLevelId]) {
                              completedRooms[currentLevelId] = true; // Mark Complete
 
-                             // Trigger Cinematic Sequence: show the current room exit being activated.
-                             const exitX = 0; // Standard Exit X
-                             const exitY = 4; // Door Center Y
-                             const exitZ = camera.position.z - roomDepth + 5;
-                             const gateZ = camera.position.z - roomDepth + 0.5;
-                             const nextGate = getNextDungeonGateForRoom(currentLevelId);
-                             triggerCinematicSequence(new THREE.Vector3(exitX, exitY, exitZ), () => {
-                                 igniteGateTorches(exitX, gateZ);
-                                 playAudio('puerta'); // Success sound
-                                 showDialogue('mysteryDoor', 3000);
-                             });
+                             // Professional progression reveal:
+                             // Room I -> show/unlock Gate II, Room II -> Gate III, ... Room V -> Boss Gate VI.
+                             // The current room exit becomes available automatically because completedRooms
+                             // is already true before the cinematic begins.
+                             triggerNextGateUnlockCinematic(currentLevelId);
                         }
                     }
                 }
@@ -3574,10 +3745,16 @@
                 gateGroup.position.z = camera.position.z - roomDepth;
                 scene.add(gateGroup);
 
-                let isLit = completedRooms[gateData.destination];
-                if (levelData.id !== 'dungeon_1') {
-                    // Inside a room, the torches reflect if the current room is cleared
-                    isLit = completedRooms[levelData.id];
+                // One source of truth for visuals + interaction.
+                // In the hall, each gate lights only when that gate is actually unlocked:
+                // I after the gatekeeper, II after room I, III after room II, etc.
+                let isLit = levelData.id === 'dungeon_1'
+                    ? isGateUnlocked({ id: gateData.id }, 'dungeon_1')
+                    : Boolean(completedRooms[levelData.id]);
+
+                // During the unlock cinematic the next gate starts dark, then ignites on cue.
+                if (levelData.id === 'dungeon_1' && gateData.id === cinematicGateRevealId) {
+                    isLit = false;
                 }
 
                 // 3D Numeral Mesh
@@ -3700,7 +3877,7 @@
                  }
                  // -------------------------------------
 
-                 if (allEnemiesX1.length === 0) {
+                 if (!firstFlameTriggered && allEnemiesX1.length === 0) {
                     const gateKeeper = new EnemyX1(scene, 12);
                     gateKeeper.isGatekeeper = true;
                     gateKeeper.mesh.position.z = GAMEPLAY_LANE_Z;
