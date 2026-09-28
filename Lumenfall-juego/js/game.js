@@ -495,10 +495,12 @@
                 const mesh = enemy && enemy.mesh;
                 if (!mesh) return;
 
+                const isDying = Boolean(enemy.isDying);
                 const isNearView = Math.abs(mesh.position.x - camera.position.x) <= activeRange;
-                mesh.visible = isNearView;
+                const shouldUpdate = isNearView || isDying;
+                mesh.visible = isNearView || isDying;
 
-                if (isNearView) {
+                if (shouldUpdate) {
                     activeEnemies.push(enemy);
                 } else if (enemy.setSleeping) {
                     enemy.setSleeping(true);
