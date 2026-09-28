@@ -4409,29 +4409,52 @@
                 this.isAlive = true;
                 this.state = 'PATROL';
                 this.detectionRange = 6.0;
-                this.patrolSpeed = 0.03;
-                this.pursueSpeed = 0.045;
+                // Units/second: lazy scheduling can skip frames without changing speed.
+                this.patrolSpeed = 1.8;
+                this.pursueSpeed = 2.7;
                 this.currentFrame = 0;
                 this.lastFrameTime = 0;
                 this.direction = -1;
                 this.patrolRange = { min: -playableAreaWidth / 2 + 5, max: playableAreaWidth / 2 - 5 };
                 this.mesh.position.x = this.patrolRange.max;
-                this.stepTimer = 0;
-                this.impactTimer = Math.random() * 5 + 3;
+                // Random phase prevents a wave from stepping in perfect unison.
+                this.stepTimer = 0.25 + Math.random() * 0.9;
                 this.growlSource = null;
                 this.growlGain = null;
+                this.growlPanner = null;
                 this.isSleeping = false;
             }
 
             startGrowl() {
-                if (!audioBuffers['enemy1_growl']) return;
-                this.growlSource = audioContext.createBufferSource();
-                this.growlSource.buffer = audioBuffers['enemy1_growl'];
-                this.growlSource.loop = true;
-                this.growlGain = audioContext.createGain();
-                this.growlGain.gain.value = 0;
-                this.growlSource.connect(this.growlGain).connect(audioContext.destination);
-                this.growlSource.start();
+                if (this.growlSource || !audioBuffers['enemy1_growl']) return;
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffers['enemy1_growl'];
+                source.loop = true;
+                source.playbackRate.value = 0.94 + Math.random() * 0.10;
+
+                const gain = audioContext.createGain();
+                gain.gain.value = 0;
+
+                let panner = null;
+                if (typeof audioContext.createStereoPanner === 'function') {
+                    panner = audioContext.createStereoPanner();
+                    panner.pan.value = getEnemyPan(this.mesh.position.x);
+                    source.connect(gain).connect(panner).connect(enemyAudioBus);
+                } else {
+                    source.connect(gain).connect(enemyAudioBus);
+                }
+
+                source.onended = () => {
+                    if (this.growlSource === source) {
+                        this.growlSource = null;
+                        this.growlGain = null;
+                        this.growlPanner = null;
+                    }
+                };
+                this.growlSource = source;
+                this.growlGain = gain;
+                this.growlPanner = panner;
+                source.start();
             }
 
             stopAudio(fadeOutDuration = 0) {
@@ -4449,26 +4472,26 @@
                         try { this.growlSource.stop(); } catch(e) {}
                     }
                     this.growlSource = null;
+                    this.growlGain = null;
+                    this.growlPanner = null;
                 }
             }
 
             setSleeping(isSleeping) {
                 this.isSleeping = isSleeping;
-                if (isSleeping && this.growlGain) {
-                    this.growlGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.08);
+                if (isSleeping && this.growlSource) {
+                    this.stopAudio(0.08);
                 }
             }
 
-            playScopedSound(name, rate, baseVolume, distance) {
-                if (!audioBuffers[name] || distance > 35 || !canPlayEnemySound(name)) return;
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffers[name];
-                source.playbackRate.value = rate;
-                const gain = audioContext.createGain();
-                const vol = calculateLogVolume(distance, 35);
-                gain.gain.value = baseVolume * vol;
-                source.connect(gain).connect(audioContext.destination);
-                source.start();
+            playScopedSound(name, rate, baseVolume, distance, delay = 0) {
+                return playEnemyOneShot(name, {
+                    sourceX: this.mesh.position.x,
+                    distance,
+                    playbackRate: rate,
+                    volume: baseVolume,
+                    delay
+                });
             }
 
             update(deltaTime) {
@@ -4480,23 +4503,11 @@
                 if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return;
 
                 if (!this.isAlive || !player) return;
-                const distanceToPlayer = this.mesh.position.distanceTo(player.mesh.position);
-                if (distanceToPlayer < 30 && !this.growlSource) this.startGrowl();
-                if (this.growlGain) {
-                    const maxDist = 30;
-                    let vol = 1 - (distanceToPlayer / maxDist);
-                    if (vol < 0) vol = 0;
-                    this.growlGain.gain.setTargetAtTime(vol * 1.0, audioContext.currentTime, 0.1);
-                }
+                const distanceToPlayer = Math.abs(this.mesh.position.x - player.mesh.position.x);
                 this.stepTimer -= deltaTime;
                 if (this.stepTimer <= 0) {
-                    this.playScopedSound('enemy1_step', 0.7, 0.8, distanceToPlayer);
-                    this.stepTimer = 1.2;
-                }
-                this.impactTimer -= deltaTime;
-                if (this.impactTimer <= 0) {
-                     this.playScopedSound('enemy1_impact', 1.0, 1.0, distanceToPlayer);
-                     this.impactTimer = Math.random() * 6 + 4;
+                    this.playScopedSound('enemy1_step', 0.92 + Math.random() * 0.08, 0.72, distanceToPlayer);
+                    this.stepTimer = 0.95 + Math.random() * 0.55;
                 }
                 if (distanceToPlayer < this.detectionRange) {
                     this.state = 'PURSUE';
@@ -4514,7 +4525,7 @@
                         this.direction = -1;
                     }
                 }
-                this.mesh.position.x += currentSpeed * this.direction;
+                this.mesh.position.x += currentSpeed * this.direction * Math.min(deltaTime, 0.10);
                 const isFacingLeft = (player.mesh.position.x < this.mesh.position.x);
                 this.mesh.rotation.y = isFacingLeft ? Math.PI : 0;
                 if (Date.now() - this.lastFrameTime > animationSpeed) {
@@ -4527,13 +4538,13 @@
             takeHit() {
                 if (!this.isAlive) return;
                 this.hitCount++;
-                const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
-                this.playScopedSound('enemy1_impact', 0.95 + Math.random() * 0.1, 1.0, dist);
+                const dist = player ? Math.abs(this.mesh.position.x - player.mesh.position.x) : 10;
+                this.playScopedSound('enemy1_impact', 0.96 + Math.random() * 0.08, 0.55, dist);
 
                 if (this.hitCount >= 6) {
                     this.isAlive = false;
                     this.stopAudio(0.1);
-                    this.playScopedSound(getRandomEnemyDeathSound(), 0.88 + Math.random() * 0.2, 1.0, dist);
+                    this.playScopedSound(getRandomEnemyDeathSound(), 0.90 + Math.random() * 0.14, 0.95, dist, 0.035);
                     this.scene.remove(this.mesh);
 
                     if (!window.firstKillHappened) {
@@ -4552,7 +4563,7 @@
                         allSimpleEnemies.splice(index, 1);
                     }
                 } else {
-                    this.playScopedSound(getRandomEnemyHurtSound(), 0.88 + Math.random() * 0.2, 1.0, dist);
+                    this.playScopedSound(getRandomEnemyHurtSound(), 0.92 + Math.random() * 0.12, 0.82, dist, 0.045);
                 }
             }
         }
@@ -4620,8 +4631,9 @@
                 this.detectionRange = 15.0;
                 this.attackRange = 3.5;
 
-                this.patrolSpeed = 0.03;
-                this.pursueSpeed = 0.05;
+                // Units/second for frame-rate independent lazy updates.
+                this.patrolSpeed = 1.8;
+                this.pursueSpeed = 3.0;
 
                 this.currentFrame = 0;
                 this.lastFrameTime = 0;
@@ -4630,24 +4642,44 @@
 
                 this.attackCooldown = 0;
 
-                // Audio
-                this.stepTimer = 0;
+                // Audio: each enemy begins at a different phase.
+                this.stepTimer = 0.18 + Math.random() * 0.65;
                 this.growlSource = null;
                 this.growlGain = null;
+                this.growlPanner = null;
                 this.isSleeping = false;
             }
 
             startGrowl() {
-                if (!audioBuffers['enemy1_growl']) return;
-                this.growlSource = audioContext.createBufferSource();
-                this.growlSource.buffer = audioBuffers['enemy1_growl'];
-                this.growlSource.loop = true;
-                this.growlSource.playbackRate.value = 0.9 + Math.random() * 0.2;
+                if (this.growlSource || !audioBuffers['enemy1_growl']) return;
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffers['enemy1_growl'];
+                source.loop = true;
+                source.playbackRate.value = 0.94 + Math.random() * 0.10;
 
-                this.growlGain = audioContext.createGain();
-                this.growlGain.gain.value = 0;
-                this.growlSource.connect(this.growlGain).connect(audioContext.destination);
-                this.growlSource.start();
+                const gain = audioContext.createGain();
+                gain.gain.value = 0;
+
+                let panner = null;
+                if (typeof audioContext.createStereoPanner === 'function') {
+                    panner = audioContext.createStereoPanner();
+                    panner.pan.value = getEnemyPan(this.mesh.position.x);
+                    source.connect(gain).connect(panner).connect(enemyAudioBus);
+                } else {
+                    source.connect(gain).connect(enemyAudioBus);
+                }
+
+                source.onended = () => {
+                    if (this.growlSource === source) {
+                        this.growlSource = null;
+                        this.growlGain = null;
+                        this.growlPanner = null;
+                    }
+                };
+                this.growlSource = source;
+                this.growlGain = gain;
+                this.growlPanner = panner;
+                source.start();
             }
 
             stopAudio(fadeOutDuration = 0) {
@@ -4665,28 +4697,26 @@
                         try { this.growlSource.stop(); } catch(e) {}
                     }
                     this.growlSource = null;
+                    this.growlGain = null;
+                    this.growlPanner = null;
                 }
             }
 
             setSleeping(isSleeping) {
                 this.isSleeping = isSleeping;
-                if (isSleeping && this.growlGain) {
-                    this.growlGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.08);
+                if (isSleeping && this.growlSource) {
+                    this.stopAudio(0.08);
                 }
             }
 
-            playScopedSound(name, rate, baseVolume, distance) {
-                if (!audioBuffers[name] || distance > 35 || !canPlayEnemySound(name)) return;
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffers[name];
-                source.playbackRate.value = rate;
-
-                const gain = audioContext.createGain();
-                const vol = calculateLogVolume(distance, 35);
-                gain.gain.value = baseVolume * vol;
-
-                source.connect(gain).connect(audioContext.destination);
-                source.start();
+            playScopedSound(name, rate, baseVolume, distance, delay = 0) {
+                return playEnemyOneShot(name, {
+                    sourceX: this.mesh.position.x,
+                    distance,
+                    playbackRate: rate,
+                    volume: baseVolume,
+                    delay
+                });
             }
 
             update(deltaTime) {
@@ -4739,15 +4769,10 @@
                 // Si está muerto (ya finalizado), no hacemos nada
                 if (!this.isAlive) return;
 
-                const distanceToPlayer = this.mesh.position.distanceTo(player.mesh.position);
+                const distanceToPlayer = Math.abs(this.mesh.position.x - player.mesh.position.x);
 
-                // --- AUDIO UPDATE ---
-                if (distanceToPlayer < 25 && !this.growlSource) this.startGrowl();
-                if (this.growlGain) {
-                    const maxDist = 25;
-                    const vol = calculateLogVolume(distanceToPlayer, maxDist);
-                    this.growlGain.gain.setTargetAtTime(vol, audioContext.currentTime, 0.1);
-                }
+                // Continuous growls are handled globally: only the two nearest
+                // visible enemies are allowed to own loop voices.
 
                 // --- ATTACK STATE ---
                 if (this.state === 'ATTACK') {
@@ -4791,15 +4816,15 @@
                     else if (this.mesh.position.x >= this.patrolRange.max) this.direction = -1;
                 }
 
-                this.mesh.position.x += currentSpeed * this.direction;
+                this.mesh.position.x += currentSpeed * this.direction * Math.min(deltaTime, 0.10);
                 const isMovingLeft = this.direction < 0;
                 this.mesh.rotation.y = isMovingLeft ? Math.PI : 0;
 
                 // Footsteps
                 this.stepTimer -= deltaTime;
                 if (this.stepTimer <= 0) {
-                    this.playScopedSound('enemy1_step', 1.0, 1.0, distanceToPlayer);
-                    this.stepTimer = 0.4;
+                    this.playScopedSound('enemy1_step', 0.94 + Math.random() * 0.10, 0.78, distanceToPlayer);
+                    this.stepTimer = 0.48 + Math.random() * 0.30;
                 }
 
                 updateAnimation(10, this.runTexture);
@@ -4809,22 +4834,29 @@
                 if (!this.isAlive || this.isDying) return;
                 this.health--;
 
-                const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
-                this.playScopedSound('enemy1_impact', 0.95 + Math.random() * 0.1, 1.0, dist);
+                const dist = player ? Math.abs(this.mesh.position.x - player.mesh.position.x) : 10;
+                this.playScopedSound('enemy1_impact', 0.96 + Math.random() * 0.08, 0.55, dist);
 
                 if (this.health <= 0) {
                     this.isAlive = false;
                     this.isDying = true;
                     this.currentFrame = -1;
                     this.stopAudio(0.1);
-                    this.playScopedSound(getRandomEnemyDeathSound(), 0.88 + Math.random() * 0.2, 1.0, dist);
+                    this.playScopedSound(getRandomEnemyDeathSound(), 0.90 + Math.random() * 0.14, 0.95, dist, 0.035);
                 } else {
-                    this.playScopedSound(getRandomEnemyHurtSound(), 0.88 + Math.random() * 0.2, 1.0, dist);
+                    this.playScopedSound(getRandomEnemyHurtSound(), 0.92 + Math.random() * 0.12, 0.82, dist, 0.045);
                 }
             }
 
             finalizeDeath() {
                 this.isDying = false;
+                this.stopAudio(0);
+
+                // Remove finished death sprites from the renderer. Previously the
+                // array entry disappeared but the mesh stayed in scene forever.
+                this.scene.remove(this.mesh);
+                if (this.mesh.geometry) this.mesh.geometry.dispose();
+                if (this.mesh.material) this.mesh.material.dispose();
 
                 if (!window.firstKillHappened) {
                     window.firstKillHappened = true;
@@ -4893,7 +4925,7 @@
                 source.playbackRate.value = 0.9;
                 const gain = audioContext.createGain();
                 gain.gain.value = 0;
-                source.connect(gain).connect(audioContext.destination);
+                source.connect(gain).connect(worldAudioBus);
                 source.onended = () => {
                     if (this.voiceSource === source) {
                         this.voiceSource = null;
