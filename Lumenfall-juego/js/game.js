@@ -95,6 +95,50 @@
         const audioSources = {};
         const gainNodes = {};
 
+        // --- LUMENFALL AUDIO DIRECTOR ---
+        // All sounds share one controlled Web Audio graph instead of connecting
+        // directly to the speakers. This keeps simultaneous enemies from turning
+        // into one clipped wall of sound.
+        const masterCompressor = audioContext.createDynamicsCompressor();
+        masterCompressor.threshold.value = -16;
+        masterCompressor.knee.value = 14;
+        masterCompressor.ratio.value = 4;
+        masterCompressor.attack.value = 0.004;
+        masterCompressor.release.value = 0.18;
+        masterCompressor.connect(audioContext.destination);
+
+        function createAudioBus(initialGain) {
+            const bus = audioContext.createGain();
+            bus.gain.value = initialGain;
+            bus.connect(masterCompressor);
+            return bus;
+        }
+
+        const ambienceAudioBus = createAudioBus(0.72);
+        const playerAudioBus = createAudioBus(0.92);
+        const enemyAudioBus = createAudioBus(0.72);
+        const worldAudioBus = createAudioBus(0.88);
+
+        let sfxMixVolume = 0.8;
+
+        function setSfxMixVolume(value) {
+            const normalized = Math.max(0, Math.min(1, Number(value)));
+            sfxMixVolume = Number.isFinite(normalized) ? normalized : 0.8;
+            const now = audioContext.currentTime;
+            playerAudioBus.gain.setTargetAtTime(0.92 * sfxMixVolume, now, 0.03);
+            enemyAudioBus.gain.setTargetAtTime(0.72 * sfxMixVolume, now, 0.03);
+            worldAudioBus.gain.setTargetAtTime(0.88 * sfxMixVolume, now, 0.03);
+        }
+
+        function getAudioBusForName(name) {
+            if (name === 'ambiente') return ambienceAudioBus;
+            if (name.startsWith('enemy1_')) return enemyAudioBus;
+            if (name === 'puerta' || name === 'fantasma_lamento' || name.startsWith('thunder_')) {
+                return worldAudioBus;
+            }
+            return playerAudioBus;
+        }
+
         const ENEMY_HURT_SOUNDS = ['enemy1_hurt', 'enemy1_hurt_02'];
         const ENEMY_DEATH_SOUNDS = [
             'enemy1_death',
@@ -105,12 +149,39 @@
             'enemy1_death_05'
         ];
 
+        const enemySoundBags = new Map();
+
+        function nextSoundVariant(group, sounds) {
+            if (!sounds?.length) return null;
+            if (sounds.length === 1) return sounds[0];
+
+            let state = enemySoundBags.get(group);
+            if (!state || state.bag.length === 0) {
+                const bag = [...sounds];
+                for (let i = bag.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [bag[i], bag[j]] = [bag[j], bag[i]];
+                }
+
+                // Prevent the first item of a new bag from repeating the last sound.
+                if (state?.last && bag[bag.length - 1] === state.last && bag.length > 1) {
+                    [bag[bag.length - 1], bag[0]] = [bag[0], bag[bag.length - 1]];
+                }
+                state = { bag, last: state?.last || null };
+                enemySoundBags.set(group, state);
+            }
+
+            const next = state.bag.pop();
+            state.last = next;
+            return next;
+        }
+
         function getRandomEnemyHurtSound() {
-            return ENEMY_HURT_SOUNDS[Math.floor(Math.random() * ENEMY_HURT_SOUNDS.length)];
+            return nextSoundVariant('hurt', ENEMY_HURT_SOUNDS);
         }
 
         function getRandomEnemyDeathSound() {
-            return ENEMY_DEATH_SOUNDS[Math.floor(Math.random() * ENEMY_DEATH_SOUNDS.length)];
+            return nextSoundVariant('death', ENEMY_DEATH_SOUNDS);
         }
 
         async function loadAudio(name, url) {
@@ -131,14 +202,24 @@
         function playAudio(name, loop = false, playbackRate = 1.0, volume = 0.8, startOffset = 0) {
             if (!audioBuffers[name]) return;
             if (audioSources[name] && audioSources[name].buffer) stopAudio(name);
+
             const source = audioContext.createBufferSource();
             source.buffer = audioBuffers[name];
             source.loop = loop;
             source.playbackRate.value = playbackRate;
+
             const gainNode = audioContext.createGain();
             gainNode.gain.value = volume;
-            source.connect(gainNode).connect(audioContext.destination);
+
+            source.connect(gainNode).connect(getAudioBusForName(name));
+            source.onended = () => {
+                if (audioSources[name] === source) {
+                    delete audioSources[name];
+                    delete gainNodes[name];
+                }
+            };
             source.start(0, startOffset);
+
             audioSources[name] = source;
             gainNodes[name] = gainNode;
         }
@@ -194,6 +275,125 @@
         const textureLoader = new THREE.TextureLoader();
         const textureCache = new Map();
         const enemySoundLimiter = new Map();
+        const enemyVoicePools = new Map();
+
+        const ENEMY_AUDIO_RULES = {
+            step:   { maxVoices: 2, minInterval: 0.08, maxDistance: 18, gain: 0.34 },
+            impact: { maxVoices: 2, minInterval: 0.04, maxDistance: 26, gain: 0.42 },
+            hurt:   { maxVoices: 2, minInterval: 0.06, maxDistance: 28, gain: 0.68 },
+            death:  { maxVoices: 2, minInterval: 0.08, maxDistance: 32, gain: 0.86 },
+            roar:   { maxVoices: 1, minInterval: 0.32, maxDistance: 30, gain: 0.72 }
+        };
+
+        function enemySoundCategory(name) {
+            if (name.includes('_step')) return 'step';
+            if (name.includes('_death')) return 'death';
+            if (name.includes('_hurt')) return 'hurt';
+            if (name.includes('_roar')) return 'roar';
+            return 'impact';
+        }
+
+        function getEnemyPan(sourceX) {
+            if (!player) return 0;
+            return THREE.MathUtils.clamp((sourceX - player.mesh.position.x) / 18, -0.82, 0.82);
+        }
+
+        function getEnemyVoicePool(category) {
+            if (!enemyVoicePools.has(category)) enemyVoicePools.set(category, new Set());
+            return enemyVoicePools.get(category);
+        }
+
+        function playEnemyOneShot(name, {
+            sourceX = 0,
+            distance = 10,
+            playbackRate = 1,
+            volume = 1,
+            delay = 0
+        } = {}) {
+            if (!audioBuffers[name]) return false;
+
+            const category = enemySoundCategory(name);
+            const rule = ENEMY_AUDIO_RULES[category] || ENEMY_AUDIO_RULES.impact;
+            if (distance > rule.maxDistance) return false;
+
+            const now = audioContext.currentTime;
+            const nextAllowed = enemySoundLimiter.get(category) || 0;
+            if (now < nextAllowed) return false;
+
+            const pool = getEnemyVoicePool(category);
+            if (pool.size >= rule.maxVoices) return false;
+
+            enemySoundLimiter.set(category, now + rule.minInterval);
+
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffers[name];
+            source.playbackRate.value = Math.max(0.75, Math.min(1.25, playbackRate + (Math.random() - 0.5) * 0.035));
+
+            const gain = audioContext.createGain();
+            const distanceGain = calculateLogVolume(distance, rule.maxDistance);
+            gain.gain.value = Math.max(0, volume * rule.gain * distanceGain);
+
+            source.connect(gain);
+
+            let panner = null;
+            if (typeof audioContext.createStereoPanner === 'function') {
+                panner = audioContext.createStereoPanner();
+                panner.pan.value = getEnemyPan(sourceX);
+                gain.connect(panner).connect(enemyAudioBus);
+            } else {
+                gain.connect(enemyAudioBus);
+            }
+
+            pool.add(source);
+            source.onended = () => {
+                pool.delete(source);
+                try { source.disconnect(); } catch(e) {}
+                try { gain.disconnect(); } catch(e) {}
+                try { panner?.disconnect(); } catch(e) {}
+            };
+
+            source.start(now + Math.max(0, delay));
+            return true;
+        }
+
+        function updateEnemyGrowlMix() {
+            if (!player) return;
+
+            const candidates = [...allSimpleEnemies, ...allEnemiesX1]
+                .filter(enemy => enemy?.mesh && enemy.isAlive && !enemy.isDying && enemy.mesh.visible !== false)
+                .map(enemy => ({
+                    enemy,
+                    distance: Math.abs(enemy.mesh.position.x - player.mesh.position.x)
+                }))
+                .filter(item => item.distance < 22)
+                .sort((a, b) => a.distance - b.distance);
+
+            const audible = new Map(candidates.slice(0, 2).map((item, index) => [item.enemy, { ...item, index }]));
+            const allEnemies = [...allSimpleEnemies, ...allEnemiesX1];
+
+            for (const enemy of allEnemies) {
+                const entry = audible.get(enemy);
+                if (!entry) {
+                    if (enemy.growlSource) enemy.stopAudio?.(0.10);
+                    continue;
+                }
+
+                if (!enemy.growlSource) enemy.startGrowl?.();
+                if (!enemy.growlGain) continue;
+
+                const base = calculateLogVolume(entry.distance, 22);
+                const rankGain = entry.index === 0 ? 0.30 : 0.18;
+                enemy.growlGain.gain.setTargetAtTime(base * rankGain, audioContext.currentTime, 0.08);
+
+                if (enemy.growlPanner) {
+                    enemy.growlPanner.pan.setTargetAtTime(
+                        getEnemyPan(enemy.mesh.position.x),
+                        audioContext.currentTime,
+                        0.06
+                    );
+                }
+            }
+        }
 
         function getCachedTexture(url, configure) {
             if (!textureCache.has(url)) {
@@ -221,10 +421,11 @@
         }
 
         function canPlayEnemySound(name, minInterval = 0.05) {
+            const category = enemySoundCategory(name);
             const now = audioContext.currentTime;
-            const nextAllowed = enemySoundLimiter.get(name) || 0;
+            const nextAllowed = enemySoundLimiter.get(category) || 0;
             if (now < nextAllowed) return false;
-            enemySoundLimiter.set(name, now + minInterval);
+            enemySoundLimiter.set(category, now + minInterval);
             return true;
         }
 
@@ -278,10 +479,13 @@
             return Math.abs(mesh.position.x - camera.position.x) <= getCameraActiveXRange(buffer);
         }
 
-        const MAX_FULL_ENEMY_UPDATES = 10;
-        let enemyUpdateCursor = 0;
+        const detectedCpuCores = navigator.hardwareConcurrency || 4;
+        const detectedDeviceMemory = navigator.deviceMemory || 4;
+        const MAX_FULL_ENEMY_UPDATES =
+            detectedCpuCores <= 4 || detectedDeviceMemory <= 4 ? 4 : 6;
+        const enemyUpdateCursors = new WeakMap();
 
-        function updateEnemiesLightweight(enemies, deltaTime, buffer = 18) {
+        function updateEnemiesLightweight(enemies, deltaTime, buffer = 10) {
             if (!enemies.length) return;
 
             const activeRange = getCameraActiveXRange(buffer);
@@ -290,22 +494,34 @@
             enemies.forEach((enemy) => {
                 const mesh = enemy && enemy.mesh;
                 if (!mesh) return;
+
+                const isDying = Boolean(enemy.isDying);
                 const isNearView = Math.abs(mesh.position.x - camera.position.x) <= activeRange;
-                mesh.visible = isNearView;
-                if (isNearView) activeEnemies.push(enemy);
-                else if (enemy.setSleeping) enemy.setSleeping(true);
+                const shouldUpdate = isNearView || isDying;
+                mesh.visible = isNearView || isDying;
+
+                if (shouldUpdate) {
+                    activeEnemies.push(enemy);
+                } else if (enemy.setSleeping) {
+                    enemy.setSleeping(true);
+                }
             });
 
             if (!activeEnemies.length) return;
 
             const fullUpdateCount = Math.min(MAX_FULL_ENEMY_UPDATES, activeEnemies.length);
-            const catchUpDelta = deltaTime * Math.ceil(activeEnemies.length / fullUpdateCount);
+            const updateStride = Math.max(1, Math.ceil(activeEnemies.length / fullUpdateCount));
+            const catchUpDelta = Math.min(0.10, deltaTime * updateStride);
+            let cursor = enemyUpdateCursors.get(enemies) || 0;
+
             for (let i = 0; i < fullUpdateCount; i++) {
-                const enemy = activeEnemies[(enemyUpdateCursor + i) % activeEnemies.length];
+                const enemy = activeEnemies[(cursor + i) % activeEnemies.length];
                 if (enemy.setSleeping) enemy.setSleeping(false);
                 enemy.update(catchUpDelta);
             }
-            enemyUpdateCursor = (enemyUpdateCursor + fullUpdateCount) % activeEnemies.length;
+
+            cursor = (cursor + fullUpdateCount) % activeEnemies.length;
+            enemyUpdateCursors.set(enemies, cursor);
         }
 
         let firstFlameTriggered = false; // Evento La Primera Llama
@@ -1433,8 +1649,9 @@
                     allFootstepParticles.splice(i, 1);
                 }
             }
-            updateEnemiesLightweight(allSimpleEnemies, deltaTime, 18);
-            updateEnemiesLightweight(allEnemiesX1, deltaTime, 18);
+            updateEnemiesLightweight(allSimpleEnemies, deltaTime, 10);
+            updateEnemiesLightweight(allEnemiesX1, deltaTime, 10);
+            updateEnemyGrowlMix();
             allDecorGhosts.forEach(ghost => {
                 // Audio proximity must not sleep with visual culling.
                 if (ghost.updateAudio) ghost.updateAudio();
@@ -1700,7 +1917,7 @@
             }
             playAudio('ambiente', true);
             setAudioVolume('ambiente', musicVolumeSlider ? musicVolumeSlider.value : 0.5);
-            setAudioVolume('pasos', sfxVolumeSlider ? sfxVolumeSlider.value : 0.5);
+            setSfxMixVolume(sfxVolumeSlider ? sfxVolumeSlider.value : 0.5);
 
             mountRendererToCanvasRoot();
 
@@ -1804,7 +2021,7 @@
         if (gamepadToggleButton) gamepadToggleButton.addEventListener('click', toggleGamepadMode);
         if (vibrationToggleButton) vibrationToggleButton.addEventListener('click', toggleVibration);
         if (musicVolumeSlider) musicVolumeSlider.addEventListener('input', (e) => setAudioVolume('ambiente', e.target.value));
-        if (sfxVolumeSlider) sfxVolumeSlider.addEventListener('input', (e) => setAudioVolume('pasos', e.target.value));
+        if (sfxVolumeSlider) sfxVolumeSlider.addEventListener('input', (e) => setSfxMixVolume(e.target.value));
 
         if (continueButton) continueButton.addEventListener('click', restartLevel);
 
@@ -2192,7 +2409,7 @@
             if (audioContext.state === 'suspended') audioContext.resume();
             playAudio('ambiente', true);
             setAudioVolume('ambiente', musicVolumeSlider.value);
-            setAudioVolume('pasos', sfxVolumeSlider.value);
+            setSfxMixVolume(sfxVolumeSlider.value);
             loadLevelById(currentLevelId);
             animate();
         }
@@ -3044,13 +3261,14 @@
                      this.hasPlayedIdleIntro = false;
                 }
 
-                // Ajuste proporcional de escala según la animación activa.
-                // Para saltar/aterrizar mirando a la derecha (saltar.png, 3x2 grid con marcos de 221x507 px),
-                // se aplica un ajuste en X de 221/507 * 1.55 (~0.676) para que guarde la misma proporción visual
-                // que la animación de salto a la izquierda (saltar-b.png) y del resto de movimientos.
-                if (!this.isFacingLeft && (this.currentState === 'jumping' || this.currentState === 'landing')) {
-                    this.mesh.scale.set(PLAYER_SCALE * (221 / 507) * 1.55, PLAYER_SCALE, 1);
-                } else {
+                // Stable sprite envelope: every animation keeps exactly the same
+                // world-space dimensions. Running, jumping, landing and shooting
+                // may swap textures/UVs, but they never resize Joziel's mesh.
+                if (
+                    this.mesh.scale.x !== PLAYER_SCALE ||
+                    this.mesh.scale.y !== PLAYER_SCALE ||
+                    this.mesh.scale.z !== 1
+                ) {
                     this.mesh.scale.set(PLAYER_SCALE, PLAYER_SCALE, 1);
                 }
 
@@ -3893,6 +4111,26 @@
             return completedRooms.room_1 && completedRooms.room_2 && completedRooms.room_3 && completedRooms.room_4 && completedRooms.room_5;
         }
 
+        function disposeEnemyRenderResources(enemy) {
+            if (!enemy) return;
+
+            if (enemy.mesh) {
+                scene.remove(enemy.mesh);
+                if (enemy.mesh.geometry?.dispose) enemy.mesh.geometry.dispose();
+                if (enemy.mesh.material?.dispose) enemy.mesh.material.dispose();
+            }
+
+            const textures = new Set([
+                enemy.texture,
+                enemy.runTexture,
+                enemy.attackTexture,
+                enemy.deathTexture
+            ]);
+            textures.forEach(texture => {
+                if (texture?.dispose) texture.dispose();
+            });
+        }
+
         function clearSceneForLevelLoad() {
             for (let i = scene.children.length - 1; i >= 0; i--) {
                 const obj = scene.children[i];
@@ -3905,12 +4143,12 @@
             // Removed allSpecters.length = 0
             allSimpleEnemies.forEach(enemy => {
                  if (enemy.stopAudio) enemy.stopAudio();
-                 scene.remove(enemy.mesh);
+                 disposeEnemyRenderResources(enemy);
             });
             allSimpleEnemies.length = 0;
             allEnemiesX1.forEach(enemy => {
                  if (enemy.stopAudio) enemy.stopAudio();
-                 scene.remove(enemy.mesh);
+                 disposeEnemyRenderResources(enemy);
             });
             allEnemiesX1.length = 0;
             // Removed allWalkingMonsters cleanup
@@ -4193,29 +4431,52 @@
                 this.isAlive = true;
                 this.state = 'PATROL';
                 this.detectionRange = 6.0;
-                this.patrolSpeed = 0.03;
-                this.pursueSpeed = 0.045;
+                // Units/second: lazy scheduling can skip frames without changing speed.
+                this.patrolSpeed = 1.8;
+                this.pursueSpeed = 2.7;
                 this.currentFrame = 0;
                 this.lastFrameTime = 0;
                 this.direction = -1;
                 this.patrolRange = { min: -playableAreaWidth / 2 + 5, max: playableAreaWidth / 2 - 5 };
                 this.mesh.position.x = this.patrolRange.max;
-                this.stepTimer = 0;
-                this.impactTimer = Math.random() * 5 + 3;
+                // Random phase prevents a wave from stepping in perfect unison.
+                this.stepTimer = 0.25 + Math.random() * 0.9;
                 this.growlSource = null;
                 this.growlGain = null;
+                this.growlPanner = null;
                 this.isSleeping = false;
             }
 
             startGrowl() {
-                if (!audioBuffers['enemy1_growl']) return;
-                this.growlSource = audioContext.createBufferSource();
-                this.growlSource.buffer = audioBuffers['enemy1_growl'];
-                this.growlSource.loop = true;
-                this.growlGain = audioContext.createGain();
-                this.growlGain.gain.value = 0;
-                this.growlSource.connect(this.growlGain).connect(audioContext.destination);
-                this.growlSource.start();
+                if (this.growlSource || !audioBuffers['enemy1_growl']) return;
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffers['enemy1_growl'];
+                source.loop = true;
+                source.playbackRate.value = 0.94 + Math.random() * 0.10;
+
+                const gain = audioContext.createGain();
+                gain.gain.value = 0;
+
+                let panner = null;
+                if (typeof audioContext.createStereoPanner === 'function') {
+                    panner = audioContext.createStereoPanner();
+                    panner.pan.value = getEnemyPan(this.mesh.position.x);
+                    source.connect(gain).connect(panner).connect(enemyAudioBus);
+                } else {
+                    source.connect(gain).connect(enemyAudioBus);
+                }
+
+                source.onended = () => {
+                    if (this.growlSource === source) {
+                        this.growlSource = null;
+                        this.growlGain = null;
+                        this.growlPanner = null;
+                    }
+                };
+                this.growlSource = source;
+                this.growlGain = gain;
+                this.growlPanner = panner;
+                source.start();
             }
 
             stopAudio(fadeOutDuration = 0) {
@@ -4233,26 +4494,26 @@
                         try { this.growlSource.stop(); } catch(e) {}
                     }
                     this.growlSource = null;
+                    this.growlGain = null;
+                    this.growlPanner = null;
                 }
             }
 
             setSleeping(isSleeping) {
                 this.isSleeping = isSleeping;
-                if (isSleeping && this.growlGain) {
-                    this.growlGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.08);
+                if (isSleeping && this.growlSource) {
+                    this.stopAudio(0.08);
                 }
             }
 
-            playScopedSound(name, rate, baseVolume, distance) {
-                if (!audioBuffers[name] || distance > 35 || !canPlayEnemySound(name)) return;
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffers[name];
-                source.playbackRate.value = rate;
-                const gain = audioContext.createGain();
-                const vol = calculateLogVolume(distance, 35);
-                gain.gain.value = baseVolume * vol;
-                source.connect(gain).connect(audioContext.destination);
-                source.start();
+            playScopedSound(name, rate, baseVolume, distance, delay = 0) {
+                return playEnemyOneShot(name, {
+                    sourceX: this.mesh.position.x,
+                    distance,
+                    playbackRate: rate,
+                    volume: baseVolume,
+                    delay
+                });
             }
 
             update(deltaTime) {
@@ -4264,23 +4525,11 @@
                 if (Math.abs(this.mesh.position.x - camera.position.x) > 35) return;
 
                 if (!this.isAlive || !player) return;
-                const distanceToPlayer = this.mesh.position.distanceTo(player.mesh.position);
-                if (distanceToPlayer < 30 && !this.growlSource) this.startGrowl();
-                if (this.growlGain) {
-                    const maxDist = 30;
-                    let vol = 1 - (distanceToPlayer / maxDist);
-                    if (vol < 0) vol = 0;
-                    this.growlGain.gain.setTargetAtTime(vol * 1.0, audioContext.currentTime, 0.1);
-                }
+                const distanceToPlayer = Math.abs(this.mesh.position.x - player.mesh.position.x);
                 this.stepTimer -= deltaTime;
                 if (this.stepTimer <= 0) {
-                    this.playScopedSound('enemy1_step', 0.7, 0.8, distanceToPlayer);
-                    this.stepTimer = 1.2;
-                }
-                this.impactTimer -= deltaTime;
-                if (this.impactTimer <= 0) {
-                     this.playScopedSound('enemy1_impact', 1.0, 1.0, distanceToPlayer);
-                     this.impactTimer = Math.random() * 6 + 4;
+                    this.playScopedSound('enemy1_step', 0.92 + Math.random() * 0.08, 0.72, distanceToPlayer);
+                    this.stepTimer = 0.95 + Math.random() * 0.55;
                 }
                 if (distanceToPlayer < this.detectionRange) {
                     this.state = 'PURSUE';
@@ -4298,7 +4547,7 @@
                         this.direction = -1;
                     }
                 }
-                this.mesh.position.x += currentSpeed * this.direction;
+                this.mesh.position.x += currentSpeed * this.direction * Math.min(deltaTime, 0.10);
                 const isFacingLeft = (player.mesh.position.x < this.mesh.position.x);
                 this.mesh.rotation.y = isFacingLeft ? Math.PI : 0;
                 if (Date.now() - this.lastFrameTime > animationSpeed) {
@@ -4311,14 +4560,14 @@
             takeHit() {
                 if (!this.isAlive) return;
                 this.hitCount++;
-                const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
-                this.playScopedSound('enemy1_impact', 0.95 + Math.random() * 0.1, 1.0, dist);
+                const dist = player ? Math.abs(this.mesh.position.x - player.mesh.position.x) : 10;
+                this.playScopedSound('enemy1_impact', 0.96 + Math.random() * 0.08, 0.55, dist);
 
                 if (this.hitCount >= 6) {
                     this.isAlive = false;
                     this.stopAudio(0.1);
-                    this.playScopedSound(getRandomEnemyDeathSound(), 0.88 + Math.random() * 0.2, 1.0, dist);
-                    this.scene.remove(this.mesh);
+                    this.playScopedSound(getRandomEnemyDeathSound(), 0.90 + Math.random() * 0.14, 0.95, dist, 0.035);
+                    disposeEnemyRenderResources(this);
 
                     if (!window.firstKillHappened) {
                         window.firstKillHappened = true;
@@ -4336,7 +4585,7 @@
                         allSimpleEnemies.splice(index, 1);
                     }
                 } else {
-                    this.playScopedSound(getRandomEnemyHurtSound(), 0.88 + Math.random() * 0.2, 1.0, dist);
+                    this.playScopedSound(getRandomEnemyHurtSound(), 0.92 + Math.random() * 0.12, 0.82, dist, 0.045);
                 }
             }
         }
@@ -4404,8 +4653,9 @@
                 this.detectionRange = 15.0;
                 this.attackRange = 3.5;
 
-                this.patrolSpeed = 0.03;
-                this.pursueSpeed = 0.05;
+                // Units/second for frame-rate independent lazy updates.
+                this.patrolSpeed = 1.8;
+                this.pursueSpeed = 3.0;
 
                 this.currentFrame = 0;
                 this.lastFrameTime = 0;
@@ -4414,24 +4664,44 @@
 
                 this.attackCooldown = 0;
 
-                // Audio
-                this.stepTimer = 0;
+                // Audio: each enemy begins at a different phase.
+                this.stepTimer = 0.18 + Math.random() * 0.65;
                 this.growlSource = null;
                 this.growlGain = null;
+                this.growlPanner = null;
                 this.isSleeping = false;
             }
 
             startGrowl() {
-                if (!audioBuffers['enemy1_growl']) return;
-                this.growlSource = audioContext.createBufferSource();
-                this.growlSource.buffer = audioBuffers['enemy1_growl'];
-                this.growlSource.loop = true;
-                this.growlSource.playbackRate.value = 0.9 + Math.random() * 0.2;
+                if (this.growlSource || !audioBuffers['enemy1_growl']) return;
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffers['enemy1_growl'];
+                source.loop = true;
+                source.playbackRate.value = 0.94 + Math.random() * 0.10;
 
-                this.growlGain = audioContext.createGain();
-                this.growlGain.gain.value = 0;
-                this.growlSource.connect(this.growlGain).connect(audioContext.destination);
-                this.growlSource.start();
+                const gain = audioContext.createGain();
+                gain.gain.value = 0;
+
+                let panner = null;
+                if (typeof audioContext.createStereoPanner === 'function') {
+                    panner = audioContext.createStereoPanner();
+                    panner.pan.value = getEnemyPan(this.mesh.position.x);
+                    source.connect(gain).connect(panner).connect(enemyAudioBus);
+                } else {
+                    source.connect(gain).connect(enemyAudioBus);
+                }
+
+                source.onended = () => {
+                    if (this.growlSource === source) {
+                        this.growlSource = null;
+                        this.growlGain = null;
+                        this.growlPanner = null;
+                    }
+                };
+                this.growlSource = source;
+                this.growlGain = gain;
+                this.growlPanner = panner;
+                source.start();
             }
 
             stopAudio(fadeOutDuration = 0) {
@@ -4449,28 +4719,26 @@
                         try { this.growlSource.stop(); } catch(e) {}
                     }
                     this.growlSource = null;
+                    this.growlGain = null;
+                    this.growlPanner = null;
                 }
             }
 
             setSleeping(isSleeping) {
                 this.isSleeping = isSleeping;
-                if (isSleeping && this.growlGain) {
-                    this.growlGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.08);
+                if (isSleeping && this.growlSource) {
+                    this.stopAudio(0.08);
                 }
             }
 
-            playScopedSound(name, rate, baseVolume, distance) {
-                if (!audioBuffers[name] || distance > 35 || !canPlayEnemySound(name)) return;
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffers[name];
-                source.playbackRate.value = rate;
-
-                const gain = audioContext.createGain();
-                const vol = calculateLogVolume(distance, 35);
-                gain.gain.value = baseVolume * vol;
-
-                source.connect(gain).connect(audioContext.destination);
-                source.start();
+            playScopedSound(name, rate, baseVolume, distance, delay = 0) {
+                return playEnemyOneShot(name, {
+                    sourceX: this.mesh.position.x,
+                    distance,
+                    playbackRate: rate,
+                    volume: baseVolume,
+                    delay
+                });
             }
 
             update(deltaTime) {
@@ -4523,15 +4791,10 @@
                 // Si está muerto (ya finalizado), no hacemos nada
                 if (!this.isAlive) return;
 
-                const distanceToPlayer = this.mesh.position.distanceTo(player.mesh.position);
+                const distanceToPlayer = Math.abs(this.mesh.position.x - player.mesh.position.x);
 
-                // --- AUDIO UPDATE ---
-                if (distanceToPlayer < 25 && !this.growlSource) this.startGrowl();
-                if (this.growlGain) {
-                    const maxDist = 25;
-                    const vol = calculateLogVolume(distanceToPlayer, maxDist);
-                    this.growlGain.gain.setTargetAtTime(vol, audioContext.currentTime, 0.1);
-                }
+                // Continuous growls are handled globally: only the two nearest
+                // visible enemies are allowed to own loop voices.
 
                 // --- ATTACK STATE ---
                 if (this.state === 'ATTACK') {
@@ -4575,15 +4838,15 @@
                     else if (this.mesh.position.x >= this.patrolRange.max) this.direction = -1;
                 }
 
-                this.mesh.position.x += currentSpeed * this.direction;
+                this.mesh.position.x += currentSpeed * this.direction * Math.min(deltaTime, 0.10);
                 const isMovingLeft = this.direction < 0;
                 this.mesh.rotation.y = isMovingLeft ? Math.PI : 0;
 
                 // Footsteps
                 this.stepTimer -= deltaTime;
                 if (this.stepTimer <= 0) {
-                    this.playScopedSound('enemy1_step', 1.0, 1.0, distanceToPlayer);
-                    this.stepTimer = 0.4;
+                    this.playScopedSound('enemy1_step', 0.94 + Math.random() * 0.10, 0.78, distanceToPlayer);
+                    this.stepTimer = 0.48 + Math.random() * 0.30;
                 }
 
                 updateAnimation(10, this.runTexture);
@@ -4593,22 +4856,26 @@
                 if (!this.isAlive || this.isDying) return;
                 this.health--;
 
-                const dist = player ? this.mesh.position.distanceTo(player.mesh.position) : 10;
-                this.playScopedSound('enemy1_impact', 0.95 + Math.random() * 0.1, 1.0, dist);
+                const dist = player ? Math.abs(this.mesh.position.x - player.mesh.position.x) : 10;
+                this.playScopedSound('enemy1_impact', 0.96 + Math.random() * 0.08, 0.55, dist);
 
                 if (this.health <= 0) {
                     this.isAlive = false;
                     this.isDying = true;
                     this.currentFrame = -1;
                     this.stopAudio(0.1);
-                    this.playScopedSound(getRandomEnemyDeathSound(), 0.88 + Math.random() * 0.2, 1.0, dist);
+                    this.playScopedSound(getRandomEnemyDeathSound(), 0.90 + Math.random() * 0.14, 0.95, dist, 0.035);
                 } else {
-                    this.playScopedSound(getRandomEnemyHurtSound(), 0.88 + Math.random() * 0.2, 1.0, dist);
+                    this.playScopedSound(getRandomEnemyHurtSound(), 0.92 + Math.random() * 0.12, 0.82, dist, 0.045);
                 }
             }
 
             finalizeDeath() {
                 this.isDying = false;
+                this.stopAudio(0);
+
+                // Remove finished death sprites and their GPU resources.
+                disposeEnemyRenderResources(this);
 
                 if (!window.firstKillHappened) {
                     window.firstKillHappened = true;
@@ -4677,7 +4944,7 @@
                 source.playbackRate.value = 0.9;
                 const gain = audioContext.createGain();
                 gain.gain.value = 0;
-                source.connect(gain).connect(audioContext.destination);
+                source.connect(gain).connect(worldAudioBus);
                 source.onended = () => {
                     if (this.voiceSource === source) {
                         this.voiceSource = null;
