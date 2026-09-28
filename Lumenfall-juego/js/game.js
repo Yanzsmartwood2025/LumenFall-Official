@@ -275,6 +275,125 @@
         const textureLoader = new THREE.TextureLoader();
         const textureCache = new Map();
         const enemySoundLimiter = new Map();
+        const enemyVoicePools = new Map();
+
+        const ENEMY_AUDIO_RULES = {
+            step:   { maxVoices: 2, minInterval: 0.08, maxDistance: 18, gain: 0.34 },
+            impact: { maxVoices: 2, minInterval: 0.04, maxDistance: 26, gain: 0.42 },
+            hurt:   { maxVoices: 2, minInterval: 0.06, maxDistance: 28, gain: 0.68 },
+            death:  { maxVoices: 2, minInterval: 0.08, maxDistance: 32, gain: 0.86 },
+            roar:   { maxVoices: 1, minInterval: 0.32, maxDistance: 30, gain: 0.72 }
+        };
+
+        function enemySoundCategory(name) {
+            if (name.includes('_step')) return 'step';
+            if (name.includes('_death')) return 'death';
+            if (name.includes('_hurt')) return 'hurt';
+            if (name.includes('_roar')) return 'roar';
+            return 'impact';
+        }
+
+        function getEnemyPan(sourceX) {
+            if (!player) return 0;
+            return THREE.MathUtils.clamp((sourceX - player.mesh.position.x) / 18, -0.82, 0.82);
+        }
+
+        function getEnemyVoicePool(category) {
+            if (!enemyVoicePools.has(category)) enemyVoicePools.set(category, new Set());
+            return enemyVoicePools.get(category);
+        }
+
+        function playEnemyOneShot(name, {
+            sourceX = 0,
+            distance = 10,
+            playbackRate = 1,
+            volume = 1,
+            delay = 0
+        } = {}) {
+            if (!audioBuffers[name]) return false;
+
+            const category = enemySoundCategory(name);
+            const rule = ENEMY_AUDIO_RULES[category] || ENEMY_AUDIO_RULES.impact;
+            if (distance > rule.maxDistance) return false;
+
+            const now = audioContext.currentTime;
+            const nextAllowed = enemySoundLimiter.get(category) || 0;
+            if (now < nextAllowed) return false;
+
+            const pool = getEnemyVoicePool(category);
+            if (pool.size >= rule.maxVoices) return false;
+
+            enemySoundLimiter.set(category, now + rule.minInterval);
+
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffers[name];
+            source.playbackRate.value = Math.max(0.75, Math.min(1.25, playbackRate + (Math.random() - 0.5) * 0.035));
+
+            const gain = audioContext.createGain();
+            const distanceGain = calculateLogVolume(distance, rule.maxDistance);
+            gain.gain.value = Math.max(0, volume * rule.gain * distanceGain);
+
+            source.connect(gain);
+
+            let panner = null;
+            if (typeof audioContext.createStereoPanner === 'function') {
+                panner = audioContext.createStereoPanner();
+                panner.pan.value = getEnemyPan(sourceX);
+                gain.connect(panner).connect(enemyAudioBus);
+            } else {
+                gain.connect(enemyAudioBus);
+            }
+
+            pool.add(source);
+            source.onended = () => {
+                pool.delete(source);
+                try { source.disconnect(); } catch(e) {}
+                try { gain.disconnect(); } catch(e) {}
+                try { panner?.disconnect(); } catch(e) {}
+            };
+
+            source.start(now + Math.max(0, delay));
+            return true;
+        }
+
+        function updateEnemyGrowlMix() {
+            if (!player) return;
+
+            const candidates = [...allSimpleEnemies, ...allEnemiesX1]
+                .filter(enemy => enemy?.mesh && enemy.isAlive && !enemy.isDying && enemy.mesh.visible !== false)
+                .map(enemy => ({
+                    enemy,
+                    distance: Math.abs(enemy.mesh.position.x - player.mesh.position.x)
+                }))
+                .filter(item => item.distance < 22)
+                .sort((a, b) => a.distance - b.distance);
+
+            const audible = new Map(candidates.slice(0, 2).map((item, index) => [item.enemy, { ...item, index }]));
+            const allEnemies = [...allSimpleEnemies, ...allEnemiesX1];
+
+            for (const enemy of allEnemies) {
+                const entry = audible.get(enemy);
+                if (!entry) {
+                    if (enemy.growlSource) enemy.stopAudio?.(0.10);
+                    continue;
+                }
+
+                if (!enemy.growlSource) enemy.startGrowl?.();
+                if (!enemy.growlGain) continue;
+
+                const base = calculateLogVolume(entry.distance, 22);
+                const rankGain = entry.index === 0 ? 0.30 : 0.18;
+                enemy.growlGain.gain.setTargetAtTime(base * rankGain, audioContext.currentTime, 0.08);
+
+                if (enemy.growlPanner) {
+                    enemy.growlPanner.pan.setTargetAtTime(
+                        getEnemyPan(enemy.mesh.position.x),
+                        audioContext.currentTime,
+                        0.06
+                    );
+                }
+            }
+        }
 
         function getCachedTexture(url, configure) {
             if (!textureCache.has(url)) {
@@ -302,10 +421,11 @@
         }
 
         function canPlayEnemySound(name, minInterval = 0.05) {
+            const category = enemySoundCategory(name);
             const now = audioContext.currentTime;
-            const nextAllowed = enemySoundLimiter.get(name) || 0;
+            const nextAllowed = enemySoundLimiter.get(category) || 0;
             if (now < nextAllowed) return false;
-            enemySoundLimiter.set(name, now + minInterval);
+            enemySoundLimiter.set(category, now + minInterval);
             return true;
         }
 
@@ -359,10 +479,13 @@
             return Math.abs(mesh.position.x - camera.position.x) <= getCameraActiveXRange(buffer);
         }
 
-        const MAX_FULL_ENEMY_UPDATES = 10;
-        let enemyUpdateCursor = 0;
+        const detectedCpuCores = navigator.hardwareConcurrency || 4;
+        const detectedDeviceMemory = navigator.deviceMemory || 4;
+        const MAX_FULL_ENEMY_UPDATES =
+            detectedCpuCores <= 4 || detectedDeviceMemory <= 4 ? 4 : 6;
+        const enemyUpdateCursors = new WeakMap();
 
-        function updateEnemiesLightweight(enemies, deltaTime, buffer = 18) {
+        function updateEnemiesLightweight(enemies, deltaTime, buffer = 10) {
             if (!enemies.length) return;
 
             const activeRange = getCameraActiveXRange(buffer);
@@ -371,22 +494,32 @@
             enemies.forEach((enemy) => {
                 const mesh = enemy && enemy.mesh;
                 if (!mesh) return;
+
                 const isNearView = Math.abs(mesh.position.x - camera.position.x) <= activeRange;
                 mesh.visible = isNearView;
-                if (isNearView) activeEnemies.push(enemy);
-                else if (enemy.setSleeping) enemy.setSleeping(true);
+
+                if (isNearView) {
+                    activeEnemies.push(enemy);
+                } else if (enemy.setSleeping) {
+                    enemy.setSleeping(true);
+                }
             });
 
             if (!activeEnemies.length) return;
 
             const fullUpdateCount = Math.min(MAX_FULL_ENEMY_UPDATES, activeEnemies.length);
-            const catchUpDelta = deltaTime * Math.ceil(activeEnemies.length / fullUpdateCount);
+            const updateStride = Math.max(1, Math.ceil(activeEnemies.length / fullUpdateCount));
+            const catchUpDelta = Math.min(0.10, deltaTime * updateStride);
+            let cursor = enemyUpdateCursors.get(enemies) || 0;
+
             for (let i = 0; i < fullUpdateCount; i++) {
-                const enemy = activeEnemies[(enemyUpdateCursor + i) % activeEnemies.length];
+                const enemy = activeEnemies[(cursor + i) % activeEnemies.length];
                 if (enemy.setSleeping) enemy.setSleeping(false);
                 enemy.update(catchUpDelta);
             }
-            enemyUpdateCursor = (enemyUpdateCursor + fullUpdateCount) % activeEnemies.length;
+
+            cursor = (cursor + fullUpdateCount) % activeEnemies.length;
+            enemyUpdateCursors.set(enemies, cursor);
         }
 
         let firstFlameTriggered = false; // Evento La Primera Llama
@@ -1514,8 +1647,9 @@
                     allFootstepParticles.splice(i, 1);
                 }
             }
-            updateEnemiesLightweight(allSimpleEnemies, deltaTime, 18);
-            updateEnemiesLightweight(allEnemiesX1, deltaTime, 18);
+            updateEnemiesLightweight(allSimpleEnemies, deltaTime, 10);
+            updateEnemiesLightweight(allEnemiesX1, deltaTime, 10);
+            updateEnemyGrowlMix();
             allDecorGhosts.forEach(ghost => {
                 // Audio proximity must not sleep with visual culling.
                 if (ghost.updateAudio) ghost.updateAudio();
