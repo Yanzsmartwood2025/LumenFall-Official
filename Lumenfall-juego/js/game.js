@@ -4109,6 +4109,26 @@
             return completedRooms.room_1 && completedRooms.room_2 && completedRooms.room_3 && completedRooms.room_4 && completedRooms.room_5;
         }
 
+        function disposeEnemyRenderResources(enemy) {
+            if (!enemy) return;
+
+            if (enemy.mesh) {
+                scene.remove(enemy.mesh);
+                if (enemy.mesh.geometry?.dispose) enemy.mesh.geometry.dispose();
+                if (enemy.mesh.material?.dispose) enemy.mesh.material.dispose();
+            }
+
+            const textures = new Set([
+                enemy.texture,
+                enemy.runTexture,
+                enemy.attackTexture,
+                enemy.deathTexture
+            ]);
+            textures.forEach(texture => {
+                if (texture?.dispose) texture.dispose();
+            });
+        }
+
         function clearSceneForLevelLoad() {
             for (let i = scene.children.length - 1; i >= 0; i--) {
                 const obj = scene.children[i];
@@ -4121,12 +4141,12 @@
             // Removed allSpecters.length = 0
             allSimpleEnemies.forEach(enemy => {
                  if (enemy.stopAudio) enemy.stopAudio();
-                 scene.remove(enemy.mesh);
+                 disposeEnemyRenderResources(enemy);
             });
             allSimpleEnemies.length = 0;
             allEnemiesX1.forEach(enemy => {
                  if (enemy.stopAudio) enemy.stopAudio();
-                 scene.remove(enemy.mesh);
+                 disposeEnemyRenderResources(enemy);
             });
             allEnemiesX1.length = 0;
             // Removed allWalkingMonsters cleanup
@@ -4545,7 +4565,7 @@
                     this.isAlive = false;
                     this.stopAudio(0.1);
                     this.playScopedSound(getRandomEnemyDeathSound(), 0.90 + Math.random() * 0.14, 0.95, dist, 0.035);
-                    this.scene.remove(this.mesh);
+                    disposeEnemyRenderResources(this);
 
                     if (!window.firstKillHappened) {
                         window.firstKillHappened = true;
@@ -4852,11 +4872,8 @@
                 this.isDying = false;
                 this.stopAudio(0);
 
-                // Remove finished death sprites from the renderer. Previously the
-                // array entry disappeared but the mesh stayed in scene forever.
-                this.scene.remove(this.mesh);
-                if (this.mesh.geometry) this.mesh.geometry.dispose();
-                if (this.mesh.material) this.mesh.material.dispose();
+                // Remove finished death sprites and their GPU resources.
+                disposeEnemyRenderResources(this);
 
                 if (!window.firstKillHappened) {
                     window.firstKillHappened = true;
